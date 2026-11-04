@@ -1,0 +1,13 @@
+# Never add /.kiro or any subfolder here; the hackathon requires it in the repo.
+
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+*.log
+
+# Local tool config, not part of the project
+.claude/
+.vscode/
