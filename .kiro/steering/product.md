@@ -5,7 +5,7 @@ inclusion: always
 # Product: ParityProven
 
 ## The problem
-Free conversion engines (AWS Transform, DMS Schema Conversion, Babelfish Compass, GitHub Copilot app modernization) now convert much legacy SQL Server and .NET Framework code. Each one reports what it converted. None of them proves that the converted code returns the same results as the original. Buyers still have to decide what to convert, and prove that it worked.
+Free conversion engines (AWS Transform, DMS Schema Conversion, Babelfish Compass, GitHub Copilot app modernization) now convert much legacy SQL Server and .NET Framework code. Each one reports what it converted. AWS Transform for SQL Server also runs its own functional-equivalence checks, and when its tests are inconclusive "an LLM assessment via Amazon Bedrock evaluates functional equivalence to reach a final verdict" (AWS .NET blog, 2026-06-04). Its public pages do not say whether those tests can be exported and re-run outside AWS. ParityProven's evidence is different in kind: deterministic tests and a receipt per object that anyone can re-run from the public repo, with no language model in the pass/fail verdict. Buyers still have to decide what to convert, and prove that it worked.
 
 ## What we build
 A toolkit that **proves** a conversion, object by object, and shows the evidence as a **migration receipt**.
