@@ -1,0 +1,65 @@
+{
+  "origin": {
+    "repo": "https://github.com/microsoft/sql-server-samples",
+    "release": "wide-world-importers-v1.0",
+    "license": "MIT",
+    "assetUrl": "https://github.com/microsoft/sql-server-samples/releases/download/wide-world-importers-v1.0/WideWorldImporters-Full.bak",
+    "sha256": "e842bad6ce02f74f166947e559dab1b476edd7eaae3da2ab9e3f522f1dd87124"
+  },
+  "conversionType": "tsql-to-plpgsql",
+  "objectClass": "procedure",
+  "tier": "simple",
+  "code": {
+    "source": "CREATE PROCEDURE [Integration].[GetMovementUpdates]\n    @LastCutoff datetime2(7),\n    @NewCutoff datetime2(7)\nWITH EXECUTE AS OWNER\nAS\nBEGIN\n    SET NOCOUNT ON;\n    SET XACT_ABORT ON;\n\n    SELECT sit.[StockItemTransactionID] AS [WWI Stock Item Transaction ID],\n           sit.[StockItemID] AS [WWI Stock Item ID],\n           sit.[TransactionTypeID] AS [WWI Transaction Type ID],\n           sit.[InvoiceID] AS [WWI Invoice ID],\n           sit.[SupplierInvoiceNumber] AS [Supplier Invoice Number],\n           sit.[CustomerID] AS [WWI Customer ID],\n           sit.[PurchaseOrderID] AS [WWI Purchase Order ID],\n           CAST(sit.[Quantity] AS int) AS [Quantity],\n           sit.[LastEditedWhen] AS [Last Edited When]\n    FROM Warehouse.StockItemTransactions sit\n    WHERE sit.LastEditedWhen > @LastCutoff\n      AND sit.LastEditedWhen <= @NewCutoff\n    ORDER BY sit.StockItemTransactionID;\nEND;",
+    "engineOutput": "-- initial hand-written draft (same as final except for the Quantity cast)\nCREATE OR REPLACE FUNCTION integration.get_movement_updates(\n    last_cutoff timestamp, new_cutoff timestamp\n)\nRETURNS TABLE (\n    \"WWI Stock Item Transaction ID\" integer,\n    ...\n)\nLANGUAGE sql STABLE AS $$\n    SELECT ..., sit.\"Quantity\"::integer, ...\n    FROM warehouse.stock_item_transactions sit\n    WHERE sit.\"LastEditedWhen\" > last_cutoff AND sit.\"LastEditedWhen\" <= new_cutoff\n    ORDER BY sit.\"StockItemTransactionID\"\n$$;",
+    "final": "See conversions/WideWorldImporters/Integration.GetMovementUpdates.sql",
+    "diff": "See conversions/WideWorldImporters/Integration.GetMovementUpdates.diff",
+    "engine": "hand-written",
+    "notes": [
+      "WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted in the conversion.",
+      "Output columns with spaces (e.g. 'WWI Invoice ID') are double-quoted in PL/pgSQL RETURNS TABLE.",
+      "CAST(Quantity AS int) in T-SQL truncates toward zero. PostgreSQL ::int rounds. Correct conversion uses CAST(TRUNC(Quantity) AS integer).",
+      "datetime2(7) sub-microsecond values are truncated to microseconds by PostgreSQL timestamp on insert; recorded as load-time findings when observed."
+    ]
+  },
+  "columnMappings": [
+    {
+      "sqlServerType": "int NOT NULL",
+      "postgresType": "integer NOT NULL"
+    },
+    {
+      "sqlServerType": "int NULL",
+      "postgresType": "integer",
+      "notes": "NULL allowed; no explicit NOT NULL constraint"
+    },
+    {
+      "sqlServerType": "nvarchar(20) NULL",
+      "postgresType": "varchar(20)",
+      "notes": "PostgreSQL stores all text as UTF-8 natively; nvarchar -> varchar is lossless for standard Unicode"
+    },
+    {
+      "sqlServerType": "decimal(18,3) NOT NULL",
+      "postgresType": "numeric(18,3) NOT NULL"
+    },
+    {
+      "sqlServerType": "datetime2(7)",
+      "postgresType": "timestamp",
+      "notes": "100ns ticks truncated to microseconds on load into PostgreSQL. Sub-microsecond boundary values can differ between engines before the function even runs. Recorded as load-time finding when observed."
+    }
+  ],
+  "evidence": {
+    "step1": "not-run",
+    "step2": "not-run",
+    "step3": "pending",
+    "step4": "not-run",
+    "step5": "not-run",
+    "step6": "not-run",
+    "harnessVersion": "harness-mvp-0.1.0"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "hand-written",
+    "engineVersion": "n/a"
+  },
+  "status": "pending"
+}

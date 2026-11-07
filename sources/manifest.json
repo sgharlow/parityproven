@@ -1,0 +1,15 @@
+{
+  "entries": [
+    {
+      "repo": "https://github.com/microsoft/sql-server-samples",
+      "release": "wide-world-importers-v1.0",
+      "assetName": "WideWorldImporters-Full.bak",
+      "assetUrl": "https://github.com/microsoft/sql-server-samples/releases/download/wide-world-importers-v1.0/WideWorldImporters-Full.bak",
+      "sha256": "e842bad6ce02f74f166947e559dab1b476edd7eaae3da2ab9e3f522f1dd87124",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/microsoft/sql-server-samples/blob/master/license.txt",
+      "licenseConfirmedDate": "2026-11-04",
+      "paths": ["WideWorldImporters-Full.bak"]
+    }
+  ]
+}

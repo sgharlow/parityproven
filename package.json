@@ -1,0 +1,27 @@
+{
+  "name": "parityproven",
+  "version": "0.1.0",
+  "description": "Proves T-SQL to PL/pgSQL conversions with property-based equivalence testing and migration receipts.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc",
+    "verify": "node dist/cli/verify.js",
+    "verify:seed": "node dist/cli/verify.js --seed",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "fast-check": "3.22.0",
+    "mssql": "11.0.1",
+    "pg": "8.13.1"
+  },
+  "devDependencies": {
+    "@types/mssql": "9.1.5",
+    "@types/node": "22.15.0",
+    "@types/pg": "8.11.10",
+    "typescript": "5.7.2",
+    "vitest": "3.2.7"
+  }
+}

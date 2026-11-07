@@ -1,0 +1,12 @@
+--- engineOutput (initial hand-written draft)
++++ final (accepted conversion)
+
+The initial draft used ::integer for the Quantity cast (same as the naive version):
+
+-        sit."Quantity"::integer,
++        CAST(TRUNC(sit."Quantity") AS integer),
+
+Reason: T-SQL CAST(decimal AS int) truncates toward zero (e.g. 2.5 -> 2, -2.5 -> -2).
+PostgreSQL ::integer rounds half-away from zero (2.5 -> 3, -2.5 -> -3).
+PostgreSQL TRUNC() truncates toward zero, matching T-SQL behaviour.
+The defect check confirmed the naive version fails the property before this fix was accepted.
