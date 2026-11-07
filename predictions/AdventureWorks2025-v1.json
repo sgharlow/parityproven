@@ -1,0 +1,68 @@
+{
+  "database": "AdventureWorks2025",
+  "version": "v1",
+  "committedAt": "",
+  "basis": "",
+  "cellEstimates": [
+    {
+      "objectClass": "procedure",
+      "tier": "simple",
+      "count": 5,
+      "p50Hours": 0,
+      "p90Hours": 0,
+      "note": "5 simple procedures."
+    },
+    {
+      "objectClass": "procedure",
+      "tier": "medium",
+      "count": 5,
+      "p50Hours": 0,
+      "p90Hours": 0,
+      "note": "5 medium procedures: uspLogError, uspPrintError, uspUpdateEmployee* — TRY/CATCH and transactions."
+    },
+    {
+      "objectClass": "function",
+      "tier": "simple",
+      "count": 11,
+      "p50Hours": 0,
+      "p90Hours": 0,
+      "note": "11 simple functions. AdventureWorks2025 uses SQL Server 2025 features — watch for compat-170-only syntax."
+    },
+    {
+      "objectClass": "view",
+      "tier": "simple",
+      "count": 20,
+      "p50Hours": 0,
+      "p90Hours": 0,
+      "note": "20 simple views."
+    },
+    {
+      "objectClass": "trigger",
+      "tier": "simple",
+      "count": 2,
+      "p50Hours": 0,
+      "p90Hours": 0,
+      "note": "2 simple triggers."
+    },
+    {
+      "objectClass": "trigger",
+      "tier": "medium",
+      "count": 8,
+      "p50Hours": 0,
+      "p90Hours": 0,
+      "note": "8 medium triggers: iWorkOrder, uWorkOrder, dVendor, iPurchaseOrderDetail, uPurchaseOrderDetail, uPurchaseOrderHeader, iduSalesOrderDetail, uSalesOrderHeader. Verification for triggers compares table state after generated DML (not result sets)."
+    }
+  ],
+  "expectedFailures": [
+    {
+      "schema": "dbo",
+      "object": "uspLogError",
+      "reason": "Logs to ErrorLog table inside CATCH block; TRY/CATCH semantics differ from PostgreSQL EXCEPTION handling — transaction state behaviour may not match."
+    },
+    {
+      "schema": "dbo",
+      "object": "uspPrintError",
+      "reason": "Uses ERROR_MESSAGE(), ERROR_NUMBER() etc — PostgreSQL equivalents exist but need careful mapping and test coverage."
+    }
+  ]
+}

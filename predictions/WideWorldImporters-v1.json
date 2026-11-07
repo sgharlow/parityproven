@@ -1,0 +1,95 @@
+{
+  "database": "WideWorldImporters",
+  "version": "v1",
+  "committedAt": "",
+  "basis": "",
+  "cellEstimates": [
+    {
+      "objectClass": "procedure",
+      "tier": "simple",
+      "count": 21,
+      "p50Hours": 0,
+      "p90Hours": 0,
+      "note": "Simple procedures: plain SELECT/INSERT/UPDATE, no special patterns. Reference: Integration.GetMovementUpdates took ~2h in harness-mvp."
+    },
+    {
+      "objectClass": "procedure",
+      "tier": "medium",
+      "count": 13,
+      "p50Hours": 0,
+      "p90Hours": 0,
+      "note": "Medium procedures: temp tables, TRY/CATCH, window functions."
+    },
+    {
+      "objectClass": "procedure",
+      "tier": "complex",
+      "count": 8,
+      "p50Hours": 0,
+      "p90Hours": 0,
+      "note": "Complex procedures: all 8 use CURSOR over FOR SYSTEM_TIME AS OF (temporal table). These require temporal-table emulation in PostgreSQL and are high-risk."
+    },
+    {
+      "objectClass": "function",
+      "tier": "simple",
+      "count": 2,
+      "p50Hours": 0,
+      "p90Hours": 0,
+      "note": "2 simple functions (1 inline TVF, 1 scalar)."
+    },
+    {
+      "objectClass": "view",
+      "tier": "simple",
+      "count": 3,
+      "p50Hours": 0,
+      "p90Hours": 0,
+      "note": "3 simple views. Note: Website.VehicleTemperatures uses DECOMPRESS — no built-in PG equivalent; likely expected failure."
+    }
+  ],
+  "expectedFailures": [
+    {
+      "schema": "DataLoadSimulation",
+      "object": "Configuration_ApplyDataLoadSimulationProcedures",
+      "reason": "Cursor-based data load simulation; references temporal tables. Low business value for conversion; likely exclude."
+    },
+    {
+      "schema": "Integration",
+      "object": "GetCityUpdates",
+      "reason": "Cursor over FOR SYSTEM_TIME AS OF — requires temporal table emulation not in scope for this phase."
+    },
+    {
+      "schema": "Integration",
+      "object": "GetCustomerUpdates",
+      "reason": "Cursor over FOR SYSTEM_TIME AS OF — temporal table emulation out of scope."
+    },
+    {
+      "schema": "Integration",
+      "object": "GetEmployeeUpdates",
+      "reason": "Cursor over FOR SYSTEM_TIME AS OF — temporal table emulation out of scope."
+    },
+    {
+      "schema": "Integration",
+      "object": "GetPaymentMethodUpdates",
+      "reason": "Cursor over FOR SYSTEM_TIME AS OF — temporal table emulation out of scope."
+    },
+    {
+      "schema": "Integration",
+      "object": "GetStockItemUpdates",
+      "reason": "Cursor over FOR SYSTEM_TIME AS OF — temporal table emulation out of scope."
+    },
+    {
+      "schema": "Integration",
+      "object": "GetSupplierUpdates",
+      "reason": "Cursor over FOR SYSTEM_TIME AS OF — temporal table emulation out of scope."
+    },
+    {
+      "schema": "Integration",
+      "object": "GetTransactionTypeUpdates",
+      "reason": "Cursor over FOR SYSTEM_TIME AS OF — temporal table emulation out of scope."
+    },
+    {
+      "schema": "Website",
+      "object": "VehicleTemperatures",
+      "reason": "View uses DECOMPRESS() — no built-in PostgreSQL equivalent; requires custom function or exclusion."
+    }
+  ]
+}

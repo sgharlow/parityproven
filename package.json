@@ -11,6 +11,8 @@
     "verify": "node dist/cli/verify.js",
     "verify:seed": "node dist/cli/verify.js --seed",
     "inventory": "node dist/cli/inventory.js",
+    "predictions:validate": "node dist/cli/predictions.js validate",
+    "predictions:score": "node dist/cli/predictions.js score",
     "test": "vitest run"
   },
   "dependencies": {
