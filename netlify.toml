@@ -1,0 +1,39 @@
+# Netlify deployment config for ParityProven
+# Site root: web/ (HTML/CSS/JS)
+# Receipts JSON served as static assets from receipts/
+# Both are in the public repo and updated by npm run receipts:build before deploy.
+
+[build]
+  # Run receipts build before deploy
+  command = "npm run build:ci"
+  publish = "."        # serve from repo root so both web/ and receipts/ are reachable
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Rewrites: serve web/ pages at clean URLs
+[[redirects]]
+  from = "/"
+  to   = "/web/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/receipt"
+  to   = "/web/receipt.html"
+  status = 200
+
+[[redirects]]
+  from = "/questionnaire"
+  to   = "/web/questionnaire.html"
+  status = 200
+
+# Cache receipts JSON — short TTL so new builds propagate quickly
+[[headers]]
+  for = "/receipts/*.json"
+  [headers.values]
+    Cache-Control = "public, max-age=300, stale-while-revalidate=60"
+
+[[headers]]
+  for = "/web/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600, stale-while-revalidate=300"

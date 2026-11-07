@@ -1,0 +1,20 @@
+{
+  "builtAt": "2026-11-07T18:43:45.668Z",
+  "receipts": [
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Integration",
+      "objectName": "GetMovementUpdates",
+      "objectClass": "procedure",
+      "tier": "simple",
+      "status": "pending",
+      "path": "WideWorldImporters/Integration.GetMovementUpdates.json"
+    }
+  ],
+  "summary": {
+    "total": 1,
+    "verified": 0,
+    "pending": 1,
+    "failed": 0
+  }
+}

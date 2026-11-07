@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "build:ci": "tsc && node dist/cli/receipts.js",
     "verify": "node dist/cli/verify.js",
     "verify:seed": "node dist/cli/verify.js --seed",
     "inventory": "node dist/cli/inventory.js",

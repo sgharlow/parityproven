@@ -1,0 +1,92 @@
+{
+  "database": "WideWorldImporters",
+  "schemaName": "Integration",
+  "objectName": "GetMovementUpdates",
+  "objectClass": "procedure",
+  "tier": "simple",
+  "status": "pending",
+  "code": {
+    "source": "CREATE PROCEDURE Integration.GetMovementUpdates\n@LastCutoff datetime2(7),\n@NewCutoff datetime2(7)\nWITH EXECUTE AS OWNER\nAS\nBEGIN\n    SET NOCOUNT ON;\n    SET XACT_ABORT ON;\n    SELECT CAST(sit.TransactionOccurredWhen AS date) AS [Date Key],\n           sit.StockItemTransactionID AS [WWI Stock Item Transaction ID],\n           sit.InvoiceID AS [WWI Invoice ID],\n           sit.PurchaseOrderID AS [WWI Purchase Order ID],\n           CAST(sit.Quantity AS int) AS Quantity,\n           sit.StockItemID AS [WWI Stock Item ID],\n           sit.CustomerID AS [WWI Customer ID],\n           sit.SupplierID AS [WWI Supplier ID],\n           sit.TransactionTypeID AS [WWI Transaction Type ID],\n           sit.TransactionOccurredWhen AS [Transaction Occurred When]\n    FROM Warehouse.StockItemTransactions AS sit\n    WHERE sit.LastEditedWhen > @LastCutoff\n    AND sit.LastEditedWhen <= @NewCutoff\n    ORDER BY sit.StockItemTransactionID;\n    RETURN 0;\nEND;",
+    "engineOutput": "-- initial hand-written draft (same as final except Quantity used ::integer instead of CAST(TRUNC(...) AS integer))",
+    "final": "See conversions/WideWorldImporters/Integration.GetMovementUpdates.sql",
+    "diff": "See conversions/WideWorldImporters/Integration.GetMovementUpdates.diff",
+    "engine": "hand-written",
+    "notes": [
+      "WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted in the conversion.",
+      "Output columns with spaces preserved as double-quoted identifiers in RETURNS TABLE.",
+      "CAST(Quantity AS int) in T-SQL truncates toward zero. PostgreSQL ::int rounds. Correct conversion uses CAST(TRUNC(Quantity) AS integer).",
+      "CAST(TransactionOccurredWhen AS date): T-SQL date type maps to PostgreSQL date via ::date cast.",
+      "datetime2(7) sub-microsecond values are truncated to microseconds by PostgreSQL timestamp on insert; recorded as load-time findings when observed.",
+      "Source definition MEASURED 2026-11-06 from sys.sql_modules on live WideWorldImporters restore."
+    ]
+  },
+  "columnMappings": [
+    {
+      "sqlServerType": "int NOT NULL",
+      "postgresType": "integer NOT NULL"
+    },
+    {
+      "sqlServerType": "int NULL",
+      "postgresType": "integer",
+      "notes": "NULL allowed"
+    },
+    {
+      "sqlServerType": "decimal(18,3) NOT NULL",
+      "postgresType": "numeric(18,3) NOT NULL"
+    },
+    {
+      "sqlServerType": "datetime2(7)",
+      "postgresType": "timestamp",
+      "notes": "100ns ticks truncated to microseconds on load into PostgreSQL. Sub-microsecond boundary values can differ. Recorded as load-time finding when observed."
+    }
+  ],
+  "verificationSteps": [
+    {
+      "step": 1,
+      "label": "Compiles and deploys on PostgreSQL",
+      "status": "not-run"
+    },
+    {
+      "step": 2,
+      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "status": "not-run"
+    },
+    {
+      "step": 3,
+      "label": "Result sets match on generated data",
+      "status": "pass"
+    },
+    {
+      "step": 4,
+      "label": "Runtime within 1.5× factor",
+      "status": "not-run"
+    },
+    {
+      "step": 5,
+      "label": "Second human review",
+      "status": "not-run"
+    },
+    {
+      "step": 6,
+      "label": "Acceptance on real data",
+      "status": "not-run"
+    }
+  ],
+  "evidence": {
+    "pbtSeeds": [
+      1821212835
+    ],
+    "rowsCompared": 563,
+    "harnessVersion": "harness-mvp-0.1.0"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "hand-written",
+    "engineVersion": "n/a"
+  },
+  "predictionCell": {
+    "p50Hours": 0,
+    "p90Hours": 0
+  },
+  "builtAt": "2026-11-07T18:43:45.667Z"
+}

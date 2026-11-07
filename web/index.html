@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ParityProven — Migration Receipts</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <nav>
+      <a href="index.html" class="brand">ParityProven</a>
+      <a href="index.html">Scorecard</a>
+      <a href="questionnaire.html">Questionnaire</a>
+      <a href="https://github.com/sgharlow/parityproven" target="_blank" rel="noopener">GitHub ↗</a>
+    </nav>
+
+    <h1>Migration Receipts</h1>
+    <p style="color:var(--c-muted);margin-bottom:1.5rem">
+      T-SQL to PL/pgSQL conversions, proved by property-based equivalence testing.
+      Every receipt is reproducible from the public repo.
+    </p>
+
+    <div id="scorecard">
+      <noscript>
+        <div class="empty">
+          <h2>JavaScript required</h2>
+          <p>This page loads receipt data dynamically. Enable JavaScript to view the scorecard.</p>
+        </div>
+      </noscript>
+      <p style="color:var(--c-muted)">Loading receipts…</p>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

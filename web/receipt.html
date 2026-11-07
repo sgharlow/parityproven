@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Receipt — ParityProven</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- highlight.js for SQL syntax highlighting (BSD 3-Clause) -->
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css"
+        integrity="sha512-rO+olRTkcf304NQjyDv6U6yGpFORchCzFpzAbDECgHMdOkQEA7p3cdlCDnMq1L8sRLCnDsGlTfO7Gkxb8P9aA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"
+          integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"
+          integrity="sha512-ycRbmtAjO5gGSoKb87oITkSJEMNbx8PQZoxEJxuHwqMG4fJvVUJSZidFPV5gGkVrqJcvH6INLNtYfh+G5pVJw=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+  <div class="container">
+    <nav>
+      <a href="index.html" class="brand">ParityProven</a>
+      <a href="index.html">← Scorecard</a>
+      <a href="questionnaire.html">Questionnaire</a>
+      <a href="https://github.com/sgharlow/parityproven" target="_blank" rel="noopener">GitHub ↗</a>
+    </nav>
+
+    <div id="receipt">
+      <noscript>
+        <div class="empty">
+          <h2>JavaScript required</h2>
+          <p>This page loads receipt data dynamically.</p>
+        </div>
+      </noscript>
+      <p style="color:var(--c-muted)">Loading receipt…</p>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

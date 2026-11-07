@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Migration Scan — ParityProven</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .object-type { margin-bottom: 1.5rem; }
+    .object-type h3 { margin-bottom: 0.5rem; }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .range-pair { display: flex; align-items: center; gap: 0.75rem; }
+    .range-pair input[type="range"] { flex: 1; }
+    .range-pair input[type="number"] { width: 4.5rem; flex-shrink: 0; }
+    @media (max-width: 600px) { .row2 { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav>
+      <a href="index.html" class="brand">ParityProven</a>
+      <a href="index.html">Scorecard</a>
+      <a href="questionnaire.html">Questionnaire</a>
+      <a href="https://github.com/sgharlow/parityproven" target="_blank" rel="noopener">GitHub ↗</a>
+    </nav>
+
+    <h1>Migration Complexity Scan</h1>
+    <p style="color:var(--c-muted);margin-bottom:1.5rem">
+      Answer a few questions about your SQL Server estate. The estimate runs entirely
+      in your browser — no data leaves this page.
+    </p>
+
+    <form id="scan-form" onsubmit="return false">
+
+      <!-- Procedures -->
+      <div class="card object-type">
+        <h3>Stored procedures</h3>
+        <div class="row2">
+          <div>
+            <label for="count-procedure">How many procedures?</label>
+            <input type="number" id="count-procedure" min="0" value="0" placeholder="0">
+          </div>
+          <div></div>
+          <div>
+            <label>% with dynamic SQL, cursors, or cross-DB refs <em>(complex)</em></label>
+            <div class="range-pair">
+              <input type="range" id="pct-complex-procedure" min="0" max="100" value="0">
+              <input type="number" id="pct-complex-procedure" min="0" max="100" value="0">
+            </div>
+          </div>
+          <div>
+            <label>% with temp tables, MERGE, TRY/CATCH, or window functions <em>(medium)</em></label>
+            <div class="range-pair">
+              <input type="range" id="pct-medium-procedure" min="0" max="100" value="0">
+              <input type="number" id="pct-medium-procedure" min="0" max="100" value="0">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Functions -->
+      <div class="card object-type">
+        <h3>Functions (scalar, inline TVF, multi-statement TVF)</h3>
+        <div class="row2">
+          <div>
+            <label for="count-function">How many functions?</label>
+            <input type="number" id="count-function" min="0" value="0" placeholder="0">
+          </div>
+          <div></div>
+          <div>
+            <label>% complex</label>
+            <div class="range-pair">
+              <input type="range" id="pct-complex-function" min="0" max="100" value="0">
+              <input type="number" id="pct-complex-function" min="0" max="100" value="0">
+            </div>
+          </div>
+          <div>
+            <label>% medium</label>
+            <div class="range-pair">
+              <input type="range" id="pct-medium-function" min="0" max="100" value="0">
+              <input type="number" id="pct-medium-function" min="0" max="100" value="0">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Views -->
+      <div class="card object-type">
+        <h3>Views</h3>
+        <div class="row2">
+          <div>
+            <label for="count-view">How many views?</label>
+            <input type="number" id="count-view" min="0" value="0" placeholder="0">
+          </div>
+          <div></div>
+          <div>
+            <label>% complex</label>
+            <div class="range-pair">
+              <input type="range" id="pct-complex-view" min="0" max="100" value="0">
+              <input type="number" id="pct-complex-view" min="0" max="100" value="0">
+            </div>
+          </div>
+          <div>
+            <label>% medium</label>
+            <div class="range-pair">
+              <input type="range" id="pct-medium-view" min="0" max="100" value="0">
+              <input type="number" id="pct-medium-view" min="0" max="100" value="0">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Triggers -->
+      <div class="card object-type">
+        <h3>Triggers</h3>
+        <div class="row2">
+          <div>
+            <label for="count-trigger">How many triggers?</label>
+            <input type="number" id="count-trigger" min="0" value="0" placeholder="0">
+          </div>
+          <div></div>
+          <div>
+            <label>% complex</label>
+            <div class="range-pair">
+              <input type="range" id="pct-complex-trigger" min="0" max="100" value="0">
+              <input type="number" id="pct-complex-trigger" min="0" max="100" value="0">
+            </div>
+          </div>
+          <div>
+            <label>% medium</label>
+            <div class="range-pair">
+              <input type="range" id="pct-medium-trigger" min="0" max="100" value="0">
+              <input type="number" id="pct-medium-trigger" min="0" max="100" value="0">
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </form>
+
+    <!-- Result -->
+    <div class="result-box" id="result" style="display:none">
+      <h2 style="margin-top:0">Rough estimate</h2>
+      <p class="estimate">
+        P50: <strong id="est-p50">—</strong> &nbsp;&nbsp;
+        P90: <strong id="est-p90">—</strong>
+      </p>
+      <p style="color:var(--c-muted);font-size:0.85rem">
+        Based on <strong id="est-objects">0</strong> objects at the complexity mix you described.
+      </p>
+      <p style="color:var(--c-muted);font-size:0.8rem;margin-bottom:0">
+        ⚠️ <strong>Judgment only</strong> — no samples from your database.
+        Rates are derived from WideWorldImporters (47 objects, 3 databases types) and human estimates.
+        A real assessment requires running the inventory tool against your database.
+      </p>
+    </div>
+
+    <div style="margin-top:2rem;padding-top:1rem;border-top:1px solid var(--c-border)">
+      <p style="color:var(--c-muted);font-size:0.85rem">
+        Want a more precise estimate? The open-source inventory tool queries your database directly
+        and produces a tier breakdown you can feed back into this form.
+        <a href="https://github.com/sgharlow/parityproven" target="_blank" rel="noopener">Run it yourself →</a>
+      </p>
+    </div>
+
+  </div>
+
+  <script src="questionnaire.js"></script>
+</body>
+</html>

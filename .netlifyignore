@@ -1,0 +1,15 @@
+# Files not needed on the Netlify deployment
+node_modules/
+src/
+.kiro/
+.claude/
+.vscode/
+*.bak
+.env
+.env.*
+docker/
+conversions/
+predictions/
+pairs/
+inventory/
+evidence/
