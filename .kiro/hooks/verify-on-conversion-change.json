@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Re-run verify when a conversion changes",
+      "trigger": "PostFileSave",
+      "description": "When a conversion .sql file is saved, rebuild and re-run the PBT equivalence check so a regression is caught immediately.",
+      "matcher": "conversions/.*\\.sql$",
+      "action": {
+        "type": "command",
+        "command": "cd /d \"%WORKSPACE%\" && npm run build --silent 2>&1 && node dist/cli/verify.js 2>&1",
+        "timeout": 300
+      }
+    }
+  ]
+}

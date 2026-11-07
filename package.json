@@ -13,6 +13,7 @@
     "inventory": "node dist/cli/inventory.js",
     "predictions:validate": "node dist/cli/predictions.js validate",
     "predictions:score": "node dist/cli/predictions.js score",
+    "receipts:build": "node dist/cli/receipts.js",
     "test": "vitest run"
   },
   "dependencies": {

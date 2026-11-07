@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Validate pair record schema on save",
+      "trigger": "PostFileSave",
+      "description": "When a pair record JSON file is created or saved, validate it against the PairRecord schema to catch structural errors before commit.",
+      "matcher": "pairs/.*\\.json$",
+      "action": {
+        "type": "command",
+        "command": "cd /d \"%WORKSPACE%\" && node dist/cli/validate-pair.js \"%FILE%\" 2>&1",
+        "timeout": 30
+      }
+    }
+  ]
+}
