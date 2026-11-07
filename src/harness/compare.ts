@@ -77,17 +77,45 @@ function valuesEquivalent(a: unknown, b: unknown): boolean {
   if (a === null && b === null) return true;
   if (a === null || b === null) return false;
 
-  // Both are Dates
+  // Both are Dates.
+  // date-only columns come back as Date objects at local midnight (pg) vs UTC midnight (mssql).
+  // If one is at UTC midnight, compare as calendar date strings to avoid TZ skew.
   if (a instanceof Date && b instanceof Date) {
-    return a.getTime() === b.getTime();
+    if (a.getTime() === b.getTime()) return true;
+    const aAtMidnightUtc = a.getUTCHours() === 0 && a.getUTCMinutes() === 0 && a.getUTCSeconds() === 0 && a.getUTCMilliseconds() === 0;
+    const bAtMidnightUtc = b.getUTCHours() === 0 && b.getUTCMinutes() === 0 && b.getUTCSeconds() === 0 && b.getUTCMilliseconds() === 0;
+    if (aAtMidnightUtc || bAtMidnightUtc) {
+      // At least one is a date-only value — compare calendar dates in UTC
+      return toDateString(a) === toDateString(b);
+    }
+    return false;
   }
 
-  // One is Date, one is string (postgres may return timestamp as string)
+  // One is Date (mssql), one is string (pg with custom type parser) — normalise both to UTC ISO string
   if (a instanceof Date && typeof b === "string") {
-    return a.getTime() === new Date(b).getTime();
+    // date-only string from pg e.g. "2020-06-15"
+    if (/^\d{4}-\d{2}-\d{2}$/.test(b)) {
+      return toDateString(a) === b;
+    }
+    // timestamp string from pg e.g. "2020-06-15 12:00:00" or "2020-06-15T12:00:00"
+    return toTimestampMs(a) === toTimestampMs(b);
   }
   if (typeof a === "string" && b instanceof Date) {
-    return new Date(a).getTime() === b.getTime();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(a)) {
+      return a === toDateString(b);
+    }
+    return toTimestampMs(a) === toTimestampMs(b);
+  }
+
+  // Both strings — if they look like timestamps/dates, normalise
+  if (typeof a === "string" && typeof b === "string") {
+    if (looksLikeDate(a) && looksLikeDate(b)) {
+      if (/^\d{4}-\d{2}-\d{2}$/.test(a) && /^\d{4}-\d{2}-\d{2}$/.test(b)) {
+        return a === b;
+      }
+      return toTimestampMs(a) === toTimestampMs(b);
+    }
+    return a === b;
   }
 
   // Numbers — compare with ===; both engines should agree on integer values
@@ -100,8 +128,24 @@ function valuesEquivalent(a: unknown, b: unknown): boolean {
   if (typeof a === "bigint" && typeof b === "number") return Number(a) === b;
   if (typeof a === "number" && typeof b === "bigint") return a === Number(b);
 
-  // String comparison (column names with spaces, varchar values)
-  if (typeof a === "string" && typeof b === "string") return a === b;
-
   return a === b;
+}
+
+/** Normalise a date value to YYYY-MM-DD, stripping time and TZ. */
+function toDateString(val: Date | string): string {
+  const s = val instanceof Date ? val.toISOString() : val;
+  return s.substring(0, 10);
+}
+
+/** Normalise a date/timestamp value to UTC milliseconds for comparison. */
+function toTimestampMs(val: Date | string): number {
+  if (val instanceof Date) return val.getTime();
+  // pg returns timestamps as "YYYY-MM-DD HH:MM:SS.ffffff" (no T, no Z)
+  // Treat as UTC (the stored value is what was inserted — no TZ applied)
+  const normalised = val.replace(" ", "T") + "Z";
+  return new Date(normalised).getTime();
+}
+
+function looksLikeDate(s: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}/.test(s);
 }

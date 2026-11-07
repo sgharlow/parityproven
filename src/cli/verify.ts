@@ -17,6 +17,7 @@ import { promisify } from "util";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 import { readFile, writeFile } from "fs/promises";
+import { existsSync, readFileSync } from "fs";
 
 import { MssqlClient } from "../harness/clients/mssql-client.js";
 import { PgClient } from "../harness/clients/pg-client.js";
@@ -38,9 +39,23 @@ const PAIR_RECORD_PATH = resolve(
 );
 const TMP_DIR = resolve(REPO_ROOT, ".tmp");
 
-// Container names as defined in compose.yml (default project = directory name)
-const MSSQL_CONTAINER = "parityproven-mssql-1";
-const PG_CONTAINER = "parityproven-postgres-1";
+// Load .env from repo root if present (no external dependency needed)
+const envFile = resolve(REPO_ROOT, ".env");
+if (existsSync(envFile)) {
+  for (const line of readFileSync(envFile, "utf-8").split(/\r?\n/)) {
+    const match = line.match(/^([^#=]+)=(.*)$/);
+    if (match && match[1] && match[2] !== undefined) {
+      process.env[match[1].trim()] = match[2].trim();
+    }
+  }
+}
+
+// Container names: default Docker Compose project name = parent folder of compose.yml.
+// compose.yml lives in docker/, so the project name is "docker" unless overridden.
+// Override with COMPOSE_PROJECT_NAME env var if needed.
+const PROJECT = process.env["COMPOSE_PROJECT_NAME"] ?? "docker";
+const MSSQL_CONTAINER = `${PROJECT}-mssql-1`;
+const PG_CONTAINER = `${PROJECT}-postgres-1`;
 
 const verbose = process.argv.includes("--verbose");
 const log = verbose ? console.log : (_: string) => undefined;

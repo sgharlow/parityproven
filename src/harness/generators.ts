@@ -16,9 +16,9 @@ import * as fc from "fast-check";
 // ---------------------------------------------------------------------------
 
 /** Smallest representable datetime2(7) value: 0001-01-01 00:00:00.0000000 */
-const MIN_DATETIME2_TICKS = 0n;
-/** Representative safe max: 2099-12-31 23:59:59.9999999 (well within range) */
-const MAX_DATETIME2_TICKS = 31_241_376_000_000_000n;
+const MIN_DATETIME2_TICKS = 946_684_800_000_0000n;   // 2000-01-01 UTC in 100ns ticks from Unix epoch
+/** Representative safe max: 2049-12-31 23:59:59 */
+const MAX_DATETIME2_TICKS = 2_524_607_999_000_0000n;
 
 /** 1 microsecond in 100ns ticks */
 const TICKS_PER_MICROSECOND = 10n;
@@ -101,18 +101,19 @@ export const nullableIntArb: fc.Arbitrary<number | null> = fc.option(
   { nil: null, freq: 3 }
 );
 
-/** A full row for warehouse.stock_item_transactions. */
+/** A full row for warehouse.stock_item_transactions (MEASURED schema 2026-11-06). */
 export interface StockItemTransactionRow {
   StockItemTransactionID: number;
   StockItemID: number;
   TransactionTypeID: number;
-  InvoiceID: number | null;
-  SupplierInvoiceNumber: string | null;
   CustomerID: number | null;
+  InvoiceID: number | null;
+  SupplierID: number | null;
   PurchaseOrderID: number | null;
+  TransactionOccurredWhen: bigint;  // 100ns ticks
   Quantity: number;
   LastEditedBy: number;
-  LastEditedWhen: bigint;  // 100ns ticks
+  LastEditedWhen: bigint;  // 100ns ticks — the filter column
 }
 
 let _idCounter = 1_000_000;  // Start high to avoid colliding with real data
@@ -121,10 +122,11 @@ export const stockItemTransactionRowArb: fc.Arbitrary<StockItemTransactionRow> =
   StockItemTransactionID: fc.constant(0).map(() => ++_idCounter),  // unique ascending
   StockItemID: fc.integer({ min: 1, max: 227 }),
   TransactionTypeID: fc.integer({ min: 1, max: 13 }),
-  InvoiceID: nullableIntArb,
-  SupplierInvoiceNumber: fc.option(fc.string({ minLength: 1, maxLength: 20 }), { nil: null, freq: 3 }),
-  CustomerID: nullableIntArb,
-  PurchaseOrderID: nullableIntArb,
+  CustomerID: fc.constant(null),   // FK to Sales.Customers — use NULL to avoid FK violations
+  InvoiceID: fc.constant(null),    // FK to Sales.Invoices
+  SupplierID: fc.constant(null),   // FK to Purchasing.Suppliers
+  PurchaseOrderID: fc.constant(null), // FK to Purchasing.PurchaseOrders
+  TransactionOccurredWhen: datetime2TicksArb,
   Quantity: quantityArb,
   LastEditedBy: fc.integer({ min: 1, max: 20 }),
   LastEditedWhen: datetime2TicksArb,

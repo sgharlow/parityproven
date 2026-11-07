@@ -5,6 +5,13 @@ import type { DatabaseClient } from "./mssql-client.js";
 // Re-export the interface so callers can import from one place
 export type { DatabaseClient };
 
+// Tell pg to return timestamps and dates as ISO strings, not Date objects.
+// This prevents local-TZ conversion (pg interprets timestamp as localtime, mssql returns UTC Date).
+// We compare as strings in the comparator.
+pg.types.setTypeParser(1114, (val: string) => val);   // timestamp without tz
+pg.types.setTypeParser(1082, (val: string) => val);   // date
+pg.types.setTypeParser(1184, (val: string) => val);   // timestamptz
+
 export class PgClient implements DatabaseClient {
   private client: pg.Client | null = null;
 

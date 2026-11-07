@@ -68,6 +68,13 @@ export async function runEquivalenceProperty(opts: {
                 columnName: "LastEditedWhen",
               });
             }
+            if (hasSubMicrosecondPrecision(r.TransactionOccurredWhen)) {
+              loadFindings.push({
+                kind: "load-time-precision-loss",
+                detail: `Row StockItemTransactionID=${r.StockItemTransactionID}: TransactionOccurredWhen has sub-microsecond ticks truncated by PostgreSQL timestamp`,
+                columnName: "TransactionOccurredWhen",
+              });
+            }
             return pgRow;
           });
 
@@ -129,17 +136,23 @@ export async function runEquivalenceProperty(opts: {
 // ---------------------------------------------------------------------------
 
 function toSsRow(r: StockItemTransactionRow): Record<string, unknown> {
+  // Truncate datetime2 to microsecond precision so both engines store identical values.
+  // Sub-microsecond precision would cause SQL Server to find a row that PostgreSQL misses
+  // (because pg truncates on insert). The load-time finding already documents this behaviour.
+  const lastEditedWhenTrunc = (r.LastEditedWhen / 10n) * 10n;
+  const transOccurredWhenTrunc = (r.TransactionOccurredWhen / 10n) * 10n;
   return {
     StockItemTransactionID: r.StockItemTransactionID,
     StockItemID: r.StockItemID,
     TransactionTypeID: r.TransactionTypeID,
-    InvoiceID: r.InvoiceID,
-    SupplierInvoiceNumber: r.SupplierInvoiceNumber,
     CustomerID: r.CustomerID,
+    InvoiceID: r.InvoiceID,
+    SupplierID: r.SupplierID,
     PurchaseOrderID: r.PurchaseOrderID,
+    TransactionOccurredWhen: ticksToSqlServerString(transOccurredWhenTrunc),
     Quantity: r.Quantity,
     LastEditedBy: r.LastEditedBy,
-    LastEditedWhen: ticksToSqlServerString(r.LastEditedWhen),
+    LastEditedWhen: ticksToSqlServerString(lastEditedWhenTrunc),
   };
 }
 
@@ -148,12 +161,15 @@ function toPgRow(r: StockItemTransactionRow): Record<string, unknown> {
     StockItemTransactionID: r.StockItemTransactionID,
     StockItemID: r.StockItemID,
     TransactionTypeID: r.TransactionTypeID,
-    InvoiceID: r.InvoiceID,
-    SupplierInvoiceNumber: r.SupplierInvoiceNumber,
     CustomerID: r.CustomerID,
+    InvoiceID: r.InvoiceID,
+    SupplierID: r.SupplierID,
     PurchaseOrderID: r.PurchaseOrderID,
+    // Truncate datetime2 columns to microsecond precision for PostgreSQL
+    TransactionOccurredWhen: ticksToPostgresString(r.TransactionOccurredWhen),
     Quantity: r.Quantity,
     LastEditedBy: r.LastEditedBy,
+    // Also truncate LastEditedWhen — sub-µs values would fall outside the filter window after truncation
     LastEditedWhen: ticksToPostgresString(r.LastEditedWhen),
   };
 }

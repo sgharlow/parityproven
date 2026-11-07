@@ -1,34 +1,37 @@
--- Planted-defect function for the harness defect check.
--- See conversions/WideWorldImporters/Integration.GetMovementUpdates.naive.sql for explanation.
+-- PLANTED DEFECT — do not use in production.
+-- Naive conversion: uses ::int (rounds) instead of CAST(TRUNC(...) AS integer) (truncates).
+-- For Quantity = 2.5: TRUNC gives 2 (correct); ::int gives 3 (wrong).
 
 CREATE OR REPLACE FUNCTION integration.get_movement_updates_naive(
     last_cutoff timestamp,
     new_cutoff  timestamp
 )
 RETURNS TABLE (
-    "WWI Stock Item Transaction ID" integer,
-    "WWI Stock Item ID"             integer,
-    "WWI Transaction Type ID"       integer,
-    "WWI Invoice ID"                integer,
-    "Supplier Invoice Number"       varchar(20),
-    "WWI Customer ID"               integer,
-    "WWI Purchase Order ID"         integer,
-    "Quantity"                      integer,
-    "Last Edited When"              timestamp
+    "Date Key"                              date,
+    "WWI Stock Item Transaction ID"         integer,
+    "WWI Invoice ID"                        integer,
+    "WWI Purchase Order ID"                 integer,
+    "Quantity"                              integer,
+    "WWI Stock Item ID"                     integer,
+    "WWI Customer ID"                       integer,
+    "WWI Supplier ID"                       integer,
+    "WWI Transaction Type ID"               integer,
+    "Transaction Occurred When"             timestamp
 )
 LANGUAGE sql
 STABLE
 AS $$
     SELECT
+        sit."TransactionOccurredWhen"::date,
         sit."StockItemTransactionID"::integer,
-        sit."StockItemID"::integer,
-        sit."TransactionTypeID"::integer,
         sit."InvoiceID",
-        sit."SupplierInvoiceNumber",
-        sit."CustomerID",
         sit."PurchaseOrderID",
-        sit."Quantity"::integer,
-        sit."LastEditedWhen"
+        sit."Quantity"::integer,   -- BUG: rounds instead of truncating toward zero
+        sit."StockItemID"::integer,
+        sit."CustomerID",
+        sit."SupplierID",
+        sit."TransactionTypeID"::integer,
+        sit."TransactionOccurredWhen"
     FROM warehouse.stock_item_transactions sit
     WHERE sit."LastEditedWhen" > last_cutoff
       AND sit."LastEditedWhen" <= new_cutoff
