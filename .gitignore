@@ -8,6 +8,7 @@ coverage/
 !.env.example
 *.log
 *.bak
+inventory/*.json
 
 # Local tool config, not part of the project
 .claude/

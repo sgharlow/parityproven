@@ -192,3 +192,64 @@ async function runSqlcmdQuery(
     "-h", "-1",
   ]);
 }
+
+// ---------------------------------------------------------------------------
+// AdventureWorks2025 restore
+// Logical file names MEASURED 2026-11-07 via RESTORE FILELISTONLY:
+//   AdventureWorks       (data, .mdf)
+//   AdventureWorks_log   (log,  .ldf)
+// Compatibility level 170 (SQL Server 2025) MEASURED post-restore.
+// ---------------------------------------------------------------------------
+
+export async function ensureAdventureWorksRestored(opts: {
+  containerName: string;
+  saPassword: string;
+  manifestPath: string;
+  tmpDir: string;
+  verbose?: boolean;
+}): Promise<void> {
+  const { containerName, saPassword, manifestPath, tmpDir, verbose } = opts;
+  const log = verbose ? console.log : () => undefined;
+
+  const manifest: Manifest = JSON.parse(await readFile(manifestPath, "utf-8"));
+  const entry = manifest.entries.find((e) => e.assetName === "AdventureWorks2025.bak");
+  if (!entry) throw new Error("Manifest entry for AdventureWorks2025.bak not found");
+
+  const bakPath = await locateBak(entry, tmpDir, log);
+
+  log(`Verifying sha256 for ${bakPath}…`);
+  const actual = await sha256File(bakPath);
+  if (actual.toLowerCase() !== entry.sha256.toLowerCase()) {
+    throw new Error(
+      `sha256 mismatch for AdventureWorks2025.bak:\n  expected: ${entry.sha256}\n  actual:   ${actual}\nRefusing to restore.`
+    );
+  }
+  log("sha256 verified.");
+
+  const already = await isDatabaseOnline(containerName, saPassword, "AdventureWorks2025");
+  if (already) {
+    log("AdventureWorks2025 already online in container — skipping restore.");
+    return;
+  }
+
+  const containerBakPath = "/var/opt/mssql/data/AdventureWorks2025.bak";
+  log(`Copying .bak into container ${containerName}…`);
+  await execFileAsync("docker", ["cp", bakPath, `${containerName}:${containerBakPath}`]);
+
+  log("Running RESTORE DATABASE AdventureWorks2025…");
+  const restoreSql = `
+RESTORE DATABASE [AdventureWorks2025]
+FROM DISK = N'${containerBakPath}'
+WITH MOVE N'AdventureWorks'     TO N'/var/opt/mssql/data/AdventureWorks2025.mdf',
+     MOVE N'AdventureWorks_log' TO N'/var/opt/mssql/data/AdventureWorks2025_log.ldf',
+     REPLACE, STATS = 10;
+`.trim();
+
+  await runSqlcmd(containerName, saPassword, restoreSql);
+
+  const online = await isDatabaseOnline(containerName, saPassword, "AdventureWorks2025");
+  if (!online) {
+    throw new Error("AdventureWorks2025 is not ONLINE after restore — check container logs.");
+  }
+  log("AdventureWorks2025 restored and ONLINE.");
+}

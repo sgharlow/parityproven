@@ -4,6 +4,10 @@
 
 export type StepStatus = "pass" | "fail" | "not-run" | "n/a";
 
+export type ObjectClass = "procedure" | "function" | "view" | "trigger";
+
+export type Tier = "simple" | "medium" | "complex";
+
 export interface ColumnMapping {
   sqlServerType: string;
   postgresType: string;
@@ -21,14 +25,14 @@ export interface PairRecordOrigin {
 export interface PairRecord {
   origin: PairRecordOrigin | "synthetic";
   conversionType: "tsql-to-plpgsql";
-  objectClass: "procedure" | "function" | "view" | "trigger";
+  objectClass: ObjectClass;
   /**
    * Complexity tier per the rules in pair-records.md:
    *  complex  — dynamic SQL, cursors, CLR, cross-db refs, linked servers, OPENQUERY/OPENROWSET, xp_
    *  medium   — temp tables/table variables, MERGE, TRY/CATCH+transactions, window functions, OUTPUT, multiple result sets
    *  simple   — everything else
    */
-  tier: "simple" | "medium" | "complex";
+  tier: Tier;
   code: {
     source: string;
     engineOutput: string;

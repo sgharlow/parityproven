@@ -10,6 +10,7 @@
     "build": "tsc",
     "verify": "node dist/cli/verify.js",
     "verify:seed": "node dist/cli/verify.js --seed",
+    "inventory": "node dist/cli/inventory.js",
     "test": "vitest run"
   },
   "dependencies": {

@@ -10,6 +10,18 @@
       "licenseUrl": "https://github.com/microsoft/sql-server-samples/blob/master/license.txt",
       "licenseConfirmedDate": "2026-11-04",
       "paths": ["WideWorldImporters-Full.bak"]
+    },
+    {
+      "repo": "https://github.com/microsoft/sql-server-samples",
+      "release": "adventureworks",
+      "assetName": "AdventureWorks2025.bak",
+      "assetUrl": "https://github.com/microsoft/sql-server-samples/releases/download/adventureworks/AdventureWorks2025.bak",
+      "sha256": "fa6a2a5d431ad88123f89b36b1f2c7e42ca4bdf6b293269a44df80f6de3738a5",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/microsoft/sql-server-samples/blob/master/license.txt",
+      "licenseConfirmedDate": "2026-11-04",
+      "paths": ["AdventureWorks2025.bak"],
+      "notes": "Restores at compatibility level 170 (SQL Server 2025). Logical file names: AdventureWorks (data), AdventureWorks_log (log). MEASURED 2026-11-07."
     }
   ]
 }
