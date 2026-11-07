@@ -8,7 +8,7 @@ An object counts as **verified** only when steps 1–4 pass and steps 5–6 are 
 
 1. **Compiles and deploys.** The converted object is created on PostgreSQL without error.
 2. **Agreed tests pass.** The tSQLt tests (source) and pgTAP tests (target) listed for the object pass.
-3. **Result sets match** on generated data that includes every trap below. Comparison covers row count, column names and types, values, and order wherever the source query guarantees an order.
+3. **Result sets match** on generated data that includes every trap below. Comparison covers row count, column names and types, values, and order wherever the source query guarantees an order. For a **trigger**, the result is the state of every table it writes after the same generated DML runs on both engines, compared the same way.
 4. **Runtime within factor.** Target runtime is at most **1.5×** the source on the synthetic volume, unless the object's record states a different agreed factor.
 5. **Second review.** A human review against this checklist, at least one day after the first pass. Record the reviewer and date.
 6. **Acceptance on real data.** For public sample databases this is **not applicable**, and the receipt says so. For a real engagement, the customer runs the validation scripts on their own data.
