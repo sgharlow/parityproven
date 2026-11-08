@@ -21,6 +21,12 @@
   from = "/receipt"
   to   = "/web/receipt.html"
   status = 200
+  query = {db = ":db", obj = ":obj"}
+
+[[redirects]]
+  from = "/receipt"
+  to   = "/web/receipt.html"
+  status = 200
 
 [[redirects]]
   from = "/questionnaire"

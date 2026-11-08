@@ -32,7 +32,7 @@ async function initScorecard() {
 
   let index;
   try {
-    const res = await fetch('../receipts/index.json');
+    const res = await fetch('/receipts/index.json');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     index = await res.json();
   } catch (e) {
@@ -95,7 +95,7 @@ async function initReceipt() {
 
   let receipt;
   try {
-    const res = await fetch(`../receipts/${encodeURIComponent(db)}/${encodeURIComponent(obj)}.json`);
+    const res = await fetch(`/receipts/${encodeURIComponent(db)}/${encodeURIComponent(obj)}.json`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     receipt = await res.json();
   } catch (e) {
