@@ -1,48 +1,48 @@
 {
   "database": "WideWorldImporters",
   "version": "v1",
-  "committedAt": "",
-  "basis": "",
+  "committedAt": "2026-11-08T03:31:14.477Z",
+  "basis": "Estimated from harness-mvp experience (GetMovementUpdates ~1h end-to-end) scaled by tier complexity; complex procedures treated as predicted failures due to cursor/temporal-table patterns with no in-scope PostgreSQL equivalent.",
   "cellEstimates": [
     {
       "objectClass": "procedure",
       "tier": "simple",
       "count": 21,
-      "p50Hours": 0,
-      "p90Hours": 0,
-      "note": "Simple procedures: plain SELECT/INSERT/UPDATE, no special patterns. Reference: Integration.GetMovementUpdates took ~2h in harness-mvp."
+      "p50Hours": 1.0,
+      "p90Hours": 2.0,
+      "note": "Plain SELECT/INSERT, 1-2 tables, no special patterns. GetMovementUpdates is representative."
     },
     {
       "objectClass": "procedure",
       "tier": "medium",
       "count": 13,
-      "p50Hours": 0,
-      "p90Hours": 0,
-      "note": "Medium procedures: temp tables, TRY/CATCH, window functions."
+      "p50Hours": 3.0,
+      "p90Hours": 6.0,
+      "note": "Temp tables, TRY/CATCH, window functions. More Kiro fix cycles expected."
     },
     {
       "objectClass": "procedure",
       "tier": "complex",
       "count": 8,
-      "p50Hours": 0,
-      "p90Hours": 0,
-      "note": "Complex procedures: all 8 use CURSOR over FOR SYSTEM_TIME AS OF (temporal table). These require temporal-table emulation in PostgreSQL and are high-risk."
+      "p50Hours": 9.0,
+      "p90Hours": 20.0,
+      "note": "All 8 use CURSOR over FOR SYSTEM_TIME AS OF (temporal tables). Expected to fail — temporal-table emulation out of scope for this phase. Estimate reflects assessment + documentation effort, not full conversion."
     },
     {
       "objectClass": "function",
       "tier": "simple",
       "count": 2,
-      "p50Hours": 0,
-      "p90Hours": 0,
-      "note": "2 simple functions (1 inline TVF, 1 scalar)."
+      "p50Hours": 1.0,
+      "p90Hours": 3.0,
+      "note": "1 inline TVF, 1 scalar. Similar to simple procedures."
     },
     {
       "objectClass": "view",
       "tier": "simple",
       "count": 3,
-      "p50Hours": 0,
-      "p90Hours": 0,
-      "note": "3 simple views. Note: Website.VehicleTemperatures uses DECOMPRESS — no built-in PG equivalent; likely expected failure."
+      "p50Hours": 0.75,
+      "p90Hours": 2.0,
+      "note": "Simple SELECTs. VehicleTemperatures uses DECOMPRESS() — expected failure, no built-in PostgreSQL equivalent."
     }
   ],
   "expectedFailures": [

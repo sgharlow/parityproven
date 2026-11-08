@@ -1,56 +1,56 @@
 {
   "database": "AdventureWorks2025",
   "version": "v1",
-  "committedAt": "",
-  "basis": "",
+  "committedAt": "2026-11-08T03:31:14.477Z",
+  "basis": "Estimated from harness-mvp experience scaled by tier complexity; AW2025 functions given extra buffer for SQL Server 2025-specific syntax; trigger estimates reflect table-state comparison overhead vs result-set comparison.",
   "cellEstimates": [
     {
       "objectClass": "procedure",
       "tier": "simple",
       "count": 5,
-      "p50Hours": 0,
-      "p90Hours": 0,
-      "note": "5 simple procedures."
+      "p50Hours": 1.0,
+      "p90Hours": 2.0,
+      "note": "Plain procedures, similar to WWI simple."
     },
     {
       "objectClass": "procedure",
       "tier": "medium",
       "count": 5,
-      "p50Hours": 0,
-      "p90Hours": 0,
-      "note": "5 medium procedures: uspLogError, uspPrintError, uspUpdateEmployee* — TRY/CATCH and transactions."
+      "p50Hours": 3.0,
+      "p90Hours": 8.0,
+      "note": "TRY/CATCH error-logging procs. uspLogError and uspPrintError are predicted failures due to ERROR_* function mapping complexity."
     },
     {
       "objectClass": "function",
       "tier": "simple",
       "count": 11,
-      "p50Hours": 0,
-      "p90Hours": 0,
-      "note": "11 simple functions. AdventureWorks2025 uses SQL Server 2025 features — watch for compat-170-only syntax."
+      "p50Hours": 1.5,
+      "p90Hours": 4.0,
+      "note": "AW2025 uses SQL Server 2025 features (compat 170) — extra buffer for 2025-specific syntax that may not have direct PostgreSQL equivalents."
     },
     {
       "objectClass": "view",
       "tier": "simple",
       "count": 20,
-      "p50Hours": 0,
-      "p90Hours": 0,
-      "note": "20 simple views."
+      "p50Hours": 0.75,
+      "p90Hours": 2.0,
+      "note": "Large count but simple SELECT patterns."
     },
     {
       "objectClass": "trigger",
       "tier": "simple",
       "count": 2,
-      "p50Hours": 0,
-      "p90Hours": 0,
-      "note": "2 simple triggers."
+      "p50Hours": 1.5,
+      "p90Hours": 4.0,
+      "note": "Trigger verification compares table state after DML, not result sets — slightly harder than procedure verification."
     },
     {
       "objectClass": "trigger",
       "tier": "medium",
       "count": 8,
-      "p50Hours": 0,
-      "p90Hours": 0,
-      "note": "8 medium triggers: iWorkOrder, uWorkOrder, dVendor, iPurchaseOrderDetail, uPurchaseOrderDetail, uPurchaseOrderHeader, iduSalesOrderDetail, uSalesOrderHeader. Verification for triggers compares table state after generated DML (not result sets)."
+      "p50Hours": 4.5,
+      "p90Hours": 9.0,
+      "note": "Medium triggers with OUTPUT clauses and complex DML chains (iWorkOrder, uWorkOrder, dVendor, iPurchaseOrderDetail, uPurchaseOrderDetail, uPurchaseOrderHeader, iduSalesOrderDetail, uSalesOrderHeader)."
     }
   ],
   "expectedFailures": [
