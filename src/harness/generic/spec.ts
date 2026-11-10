@@ -13,7 +13,9 @@ export type ColType =
   | { kind: "nvarchar"; n: number }
   | { kind: "date" }
   | { kind: "datetime2" }
-  | { kind: "bit" };
+  | { kind: "bit" }
+  /** SQL Server spatial type. PostgreSQL has no built-in equivalent (PostGIS is not installed); the column is always NULL in generated data. */
+  | { kind: "geography" };
 
 export interface ColSpec {
   name: string;
@@ -41,7 +43,15 @@ export interface Mutant {
 export interface FixedCase {
   label: string;
   cutoffs?: { last: string; new: string };   // µs-normalised ISO strings
+  args?: unknown[];                          // call arguments (scalar functions)
   tables: Record<string, Row[]>;             // keyed "Schema.Table"
+}
+
+/** A miss we know about before running: the conversion cannot be equivalent, and says why. */
+export interface KnownLimitation {
+  /** Output column the PostgreSQL side cannot reproduce. */
+  column: string;
+  reason: string;
 }
 
 export interface ObjectSpec {
@@ -56,6 +66,13 @@ export interface ObjectSpec {
   orderKey: string[];
   /** Schema-qualified PostgreSQL function name, e.g. integration.get_order_updates */
   pgFunction: string;
+  /** Call arguments (scalar functions). Generated from the same key universe as the tables. */
+  params?: ColSpec[];
+  /** Override the default call. SQL Server uses ? placeholders; PostgreSQL uses $n and {fn} for the function name. */
+  ssCall?: string;
+  pgCall?: string;
+  /** Set when the object is known not to convert cleanly; a failing run is then recorded as a failed pair, not discarded. */
+  knownLimitation?: KnownLimitation;
   /** Hand-derived trap inputs that always run before the random samples. */
   fixedCases?: FixedCase[];
   /** Each mutant of the final conversion must be detected as FAILING. */
@@ -79,6 +96,7 @@ export function sqlServerType(t: ColType): string {
     case "date": return "date";
     case "datetime2": return "datetime2(7)";
     case "bit": return "bit";
+    case "geography": return "geography";
   }
 }
 
@@ -90,6 +108,7 @@ export function postgresType(t: ColType): string {
     case "date": return "date";
     case "datetime2": return "timestamp";   // microsecond precision: 100 ns ticks are not representable
     case "bit": return "boolean";
+    case "geography": return "text";   // stand-in so the table exists; no spatial semantics
   }
 }
 
@@ -125,6 +144,7 @@ export function mappingsFor(spec: ObjectSpec): Array<{ sqlServerType: string; po
         m.notes = "datetime2(7) holds 100 ns ticks; PostgreSQL timestamp holds 1 µs. Harness inputs are normalised to µs and the count of normalised values is recorded as a finding.";
       }
       if (c.type.kind === "bit") m.notes = "bit maps to boolean; the driver returns true/false on both sides.";
+      if (c.type.kind === "geography") m.notes = "NO EQUIVALENT: PostgreSQL needs PostGIS (geography), which is not in the pinned postgres:18 image. A text stand-in column holds NULL only.";
       seen.set(ss, m);
     }
   }

@@ -31,6 +31,7 @@ export interface ReceiptFile {
     samplesWithRows?: number;
     trapsCovered?: string[];
     mutantsDetected?: string[];
+    failureDetail?: string;
     engineOutputCheck?: { step3: StepStatus; seed: number; detail?: string };
     subMicrosecondNormalised?: number;
     loadTimeFindings?: string[];

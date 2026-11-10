@@ -89,6 +89,7 @@ export function buildReceipts(input: BuildInput): BuildOutput {
           samplesWithRows: evidence.samplesWithRows,
           trapsCovered: evidence.trapsCovered,
           mutantsDetected: evidence.mutantsDetected,
+          failureDetail: evidence.failureDetail,
           engineOutputCheck: evidence.engineOutputCheck,
           subMicrosecondNormalised: evidence.subMicrosecondNormalised,
           loadTimeFindings: pair.loadTimeFindings,

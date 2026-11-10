@@ -18,9 +18,10 @@ import { tableKey } from "./spec.js";
 export const T0 = BigInt(Date.UTC(2020, 0, 1)) * 10000n;   // 100 ns ticks since Unix epoch
 
 export interface Cutoffs { last: bigint; new: bigint }
-export interface Dataset { cutoffs: Cutoffs | null; tables: Record<string, Row[]> }
+export interface Dataset { cutoffs: Cutoffs | null; args: unknown[]; tables: Record<string, Row[]> }
 export interface Materialised {
   cutoffs: { last: string; new: string } | null;
+  args?: unknown[];
   tables: Record<string, Row[]>;
   subMicrosecondNormalised: number;
 }
@@ -52,10 +53,17 @@ function datetimeArb(c: Cutoffs | null): fc.Arbitrary<bigint> {
 function decimalArb(p: number, s: number): fc.Arbitrary<string> {
   const scale = 10 ** s;
   const hints = [0, 1, 5, 15, 25, 50, 99, 105, 505, 995, 999, 1005, 1500, 1995, 2500, 3500, 15000, 100000];
-  const unscaled = fc.oneof(
-    { arbitrary: fc.constantFrom(...hints, ...hints.map((n) => -n)), weight: 3 },
-    { arbitrary: fc.integer({ min: -1_000_000, max: 1_000_000 }), weight: 2 }
+  // Business decimals (prices, discounts, quantities) are mostly non-negative: bias 3:1 so
+  // arithmetic between them is meaningful, while negatives are still generated.
+  const nonNegative = fc.oneof(
+    { arbitrary: fc.constantFrom(...hints), weight: 3 },
+    { arbitrary: fc.integer({ min: 0, max: 1_000_000 }), weight: 2 }
   );
+  const negative = fc.oneof(
+    { arbitrary: fc.constantFrom(...hints.filter((n) => n > 0).map((n) => -n)), weight: 3 },
+    { arbitrary: fc.integer({ min: -1_000_000, max: -1 }), weight: 2 }
+  );
+  const unscaled = fc.oneof({ arbitrary: nonNegative, weight: 3 }, { arbitrary: negative, weight: 1 });
   const maxUnscaled = 10 ** Math.min(p, 15) - 1;
   return unscaled.map((n) => {
     const clamped = Math.max(-maxUnscaled, Math.min(maxUnscaled, n));
@@ -84,6 +92,8 @@ function baseColArb(col: ColSpec, c: Cutoffs | null, k: number): fc.Arbitrary<un
       return datetimeArb(c);
     case "bit":
       return fc.boolean();
+    case "geography":
+      return fc.constant(null);   // no PostgreSQL equivalent; only NULL can be compared
   }
 }
 
@@ -120,7 +130,8 @@ export function datasetArb(spec: ObjectSpec): fc.Arbitrary<Dataset> {
     const eff = spec.windowParams ? c : null;
     const shape: Record<string, fc.Arbitrary<Row[]>> = {};
     for (const t of spec.tables) shape[tableKey(t)] = tableArb(t, eff, k);
-    return fc.record(shape).map((tables) => ({ cutoffs: eff, tables }));
+    const argsArb = fc.tuple(...(spec.params ?? []).map((p) => baseColArb(p, eff, k)));
+    return fc.tuple(fc.record(shape), argsArb).map(([tables, args]) => ({ cutoffs: eff, args: args as unknown[], tables }));
   });
 }
 
@@ -154,5 +165,5 @@ export function materialise(spec: ObjectSpec, d: Dataset): Materialised {
     });
   }
   const cutoffs = d.cutoffs ? { last: conv(d.cutoffs.last), new: conv(d.cutoffs.new) } : null;
-  return { cutoffs, tables, subMicrosecondNormalised: lost };
+  return { cutoffs, args: d.args, tables, subMicrosecondNormalised: lost };
 }

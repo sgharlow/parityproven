@@ -168,5 +168,95 @@ export const SPECS: ObjectSpec[] = [
   },
 ];
 
+// ── views over reference data (Website.Customers / Website.Suppliers) ──────────────────────────
+const geography = { kind: "geography" } as const;
+const people: TableSpec = { schema: "Application", name: "People", columns: [pk("PersonID"), col("FullName", nv(50))] };
+const deliveryMethods: TableSpec = { schema: "Application", name: "DeliveryMethods", columns: [pk("DeliveryMethodID"), col("DeliveryMethodName", nv(50))] };
+const cities: TableSpec = { schema: "Application", name: "Cities", columns: [pk("CityID"), col("CityName", nv(50))] };
+
+const GEOGRAPHY_LIMIT = {
+  column: "DeliveryLocation",
+  reason:
+    "DeliveryLocation is a SQL Server geography column. PostgreSQL has no built-in equivalent; it needs PostGIS, which is not in the pinned postgres:18 image. The converted view therefore omits the column and its interface differs from the source.",
+};
+
+SPECS.push(
+  {
+    ...base, schema: "Website", name: "Customers", objectClass: "view", windowParams: false, orderKey: [],
+    pgFunction: "website.customers",
+    tables: [
+      { schema: "Sales", name: "Customers", columns: [
+        pk("CustomerID"), col("CustomerName", nv(100)), ref("CustomerCategoryID"), ref("PrimaryContactPersonID"),
+        ref("AlternateContactPersonID", true), ref("BuyingGroupID", true), ref("DeliveryMethodID"), ref("DeliveryCityID"),
+        col("PhoneNumber", nv(20)), col("FaxNumber", nv(20)), col("WebsiteURL", nv(256)),
+        col("DeliveryLocation", geography, true), col("DeliveryRun", nv(5), true), col("RunPosition", nv(5), true) ] },
+      { schema: "Sales", name: "CustomerCategories", columns: [pk("CustomerCategoryID"), col("CustomerCategoryName", nv(50))] },
+      { schema: "Sales", name: "BuyingGroups", columns: [pk("BuyingGroupID"), col("BuyingGroupName", nv(50))] },
+      people, deliveryMethods, cities,
+    ],
+    mutants: [],
+    knownLimitation: GEOGRAPHY_LIMIT,
+  },
+  {
+    ...base, schema: "Website", name: "Suppliers", objectClass: "view", windowParams: false, orderKey: [],
+    pgFunction: "website.suppliers",
+    tables: [
+      { schema: "Purchasing", name: "Suppliers", columns: [
+        pk("SupplierID"), col("SupplierName", nv(100)), ref("SupplierCategoryID"), ref("PrimaryContactPersonID"),
+        ref("AlternateContactPersonID"), ref("DeliveryMethodID", true), ref("DeliveryCityID"),
+        col("SupplierReference", nv(20), true), col("PhoneNumber", nv(20)), col("FaxNumber", nv(20)),
+        col("WebsiteURL", nv(256)), col("DeliveryLocation", geography, true) ] },
+      { schema: "Purchasing", name: "SupplierCategories", columns: [pk("SupplierCategoryID"), col("SupplierCategoryName", nv(50))] },
+      people, deliveryMethods, cities,
+    ],
+    mutants: [],
+    knownLimitation: GEOGRAPHY_LIMIT,
+  },
+  {
+    ...base, schema: "Website", name: "CalculateCustomerPrice", objectClass: "function", windowParams: false, orderKey: [],
+    pgFunction: "website.calculate_customer_price",
+    params: [ref("CustomerID"), ref("StockItemID"), col("PricingDate", date)],
+    ssCall: "SELECT Website.CalculateCustomerPrice(?, ?, ?) AS result",
+    pgCall: "SELECT {fn}($1::integer, $2::integer, $3::date) AS result",
+    tables: [
+      { schema: "Sales", name: "Customers", columns: [pk("CustomerID"), ref("BuyingGroupID", true), ref("CustomerCategoryID")] },
+      { schema: "Warehouse", name: "StockItems", columns: [pk("StockItemID"), col("UnitPrice", dec(18, 2))] },
+      { schema: "Sales", name: "SpecialDeals", columns: [
+        pk("SpecialDealID"), ref("StockItemID", true), ref("CustomerID", true), ref("BuyingGroupID", true),
+        ref("CustomerCategoryID", true), ref("StockGroupID", true), col("StartDate", date), col("EndDate", date),
+        col("DiscountAmount", dec(18, 2), true), col("DiscountPercentage", dec(18, 3), true), col("UnitPrice", dec(18, 2), true) ] },
+      { schema: "Warehouse", name: "StockItemStockGroups", columns: [pk("StockItemStockGroupID"), ref("StockItemID"), ref("StockGroupID")] },
+    ],
+    fixedCases: [{
+      label: "percentage discount price: 19.99 * 12.5 / 100 = 2.49875 rounds to 2.50",
+      args: [1, 1, "2020-01-02"],
+      tables: {
+        "Sales.Customers": [{ CustomerID: 1, BuyingGroupID: null, CustomerCategoryID: 1 }],
+        "Warehouse.StockItems": [{ StockItemID: 1, UnitPrice: "19.99" }],
+        "Sales.SpecialDeals": [{ SpecialDealID: 1, StockItemID: 1, CustomerID: null, BuyingGroupID: null, CustomerCategoryID: null, StockGroupID: null, StartDate: "2020-01-01", EndDate: "2020-01-03", DiscountAmount: null, DiscountPercentage: "12.500", UnitPrice: null }],
+        "Warehouse.StockItemStockGroups": [],
+      },
+    }, {
+      label: "two competing discount amounts: the highest (25.00) must win, giving 75.00",
+      args: [1, 1, "2020-01-02"],
+      tables: {
+        "Sales.Customers": [{ CustomerID: 1, BuyingGroupID: null, CustomerCategoryID: 1 }],
+        "Warehouse.StockItems": [{ StockItemID: 1, UnitPrice: "100.00" }],
+        "Sales.SpecialDeals": [
+          { SpecialDealID: 1, StockItemID: 1, CustomerID: null, BuyingGroupID: null, CustomerCategoryID: null, StockGroupID: null, StartDate: "2020-01-01", EndDate: "2020-01-03", DiscountAmount: "10.00", DiscountPercentage: null, UnitPrice: null },
+          { SpecialDealID: 2, StockItemID: null, CustomerID: 1, BuyingGroupID: null, CustomerCategoryID: null, StockGroupID: null, StartDate: "2020-01-01", EndDate: "2020-01-03", DiscountAmount: "25.00", DiscountPercentage: null, UnitPrice: null },
+        ],
+        "Warehouse.StockItemStockGroups": [],
+      },
+    }],
+    mutants: [
+      { name: "deal end date exclusive", from: 'pricing_date BETWEEN sd."StartDate" AND sd."EndDate"', to: 'pricing_date >= sd."StartDate" AND pricing_date < sd."EndDate"' },
+      { name: "lowest discount amount instead of highest", from: 'MAX(sd."DiscountAmount")', to: 'MIN(sd."DiscountAmount")' },
+      { name: "percentage price truncates instead of rounding", from: 'round(unit_price * highest_discount_percentage / 100.0, 2)', to: 'trunc(unit_price * highest_discount_percentage / 100.0, 2)' },
+    ],
+    notes: ["WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted.", "Scalar function: coverage counts samples where the result is not NULL."],
+  }
+);
+
 export const specByName = (qualified: string): ObjectSpec | undefined =>
   SPECS.find((s) => `${s.schema}.${s.name}` === qualified);

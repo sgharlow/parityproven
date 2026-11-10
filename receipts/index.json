@@ -1,5 +1,5 @@
 {
-  "builtAt": "2026-11-10T04:30:50.844Z",
+  "builtAt": "2026-11-10T05:04:57.770Z",
   "receipts": [
     {
       "database": "WideWorldImporters",
@@ -54,12 +54,39 @@
       "tier": "simple",
       "status": "pending",
       "path": "WideWorldImporters/Integration.GetTransactionUpdates.json"
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Website",
+      "objectName": "CalculateCustomerPrice",
+      "objectClass": "function",
+      "tier": "simple",
+      "status": "pending",
+      "path": "WideWorldImporters/Website.CalculateCustomerPrice.json"
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Website",
+      "objectName": "Customers",
+      "objectClass": "view",
+      "tier": "simple",
+      "status": "failed",
+      "path": "WideWorldImporters/Website.Customers.json"
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Website",
+      "objectName": "Suppliers",
+      "objectClass": "view",
+      "tier": "simple",
+      "status": "failed",
+      "path": "WideWorldImporters/Website.Suppliers.json"
     }
   ],
   "summary": {
-    "total": 6,
+    "total": 9,
     "verified": 0,
-    "pending": 6,
-    "failed": 0
+    "pending": 7,
+    "failed": 2
   }
 }

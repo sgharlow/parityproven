@@ -46,7 +46,7 @@
     "step4": "not-run",
     "step5": "not-run",
     "step6": "not-run",
-    "rowsCompared": 183,
+    "rowsCompared": 175,
     "trapsCovered": [
       "NULL in every nullable column",
       "numeric rounding and scale (decimal edge values)",
@@ -54,16 +54,16 @@
       "ORDER BY key (ties compared as multisets)"
     ],
     "pbtSeeds": [
-      453268967
+      447024626
     ],
     "engineOutputCheck": {
       "step3": "fail",
-      "seed": 453268967,
+      "seed": 447024626,
       "detail": "fixed case \"fractional Quantity (decimal -> int cast)\": value differs in group 0 (key \"n:1\"), column \"Quantity\": SQL Server n:2 vs PostgreSQL n:3"
     },
     "samples": 200,
-    "samplesWithRows": 116,
-    "subMicrosecondNormalised": 996,
+    "samplesWithRows": 123,
+    "subMicrosecondNormalised": 964,
     "mutantsDetected": [
       "Quantity rounds instead of truncating",
       "upper cutoff exclusive"

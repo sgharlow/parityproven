@@ -40,17 +40,17 @@
     "step4": "not-run",
     "step5": "not-run",
     "step6": "not-run",
-    "rowsCompared": 342,
+    "rowsCompared": 366,
     "trapsCovered": [
       "numeric rounding and scale (decimal edge values)",
       "empty string and trailing spaces",
       "ORDER BY key (ties compared as multisets)"
     ],
     "pbtSeeds": [
-      228545464
+      1927431672
     ],
     "samples": 200,
-    "samplesWithRows": 183,
+    "samplesWithRows": 193,
     "subMicrosecondNormalised": 0,
     "mutantsDetected": [
       "descending order",

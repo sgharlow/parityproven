@@ -105,8 +105,10 @@ async function initReceipt() {
 
   document.title = `${obj} — ParityProven`;
 
+  const failureNote = receipt.evidence.failureDetail
+    ? `<br><strong>Why it failed:</strong> ${esc(receipt.evidence.failureDetail)}` : '';
   const notVerifiedBanner = receipt.status !== 'verified'
-    ? `<div class="banner-warning">⚠️ This object has not passed all 6 verification steps. Status: <strong>${receipt.status}</strong>.</div>`
+    ? `<div class="banner-warning">⚠️ This object has not passed all 6 verification steps. Status: <strong>${receipt.status}</strong>.${failureNote}</div>`
     : '';
 
   const stepsHtml = receipt.verificationSteps.map(s => `

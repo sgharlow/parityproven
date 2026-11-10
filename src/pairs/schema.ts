@@ -64,6 +64,8 @@ export interface PairRecord {
     subMicrosecondNormalised?: number;
     /** Planted defects (mutants of the final conversion) that the property reported as failing. */
     mutantsDetected?: string[];
+    /** Why the object did not pass, in plain words, when status is "failed". */
+    failureDetail?: string;
     harnessVersion: string;
     reviewer?: string;
     reviewDate?: string;

@@ -19,7 +19,7 @@ import { MssqlClient } from "../harness/clients/mssql-client.js";
 import { PgClient } from "../harness/clients/pg-client.js";
 import { ensureWwiRestored } from "../harness/restore.js";
 import {
-  deployPgFunction, fetchSourceDefinition, prepareSqlServer, preparePostgres, readSql, runProperty,
+  deployPgFunction, dropPgObject, fetchSourceDefinition, prepareSqlServer, preparePostgres, readSql, runProperty,
   type Connections, type RunOutcome,
 } from "../harness/generic/run.js";
 import { mappingsFor, type ObjectSpec } from "../harness/generic/spec.js";
@@ -57,7 +57,9 @@ function traps(spec: ObjectSpec): string[] {
 
 function mutantSql(spec: ObjectSpec, finalSql: string, from: string, to: string): string {
   if (!finalSql.includes(from)) throw new Error(`mutant text not found in ${spec.name}: ${JSON.stringify(from)}`);
-  return finalSql.replace(from, to).replace(`${spec.pgFunction}(`, `${spec.pgFunction}_mutant(`);
+  const esc = spec.pgFunction.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  // rename the object (first whole-name occurrence) so the mutant never replaces the real conversion
+  return finalSql.replace(from, to).replace(new RegExp(`${esc}(?![\\w])`), `${spec.pgFunction}_mutant`);
 }
 
 async function convertOne(conn: Connections, spec: ObjectSpec, seed: number, runs: number): Promise<boolean> {
@@ -96,6 +98,22 @@ async function convertOne(conn: Connections, spec: ObjectSpec, seed: number, run
 
     const f: RunOutcome = await runProperty(conn, scratch, spec, { fn: spec.pgFunction, seed, numRuns: runs });
     console.log(`final: ${f.passed ? "PASS" : "FAIL"} (${f.rowsCompared} rows compared; ${f.samplesWithRows}/${f.samples} samples returned rows; ${f.subMicrosecondNormalised} sub-µs values normalised)`);
+    if (!f.passed && spec.knownLimitation && !f.failure?.startsWith("vacuous")) {
+      // A miss we expected: record it as a failed pair so it is shown, not hidden.
+      const lim = spec.knownLimitation;
+      const rest = await runProperty(conn, scratch, spec, { fn: spec.pgFunction, seed, numRuns: runs, excludeColumns: [lim.column] });
+      const restLine = rest.passed
+        ? `All other columns match the source on ${rest.samplesWithRows}/${rest.samples} generated samples (${rest.rowsCompared} rows); the only difference is "${lim.column}".`
+        : `Other columns also differ: ${rest.failure?.split("\n")[0]}`;
+      console.log(`known limitation confirmed: ${f.failure?.split("\n")[0]}`);
+      console.log(restLine);
+      writePair({
+        spec, label, definition, draftSql: null, finalSql, f, detected: [], draftCheck,
+        status: "failed", step3: "fail", seed,
+        failureDetail: `${lim.reason} ${restLine}`,
+      });
+      return true;
+    }
     if (!f.passed) {
       console.error(f.failure);
       console.error(`reproduce: npm run convert -- --object ${label} --seed ${seed}`);
@@ -111,66 +129,86 @@ async function convertOne(conn: Connections, spec: ObjectSpec, seed: number, run
       console.log(`mutant "${m.name}": ${caught ? "detected" : "NOT DETECTED"}`);
       if (caught) detected.push(m.name);
     }
-    await conn.pg.query(`DROP FUNCTION IF EXISTS ${spec.pgFunction}_mutant(timestamp, timestamp)`, []);
-    await conn.pg.query(`DROP FUNCTION IF EXISTS ${spec.pgFunction}_mutant()`, []);
+    await dropPgObject(conn, spec, `${spec.pgFunction}_mutant`);
     if (detected.length !== spec.mutants.length) {
       console.error("harness is not trustworthy for this object: a planted defect passed. Not recording a pass.");
       return false;
     }
 
     // 5. pair record
-    const pairPath = resolve(ROOT, "pairs", spec.database, `${label}.json`);
-    const previous: PairRecord | null = existsSync(pairPath) ? (JSON.parse(readFileSync(pairPath, "utf-8")) as PairRecord) : null;
-    const engineOutput = draftSql ?? finalSql;
-    const record: PairRecord = {
-      origin: {
-        repo: "https://github.com/microsoft/sql-server-samples",
-        release: "wide-world-importers-v1.0",
-        license: "MIT",
-        assetUrl: "https://github.com/microsoft/sql-server-samples/releases/download/wide-world-importers-v1.0/WideWorldImporters-Full.bak",
-        sha256: "e842bad6ce02f74f166947e559dab1b476edd7eaae3da2ab9e3f522f1dd87124",
-      },
-      conversionType: "tsql-to-plpgsql",
-      objectClass: spec.objectClass,
-      tier: previous?.tier ?? tierFromInventory(spec),
-      code: {
-        source: definition,
-        engineOutput,
-        final: finalSql,
-        diff: lineDiff(engineOutput, finalSql),
-        engine: "kiro",
-        notes: [
-          ...(spec.notes ?? []),
-          "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign keys and no pre-existing rows.",
-        ],
-      },
-      columnMappings: mappingsFor(spec),
-      evidence: {
-        step1: "pass", step2: "not-run", step3: "pass", step4: "not-run", step5: "not-run", step6: "not-run",
-        rowsCompared: f.rowsCompared,
-        trapsCovered: traps(spec),
-        pbtSeeds: [seed],
-        engineOutputCheck: draftCheck,
-        samples: f.samples,
-        samplesWithRows: f.samplesWithRows,
-        subMicrosecondNormalised: f.subMicrosecondNormalised,
-        mutantsDetected: detected,
-        harnessVersion: HARNESS_VERSION,
-      },
-      effort: {
-        humanMinutes: previous?.effort.humanMinutes ?? 0,
-        engineName: "Kiro",
-        engineVersion: "model selected dynamically by Kiro; exact model/version not exposed in the session",
-      },
-      status: "pending",
-    };
-    mkdirSync(dirname(pairPath), { recursive: true });
-    writeFileSync(pairPath, JSON.stringify(record, null, 2) + "\n", "utf-8");
-    console.log(`pair record written: pairs/${spec.database}/${label}.json (step1 pass, step3 pass, status pending)`);
+    writePair({ spec, label, definition, draftSql, finalSql, f, detected, draftCheck, status: "pending", step3: "pass", seed });
     return true;
   } finally {
     await scratch.close();
   }
+}
+
+interface PairInput {
+  spec: ObjectSpec;
+  label: string;
+  definition: string;
+  draftSql: string | null;
+  finalSql: string;
+  f: RunOutcome;
+  detected: string[];
+  draftCheck: PairRecord["evidence"]["engineOutputCheck"];
+  status: PairRecord["status"];
+  step3: "pass" | "fail";
+  seed: number;
+  failureDetail?: string;
+}
+
+function writePair(p: PairInput): void {
+  const { spec, label, f } = p;
+  const pairPath = resolve(ROOT, "pairs", spec.database, `${label}.json`);
+  const previous: PairRecord | null = existsSync(pairPath) ? (JSON.parse(readFileSync(pairPath, "utf-8")) as PairRecord) : null;
+  const engineOutput = p.draftSql ?? p.finalSql;
+  const record: PairRecord = {
+    origin: {
+      repo: "https://github.com/microsoft/sql-server-samples",
+      release: "wide-world-importers-v1.0",
+      license: "MIT",
+      assetUrl: "https://github.com/microsoft/sql-server-samples/releases/download/wide-world-importers-v1.0/WideWorldImporters-Full.bak",
+      sha256: "e842bad6ce02f74f166947e559dab1b476edd7eaae3da2ab9e3f522f1dd87124",
+    },
+    conversionType: "tsql-to-plpgsql",
+    objectClass: spec.objectClass,
+    tier: previous?.tier ?? tierFromInventory(spec),
+    code: {
+      source: p.definition,
+      engineOutput,
+      final: p.finalSql,
+      diff: lineDiff(engineOutput, p.finalSql),
+      engine: "kiro",
+      notes: [
+        ...(spec.notes ?? []),
+        "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign keys and no pre-existing rows.",
+      ],
+    },
+    columnMappings: mappingsFor(spec),
+    evidence: {
+      step1: "pass", step2: "not-run", step3: p.step3, step4: "not-run", step5: "not-run", step6: "not-run",
+      rowsCompared: f.rowsCompared,
+      trapsCovered: traps(spec),
+      pbtSeeds: [p.seed],
+      engineOutputCheck: p.draftCheck,
+      samples: f.samples,
+      samplesWithRows: f.samplesWithRows,
+      subMicrosecondNormalised: f.subMicrosecondNormalised,
+      mutantsDetected: p.detected,
+      failureDetail: p.failureDetail,
+      harnessVersion: HARNESS_VERSION,
+    },
+    effort: {
+      humanMinutes: previous?.effort.humanMinutes ?? 0,
+      engineName: "Kiro",
+      engineVersion: "model selected dynamically by Kiro; exact model/version not exposed in the session",
+    },
+    status: p.status,
+  };
+  mkdirSync(dirname(pairPath), { recursive: true });
+  writeFileSync(pairPath, JSON.stringify(record, null, 2) + "\n", "utf-8");
+  console.log(`pair record written: pairs/${spec.database}/${label}.json (step1 pass, step3 ${p.step3}, status ${p.status})`);
 }
 
 function tierFromInventory(spec: ObjectSpec): PairRecord["tier"] {

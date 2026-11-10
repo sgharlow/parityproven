@@ -59,7 +59,7 @@
     "step4": "not-run",
     "step5": "not-run",
     "step6": "not-run",
-    "rowsCompared": 376,
+    "rowsCompared": 346,
     "trapsCovered": [
       "NULL in every nullable column",
       "numeric rounding and scale (decimal edge values)",
@@ -67,11 +67,11 @@
       "empty string and trailing spaces"
     ],
     "pbtSeeds": [
-      786524102
+      1219930027
     ],
     "samples": 200,
-    "samplesWithRows": 148,
-    "subMicrosecondNormalised": 987,
+    "samplesWithRows": 147,
+    "subMicrosecondNormalised": 1028,
     "mutantsDetected": [
       "customer id taken from transaction only",
       "LEFT OUTER JOIN to invoices becomes INNER JOIN"

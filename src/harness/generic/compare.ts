@@ -59,7 +59,16 @@ function orderViolation(rs: RowSet, keyIdx: number[], label: string): string | n
   return null;
 }
 
-export function compareResults(ss: RowSet, pg: RowSet, orderKey: string[]): string | null {
+/** Drop named columns from a result set (used only for the diagnostic re-run of a known limitation). */
+function withoutColumns(rs: RowSet, names: string[]): RowSet {
+  if (!names.length) return rs;
+  const keep = rs.columns.map((c, i) => (names.includes(c.name) ? -1 : i)).filter((i) => i >= 0);
+  return { columns: keep.map((i) => rs.columns[i]), rows: rs.rows.map((r) => keep.map((i) => r[i])) };
+}
+
+export function compareResults(ssIn: RowSet, pgIn: RowSet, orderKey: string[], excludeColumns: string[] = []): string | null {
+  const ss = withoutColumns(ssIn, excludeColumns);
+  const pg = withoutColumns(pgIn, excludeColumns);
   // column names, exact
   const ssNames = ss.columns.map((c) => c.name);
   const pgNames = pg.columns.map((c) => c.name);

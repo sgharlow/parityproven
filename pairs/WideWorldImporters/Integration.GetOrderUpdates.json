@@ -66,7 +66,7 @@
     "step4": "not-run",
     "step5": "not-run",
     "step6": "not-run",
-    "rowsCompared": 125,
+    "rowsCompared": 103,
     "trapsCovered": [
       "NULL in every nullable column",
       "numeric rounding and scale (decimal edge values)",
@@ -75,11 +75,11 @@
       "ORDER BY key (ties compared as multisets)"
     ],
     "pbtSeeds": [
-      933137090
+      1809753295
     ],
     "samples": 200,
-    "samplesWithRows": 80,
-    "subMicrosecondNormalised": 1232,
+    "samplesWithRows": 74,
+    "subMicrosecondNormalised": 1175,
     "mutantsDetected": [
       "tax amount truncates instead of rounding at 2dp",
       "lower cutoff inclusive"

@@ -74,9 +74,26 @@ export async function preparePostgres(conn: Connections, spec: ObjectSpec): Prom
   }
 }
 
-export async function deployPgFunction(conn: Connections, spec: ObjectSpec, sqlText: string): Promise<void> {
-  const [schema] = spec.pgFunction.split(".");
+/** Drop a converted object (a view, or every overload of a function) so a changed signature can be redeployed. */
+export async function dropPgObject(conn: Connections, spec: ObjectSpec, qualified: string): Promise<void> {
+  const [schema, name] = qualified.split(".");
+  if (spec.objectClass === "view") {
+    await conn.pg.query(`DROP VIEW IF EXISTS ${qualified} CASCADE`, []);
+    return;
+  }
+  await conn.pg.query(
+    `DO $do$ DECLARE r record; BEGIN
+       FOR r IN SELECT p.oid::regprocedure AS sig FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+                WHERE n.nspname = '${schema}' AND p.proname = '${name}'
+       LOOP EXECUTE 'DROP FUNCTION ' || r.sig; END LOOP; END $do$`,
+    []
+  );
+}
+
+export async function deployPgFunction(conn: Connections, spec: ObjectSpec, sqlText: string, qualified: string = spec.pgFunction): Promise<void> {
+  const [schema] = qualified.split(".");
   await conn.pg.query(`CREATE SCHEMA IF NOT EXISTS ${schema}`, []);
+  await dropPgObject(conn, spec, qualified);
   await conn.pg.query(sqlText, []);
 }
 
@@ -84,13 +101,22 @@ export function readSql(path: string): string {
   return readFileSync(path, "utf-8");
 }
 
-const ssCall = (spec: ObjectSpec): string =>
-  spec.windowParams
+const ssCall = (spec: ObjectSpec): string => {
+  if (spec.ssCall) return spec.ssCall;
+  if (spec.objectClass === "view") return `SELECT * FROM ${spec.schema}.${spec.name}`;
+  return spec.windowParams
     ? `EXEC ${spec.schema}.${spec.name} @LastCutoff = ?, @NewCutoff = ?`
     : `EXEC ${spec.schema}.${spec.name}`;
+};
 
-const pgCall = (spec: ObjectSpec, fn: string): string =>
-  spec.windowParams ? `SELECT * FROM ${fn}($1::timestamp, $2::timestamp)` : `SELECT * FROM ${fn}()`;
+const pgCall = (spec: ObjectSpec, fn: string): string => {
+  if (spec.pgCall) return spec.pgCall.replace("{fn}", fn);
+  if (spec.objectClass === "view") return `SELECT * FROM ${fn}`;
+  return spec.windowParams ? `SELECT * FROM ${fn}($1::timestamp, $2::timestamp)` : `SELECT * FROM ${fn}()`;
+};
+
+/** A sample is informative when the object returned at least one non-NULL value. */
+const informative = (rs: RowSet): boolean => rs.rows.some((r) => r.some((v) => v !== null && v !== undefined));
 
 async function clearTables(scratch: MssqlClient, pg: PgClient, tables: TableSpec[]): Promise<void> {
   for (const t of tables) {
@@ -112,7 +138,7 @@ async function loadAndRun(
       await scratch.loadRows(`[${t.schema}].[${t.name}]`, rows);
       await conn.pg.loadRows(pgTableName(t), rows);
     }
-    const params = data.cutoffs ? [data.cutoffs.last, data.cutoffs.new] : [];
+    const params = data.args && data.args.length ? data.args : data.cutoffs ? [data.cutoffs.last, data.cutoffs.new] : [];
     const ss = await scratch.query(ssCall(spec), params);
     const pg = await conn.pg.query(pgCall(spec, fn), params);
     return { ss, pg };
@@ -125,7 +151,7 @@ export async function runProperty(
   conn: Connections,
   scratch: MssqlClient,
   spec: ObjectSpec,
-  opts: { fn: string; seed: number; numRuns: number }
+  opts: { fn: string; seed: number; numRuns: number; excludeColumns?: string[] }
 ): Promise<RunOutcome> {
   const outcome: RunOutcome = {
     passed: true, seed: opts.seed, numRuns: opts.numRuns, subMicrosecondNormalised: 0, rowsCompared: 0,
@@ -138,12 +164,12 @@ export async function runProperty(
     outcome.rowsCompared += ss.rows.length;
     if (random) {
       outcome.samples++;
-      if (ss.rows.length > 0) outcome.samplesWithRows++;
+      if (informative(ss)) outcome.samplesWithRows++;
     }
     if (!outcome.outputColumns) {
       outcome.outputColumns = ss.columns.map((c, i) => ({ sqlServer: c.declaredType, postgres: pg.columns[i]?.declaredType ?? "?" }));
     }
-    const diff = compareResults(ss, pg, spec.orderKey);
+    const diff = compareResults(ss, pg, spec.orderKey, opts.excludeColumns ?? []);
     if (diff) throw new Error(`${label}: ${diff}\n  input: ${JSON.stringify(data, (_k, v) => (typeof v === "bigint" ? v.toString() : v))}`);
   };
 
@@ -151,7 +177,7 @@ export async function runProperty(
   for (const fc_ of spec.fixedCases ?? []) {
     try {
       await check(
-        { cutoffs: fc_.cutoffs ?? null, tables: fc_.tables, subMicrosecondNormalised: 0 },
+        { cutoffs: fc_.cutoffs ?? null, args: fc_.args, tables: fc_.tables, subMicrosecondNormalised: 0 },
         `fixed case "${fc_.label}"`,
         false
       );

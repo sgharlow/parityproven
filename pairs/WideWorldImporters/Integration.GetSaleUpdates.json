@@ -81,11 +81,11 @@
       "ORDER BY key (ties compared as multisets)"
     ],
     "pbtSeeds": [
-      1080883660
+      1875593674
     ],
     "samples": 200,
-    "samplesWithRows": 79,
-    "subMicrosecondNormalised": 1259,
+    "samplesWithRows": 77,
+    "subMicrosecondNormalised": 1283,
     "mutantsDetected": [
       "chiller test inverted",
       "bill-to join dropped to customer"

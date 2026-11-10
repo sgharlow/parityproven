@@ -69,11 +69,11 @@
   ],
   "evidence": {
     "pbtSeeds": [
-      453268967
+      447024626
     ],
-    "rowsCompared": 183,
+    "rowsCompared": 175,
     "samples": 200,
-    "samplesWithRows": 116,
+    "samplesWithRows": 123,
     "trapsCovered": [
       "NULL in every nullable column",
       "numeric rounding and scale (decimal edge values)",
@@ -86,10 +86,10 @@
     ],
     "engineOutputCheck": {
       "step3": "fail",
-      "seed": 453268967,
+      "seed": 447024626,
       "detail": "fixed case \"fractional Quantity (decimal -> int cast)\": value differs in group 0 (key \"n:1\"), column \"Quantity\": SQL Server n:2 vs PostgreSQL n:3"
     },
-    "subMicrosecondNormalised": 996,
+    "subMicrosecondNormalised": 964,
     "harnessVersion": "harness-generic-0.2.0"
   },
   "effort": {
@@ -101,5 +101,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-10T04:30:50.842Z"
+  "builtAt": "2026-11-10T05:04:57.768Z"
 }

@@ -50,18 +50,18 @@
     "step4": "not-run",
     "step5": "not-run",
     "step6": "not-run",
-    "rowsCompared": 119,
+    "rowsCompared": 132,
     "trapsCovered": [
       "datetime boundaries at the cutoffs (inputs normalised to µs)",
       "empty string and trailing spaces",
       "ORDER BY key (ties compared as multisets)"
     ],
     "pbtSeeds": [
-      300207226
+      1627717152
     ],
     "samples": 200,
-    "samplesWithRows": 80,
-    "subMicrosecondNormalised": 929,
+    "samplesWithRows": 87,
+    "subMicrosecondNormalised": 953,
     "mutantsDetected": [
       "ordered quantity uses outers only",
       "upper cutoff exclusive"

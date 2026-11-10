@@ -95,11 +95,11 @@
   ],
   "evidence": {
     "pbtSeeds": [
-      1080883660
+      1875593674
     ],
     "rowsCompared": 122,
     "samples": 200,
-    "samplesWithRows": 79,
+    "samplesWithRows": 77,
     "trapsCovered": [
       "NULL in every nullable column",
       "numeric rounding and scale (decimal edge values)",
@@ -111,7 +111,7 @@
       "chiller test inverted",
       "bill-to join dropped to customer"
     ],
-    "subMicrosecondNormalised": 1259,
+    "subMicrosecondNormalised": 1283,
     "harnessVersion": "harness-generic-0.2.0"
   },
   "effort": {
@@ -123,5 +123,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-10T04:30:50.844Z"
+  "builtAt": "2026-11-10T05:04:57.769Z"
 }
