@@ -55,6 +55,15 @@ export interface PairRecord {
     trapsCovered?: string[];
     runtimeRatio?: number;
     pbtSeeds?: number[];
+    /** Result of running the property against the engine's first draft, before any fix. */
+    engineOutputCheck?: { step3: StepStatus; seed: number; detail?: string };
+    /** Random samples executed and how many returned at least one row (coverage of the property). */
+    samples?: number;
+    samplesWithRows?: number;
+    /** Number of generated datetime2 values that lost sub-microsecond ticks when normalised for PostgreSQL. */
+    subMicrosecondNormalised?: number;
+    /** Planted defects (mutants of the final conversion) that the property reported as failing. */
+    mutantsDetected?: string[];
     harnessVersion: string;
     reviewer?: string;
     reviewDate?: string;

@@ -1,0 +1,113 @@
+{
+  "database": "WideWorldImporters",
+  "schemaName": "Integration",
+  "objectName": "GetTransactionUpdates",
+  "objectClass": "procedure",
+  "tier": "simple",
+  "status": "pending",
+  "code": {
+    "source": "\r\nCREATE PROCEDURE Integration.GetTransactionUpdates\r\n@LastCutoff datetime2(7),\r\n@NewCutoff datetime2(7)\r\nWITH EXECUTE AS OWNER\r\nAS\r\nBEGIN\r\n    SET NOCOUNT ON;\r\n    SET XACT_ABORT ON;\r\n\r\n    SELECT CAST(ct.TransactionDate AS date) AS [Date Key],\r\n           ct.CustomerTransactionID AS [WWI Customer Transaction ID],\r\n           CAST(NULL AS int) AS [WWI Supplier Transaction ID],\r\n           ct.InvoiceID AS [WWI Invoice ID],\r\n           CAST(NULL AS int) AS [WWI Purchase Order ID],\r\n           CAST(NULL AS nvarchar(20)) AS [Supplier Invoice Number],\r\n           ct.AmountExcludingTax AS [Total Excluding Tax],\r\n           ct.TaxAmount AS [Tax Amount],\r\n           ct.TransactionAmount AS [Total Including Tax],\r\n           ct.OutstandingBalance AS [Outstanding Balance],\r\n           ct.IsFinalized AS [Is Finalized],\r\n           COALESCE(i.CustomerID, ct.CustomerID) AS [WWI Customer ID],\r\n           ct.CustomerID AS [WWI Bill To Customer ID],\r\n           CAST(NULL AS int) AS [WWI Supplier ID],\r\n           ct.TransactionTypeID AS [WWI Transaction Type ID],\r\n           ct.PaymentMethodID AS [WWI Payment Method ID],\r\n           ct.LastEditedWhen AS [Last Modified When]\r\n    FROM Sales.CustomerTransactions AS ct\r\n    LEFT OUTER JOIN Sales.Invoices AS i\r\n    ON ct.InvoiceID = i.InvoiceID\r\n    WHERE ct.LastEditedWhen > @LastCutoff\r\n    AND ct.LastEditedWhen <= @NewCutoff\r\n\r\n    UNION ALL\r\n\r\n    SELECT CAST(st.TransactionDate AS date) AS [Date Key],\r\n           CAST(NULL AS int) AS [WWI Customer Transaction ID],\r\n           st.SupplierTransactionID AS [WWI Supplier Transaction ID],\r\n           CAST(NULL AS int) AS [WWI Invoice ID],\r\n           st.PurchaseOrderID AS [WWI Purchase Order ID],\r\n           st.SupplierInvoiceNumber AS [Supplier Invoice Number],\r\n           st.AmountExcludingTax AS [Total Excluding Tax],\r\n           st.TaxAmount AS [Tax Amount],\r\n           st.TransactionAmount AS [Total Including Tax],\r\n           st.OutstandingBalance AS [Outstanding Balance],\r\n           st.IsFinalized AS [Is Finalized],\r\n           CAST(NULL AS int) AS [WWI Customer ID],\r\n           CAST(NULL AS int) AS [WWI Bill To Customer ID],\r\n           st.SupplierID AS [WWI Supplier ID],\r\n           st.TransactionTypeID AS [WWI Transaction Type ID],\r\n           st.PaymentMethodID AS [WWI Payment Method ID],\r\n           st.LastEditedWhen AS [Last Modified When]\r\n    FROM Purchasing.SupplierTransactions AS st\r\n    WHERE st.LastEditedWhen > @LastCutoff\r\n    AND st.LastEditedWhen <= @NewCutoff;\r\n\r\n    RETURN 0;\r\nEND;\r\n",
+    "engineOutput": "-- PL/pgSQL conversion of Integration.GetTransactionUpdates (WideWorldImporters).\n-- Engine: Kiro first draft (see pair record).\n-- WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted.\n-- The source has no ORDER BY, so none is added.\n\nCREATE OR REPLACE FUNCTION integration.get_transaction_updates(\n    last_cutoff timestamp,\n    new_cutoff  timestamp\n)\nRETURNS TABLE (\n    \"Date Key\"                       date,\n    \"WWI Customer Transaction ID\"    integer,\n    \"WWI Supplier Transaction ID\"    integer,\n    \"WWI Invoice ID\"                 integer,\n    \"WWI Purchase Order ID\"          integer,\n    \"Supplier Invoice Number\"        varchar(20),\n    \"Total Excluding Tax\"            numeric,\n    \"Tax Amount\"                     numeric,\n    \"Total Including Tax\"            numeric,\n    \"Outstanding Balance\"            numeric,\n    \"Is Finalized\"                   boolean,\n    \"WWI Customer ID\"                integer,\n    \"WWI Bill To Customer ID\"        integer,\n    \"WWI Supplier ID\"                integer,\n    \"WWI Transaction Type ID\"        integer,\n    \"WWI Payment Method ID\"          integer,\n    \"Last Modified When\"             timestamp\n)\nLANGUAGE sql\nSTABLE\nAS $$\n    SELECT\n        ct.\"TransactionDate\"::date,\n        ct.\"CustomerTransactionID\",\n        NULL::integer,\n        ct.\"InvoiceID\",\n        NULL::integer,\n        NULL::varchar(20),\n        ct.\"AmountExcludingTax\",\n        ct.\"TaxAmount\",\n        ct.\"TransactionAmount\",\n        ct.\"OutstandingBalance\",\n        ct.\"IsFinalized\",\n        COALESCE(i.\"CustomerID\", ct.\"CustomerID\"),\n        ct.\"CustomerID\",\n        NULL::integer,\n        ct.\"TransactionTypeID\",\n        ct.\"PaymentMethodID\",\n        ct.\"LastEditedWhen\"\n    FROM sales.customer_transactions AS ct\n    LEFT OUTER JOIN sales.invoices AS i ON ct.\"InvoiceID\" = i.\"InvoiceID\"\n    WHERE ct.\"LastEditedWhen\" > last_cutoff\n      AND ct.\"LastEditedWhen\" <= new_cutoff\n    UNION ALL\n    SELECT\n        st.\"TransactionDate\"::date,\n        NULL::integer,\n        st.\"SupplierTransactionID\",\n        NULL::integer,\n        st.\"PurchaseOrderID\",\n        st.\"SupplierInvoiceNumber\",\n        st.\"AmountExcludingTax\",\n        st.\"TaxAmount\",\n        st.\"TransactionAmount\",\n        st.\"OutstandingBalance\",\n        st.\"IsFinalized\",\n        NULL::integer,\n        NULL::integer,\n        st.\"SupplierID\",\n        st.\"TransactionTypeID\",\n        st.\"PaymentMethodID\",\n        st.\"LastEditedWhen\"\n    FROM purchasing.supplier_transactions AS st\n    WHERE st.\"LastEditedWhen\" > last_cutoff\n      AND st.\"LastEditedWhen\" <= new_cutoff\n$$;\n",
+    "final": "-- PL/pgSQL conversion of Integration.GetTransactionUpdates (WideWorldImporters).\n-- Engine: Kiro first draft (see pair record).\n-- WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted.\n-- The source has no ORDER BY, so none is added.\n\nCREATE OR REPLACE FUNCTION integration.get_transaction_updates(\n    last_cutoff timestamp,\n    new_cutoff  timestamp\n)\nRETURNS TABLE (\n    \"Date Key\"                       date,\n    \"WWI Customer Transaction ID\"    integer,\n    \"WWI Supplier Transaction ID\"    integer,\n    \"WWI Invoice ID\"                 integer,\n    \"WWI Purchase Order ID\"          integer,\n    \"Supplier Invoice Number\"        varchar(20),\n    \"Total Excluding Tax\"            numeric,\n    \"Tax Amount\"                     numeric,\n    \"Total Including Tax\"            numeric,\n    \"Outstanding Balance\"            numeric,\n    \"Is Finalized\"                   boolean,\n    \"WWI Customer ID\"                integer,\n    \"WWI Bill To Customer ID\"        integer,\n    \"WWI Supplier ID\"                integer,\n    \"WWI Transaction Type ID\"        integer,\n    \"WWI Payment Method ID\"          integer,\n    \"Last Modified When\"             timestamp\n)\nLANGUAGE sql\nSTABLE\nAS $$\n    SELECT\n        ct.\"TransactionDate\"::date,\n        ct.\"CustomerTransactionID\",\n        NULL::integer,\n        ct.\"InvoiceID\",\n        NULL::integer,\n        NULL::varchar(20),\n        ct.\"AmountExcludingTax\",\n        ct.\"TaxAmount\",\n        ct.\"TransactionAmount\",\n        ct.\"OutstandingBalance\",\n        ct.\"IsFinalized\",\n        COALESCE(i.\"CustomerID\", ct.\"CustomerID\"),\n        ct.\"CustomerID\",\n        NULL::integer,\n        ct.\"TransactionTypeID\",\n        ct.\"PaymentMethodID\",\n        ct.\"LastEditedWhen\"\n    FROM sales.customer_transactions AS ct\n    LEFT OUTER JOIN sales.invoices AS i ON ct.\"InvoiceID\" = i.\"InvoiceID\"\n    WHERE ct.\"LastEditedWhen\" > last_cutoff\n      AND ct.\"LastEditedWhen\" <= new_cutoff\n    UNION ALL\n    SELECT\n        st.\"TransactionDate\"::date,\n        NULL::integer,\n        st.\"SupplierTransactionID\",\n        NULL::integer,\n        st.\"PurchaseOrderID\",\n        st.\"SupplierInvoiceNumber\",\n        st.\"AmountExcludingTax\",\n        st.\"TaxAmount\",\n        st.\"TransactionAmount\",\n        st.\"OutstandingBalance\",\n        st.\"IsFinalized\",\n        NULL::integer,\n        NULL::integer,\n        st.\"SupplierID\",\n        st.\"TransactionTypeID\",\n        st.\"PaymentMethodID\",\n        st.\"LastEditedWhen\"\n    FROM purchasing.supplier_transactions AS st\n    WHERE st.\"LastEditedWhen\" > last_cutoff\n      AND st.\"LastEditedWhen\" <= new_cutoff\n$$;\n",
+    "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
+    "engine": "kiro",
+    "notes": [
+      "Source has no ORDER BY; the whole result is compared as a multiset.",
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign keys and no pre-existing rows."
+    ]
+  },
+  "columnMappings": [
+    {
+      "sqlServerType": "int NOT NULL",
+      "postgresType": "integer NOT NULL"
+    },
+    {
+      "sqlServerType": "int NULL",
+      "postgresType": "integer"
+    },
+    {
+      "sqlServerType": "date NOT NULL",
+      "postgresType": "date NOT NULL"
+    },
+    {
+      "sqlServerType": "decimal(18,2) NOT NULL",
+      "postgresType": "numeric(18,2) NOT NULL"
+    },
+    {
+      "sqlServerType": "bit NULL",
+      "postgresType": "boolean",
+      "notes": "bit maps to boolean; the driver returns true/false on both sides."
+    },
+    {
+      "sqlServerType": "datetime2(7) NOT NULL",
+      "postgresType": "timestamp NOT NULL",
+      "notes": "datetime2(7) holds 100 ns ticks; PostgreSQL timestamp holds 1 µs. Harness inputs are normalised to µs and the count of normalised values is recorded as a finding."
+    },
+    {
+      "sqlServerType": "nvarchar(20) NULL",
+      "postgresType": "varchar(20)"
+    }
+  ],
+  "verificationSteps": [
+    {
+      "step": 1,
+      "label": "Compiles and deploys on PostgreSQL",
+      "status": "pass"
+    },
+    {
+      "step": 2,
+      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "status": "not-run"
+    },
+    {
+      "step": 3,
+      "label": "Result sets match on generated data",
+      "status": "pass"
+    },
+    {
+      "step": 4,
+      "label": "Runtime within 1.5× factor",
+      "status": "not-run"
+    },
+    {
+      "step": 5,
+      "label": "Second human review",
+      "status": "not-run"
+    },
+    {
+      "step": 6,
+      "label": "Acceptance on real data",
+      "status": "not-run"
+    }
+  ],
+  "evidence": {
+    "pbtSeeds": [
+      786524102
+    ],
+    "rowsCompared": 376,
+    "samples": 200,
+    "samplesWithRows": 148,
+    "trapsCovered": [
+      "NULL in every nullable column",
+      "numeric rounding and scale (decimal edge values)",
+      "datetime boundaries at the cutoffs (inputs normalised to µs)",
+      "empty string and trailing spaces"
+    ],
+    "mutantsDetected": [
+      "customer id taken from transaction only",
+      "LEFT OUTER JOIN to invoices becomes INNER JOIN"
+    ],
+    "subMicrosecondNormalised": 987,
+    "harnessVersion": "harness-generic-0.2.0"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "Kiro",
+    "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
+  },
+  "predictionCell": {
+    "p50Hours": 1,
+    "p90Hours": 2
+  },
+  "builtAt": "2026-11-10T04:30:50.844Z"
+}

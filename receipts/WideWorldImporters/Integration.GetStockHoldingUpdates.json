@@ -1,0 +1,93 @@
+{
+  "database": "WideWorldImporters",
+  "schemaName": "Integration",
+  "objectName": "GetStockHoldingUpdates",
+  "objectClass": "procedure",
+  "tier": "simple",
+  "status": "pending",
+  "code": {
+    "source": "\r\nCREATE PROCEDURE Integration.GetStockHoldingUpdates\r\nWITH EXECUTE AS OWNER\r\nAS\r\nBEGIN\r\n    SET NOCOUNT ON;\r\n    SET XACT_ABORT ON;\r\n\r\n    SELECT sih.QuantityOnHand AS [Quantity On Hand],\r\n           sih.BinLocation AS [Bin Location],\r\n           sih.LastStocktakeQuantity AS [Last Stocktake Quantity],\r\n           sih.LastCostPrice AS [Last Cost Price],\r\n           sih.ReorderLevel AS [Reorder Level],\r\n           sih.TargetStockLevel AS [Target Stock Level],\r\n           sih.StockItemID AS [WWI Stock Item ID]\r\n    FROM Warehouse.StockItemHoldings AS sih\r\n    ORDER BY sih.StockItemID;\r\n\r\n    RETURN 0;\r\nEND;\r\n",
+    "engineOutput": "-- PL/pgSQL conversion of Integration.GetStockHoldingUpdates (WideWorldImporters).\n-- Engine: Kiro first draft (see pair record).\n-- WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted. No parameters.\n\nCREATE OR REPLACE FUNCTION integration.get_stock_holding_updates()\nRETURNS TABLE (\n    \"Quantity On Hand\"        integer,\n    \"Bin Location\"            varchar(20),\n    \"Last Stocktake Quantity\" integer,\n    \"Last Cost Price\"         numeric,\n    \"Reorder Level\"           integer,\n    \"Target Stock Level\"      integer,\n    \"WWI Stock Item ID\"       integer\n)\nLANGUAGE sql\nSTABLE\nAS $$\n    SELECT\n        sih.\"QuantityOnHand\",\n        sih.\"BinLocation\",\n        sih.\"LastStocktakeQuantity\",\n        sih.\"LastCostPrice\",\n        sih.\"ReorderLevel\",\n        sih.\"TargetStockLevel\",\n        sih.\"StockItemID\"\n    FROM warehouse.stock_item_holdings AS sih\n    ORDER BY sih.\"StockItemID\"\n$$;\n",
+    "final": "-- PL/pgSQL conversion of Integration.GetStockHoldingUpdates (WideWorldImporters).\n-- Engine: Kiro first draft (see pair record).\n-- WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted. No parameters.\n\nCREATE OR REPLACE FUNCTION integration.get_stock_holding_updates()\nRETURNS TABLE (\n    \"Quantity On Hand\"        integer,\n    \"Bin Location\"            varchar(20),\n    \"Last Stocktake Quantity\" integer,\n    \"Last Cost Price\"         numeric,\n    \"Reorder Level\"           integer,\n    \"Target Stock Level\"      integer,\n    \"WWI Stock Item ID\"       integer\n)\nLANGUAGE sql\nSTABLE\nAS $$\n    SELECT\n        sih.\"QuantityOnHand\",\n        sih.\"BinLocation\",\n        sih.\"LastStocktakeQuantity\",\n        sih.\"LastCostPrice\",\n        sih.\"ReorderLevel\",\n        sih.\"TargetStockLevel\",\n        sih.\"StockItemID\"\n    FROM warehouse.stock_item_holdings AS sih\n    ORDER BY sih.\"StockItemID\"\n$$;\n",
+    "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
+    "engine": "kiro",
+    "notes": [
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign keys and no pre-existing rows."
+    ]
+  },
+  "columnMappings": [
+    {
+      "sqlServerType": "int NOT NULL",
+      "postgresType": "integer NOT NULL"
+    },
+    {
+      "sqlServerType": "nvarchar(20) NOT NULL",
+      "postgresType": "varchar(20) NOT NULL"
+    },
+    {
+      "sqlServerType": "decimal(18,2) NOT NULL",
+      "postgresType": "numeric(18,2) NOT NULL"
+    }
+  ],
+  "verificationSteps": [
+    {
+      "step": 1,
+      "label": "Compiles and deploys on PostgreSQL",
+      "status": "pass"
+    },
+    {
+      "step": 2,
+      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "status": "not-run"
+    },
+    {
+      "step": 3,
+      "label": "Result sets match on generated data",
+      "status": "pass"
+    },
+    {
+      "step": 4,
+      "label": "Runtime within 1.5× factor",
+      "status": "not-run"
+    },
+    {
+      "step": 5,
+      "label": "Second human review",
+      "status": "not-run"
+    },
+    {
+      "step": 6,
+      "label": "Acceptance on real data",
+      "status": "not-run"
+    }
+  ],
+  "evidence": {
+    "pbtSeeds": [
+      228545464
+    ],
+    "rowsCompared": 342,
+    "samples": 200,
+    "samplesWithRows": 183,
+    "trapsCovered": [
+      "numeric rounding and scale (decimal edge values)",
+      "empty string and trailing spaces",
+      "ORDER BY key (ties compared as multisets)"
+    ],
+    "mutantsDetected": [
+      "descending order",
+      "swapped reorder / target"
+    ],
+    "subMicrosecondNormalised": 0,
+    "harnessVersion": "harness-generic-0.2.0"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "Kiro",
+    "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
+  },
+  "predictionCell": {
+    "p50Hours": 1,
+    "p90Hours": 2
+  },
+  "builtAt": "2026-11-10T04:30:50.844Z"
+}

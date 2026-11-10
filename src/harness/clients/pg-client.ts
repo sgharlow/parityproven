@@ -11,6 +11,10 @@ export type { DatabaseClient };
 pg.types.setTypeParser(1114, (val: string) => val);   // timestamp without tz
 pg.types.setTypeParser(1082, (val: string) => val);   // date
 pg.types.setTypeParser(1184, (val: string) => val);   // timestamptz
+// numeric and int8 come back as strings by default; mssql returns JS numbers for decimal/bigint.
+// Fixtures stay within 15 significant digits, so Number is exact for the values compared.
+pg.types.setTypeParser(1700, (val: string) => Number(val));  // numeric
+pg.types.setTypeParser(20, (val: string) => Number(val));    // int8
 
 export class PgClient implements DatabaseClient {
   private client: pg.Client | null = null;
@@ -44,7 +48,8 @@ export class PgClient implements DatabaseClient {
 
     // Convert ? placeholders to $1, $2, ...
     let idx = 1;
-    const parameterisedSql = sqlText.replace(/\?/g, () => `$${idx++}`);
+    const parameterisedSql =
+      params.length > 0 ? sqlText.replace(/\?/g, () => `$${idx++}`) : sqlText;
 
     const result = await client.query({
       text: parameterisedSql,

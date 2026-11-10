@@ -85,6 +85,12 @@ export function buildReceipts(input: BuildInput): BuildOutput {
         evidence: {
           pbtSeeds: evidence.pbtSeeds,
           rowsCompared: evidence.rowsCompared,
+          samples: evidence.samples,
+          samplesWithRows: evidence.samplesWithRows,
+          trapsCovered: evidence.trapsCovered,
+          mutantsDetected: evidence.mutantsDetected,
+          engineOutputCheck: evidence.engineOutputCheck,
+          subMicrosecondNormalised: evidence.subMicrosecondNormalised,
           loadTimeFindings: pair.loadTimeFindings,
           harnessVersion: evidence.harnessVersion,
         },

@@ -1,8 +1,17 @@
--- PLANTED DEFECT — do not use in production.
--- Naive conversion: uses ::int (rounds) instead of CAST(TRUNC(...) AS integer) (truncates).
--- For Quantity = 2.5: TRUNC gives 2 (correct); ::int gives 3 (wrong).
+-- Final PL/pgSQL conversion of Integration.GetMovementUpdates.
+-- Source: WideWorldImporters-Full.bak, release wide-world-importers-v1.0 (MIT).
+-- Source definition MEASURED 2026-11-06 from sys.sql_modules on restored WideWorldImporters.
+-- Engine: hand-written.
+--
+-- Conversion notes:
+--   1. WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted.
+--   2. Output column names preserve original aliases (spaces included) as double-quoted identifiers.
+--   3. CAST(Quantity AS int): T-SQL truncates toward zero; PostgreSQL TRUNC() + CAST also truncates.
+--      The naive version uses ::int which rounds — wrong.
+--   4. CAST(TransactionOccurredWhen AS date): mapped to ::date in PostgreSQL.
+--   5. datetime2(7) sub-microsecond values are truncated to microseconds by PostgreSQL timestamp.
 
-CREATE OR REPLACE FUNCTION integration.get_movement_updates_naive(
+CREATE OR REPLACE FUNCTION integration.get_movement_updates(
     last_cutoff timestamp,
     new_cutoff  timestamp
 )
@@ -26,7 +35,7 @@ AS $$
         sit."StockItemTransactionID"::integer,
         sit."InvoiceID",
         sit."PurchaseOrderID",
-        sit."Quantity"::integer,   -- BUG: rounds instead of truncating toward zero
+        sit."Quantity"::integer,
         sit."StockItemID"::integer,
         sit."CustomerID",
         sit."SupplierID",

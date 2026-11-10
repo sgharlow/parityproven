@@ -27,6 +27,12 @@ export interface ReceiptFile {
   evidence: {
     pbtSeeds?: number[];
     rowsCompared?: number;
+    samples?: number;
+    samplesWithRows?: number;
+    trapsCovered?: string[];
+    mutantsDetected?: string[];
+    engineOutputCheck?: { step3: StepStatus; seed: number; detail?: string };
+    subMicrosecondNormalised?: number;
     loadTimeFindings?: string[];
     harnessVersion: string;
   };

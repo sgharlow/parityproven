@@ -47,9 +47,12 @@ export class MssqlClient implements DatabaseClient {
     }
 
     // Replace positional ? placeholders with @p0, @p1, ...
+    // Only rewrite placeholders when parameters were supplied (DDL / procedure bodies may contain '?').
     let parameterisedSql = sqlText;
-    let idx = 0;
-    parameterisedSql = parameterisedSql.replace(/\?/g, () => `@p${idx++}`);
+    if (params.length > 0) {
+      let idx = 0;
+      parameterisedSql = parameterisedSql.replace(/\?/g, () => `@p${idx++}`);
+    }
 
     const result = await request.query(parameterisedSql);
     const recordset = result.recordset;

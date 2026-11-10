@@ -1,5 +1,5 @@
 {
-  "builtAt": "2026-11-07T18:43:45.668Z",
+  "builtAt": "2026-11-10T04:30:50.844Z",
   "receipts": [
     {
       "database": "WideWorldImporters",
@@ -9,12 +9,57 @@
       "tier": "simple",
       "status": "pending",
       "path": "WideWorldImporters/Integration.GetMovementUpdates.json"
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Integration",
+      "objectName": "GetOrderUpdates",
+      "objectClass": "procedure",
+      "tier": "simple",
+      "status": "pending",
+      "path": "WideWorldImporters/Integration.GetOrderUpdates.json"
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Integration",
+      "objectName": "GetPurchaseUpdates",
+      "objectClass": "procedure",
+      "tier": "simple",
+      "status": "pending",
+      "path": "WideWorldImporters/Integration.GetPurchaseUpdates.json"
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Integration",
+      "objectName": "GetSaleUpdates",
+      "objectClass": "procedure",
+      "tier": "simple",
+      "status": "pending",
+      "path": "WideWorldImporters/Integration.GetSaleUpdates.json"
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Integration",
+      "objectName": "GetStockHoldingUpdates",
+      "objectClass": "procedure",
+      "tier": "simple",
+      "status": "pending",
+      "path": "WideWorldImporters/Integration.GetStockHoldingUpdates.json"
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Integration",
+      "objectName": "GetTransactionUpdates",
+      "objectClass": "procedure",
+      "tier": "simple",
+      "status": "pending",
+      "path": "WideWorldImporters/Integration.GetTransactionUpdates.json"
     }
   ],
   "summary": {
-    "total": 1,
+    "total": 6,
     "verified": 0,
-    "pending": 1,
+    "pending": 6,
     "failed": 0
   }
 }

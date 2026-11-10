@@ -9,9 +9,9 @@
   "scripts": {
     "build": "tsc",
     "build:ci": "tsc && node dist/cli/receipts.js",
-    "verify": "node dist/cli/verify.js",
-    "verify:seed": "node dist/cli/verify.js --seed",
+    "verify": "node dist/cli/convert.js --all",
     "inventory": "node dist/cli/inventory.js",
+    "convert": "node dist/cli/convert.js",
     "predictions:validate": "node dist/cli/predictions.js validate",
     "predictions:score": "node dist/cli/predictions.js score",
     "receipts:build": "node dist/cli/receipts.js",

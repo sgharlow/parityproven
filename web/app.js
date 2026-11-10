@@ -116,11 +116,30 @@ async function initReceipt() {
       <span>${esc(s.label)}</span>
     </li>`).join('');
 
-  const pbtHtml = receipt.evidence.pbtSeeds?.length
-    ? `<p><strong>PBT seeds:</strong> ${receipt.evidence.pbtSeeds.join(', ')}<br>
-       <strong>Rows compared:</strong> ${receipt.evidence.rowsCompared ?? '—'}<br>
-       <strong>Harness:</strong> ${esc(receipt.evidence.harnessVersion)}</p>
-       <div class="cmd">npm run verify -- --seed ${receipt.evidence.pbtSeeds[0]}</div>`
+  const ev = receipt.evidence;
+  const draft = ev.engineOutputCheck
+    ? `<li><strong>Engine first draft:</strong> ${statusBadge(ev.engineOutputCheck.step3)} ${ev.engineOutputCheck.step3 === 'fail'
+        ? `<span style="color:var(--c-muted);font-size:0.85rem">${esc(ev.engineOutputCheck.detail ?? '')}</span>`
+        : '<span style="color:var(--c-muted);font-size:0.85rem">accepted unchanged</span>'}</li>`
+    : '';
+  const coverage = ev.samples
+    ? `<li><strong>Coverage:</strong> ${ev.samplesWithRows} of ${ev.samples} generated samples returned rows (${ev.rowsCompared} rows compared)</li>`
+    : `<li><strong>Rows compared:</strong> ${ev.rowsCompared ?? '—'}</li>`;
+  const mutants = ev.mutantsDetected?.length
+    ? `<li><strong>Planted defects caught:</strong> ${ev.mutantsDetected.map(m => esc(m)).join('; ')}</li>` : '';
+  const traps = ev.trapsCovered?.length
+    ? `<li><strong>Traps generated:</strong> ${ev.trapsCovered.map(t => esc(t)).join('; ')}</li>` : '';
+  const precision = ev.subMicrosecondNormalised
+    ? `<li><strong>Load-time finding:</strong> ${ev.subMicrosecondNormalised} generated datetime2(7) values had sub-microsecond ticks that PostgreSQL <code>timestamp</code> cannot hold; they were normalised to microseconds on both engines before comparing.</li>` : '';
+
+  const pbtHtml = ev.pbtSeeds?.length
+    ? `<ul style="padding-left:1.2rem">
+         <li><strong>Seed:</strong> ${ev.pbtSeeds.join(', ')}</li>
+         ${draft}${coverage}${traps}${mutants}${precision}
+         <li><strong>Harness:</strong> ${esc(ev.harnessVersion)}</li>
+       </ul>
+       <p style="color:var(--c-muted);font-size:0.85rem;margin-bottom:0.25rem">Re-run from the public repo:</p>
+       <div class="cmd">npm run convert -- --object ${esc(receipt.schemaName)}.${esc(receipt.objectName)} --seed ${ev.pbtSeeds[0]}</div>`
     : `<p style="color:var(--c-muted)">No PBT run recorded yet.</p>`;
 
   const loadFindings = receipt.evidence.loadTimeFindings?.length

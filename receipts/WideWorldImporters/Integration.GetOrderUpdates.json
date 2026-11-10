@@ -1,0 +1,121 @@
+{
+  "database": "WideWorldImporters",
+  "schemaName": "Integration",
+  "objectName": "GetOrderUpdates",
+  "objectClass": "procedure",
+  "tier": "simple",
+  "status": "pending",
+  "code": {
+    "source": "\r\nCREATE PROCEDURE Integration.GetOrderUpdates\r\n@LastCutoff datetime2(7),\r\n@NewCutoff datetime2(7)\r\nWITH EXECUTE AS OWNER\r\nAS\r\nBEGIN\r\n    SET NOCOUNT ON;\r\n    SET XACT_ABORT ON;\r\n\r\n\r\n    SELECT CAST(o.OrderDate AS date) AS [Order Date Key],\r\n           CAST(ol.PickingCompletedWhen AS date) AS [Picked Date Key],\r\n           o.OrderID AS [WWI Order ID],\r\n           o.BackorderOrderID AS [WWI Backorder ID],\r\n           ol.[Description],\r\n           pt.PackageTypeName AS Package,\r\n           ol.Quantity AS Quantity,\r\n           ol.UnitPrice AS [Unit Price],\r\n           ol.TaxRate AS [Tax Rate],\r\n           ROUND(ol.Quantity * ol.UnitPrice, 2) AS [Total Excluding Tax],\r\n           ROUND(ol.Quantity * ol.UnitPrice * ol.TaxRate / 100.0, 2) AS [Tax Amount],\r\n           ROUND(ol.Quantity * ol.UnitPrice, 2) + ROUND(ol.Quantity * ol.UnitPrice * ol.TaxRate / 100.0, 2) AS [Total Including Tax],\r\n           c.DeliveryCityID AS [WWI City ID],\r\n           c.CustomerID AS [WWI Customer ID],\r\n           ol.StockItemID AS [WWI Stock Item ID],\r\n           o.SalespersonPersonID AS [WWI Salesperson ID],\r\n           o.PickedByPersonID AS [WWI Picker ID],\r\n           CASE WHEN ol.LastEditedWhen > o.LastEditedWhen THEN ol.LastEditedWhen ELSE o.LastEditedWhen END AS [Last Modified When]\r\n    FROM Sales.Orders AS o\r\n    INNER JOIN Sales.OrderLines AS ol\r\n    ON o.OrderID = ol.OrderID\r\n    INNER JOIN Warehouse.PackageTypes AS pt\r\n    ON ol.PackageTypeID = pt.PackageTypeID\r\n    INNER JOIN Sales.Customers AS c\r\n    ON c.CustomerID = o.CustomerID\r\n    WHERE CASE WHEN ol.LastEditedWhen > o.LastEditedWhen THEN ol.LastEditedWhen ELSE o.LastEditedWhen END > @LastCutoff\r\n    AND CASE WHEN ol.LastEditedWhen > o.LastEditedWhen THEN ol.LastEditedWhen ELSE o.LastEditedWhen END <= @NewCutoff\r\n    ORDER BY o.OrderID;\r\n\r\n    RETURN 0;\r\nEND;\r\n",
+    "engineOutput": "-- PL/pgSQL conversion of Integration.GetOrderUpdates (WideWorldImporters).\n-- Engine: Kiro first draft (see pair record).\n-- WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted.\n\nCREATE OR REPLACE FUNCTION integration.get_order_updates(\n    last_cutoff timestamp,\n    new_cutoff  timestamp\n)\nRETURNS TABLE (\n    \"Order Date Key\"       date,\n    \"Picked Date Key\"      date,\n    \"WWI Order ID\"         integer,\n    \"WWI Backorder ID\"     integer,\n    \"Description\"          varchar(100),\n    \"Package\"              varchar(50),\n    \"Quantity\"             integer,\n    \"Unit Price\"           numeric,\n    \"Tax Rate\"             numeric,\n    \"Total Excluding Tax\"  numeric,\n    \"Tax Amount\"           numeric,\n    \"Total Including Tax\"  numeric,\n    \"WWI City ID\"          integer,\n    \"WWI Customer ID\"      integer,\n    \"WWI Stock Item ID\"    integer,\n    \"WWI Salesperson ID\"   integer,\n    \"WWI Picker ID\"        integer,\n    \"Last Modified When\"   timestamp\n)\nLANGUAGE sql\nSTABLE\nAS $$\n    SELECT\n        o.\"OrderDate\"::date,\n        ol.\"PickingCompletedWhen\"::date,\n        o.\"OrderID\",\n        o.\"BackorderOrderID\",\n        ol.\"Description\",\n        pt.\"PackageTypeName\",\n        ol.\"Quantity\",\n        ol.\"UnitPrice\",\n        ol.\"TaxRate\",\n        round(ol.\"Quantity\" * ol.\"UnitPrice\", 2),\n        round(ol.\"Quantity\" * ol.\"UnitPrice\" * ol.\"TaxRate\" / 100.0, 2),\n        round(ol.\"Quantity\" * ol.\"UnitPrice\", 2) + round(ol.\"Quantity\" * ol.\"UnitPrice\" * ol.\"TaxRate\" / 100.0, 2),\n        c.\"DeliveryCityID\",\n        c.\"CustomerID\",\n        ol.\"StockItemID\",\n        o.\"SalespersonPersonID\",\n        o.\"PickedByPersonID\",\n        CASE WHEN ol.\"LastEditedWhen\" > o.\"LastEditedWhen\" THEN ol.\"LastEditedWhen\" ELSE o.\"LastEditedWhen\" END\n    FROM sales.orders AS o\n    INNER JOIN sales.order_lines AS ol ON o.\"OrderID\" = ol.\"OrderID\"\n    INNER JOIN warehouse.package_types AS pt ON ol.\"PackageTypeID\" = pt.\"PackageTypeID\"\n    INNER JOIN sales.customers AS c ON c.\"CustomerID\" = o.\"CustomerID\"\n    WHERE CASE WHEN ol.\"LastEditedWhen\" > o.\"LastEditedWhen\" THEN ol.\"LastEditedWhen\" ELSE o.\"LastEditedWhen\" END > last_cutoff\n      AND CASE WHEN ol.\"LastEditedWhen\" > o.\"LastEditedWhen\" THEN ol.\"LastEditedWhen\" ELSE o.\"LastEditedWhen\" END <= new_cutoff\n    ORDER BY o.\"OrderID\"\n$$;\n",
+    "final": "-- PL/pgSQL conversion of Integration.GetOrderUpdates (WideWorldImporters).\n-- Engine: Kiro first draft (see pair record).\n-- WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted.\n\nCREATE OR REPLACE FUNCTION integration.get_order_updates(\n    last_cutoff timestamp,\n    new_cutoff  timestamp\n)\nRETURNS TABLE (\n    \"Order Date Key\"       date,\n    \"Picked Date Key\"      date,\n    \"WWI Order ID\"         integer,\n    \"WWI Backorder ID\"     integer,\n    \"Description\"          varchar(100),\n    \"Package\"              varchar(50),\n    \"Quantity\"             integer,\n    \"Unit Price\"           numeric,\n    \"Tax Rate\"             numeric,\n    \"Total Excluding Tax\"  numeric,\n    \"Tax Amount\"           numeric,\n    \"Total Including Tax\"  numeric,\n    \"WWI City ID\"          integer,\n    \"WWI Customer ID\"      integer,\n    \"WWI Stock Item ID\"    integer,\n    \"WWI Salesperson ID\"   integer,\n    \"WWI Picker ID\"        integer,\n    \"Last Modified When\"   timestamp\n)\nLANGUAGE sql\nSTABLE\nAS $$\n    SELECT\n        o.\"OrderDate\"::date,\n        ol.\"PickingCompletedWhen\"::date,\n        o.\"OrderID\",\n        o.\"BackorderOrderID\",\n        ol.\"Description\",\n        pt.\"PackageTypeName\",\n        ol.\"Quantity\",\n        ol.\"UnitPrice\",\n        ol.\"TaxRate\",\n        round(ol.\"Quantity\" * ol.\"UnitPrice\", 2),\n        round(ol.\"Quantity\" * ol.\"UnitPrice\" * ol.\"TaxRate\" / 100.0, 2),\n        round(ol.\"Quantity\" * ol.\"UnitPrice\", 2) + round(ol.\"Quantity\" * ol.\"UnitPrice\" * ol.\"TaxRate\" / 100.0, 2),\n        c.\"DeliveryCityID\",\n        c.\"CustomerID\",\n        ol.\"StockItemID\",\n        o.\"SalespersonPersonID\",\n        o.\"PickedByPersonID\",\n        CASE WHEN ol.\"LastEditedWhen\" > o.\"LastEditedWhen\" THEN ol.\"LastEditedWhen\" ELSE o.\"LastEditedWhen\" END\n    FROM sales.orders AS o\n    INNER JOIN sales.order_lines AS ol ON o.\"OrderID\" = ol.\"OrderID\"\n    INNER JOIN warehouse.package_types AS pt ON ol.\"PackageTypeID\" = pt.\"PackageTypeID\"\n    INNER JOIN sales.customers AS c ON c.\"CustomerID\" = o.\"CustomerID\"\n    WHERE CASE WHEN ol.\"LastEditedWhen\" > o.\"LastEditedWhen\" THEN ol.\"LastEditedWhen\" ELSE o.\"LastEditedWhen\" END > last_cutoff\n      AND CASE WHEN ol.\"LastEditedWhen\" > o.\"LastEditedWhen\" THEN ol.\"LastEditedWhen\" ELSE o.\"LastEditedWhen\" END <= new_cutoff\n    ORDER BY o.\"OrderID\"\n$$;\n",
+    "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
+    "engine": "kiro",
+    "notes": [
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign keys and no pre-existing rows."
+    ]
+  },
+  "columnMappings": [
+    {
+      "sqlServerType": "int NOT NULL",
+      "postgresType": "integer NOT NULL"
+    },
+    {
+      "sqlServerType": "int NULL",
+      "postgresType": "integer"
+    },
+    {
+      "sqlServerType": "date NOT NULL",
+      "postgresType": "date NOT NULL"
+    },
+    {
+      "sqlServerType": "datetime2(7) NOT NULL",
+      "postgresType": "timestamp NOT NULL",
+      "notes": "datetime2(7) holds 100 ns ticks; PostgreSQL timestamp holds 1 µs. Harness inputs are normalised to µs and the count of normalised values is recorded as a finding."
+    },
+    {
+      "sqlServerType": "nvarchar(100) NOT NULL",
+      "postgresType": "varchar(100) NOT NULL"
+    },
+    {
+      "sqlServerType": "decimal(18,2) NULL",
+      "postgresType": "numeric(18,2)"
+    },
+    {
+      "sqlServerType": "decimal(18,3) NOT NULL",
+      "postgresType": "numeric(18,3) NOT NULL"
+    },
+    {
+      "sqlServerType": "datetime2(7) NULL",
+      "postgresType": "timestamp",
+      "notes": "datetime2(7) holds 100 ns ticks; PostgreSQL timestamp holds 1 µs. Harness inputs are normalised to µs and the count of normalised values is recorded as a finding."
+    },
+    {
+      "sqlServerType": "nvarchar(50) NOT NULL",
+      "postgresType": "varchar(50) NOT NULL"
+    }
+  ],
+  "verificationSteps": [
+    {
+      "step": 1,
+      "label": "Compiles and deploys on PostgreSQL",
+      "status": "pass"
+    },
+    {
+      "step": 2,
+      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "status": "not-run"
+    },
+    {
+      "step": 3,
+      "label": "Result sets match on generated data",
+      "status": "pass"
+    },
+    {
+      "step": 4,
+      "label": "Runtime within 1.5× factor",
+      "status": "not-run"
+    },
+    {
+      "step": 5,
+      "label": "Second human review",
+      "status": "not-run"
+    },
+    {
+      "step": 6,
+      "label": "Acceptance on real data",
+      "status": "not-run"
+    }
+  ],
+  "evidence": {
+    "pbtSeeds": [
+      933137090
+    ],
+    "rowsCompared": 125,
+    "samples": 200,
+    "samplesWithRows": 80,
+    "trapsCovered": [
+      "NULL in every nullable column",
+      "numeric rounding and scale (decimal edge values)",
+      "datetime boundaries at the cutoffs (inputs normalised to µs)",
+      "empty string and trailing spaces",
+      "ORDER BY key (ties compared as multisets)"
+    ],
+    "mutantsDetected": [
+      "tax amount truncates instead of rounding at 2dp",
+      "lower cutoff inclusive"
+    ],
+    "subMicrosecondNormalised": 1232,
+    "harnessVersion": "harness-generic-0.2.0"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "Kiro",
+    "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
+  },
+  "predictionCell": {
+    "p50Hours": 1,
+    "p90Hours": 2
+  },
+  "builtAt": "2026-11-10T04:30:50.843Z"
+}

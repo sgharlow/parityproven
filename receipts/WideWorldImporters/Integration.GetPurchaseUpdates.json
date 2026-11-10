@@ -1,0 +1,103 @@
+{
+  "database": "WideWorldImporters",
+  "schemaName": "Integration",
+  "objectName": "GetPurchaseUpdates",
+  "objectClass": "procedure",
+  "tier": "simple",
+  "status": "pending",
+  "code": {
+    "source": "\r\nCREATE PROCEDURE Integration.GetPurchaseUpdates\r\n@LastCutoff datetime2(7),\r\n@NewCutoff datetime2(7)\r\nWITH EXECUTE AS OWNER\r\nAS\r\nBEGIN\r\n    SET NOCOUNT ON;\r\n    SET XACT_ABORT ON;\r\n\r\n\r\n    SELECT CAST(po.OrderDate AS date) AS [Date Key],\r\n           po.PurchaseOrderID AS [WWI Purchase Order ID],\r\n           pol.OrderedOuters AS [Ordered Outers],\r\n           pol.OrderedOuters * si.QuantityPerOuter AS [Ordered Quantity],\r\n           pol.ReceivedOuters AS [Received Outers],\r\n           pt.PackageTypeName AS Package,\r\n           pol.IsOrderLineFinalized AS [Is Order Finalized],\r\n           po.SupplierID AS [WWI Supplier ID],\r\n           pol.StockItemID AS [WWI Stock Item ID],\r\n           CASE WHEN pol.LastEditedWhen > po.LastEditedWhen THEN pol.LastEditedWhen ELSE po.LastEditedWhen END AS [Last Modified When]\r\n    FROM Purchasing.PurchaseOrders AS po\r\n    INNER JOIN Purchasing.PurchaseOrderLines AS pol\r\n    ON po.PurchaseOrderID = pol.PurchaseOrderID\r\n    INNER JOIN Warehouse.StockItems AS si\r\n    ON pol.StockItemID = si.StockItemID\r\n    INNER JOIN Warehouse.PackageTypes AS pt\r\n    ON pol.PackageTypeID = pt.PackageTypeID\r\n    WHERE CASE WHEN pol.LastEditedWhen > po.LastEditedWhen THEN pol.LastEditedWhen ELSE po.LastEditedWhen END > @LastCutoff\r\n    AND CASE WHEN pol.LastEditedWhen > po.LastEditedWhen THEN pol.LastEditedWhen ELSE po.LastEditedWhen END <= @NewCutoff\r\n    ORDER BY po.PurchaseOrderID;\r\n\r\n    RETURN 0;\r\nEND;\r\n",
+    "engineOutput": "-- PL/pgSQL conversion of Integration.GetPurchaseUpdates (WideWorldImporters).\n-- Engine: Kiro first draft (see pair record).\n-- WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted.\n\nCREATE OR REPLACE FUNCTION integration.get_purchase_updates(\n    last_cutoff timestamp,\n    new_cutoff  timestamp\n)\nRETURNS TABLE (\n    \"Date Key\"              date,\n    \"WWI Purchase Order ID\" integer,\n    \"Ordered Outers\"        integer,\n    \"Ordered Quantity\"      integer,\n    \"Received Outers\"       integer,\n    \"Package\"               varchar(50),\n    \"Is Order Finalized\"    boolean,\n    \"WWI Supplier ID\"       integer,\n    \"WWI Stock Item ID\"     integer,\n    \"Last Modified When\"    timestamp\n)\nLANGUAGE sql\nSTABLE\nAS $$\n    SELECT\n        po.\"OrderDate\"::date,\n        po.\"PurchaseOrderID\",\n        pol.\"OrderedOuters\",\n        pol.\"OrderedOuters\" * si.\"QuantityPerOuter\",\n        pol.\"ReceivedOuters\",\n        pt.\"PackageTypeName\",\n        pol.\"IsOrderLineFinalized\",\n        po.\"SupplierID\",\n        pol.\"StockItemID\",\n        CASE WHEN pol.\"LastEditedWhen\" > po.\"LastEditedWhen\" THEN pol.\"LastEditedWhen\" ELSE po.\"LastEditedWhen\" END\n    FROM purchasing.purchase_orders AS po\n    INNER JOIN purchasing.purchase_order_lines AS pol ON po.\"PurchaseOrderID\" = pol.\"PurchaseOrderID\"\n    INNER JOIN warehouse.stock_items AS si ON pol.\"StockItemID\" = si.\"StockItemID\"\n    INNER JOIN warehouse.package_types AS pt ON pol.\"PackageTypeID\" = pt.\"PackageTypeID\"\n    WHERE CASE WHEN pol.\"LastEditedWhen\" > po.\"LastEditedWhen\" THEN pol.\"LastEditedWhen\" ELSE po.\"LastEditedWhen\" END > last_cutoff\n      AND CASE WHEN pol.\"LastEditedWhen\" > po.\"LastEditedWhen\" THEN pol.\"LastEditedWhen\" ELSE po.\"LastEditedWhen\" END <= new_cutoff\n    ORDER BY po.\"PurchaseOrderID\"\n$$;\n",
+    "final": "-- PL/pgSQL conversion of Integration.GetPurchaseUpdates (WideWorldImporters).\n-- Engine: Kiro first draft (see pair record).\n-- WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted.\n\nCREATE OR REPLACE FUNCTION integration.get_purchase_updates(\n    last_cutoff timestamp,\n    new_cutoff  timestamp\n)\nRETURNS TABLE (\n    \"Date Key\"              date,\n    \"WWI Purchase Order ID\" integer,\n    \"Ordered Outers\"        integer,\n    \"Ordered Quantity\"      integer,\n    \"Received Outers\"       integer,\n    \"Package\"               varchar(50),\n    \"Is Order Finalized\"    boolean,\n    \"WWI Supplier ID\"       integer,\n    \"WWI Stock Item ID\"     integer,\n    \"Last Modified When\"    timestamp\n)\nLANGUAGE sql\nSTABLE\nAS $$\n    SELECT\n        po.\"OrderDate\"::date,\n        po.\"PurchaseOrderID\",\n        pol.\"OrderedOuters\",\n        pol.\"OrderedOuters\" * si.\"QuantityPerOuter\",\n        pol.\"ReceivedOuters\",\n        pt.\"PackageTypeName\",\n        pol.\"IsOrderLineFinalized\",\n        po.\"SupplierID\",\n        pol.\"StockItemID\",\n        CASE WHEN pol.\"LastEditedWhen\" > po.\"LastEditedWhen\" THEN pol.\"LastEditedWhen\" ELSE po.\"LastEditedWhen\" END\n    FROM purchasing.purchase_orders AS po\n    INNER JOIN purchasing.purchase_order_lines AS pol ON po.\"PurchaseOrderID\" = pol.\"PurchaseOrderID\"\n    INNER JOIN warehouse.stock_items AS si ON pol.\"StockItemID\" = si.\"StockItemID\"\n    INNER JOIN warehouse.package_types AS pt ON pol.\"PackageTypeID\" = pt.\"PackageTypeID\"\n    WHERE CASE WHEN pol.\"LastEditedWhen\" > po.\"LastEditedWhen\" THEN pol.\"LastEditedWhen\" ELSE po.\"LastEditedWhen\" END > last_cutoff\n      AND CASE WHEN pol.\"LastEditedWhen\" > po.\"LastEditedWhen\" THEN pol.\"LastEditedWhen\" ELSE po.\"LastEditedWhen\" END <= new_cutoff\n    ORDER BY po.\"PurchaseOrderID\"\n$$;\n",
+    "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
+    "engine": "kiro",
+    "notes": [
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign keys and no pre-existing rows."
+    ]
+  },
+  "columnMappings": [
+    {
+      "sqlServerType": "int NOT NULL",
+      "postgresType": "integer NOT NULL"
+    },
+    {
+      "sqlServerType": "date NOT NULL",
+      "postgresType": "date NOT NULL"
+    },
+    {
+      "sqlServerType": "datetime2(7) NOT NULL",
+      "postgresType": "timestamp NOT NULL",
+      "notes": "datetime2(7) holds 100 ns ticks; PostgreSQL timestamp holds 1 µs. Harness inputs are normalised to µs and the count of normalised values is recorded as a finding."
+    },
+    {
+      "sqlServerType": "bit NOT NULL",
+      "postgresType": "boolean NOT NULL",
+      "notes": "bit maps to boolean; the driver returns true/false on both sides."
+    },
+    {
+      "sqlServerType": "nvarchar(50) NOT NULL",
+      "postgresType": "varchar(50) NOT NULL"
+    }
+  ],
+  "verificationSteps": [
+    {
+      "step": 1,
+      "label": "Compiles and deploys on PostgreSQL",
+      "status": "pass"
+    },
+    {
+      "step": 2,
+      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "status": "not-run"
+    },
+    {
+      "step": 3,
+      "label": "Result sets match on generated data",
+      "status": "pass"
+    },
+    {
+      "step": 4,
+      "label": "Runtime within 1.5× factor",
+      "status": "not-run"
+    },
+    {
+      "step": 5,
+      "label": "Second human review",
+      "status": "not-run"
+    },
+    {
+      "step": 6,
+      "label": "Acceptance on real data",
+      "status": "not-run"
+    }
+  ],
+  "evidence": {
+    "pbtSeeds": [
+      300207226
+    ],
+    "rowsCompared": 119,
+    "samples": 200,
+    "samplesWithRows": 80,
+    "trapsCovered": [
+      "datetime boundaries at the cutoffs (inputs normalised to µs)",
+      "empty string and trailing spaces",
+      "ORDER BY key (ties compared as multisets)"
+    ],
+    "mutantsDetected": [
+      "ordered quantity uses outers only",
+      "upper cutoff exclusive"
+    ],
+    "subMicrosecondNormalised": 929,
+    "harnessVersion": "harness-generic-0.2.0"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "Kiro",
+    "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
+  },
+  "predictionCell": {
+    "p50Hours": 1,
+    "p90Hours": 2
+  },
+  "builtAt": "2026-11-10T04:30:50.844Z"
+}
