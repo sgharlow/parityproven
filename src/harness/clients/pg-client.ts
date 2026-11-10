@@ -70,7 +70,8 @@ export class PgClient implements DatabaseClient {
 
   async loadRows(
     table: string,
-    rows: Record<string, unknown>[]
+    rows: Record<string, unknown>[],
+    wrap?: Record<string, (placeholder: string) => string>
   ): Promise<void> {
     if (rows.length === 0) return;
 
@@ -79,7 +80,7 @@ export class PgClient implements DatabaseClient {
 
     for (const row of rows) {
       const values = columns.map((col) => row[col]);
-      const placeholders = values.map((_, i) => `$${i + 1}`).join(", ");
+      const placeholders = columns.map((col, i) => (wrap?.[col] ? wrap[col](`$${i + 1}`) : `$${i + 1}`)).join(", ");
       const quotedColumns = columns.map((c) => `"${c}"`).join(", ");
       const insertSql = `INSERT INTO ${table} (${quotedColumns}) VALUES (${placeholders})`;
       await client.query(insertSql, values);

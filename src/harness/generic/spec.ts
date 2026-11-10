@@ -14,7 +14,7 @@ export type ColType =
   | { kind: "date" }
   | { kind: "datetime2" }
   | { kind: "bit" }
-  /** SQL Server spatial type. PostgreSQL has no built-in equivalent (PostGIS is not installed); the column is always NULL in generated data. */
+  /** SQL Server geography (points, SRID 4326) <-> PostGIS geography. Compared as well-known text. */
   | { kind: "geography" };
 
 export interface ColSpec {
@@ -108,7 +108,7 @@ export function postgresType(t: ColType): string {
     case "date": return "date";
     case "datetime2": return "timestamp";   // microsecond precision: 100 ns ticks are not representable
     case "bit": return "boolean";
-    case "geography": return "text";   // stand-in so the table exists; no spatial semantics
+    case "geography": return "geography";   // PostGIS (SRID 4326)
   }
 }
 
@@ -144,7 +144,7 @@ export function mappingsFor(spec: ObjectSpec): Array<{ sqlServerType: string; po
         m.notes = "datetime2(7) holds 100 ns ticks; PostgreSQL timestamp holds 1 µs. Harness inputs are normalised to µs and the count of normalised values is recorded as a finding.";
       }
       if (c.type.kind === "bit") m.notes = "bit maps to boolean; the driver returns true/false on both sides.";
-      if (c.type.kind === "geography") m.notes = "NO EQUIVALENT: PostgreSQL needs PostGIS (geography), which is not in the pinned postgres:18 image. A text stand-in column holds NULL only.";
+      if (c.type.kind === "geography") m.notes = "SQL Server geography maps to PostGIS geography (SRID 4326). Only point values are generated and compared, as well-known text.";
       seen.set(ss, m);
     }
   }

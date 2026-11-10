@@ -3,7 +3,8 @@ import type { RowSet, ColumnMeta } from "../types.js";
 
 export interface DatabaseClient {
   query(sqlText: string, params: unknown[]): Promise<RowSet>;
-  loadRows(table: string, rows: Record<string, unknown>[]): Promise<void>;
+  /** wrap: per-column SQL expression around the parameter placeholder, e.g. to build a spatial value from WKT. */
+  loadRows(table: string, rows: Record<string, unknown>[], wrap?: Record<string, (placeholder: string) => string>): Promise<void>;
   close(): Promise<void>;
 }
 
@@ -89,7 +90,8 @@ export class MssqlClient implements DatabaseClient {
 
   async loadRows(
     table: string,
-    rows: Record<string, unknown>[]
+    rows: Record<string, unknown>[],
+    wrap?: Record<string, (placeholder: string) => string>
   ): Promise<void> {
     if (rows.length === 0) return;
 
@@ -100,7 +102,7 @@ export class MssqlClient implements DatabaseClient {
       const request = pool.request();
       const placeholders = columns.map((col, i) => {
         request.input(`p${i}`, row[col]);
-        return `@p${i}`;
+        return wrap?.[col] ? wrap[col](`@p${i}`) : `@p${i}`;
       });
       const insertSql = `INSERT INTO ${table} (${columns.map((c) => `[${c}]`).join(", ")}) VALUES (${placeholders.join(", ")})`;
       await request.query(insertSql);

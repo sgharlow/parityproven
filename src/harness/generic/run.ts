@@ -66,6 +66,8 @@ export async function prepareSqlServer(conn: Connections, spec: ObjectSpec, defi
 }
 
 export async function preparePostgres(conn: Connections, spec: ObjectSpec): Promise<void> {
+  // init scripts only run on a fresh data directory; make the extension a harness precondition instead
+  await conn.pg.query("CREATE EXTENSION IF NOT EXISTS postgis", []);
   const schemas = new Set<string>(spec.tables.map((t) => t.schema.toLowerCase()));
   for (const s of schemas) await conn.pg.query(`CREATE SCHEMA IF NOT EXISTS ${s}`, []);
   for (const t of spec.tables) {
@@ -135,8 +137,12 @@ async function loadAndRun(
   try {
     for (const t of spec.tables) {
       const rows = data.tables[tableKey(t)] ?? [];
-      await scratch.loadRows(`[${t.schema}].[${t.name}]`, rows);
-      await conn.pg.loadRows(pgTableName(t), rows);
+      // spatial values are built from WKT by each engine's own constructor
+      const geo = t.columns.filter((c) => c.type.kind === "geography").map((c) => c.name);
+      const ssWrap = Object.fromEntries(geo.map((n) => [n, (ph: string) => `geography::STGeomFromText(${ph}, 4326)`]));
+      const pgWrap = Object.fromEntries(geo.map((n) => [n, (ph: string) => `ST_GeogFromText(${ph})`]));
+      await scratch.loadRows(`[${t.schema}].[${t.name}]`, rows, ssWrap);
+      await conn.pg.loadRows(pgTableName(t), rows, pgWrap);
     }
     const params = data.args && data.args.length ? data.args : data.cutoffs ? [data.cutoffs.last, data.cutoffs.new] : [];
     const ss = await scratch.query(ssCall(spec), params);

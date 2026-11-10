@@ -7,7 +7,7 @@ inclusion: always
 ## Decided
 - **Language:** TypeScript (strict), Node.js 22, ESM. One language across the scorer, harness, CLI and UI.
 - **Source database:** SQL Server in Docker (`mcr.microsoft.com/mssql/server:2025-latest`; AdventureWorks uses SQL Server 2025 features), with **tSQLt** for source-side unit tests.
-- **Target database:** PostgreSQL in Docker (`postgres:18`), with **pgTAP** for target-side unit tests.
+- **Target database:** PostgreSQL in Docker (`postgis/postgis:18-3.6`, the official PostGIS build of `postgres:18`; PostGIS added 2026-11-09 by the project owner so SQL Server `geography` has an equivalent), with **pgTAP** for target-side unit tests.
 - **Property-based testing:** `fast-check`. Result-set equivalence is the core property (see `verification-standard.md`).
 - **Unit tests:** Vitest.
 - **Engine evidence:** Babelfish Compass, always run with `-noupdatechk` so it makes no network call. Its report is stored as evidence and never treated as the answer. Compass is a compatibility *assessment* tool for Babelfish for PostgreSQL. It does not produce PL/pgSQL; its `-rewrite` option produces Babelfish-compatible T-SQL.

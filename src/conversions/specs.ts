@@ -174,12 +174,6 @@ const people: TableSpec = { schema: "Application", name: "People", columns: [pk(
 const deliveryMethods: TableSpec = { schema: "Application", name: "DeliveryMethods", columns: [pk("DeliveryMethodID"), col("DeliveryMethodName", nv(50))] };
 const cities: TableSpec = { schema: "Application", name: "Cities", columns: [pk("CityID"), col("CityName", nv(50))] };
 
-const GEOGRAPHY_LIMIT = {
-  column: "DeliveryLocation",
-  reason:
-    "DeliveryLocation is a SQL Server geography column. PostgreSQL has no built-in equivalent; it needs PostGIS, which is not in the pinned postgres:18 image. The converted view therefore omits the column and its interface differs from the source.",
-};
-
 SPECS.push(
   {
     ...base, schema: "Website", name: "Customers", objectClass: "view", windowParams: false, orderKey: [],
@@ -194,8 +188,13 @@ SPECS.push(
       { schema: "Sales", name: "BuyingGroups", columns: [pk("BuyingGroupID"), col("BuyingGroupName", nv(50))] },
       people, deliveryMethods, cities,
     ],
-    mutants: [],
-    knownLimitation: GEOGRAPHY_LIMIT,
+    // DeliveryLocation is compared as well-known text (STAsText / ST_AsText) so the geography values themselves are checked
+    ssCall: "SELECT CustomerID, CustomerName, CustomerCategoryName, PrimaryContact, AlternateContact, PhoneNumber, FaxNumber, BuyingGroupName, WebsiteURL, DeliveryMethod, CityName, DeliveryLocation.STAsText() AS DeliveryLocation, DeliveryRun, RunPosition FROM Website.Customers",
+    pgCall: 'SELECT "CustomerID", "CustomerName", "CustomerCategoryName", "PrimaryContact", "AlternateContact", "PhoneNumber", "FaxNumber", "BuyingGroupName", "WebsiteURL", "DeliveryMethod", "CityName", ST_AsText("DeliveryLocation") AS "DeliveryLocation", "DeliveryRun", "RunPosition" FROM {fn}',
+    mutants: [
+      { name: "alternate contact joined on the primary contact id", from: 'ON s."AlternateContactPersonID" = ap."PersonID"', to: 'ON s."PrimaryContactPersonID" = ap."PersonID"' },
+      { name: "buying group LEFT JOIN becomes INNER JOIN", from: "LEFT OUTER JOIN sales.buying_groups", to: "INNER JOIN sales.buying_groups" },
+    ],
   },
   {
     ...base, schema: "Website", name: "Suppliers", objectClass: "view", windowParams: false, orderKey: [],
@@ -209,8 +208,12 @@ SPECS.push(
       { schema: "Purchasing", name: "SupplierCategories", columns: [pk("SupplierCategoryID"), col("SupplierCategoryName", nv(50))] },
       people, deliveryMethods, cities,
     ],
-    mutants: [],
-    knownLimitation: GEOGRAPHY_LIMIT,
+    ssCall: "SELECT SupplierID, SupplierName, SupplierCategoryName, PrimaryContact, AlternateContact, PhoneNumber, FaxNumber, WebsiteURL, DeliveryMethod, CityName, DeliveryLocation.STAsText() AS DeliveryLocation, SupplierReference FROM Website.Suppliers",
+    pgCall: 'SELECT "SupplierID", "SupplierName", "SupplierCategoryName", "PrimaryContact", "AlternateContact", "PhoneNumber", "FaxNumber", "WebsiteURL", "DeliveryMethod", "CityName", ST_AsText("DeliveryLocation") AS "DeliveryLocation", "SupplierReference" FROM {fn}',
+    mutants: [
+      { name: "alternate contact joined on the primary contact id", from: 'ON s."AlternateContactPersonID" = ap."PersonID"', to: 'ON s."PrimaryContactPersonID" = ap."PersonID"' },
+      { name: "delivery method LEFT JOIN becomes INNER JOIN", from: "LEFT OUTER JOIN application.delivery_methods", to: "INNER JOIN application.delivery_methods" },
+    ],
   },
   {
     ...base, schema: "Website", name: "CalculateCustomerPrice", objectClass: "function", windowParams: false, orderKey: [],

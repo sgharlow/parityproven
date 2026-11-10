@@ -1,5 +1,5 @@
 {
-  "builtAt": "2026-11-10T05:04:57.770Z",
+  "builtAt": "2026-11-10T05:24:16.477Z",
   "receipts": [
     {
       "database": "WideWorldImporters",
@@ -70,7 +70,7 @@
       "objectName": "Customers",
       "objectClass": "view",
       "tier": "simple",
-      "status": "failed",
+      "status": "pending",
       "path": "WideWorldImporters/Website.Customers.json"
     },
     {
@@ -79,14 +79,14 @@
       "objectName": "Suppliers",
       "objectClass": "view",
       "tier": "simple",
-      "status": "failed",
+      "status": "pending",
       "path": "WideWorldImporters/Website.Suppliers.json"
     }
   ],
   "summary": {
     "total": 9,
     "verified": 0,
-    "pending": 7,
-    "failed": 2
+    "pending": 9,
+    "failed": 0
   }
 }

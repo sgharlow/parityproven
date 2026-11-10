@@ -11,9 +11,9 @@
   "tier": "simple",
   "code": {
     "source": "\r\nCREATE VIEW Website.Suppliers\r\nAS\r\nSELECT s.SupplierID,\r\n       s.SupplierName,\r\n       sc.SupplierCategoryName,\r\n       pp.FullName AS PrimaryContact,\r\n       ap.FullName AS AlternateContact,\r\n       s.PhoneNumber,\r\n       s.FaxNumber,\r\n       s.WebsiteURL,\r\n       dm.DeliveryMethodName AS DeliveryMethod,\r\n       c.CityName AS CityName,\r\n       s.DeliveryLocation AS DeliveryLocation,\r\n       s.SupplierReference\r\nFROM Purchasing.Suppliers AS s\r\nLEFT OUTER JOIN Purchasing.SupplierCategories AS sc\r\nON s.SupplierCategoryID = sc.SupplierCategoryID\r\nLEFT OUTER JOIN [Application].People AS pp\r\nON s.PrimaryContactPersonID = pp.PersonID\r\nLEFT OUTER JOIN [Application].People AS ap\r\nON s.AlternateContactPersonID = ap.PersonID\r\nLEFT OUTER JOIN [Application].DeliveryMethods AS dm\r\nON s.DeliveryMethodID = dm.DeliveryMethodID\r\nLEFT OUTER JOIN [Application].Cities AS c\r\nON s.DeliveryCityID = c.CityID\r\n",
-    "engineOutput": "-- PostgreSQL conversion of the view Website.Suppliers (WideWorldImporters).\n-- Engine: Kiro first draft (see pair record).\n--\n-- KNOWN GAP: the source view exposes s.DeliveryLocation, a SQL Server geography column.\n-- PostgreSQL has no built-in equivalent; it needs PostGIS, which is not in the pinned\n-- postgres:18 image. This view omits the column, so its interface differs from the source\n-- and it cannot be called equivalent. The mapping is a decision for the project owner.\n\nCREATE OR REPLACE VIEW website.suppliers AS\nSELECT s.\"SupplierID\"            AS \"SupplierID\",\n       s.\"SupplierName\"          AS \"SupplierName\",\n       sc.\"SupplierCategoryName\" AS \"SupplierCategoryName\",\n       pp.\"FullName\"             AS \"PrimaryContact\",\n       ap.\"FullName\"             AS \"AlternateContact\",\n       s.\"PhoneNumber\"           AS \"PhoneNumber\",\n       s.\"FaxNumber\"             AS \"FaxNumber\",\n       s.\"WebsiteURL\"            AS \"WebsiteURL\",\n       dm.\"DeliveryMethodName\"   AS \"DeliveryMethod\",\n       c.\"CityName\"              AS \"CityName\",\n       s.\"SupplierReference\"     AS \"SupplierReference\"\nFROM purchasing.suppliers AS s\nLEFT OUTER JOIN purchasing.supplier_categories AS sc ON s.\"SupplierCategoryID\" = sc.\"SupplierCategoryID\"\nLEFT OUTER JOIN application.people AS pp ON s.\"PrimaryContactPersonID\" = pp.\"PersonID\"\nLEFT OUTER JOIN application.people AS ap ON s.\"AlternateContactPersonID\" = ap.\"PersonID\"\nLEFT OUTER JOIN application.delivery_methods AS dm ON s.\"DeliveryMethodID\" = dm.\"DeliveryMethodID\"\nLEFT OUTER JOIN application.cities AS c ON s.\"DeliveryCityID\" = c.\"CityID\";\n",
-    "final": "-- PostgreSQL conversion of the view Website.Suppliers (WideWorldImporters).\n-- Engine: Kiro first draft (see pair record).\n--\n-- KNOWN GAP: the source view exposes s.DeliveryLocation, a SQL Server geography column.\n-- PostgreSQL has no built-in equivalent; it needs PostGIS, which is not in the pinned\n-- postgres:18 image. This view omits the column, so its interface differs from the source\n-- and it cannot be called equivalent. The mapping is a decision for the project owner.\n\nCREATE OR REPLACE VIEW website.suppliers AS\nSELECT s.\"SupplierID\"            AS \"SupplierID\",\n       s.\"SupplierName\"          AS \"SupplierName\",\n       sc.\"SupplierCategoryName\" AS \"SupplierCategoryName\",\n       pp.\"FullName\"             AS \"PrimaryContact\",\n       ap.\"FullName\"             AS \"AlternateContact\",\n       s.\"PhoneNumber\"           AS \"PhoneNumber\",\n       s.\"FaxNumber\"             AS \"FaxNumber\",\n       s.\"WebsiteURL\"            AS \"WebsiteURL\",\n       dm.\"DeliveryMethodName\"   AS \"DeliveryMethod\",\n       c.\"CityName\"              AS \"CityName\",\n       s.\"SupplierReference\"     AS \"SupplierReference\"\nFROM purchasing.suppliers AS s\nLEFT OUTER JOIN purchasing.supplier_categories AS sc ON s.\"SupplierCategoryID\" = sc.\"SupplierCategoryID\"\nLEFT OUTER JOIN application.people AS pp ON s.\"PrimaryContactPersonID\" = pp.\"PersonID\"\nLEFT OUTER JOIN application.people AS ap ON s.\"AlternateContactPersonID\" = ap.\"PersonID\"\nLEFT OUTER JOIN application.delivery_methods AS dm ON s.\"DeliveryMethodID\" = dm.\"DeliveryMethodID\"\nLEFT OUTER JOIN application.cities AS c ON s.\"DeliveryCityID\" = c.\"CityID\";\n",
-    "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
+    "engineOutput": "-- PostgreSQL conversion of the view Website.Suppliers (WideWorldImporters).\n-- Engine: Kiro first draft (see pair record).\n--\n-- First draft: omits s.DeliveryLocation (SQL Server geography) because the image then in use had no PostGIS.\n\nCREATE OR REPLACE VIEW website.suppliers AS\nSELECT s.\"SupplierID\"            AS \"SupplierID\",\n       s.\"SupplierName\"          AS \"SupplierName\",\n       sc.\"SupplierCategoryName\" AS \"SupplierCategoryName\",\n       pp.\"FullName\"             AS \"PrimaryContact\",\n       ap.\"FullName\"             AS \"AlternateContact\",\n       s.\"PhoneNumber\"           AS \"PhoneNumber\",\n       s.\"FaxNumber\"             AS \"FaxNumber\",\n       s.\"WebsiteURL\"            AS \"WebsiteURL\",\n       dm.\"DeliveryMethodName\"   AS \"DeliveryMethod\",\n       c.\"CityName\"              AS \"CityName\",\n       s.\"SupplierReference\"     AS \"SupplierReference\"\nFROM purchasing.suppliers AS s\nLEFT OUTER JOIN purchasing.supplier_categories AS sc ON s.\"SupplierCategoryID\" = sc.\"SupplierCategoryID\"\nLEFT OUTER JOIN application.people AS pp ON s.\"PrimaryContactPersonID\" = pp.\"PersonID\"\nLEFT OUTER JOIN application.people AS ap ON s.\"AlternateContactPersonID\" = ap.\"PersonID\"\nLEFT OUTER JOIN application.delivery_methods AS dm ON s.\"DeliveryMethodID\" = dm.\"DeliveryMethodID\"\nLEFT OUTER JOIN application.cities AS c ON s.\"DeliveryCityID\" = c.\"CityID\";\n",
+    "final": "-- PostgreSQL conversion of the view Website.Suppliers (WideWorldImporters).\n-- Engine: Kiro first draft (see pair record).\n--\n-- DeliveryLocation is a SQL Server geography column; it maps to PostGIS geography (SRID 4326)\n-- in the pinned postgis/postgis:18-3.6 image. History: the first draft omitted this column\n-- because the earlier image had no PostGIS; that draft was recorded as a failed pair.\n\nCREATE OR REPLACE VIEW website.suppliers AS\nSELECT s.\"SupplierID\"            AS \"SupplierID\",\n       s.\"SupplierName\"          AS \"SupplierName\",\n       sc.\"SupplierCategoryName\" AS \"SupplierCategoryName\",\n       pp.\"FullName\"             AS \"PrimaryContact\",\n       ap.\"FullName\"             AS \"AlternateContact\",\n       s.\"PhoneNumber\"           AS \"PhoneNumber\",\n       s.\"FaxNumber\"             AS \"FaxNumber\",\n       s.\"WebsiteURL\"            AS \"WebsiteURL\",\n       dm.\"DeliveryMethodName\"   AS \"DeliveryMethod\",\n       c.\"CityName\"              AS \"CityName\",\n       s.\"DeliveryLocation\"      AS \"DeliveryLocation\",\n       s.\"SupplierReference\"     AS \"SupplierReference\"\nFROM purchasing.suppliers AS s\nLEFT OUTER JOIN purchasing.supplier_categories AS sc ON s.\"SupplierCategoryID\" = sc.\"SupplierCategoryID\"\nLEFT OUTER JOIN application.people AS pp ON s.\"PrimaryContactPersonID\" = pp.\"PersonID\"\nLEFT OUTER JOIN application.people AS ap ON s.\"AlternateContactPersonID\" = ap.\"PersonID\"\nLEFT OUTER JOIN application.delivery_methods AS dm ON s.\"DeliveryMethodID\" = dm.\"DeliveryMethodID\"\nLEFT OUTER JOIN application.cities AS c ON s.\"DeliveryCityID\" = c.\"CityID\";\n",
+    "diff": "--- engineOutput\n+++ final\n@@ engineOutput line 4 / final line 4 @@\n+-- DeliveryLocation is a SQL Server geography column; it maps to PostGIS geography (SRID 4326)\n+-- in the pinned postgis/postgis:18-3.6 image. History: the first draft omitted this column\n+-- because the earlier image had no PostGIS; that draft was recorded as a failed pair.\n--- First draft: omits s.DeliveryLocation (SQL Server geography) because the image then in use had no PostGIS.\n@@ engineOutput line 17 / final line 19 @@\n+       s.\"DeliveryLocation\"      AS \"DeliveryLocation\",",
     "engine": "kiro",
     "notes": [
       "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign keys and no pre-existing rows."
@@ -46,8 +46,8 @@
     },
     {
       "sqlServerType": "geography NULL",
-      "postgresType": "text",
-      "notes": "NO EQUIVALENT: PostgreSQL needs PostGIS (geography), which is not in the pinned postgres:18 image. A text stand-in column holds NULL only."
+      "postgresType": "geography",
+      "notes": "SQL Server geography maps to PostGIS geography (SRID 4326). Only point values are generated and compared, as well-known text."
     },
     {
       "sqlServerType": "nvarchar(50) NOT NULL",
@@ -57,23 +57,30 @@
   "evidence": {
     "step1": "pass",
     "step2": "not-run",
-    "step3": "fail",
+    "step3": "pass",
     "step4": "not-run",
     "step5": "not-run",
     "step6": "not-run",
-    "rowsCompared": 16,
+    "rowsCompared": 396,
     "trapsCovered": [
       "NULL in every nullable column",
       "empty string and trailing spaces"
     ],
     "pbtSeeds": [
-      1697408515
+      1120154690
     ],
-    "samples": 14,
-    "samplesWithRows": 14,
+    "engineOutputCheck": {
+      "step3": "fail",
+      "seed": 1120154690,
+      "detail": "column \"DeliveryLocation\" does not exist"
+    },
+    "samples": 200,
+    "samplesWithRows": 195,
     "subMicrosecondNormalised": 0,
-    "mutantsDetected": [],
-    "failureDetail": "DeliveryLocation is a SQL Server geography column. PostgreSQL has no built-in equivalent; it needs PostGIS, which is not in the pinned postgres:18 image. The converted view therefore omits the column and its interface differs from the source. All other columns match the source on 187/200 generated samples (376 rows); the only difference is \"DeliveryLocation\".",
+    "mutantsDetected": [
+      "alternate contact joined on the primary contact id",
+      "delivery method LEFT JOIN becomes INNER JOIN"
+    ],
     "harnessVersion": "harness-generic-0.2.0"
   },
   "effort": {
@@ -81,5 +88,5 @@
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "failed"
+  "status": "pending"
 }

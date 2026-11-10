@@ -4,6 +4,8 @@
 -- from conversions/<database>/<Schema>.<Object>.sql, so the SQL Server and PostgreSQL sides
 -- always come from the same source of truth.
 
+CREATE EXTENSION IF NOT EXISTS postgis;
+
 CREATE SCHEMA IF NOT EXISTS integration;
 CREATE SCHEMA IF NOT EXISTS sales;
 CREATE SCHEMA IF NOT EXISTS purchasing;

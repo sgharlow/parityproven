@@ -1,10 +1,9 @@
 -- PostgreSQL conversion of the view Website.Suppliers (WideWorldImporters).
 -- Engine: Kiro first draft (see pair record).
 --
--- KNOWN GAP: the source view exposes s.DeliveryLocation, a SQL Server geography column.
--- PostgreSQL has no built-in equivalent; it needs PostGIS, which is not in the pinned
--- postgres:18 image. This view omits the column, so its interface differs from the source
--- and it cannot be called equivalent. The mapping is a decision for the project owner.
+-- DeliveryLocation is a SQL Server geography column; it maps to PostGIS geography (SRID 4326)
+-- in the pinned postgis/postgis:18-3.6 image. History: the first draft omitted this column
+-- because the earlier image had no PostGIS; that draft was recorded as a failed pair.
 
 CREATE OR REPLACE VIEW website.suppliers AS
 SELECT s."SupplierID"            AS "SupplierID",
@@ -17,6 +16,7 @@ SELECT s."SupplierID"            AS "SupplierID",
        s."WebsiteURL"            AS "WebsiteURL",
        dm."DeliveryMethodName"   AS "DeliveryMethod",
        c."CityName"              AS "CityName",
+       s."DeliveryLocation"      AS "DeliveryLocation",
        s."SupplierReference"     AS "SupplierReference"
 FROM purchasing.suppliers AS s
 LEFT OUTER JOIN purchasing.supplier_categories AS sc ON s."SupplierCategoryID" = sc."SupplierCategoryID"

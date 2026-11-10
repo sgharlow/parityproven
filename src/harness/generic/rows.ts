@@ -93,7 +93,13 @@ function baseColArb(col: ColSpec, c: Cutoffs | null, k: number): fc.Arbitrary<un
     case "bit":
       return fc.boolean();
     case "geography":
-      return fc.constant(null);   // no PostgreSQL equivalent; only NULL can be compared
+      // WKT point (longitude latitude), 4 decimals; includes the poles, antimeridian and zero
+      return fc
+        .tuple(
+          fc.oneof(fc.constantFrom(-180, 0, 180), fc.integer({ min: -1_800_000, max: 1_800_000 }).map((n) => n / 10000)),
+          fc.oneof(fc.constantFrom(-90, 0, 90), fc.integer({ min: -900_000, max: 900_000 }).map((n) => n / 10000))
+        )
+        .map(([lon, lat]) => `POINT(${lon} ${lat})`);
   }
 }
 

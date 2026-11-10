@@ -27,6 +27,9 @@ function canonicalCell(value: unknown, declaredType: string): string {
     return `t:${microsToIso(micros)}`;
   }
   if (typeof value === "string") {
+    // well-known text from STAsText() ("POINT (x y)") and ST_AsText() ("POINT(x y)")
+    const pt = value.match(/^POINT\s*\(\s*(-?[\d.eE+-]+)\s+(-?[\d.eE+-]+)\s*\)$/i);
+    if (pt) return `g:POINT(${Number(pt[1])} ${Number(pt[2])})`;
     if (declaredType === "date") return `d:${value.slice(0, 10)}`;
     if (declaredType === "timestamp") {
       const m = value.replace(" ", "T").match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d+))?$/);
