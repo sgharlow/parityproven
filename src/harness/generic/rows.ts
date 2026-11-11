@@ -75,13 +75,51 @@ export function baseColArb(col: ColSpec, c: Cutoffs | null, k: number): fc.Arbit
   const t = col.type;
   switch (t.kind) {
     case "int":
+    case "smallint":
+    case "tinyint":
+    case "bigint": {
       // ref columns draw from the dataset's key universe 1..k; an occasional dangling key (k+1) keeps joins honest
-      return col.role === "ref"
-        ? fc.oneof({ arbitrary: fc.integer({ min: 1, max: k }), weight: 12 }, { arbitrary: fc.constant(k + 1), weight: 1 })
-        : fc.oneof(fc.constantFrom(0, 1, -1, 2, 3, 10), fc.integer({ min: -50, max: 500 }));
+      if (col.role === "ref") {
+        return fc.oneof({ arbitrary: fc.integer({ min: 1, max: k }), weight: 12 }, { arbitrary: fc.constant(k + 1), weight: 1 });
+      }
+      const natural: [number, number] =
+        t.kind === "tinyint" ? [0, 255] : t.kind === "smallint" ? [-32768, 32767] : t.kind === "bigint" ? [-1_000_000_000, 1_000_000_000] : [-50, 500];
+      const [lo, hi] = col.range ?? natural;
+      const edge = [lo, hi, 0, 1, -1, 2, 3, 6, 7, 10, ...(col.special ?? [])].filter((n) => n >= lo && n <= hi);
+      return fc.oneof(
+        { arbitrary: fc.constantFrom(...edge), weight: 3 },
+        { arbitrary: fc.integer({ min: Math.max(lo, -50), max: Math.min(hi, 500) }), weight: 2 },
+        { arbitrary: fc.integer({ min: lo, max: hi }), weight: 1 }
+      );
+    }
+    case "money":
+      return decimalArb(19, 4);
+    case "datetime": {
+      // Values SQL Server datetime can represent exactly. Two populations:
+      //  - columns named Start*/End* (validity periods) sit on either side of the canonical probe instant
+      //    2020-01-02 12:00:00 (End* is often NULL = open period), with the probe itself and +/-3 ms as edges
+      //  - everything else, including the probe arguments, mostly IS the probe instant, with edges around it
+      const probe = "2020-01-02T12:00:00.000";
+      const edges = ["2020-01-02T11:59:59.997", "2020-01-02T12:00:00.003", "2020-01-01T00:00:00.000", "2020-01-04T00:00:00.000"];
+      if (/^start/i.test(col.name)) {
+        return fc.oneof({ arbitrary: fc.constant("2020-01-01T00:00:00.000"), weight: 4 }, { arbitrary: fc.constantFrom(probe, ...edges), weight: 2 });
+      }
+      if (/^end/i.test(col.name)) {
+        return fc.oneof({ arbitrary: fc.constant("2020-01-03T00:00:00.000"), weight: 4 }, { arbitrary: fc.constantFrom(probe, ...edges), weight: 2 });
+      }
+      return fc.oneof({ arbitrary: fc.constant(probe), weight: 4 }, { arbitrary: fc.constantFrom(...edges), weight: 2 });
+    }
+    case "char":
+      if (col.role === "ref" && t.n >= 2) {
+        return fc.oneof({ arbitrary: fc.integer({ min: 1, max: k }).map((n) => `K${n}`), weight: 12 }, { arbitrary: fc.constant(`K${k + 1}`), weight: 1 });
+      }
+      return fc.oneof(fc.constantFrom("", "a", "A", " a"), fc.string({ maxLength: t.n })).map((s) => s.slice(0, t.n));
     case "decimal":
       return decimalArb(t.p, t.s);
     case "nvarchar":
+      if (col.role === "ref" && t.n >= 2) {
+        return fc.oneof({ arbitrary: fc.integer({ min: 1, max: k }).map((n) => `K${n}`), weight: 12 }, { arbitrary: fc.constant(`K${k + 1}`), weight: 1 });
+      }
       return fc.oneof(
         fc.constantFrom("", " ", "a", "A", "a ", " a", "Café", "x'y"),
         fc.string({ maxLength: Math.min(t.n, 8) })
@@ -110,7 +148,7 @@ function tableArb(t: TableSpec, c: Cutoffs | null, k: number): fc.Arbitrary<Row[
     const base = baseColArb(col, c, k);
     shape[col.name] = col.nullable ? fc.option(base, { nil: null, freq: 4 }) : base;
   }
-  const pks = t.columns.filter((x) => x.role === "pk").map((x) => x.name);
+  const pks = t.columns.filter((x) => x.role === "pk");
   // About k rows so every key in 1..k usually has a partner; empty (~5%) and larger tables still occur.
   const rec = fc.record(shape);
   const rowsArb = fc.oneof(
@@ -121,7 +159,7 @@ function tableArb(t: TableSpec, c: Cutoffs | null, k: number): fc.Arbitrary<Row[
   return rowsArb.map((rows) =>
     rows.map((r, i) => {
       const row: Row = {};
-      for (const pk of pks) row[pk] = i + 1;
+      for (const pk of pks) row[pk.name] = pk.type.kind === "nvarchar" || pk.type.kind === "char" ? `K${i + 1}` : i + 1;
       return { ...row, ...r };
     })
   );
@@ -136,7 +174,9 @@ export function datasetArb(spec: ObjectSpec): fc.Arbitrary<Dataset> {
     const eff = spec.windowParams ? c : null;
     const shape: Record<string, fc.Arbitrary<Row[]>> = {};
     for (const t of spec.tables) shape[tableKey(t)] = tableArb(t, eff, k);
-    const argsArb = fc.tuple(...(spec.params ?? []).map((p) => baseColArb(p, eff, k)));
+    const argsArb = fc.tuple(
+      ...(spec.params ?? []).map((p) => (p.nullable ? fc.option(baseColArb(p, eff, k), { nil: null, freq: 4 }) : baseColArb(p, eff, k)))
+    );
     return fc.tuple(fc.record(shape), argsArb).map(([tables, args]) => ({ cutoffs: eff, args: args as unknown[], tables }));
   });
 }

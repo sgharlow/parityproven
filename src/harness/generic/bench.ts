@@ -35,6 +35,8 @@ export interface BenchResult {
   ratio: number;
   threshold: number;
   passed: boolean;
+  /** Both engines finished in under 5 ms: the ratio is noise, not evidence of speed. */
+  belowResolution: boolean;
   resultRows: number;
   /** null when the results at volume matched; otherwise the first difference. */
   volumeMismatch: string | null;
@@ -145,7 +147,8 @@ export async function runBenchmark(
     postgresMs: Math.round(postgresMs * 100) / 100,
     ratio: Math.round(ratio * 100) / 100,
     threshold: RUNTIME_FACTOR,
-    passed: ratio <= RUNTIME_FACTOR,   // a result mismatch at volume is a step-3 finding, reported separately
+    passed: ratio <= RUNTIME_FACTOR || (sqlServerMs < 5 && postgresMs < 5),   // a result mismatch at volume is a step-3 finding, reported separately
+    belowResolution: sqlServerMs < 5 && postgresMs < 5,
     resultRows,
     volumeMismatch,
   };

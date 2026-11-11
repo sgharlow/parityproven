@@ -1,0 +1,104 @@
+{
+  "object": "Production.vProductAndDescription",
+  "type": "V",
+  "tables": [
+    {
+      "schema": "Production",
+      "name": "Product",
+      "objectType": "U",
+      "columns": [
+        {
+          "name": "ProductID",
+          "sqlType": "int",
+          "nullable": false,
+          "isPk": true,
+          "isFk": false
+        },
+        {
+          "name": "Name",
+          "sqlType": "nvarchar(50)",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        },
+        {
+          "name": "ProductModelID",
+          "sqlType": "int",
+          "nullable": true,
+          "isPk": false,
+          "isFk": true
+        }
+      ]
+    },
+    {
+      "schema": "Production",
+      "name": "ProductDescription",
+      "objectType": "U",
+      "columns": [
+        {
+          "name": "ProductDescriptionID",
+          "sqlType": "int",
+          "nullable": false,
+          "isPk": true,
+          "isFk": false
+        },
+        {
+          "name": "Description",
+          "sqlType": "nvarchar(400)",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        }
+      ]
+    },
+    {
+      "schema": "Production",
+      "name": "ProductModel",
+      "objectType": "U",
+      "columns": [
+        {
+          "name": "ProductModelID",
+          "sqlType": "int",
+          "nullable": false,
+          "isPk": true,
+          "isFk": false
+        },
+        {
+          "name": "Name",
+          "sqlType": "nvarchar(50)",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        }
+      ]
+    },
+    {
+      "schema": "Production",
+      "name": "ProductModelProductDescriptionCulture",
+      "objectType": "U",
+      "columns": [
+        {
+          "name": "ProductModelID",
+          "sqlType": "int",
+          "nullable": false,
+          "isPk": true,
+          "isFk": true
+        },
+        {
+          "name": "ProductDescriptionID",
+          "sqlType": "int",
+          "nullable": false,
+          "isPk": true,
+          "isFk": true
+        },
+        {
+          "name": "CultureID",
+          "sqlType": "nchar(6)",
+          "nullable": false,
+          "isPk": true,
+          "isFk": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "database": "AdventureWorks2025",
+  "schemaName": "dbo",
+  "objectName": "ufnGetDocumentStatusText",
+  "objectClass": "function",
+  "tier": "simple",
+  "status": "pending",
+  "code": {
+    "source": "\r\nCREATE FUNCTION [dbo].[ufnGetDocumentStatusText](@Status [tinyint])\r\nRETURNS [nvarchar](16)\r\nAS\r\n-- Returns the sales order status text representation for the status value.\r\nBEGIN\r\n    DECLARE @ret [nvarchar](16);\r\n\r\n    SET @ret =\r\n        CASE @Status\r\n            WHEN 1 THEN N'Pending approval'\r\n            WHEN 2 THEN N'Approved'\r\n            WHEN 3 THEN N'Obsolete'\r\n            ELSE N'** Invalid **'\r\n        END;\r\n   \r\n    RETURN @ret\r\nEND;\r\n",
+    "engineOutput": "-- PostgreSQL conversion of dbo.ufnGetDocumentStatusText (AdventureWorks2025).\n-- Engine: Kiro first draft (see pair record).\n-- tinyint -> smallint (PostgreSQL has no 1-byte integer); nvarchar(16) -> varchar(16).\n\nCREATE OR REPLACE FUNCTION dbo.ufn_get_document_status_text(status smallint)\nRETURNS varchar(16)\nLANGUAGE sql\nIMMUTABLE\nAS $$\n    SELECT CASE status\n               WHEN 1 THEN 'Pending approval'\n               WHEN 2 THEN 'Approved'\n               WHEN 3 THEN 'Obsolete'\n               ELSE '** Invalid **'\n           END\n$$;\n",
+    "final": "-- PostgreSQL conversion of dbo.ufnGetDocumentStatusText (AdventureWorks2025).\n-- Engine: Kiro first draft (see pair record).\n-- tinyint -> smallint (PostgreSQL has no 1-byte integer); nvarchar(16) -> varchar(16).\n\nCREATE OR REPLACE FUNCTION dbo.ufn_get_document_status_text(status smallint)\nRETURNS varchar(16)\nLANGUAGE sql\nIMMUTABLE\nAS $$\n    SELECT CASE status\n               WHEN 1 THEN 'Pending approval'\n               WHEN 2 THEN 'Approved'\n               WHEN 3 THEN 'Obsolete'\n               ELSE '** Invalid **'\n           END\n$$;\n",
+    "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
+    "engine": "kiro",
+    "notes": [
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign keys and no pre-existing rows."
+    ]
+  },
+  "columnMappings": [],
+  "verificationSteps": [
+    {
+      "step": 1,
+      "label": "Compiles and deploys on PostgreSQL",
+      "status": "pass"
+    },
+    {
+      "step": 2,
+      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "status": "not-run"
+    },
+    {
+      "step": 3,
+      "label": "Result sets match on generated data",
+      "status": "pass"
+    },
+    {
+      "step": 4,
+      "label": "Runtime within 1.5× factor",
+      "status": "pass"
+    },
+    {
+      "step": 5,
+      "label": "Second human review",
+      "status": "not-run"
+    },
+    {
+      "step": 6,
+      "label": "Acceptance on real data",
+      "status": "not-run"
+    }
+  ],
+  "evidence": {
+    "pbtSeeds": [
+      1164533016
+    ],
+    "rowsCompared": 200,
+    "samples": 200,
+    "samplesWithRows": 200,
+    "trapsCovered": [],
+    "mutantsDetected": [
+      "auto: first CASE result text altered"
+    ],
+    "runtime": {
+      "volume": 10,
+      "timedRuns": 7,
+      "sqlServerMs": 15,
+      "postgresMs": 3.83,
+      "ratio": 0.26,
+      "threshold": 1.5,
+      "passed": true,
+      "resultRows": 100,
+      "volumeMismatch": null
+    },
+    "subMicrosecondNormalised": 0,
+    "harnessVersion": "harness-generic-0.3.0"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "Kiro",
+    "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
+  },
+  "predictionCell": {
+    "p50Hours": 1.5,
+    "p90Hours": 4
+  },
+  "builtAt": "2026-11-11T02:07:18.690Z"
+}

@@ -1,0 +1,76 @@
+{
+  "object": "Person.vStateProvinceCountryRegion",
+  "type": "V",
+  "tables": [
+    {
+      "schema": "Person",
+      "name": "CountryRegion",
+      "objectType": "U",
+      "columns": [
+        {
+          "name": "CountryRegionCode",
+          "sqlType": "nvarchar(3)",
+          "nullable": false,
+          "isPk": true,
+          "isFk": false
+        },
+        {
+          "name": "Name",
+          "sqlType": "nvarchar(50)",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        }
+      ]
+    },
+    {
+      "schema": "Person",
+      "name": "StateProvince",
+      "objectType": "U",
+      "columns": [
+        {
+          "name": "StateProvinceID",
+          "sqlType": "int",
+          "nullable": false,
+          "isPk": true,
+          "isFk": false
+        },
+        {
+          "name": "StateProvinceCode",
+          "sqlType": "nchar(3)",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        },
+        {
+          "name": "CountryRegionCode",
+          "sqlType": "nvarchar(3)",
+          "nullable": false,
+          "isPk": false,
+          "isFk": true
+        },
+        {
+          "name": "IsOnlyStateProvinceFlag",
+          "sqlType": "bit",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        },
+        {
+          "name": "Name",
+          "sqlType": "nvarchar(50)",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        },
+        {
+          "name": "TerritoryID",
+          "sqlType": "int",
+          "nullable": false,
+          "isPk": false,
+          "isFk": true
+        }
+      ]
+    }
+  ]
+}

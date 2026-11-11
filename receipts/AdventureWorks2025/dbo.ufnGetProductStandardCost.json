@@ -1,0 +1,112 @@
+{
+  "database": "AdventureWorks2025",
+  "schemaName": "dbo",
+  "objectName": "ufnGetProductStandardCost",
+  "objectClass": "function",
+  "tier": "simple",
+  "status": "pending",
+  "code": {
+    "source": "\r\nCREATE FUNCTION [dbo].[ufnGetProductStandardCost](@ProductID [int], @OrderDate [datetime])\r\nRETURNS [money]\r\nAS\r\n-- Returns the standard cost for the product on a specific date.\r\nBEGIN\r\n    DECLARE @StandardCost money;\r\n\r\n    SELECT @StandardCost = pch.[StandardCost]\r\n    FROM [Production].[Product] p\r\n        INNER JOIN [Production].[ProductCostHistory] pch\r\n        ON p.[ProductID] = pch.[ProductID]\r\n            AND p.[ProductID] = @ProductID\r\n            AND @OrderDate BETWEEN pch.[StartDate] AND COALESCE(pch.[EndDate], CONVERT(datetime, '99991231', 112)); -- Make sure we get all the prices!\r\n\r\n    RETURN @StandardCost;\r\nEND;\r\n",
+    "engineOutput": "-- PostgreSQL conversion of dbo.ufnGetProductStandardCost (AdventureWorks2025).\n-- Engine: Kiro first draft (see pair record).\n-- money -> numeric(19,4); datetime -> timestamp.\n-- Precondition: at most one cost period per product (T-SQL `SELECT @x = ...` keeps the last row read).\n\nCREATE OR REPLACE FUNCTION dbo.ufn_get_product_standard_cost(product_id integer, order_date timestamp)\nRETURNS numeric(19,4)\nLANGUAGE sql\nSTABLE\nAS $$\n    SELECT pch.\"StandardCost\"\n      FROM production.product AS p\n     INNER JOIN production.product_cost_history AS pch\n        ON p.\"ProductID\" = pch.\"ProductID\"\n       AND p.\"ProductID\" = product_id\n       AND order_date BETWEEN pch.\"StartDate\" AND COALESCE(pch.\"EndDate\", TIMESTAMP '9999-12-31 00:00:00')\n     LIMIT 1\n$$;\n",
+    "final": "-- PostgreSQL conversion of dbo.ufnGetProductStandardCost (AdventureWorks2025).\n-- Engine: Kiro first draft (see pair record).\n-- money -> numeric(19,4); datetime -> timestamp.\n-- Precondition: at most one cost period per product (T-SQL `SELECT @x = ...` keeps the last row read).\n\nCREATE OR REPLACE FUNCTION dbo.ufn_get_product_standard_cost(product_id integer, order_date timestamp)\nRETURNS numeric(19,4)\nLANGUAGE sql\nSTABLE\nAS $$\n    SELECT pch.\"StandardCost\"\n      FROM production.product AS p\n     INNER JOIN production.product_cost_history AS pch\n        ON p.\"ProductID\" = pch.\"ProductID\"\n       AND p.\"ProductID\" = product_id\n       AND order_date BETWEEN pch.\"StartDate\" AND COALESCE(pch.\"EndDate\", TIMESTAMP '9999-12-31 00:00:00')\n     LIMIT 1\n$$;\n",
+    "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
+    "engine": "kiro",
+    "notes": [
+      "At most one price period per product (precondition): with overlapping periods the T-SQL `SELECT @x = ...` keeps the last row read, which is undefined.",
+      "Step 4 finding: SQL Server 2025 inlines this scalar function into the calling query (sys.sql_modules.is_inlineable = 1, Froid). PostgreSQL runs the function once per call, so per-row calls cost about 2x more at 20,000 calls. Equivalence is unaffected; a caller that needs the speed would inline the expression or use a set-based join.",
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
+    ]
+  },
+  "columnMappings": [
+    {
+      "sqlServerType": "int NOT NULL",
+      "postgresType": "integer NOT NULL"
+    },
+    {
+      "sqlServerType": "datetime NOT NULL",
+      "postgresType": "timestamp(3) NOT NULL",
+      "notes": "datetime rounds to .000/.003/.007 s on SQL Server; timestamp(3) does not. Only SQL Server-representable values are generated, and results are compared at microsecond resolution."
+    },
+    {
+      "sqlServerType": "datetime NULL",
+      "postgresType": "timestamp(3)",
+      "notes": "datetime rounds to .000/.003/.007 s on SQL Server; timestamp(3) does not. Only SQL Server-representable values are generated, and results are compared at microsecond resolution."
+    },
+    {
+      "sqlServerType": "money NOT NULL",
+      "postgresType": "numeric(19,4) NOT NULL",
+      "notes": "money -> numeric(19,4), not PostgreSQL's locale-dependent money type. Money arithmetic rounds to 4 places on SQL Server."
+    }
+  ],
+  "verificationSteps": [
+    {
+      "step": 1,
+      "label": "Compiles and deploys on PostgreSQL",
+      "status": "pass"
+    },
+    {
+      "step": 2,
+      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "status": "not-run"
+    },
+    {
+      "step": 3,
+      "label": "Result sets match on generated data",
+      "status": "pass"
+    },
+    {
+      "step": 4,
+      "label": "Runtime within 1.5× factor",
+      "status": "fail"
+    },
+    {
+      "step": 5,
+      "label": "Second human review",
+      "status": "not-run"
+    },
+    {
+      "step": 6,
+      "label": "Acceptance on real data",
+      "status": "not-run"
+    }
+  ],
+  "evidence": {
+    "pbtSeeds": [
+      1778954492
+    ],
+    "rowsCompared": 200,
+    "samples": 200,
+    "samplesWithRows": 118,
+    "trapsCovered": [
+      "NULL in every nullable column"
+    ],
+    "mutantsDetected": [
+      "auto: first AND becomes OR",
+      "auto: COALESCE first argument dropped"
+    ],
+    "runtime": {
+      "volume": 2000,
+      "timedRuns": 7,
+      "sqlServerMs": 73,
+      "postgresMs": 152.03,
+      "ratio": 2.08,
+      "threshold": 1.5,
+      "passed": false,
+      "belowResolution": false,
+      "resultRows": 100,
+      "volumeMismatch": null
+    },
+    "subMicrosecondNormalised": 0,
+    "harnessVersion": "harness-generic-0.3.0"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "Kiro",
+    "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
+  },
+  "predictionCell": {
+    "p50Hours": 1.5,
+    "p90Hours": 4
+  },
+  "builtAt": "2026-11-11T02:07:18.691Z"
+}

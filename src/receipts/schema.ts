@@ -34,7 +34,7 @@ export interface ReceiptFile {
     failureDetail?: string;
     runtime?: {
       volume: number; timedRuns: number; sqlServerMs: number; postgresMs: number; ratio: number;
-      threshold: number; resultRows: number; volumeMismatch: string | null;
+      threshold: number; belowResolution?: boolean; resultRows: number; volumeMismatch: string | null;
     };
     engineOutputCheck?: { step3: StepStatus; seed: number; detail?: string };
     subMicrosecondNormalised?: number;

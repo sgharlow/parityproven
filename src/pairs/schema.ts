@@ -74,6 +74,7 @@ export interface PairRecord {
       postgresMs: number;
       ratio: number;
       threshold: number;
+      belowResolution?: boolean;
       resultRows: number;
       /** Rows compared at volume (step 3, large row counts); mismatch text if the results differed. */
       volumeMismatch: string | null;

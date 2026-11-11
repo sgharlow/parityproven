@@ -1,0 +1,41 @@
+{
+  "object": "HumanResources.vJobCandidate",
+  "type": "V",
+  "tables": [
+    {
+      "schema": "HumanResources",
+      "name": "JobCandidate",
+      "objectType": "U",
+      "columns": [
+        {
+          "name": "JobCandidateID",
+          "sqlType": "int",
+          "nullable": false,
+          "isPk": true,
+          "isFk": false
+        },
+        {
+          "name": "BusinessEntityID",
+          "sqlType": "int",
+          "nullable": true,
+          "isPk": false,
+          "isFk": true
+        },
+        {
+          "name": "Resume",
+          "sqlType": "xml",
+          "nullable": true,
+          "isPk": false,
+          "isFk": false
+        },
+        {
+          "name": "ModifiedDate",
+          "sqlType": "datetime",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        }
+      ]
+    }
+  ]
+}

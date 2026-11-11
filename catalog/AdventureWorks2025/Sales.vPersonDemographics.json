@@ -1,0 +1,27 @@
+{
+  "object": "Sales.vPersonDemographics",
+  "type": "V",
+  "tables": [
+    {
+      "schema": "Person",
+      "name": "Person",
+      "objectType": "U",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlType": "int",
+          "nullable": false,
+          "isPk": true,
+          "isFk": true
+        },
+        {
+          "name": "Demographics",
+          "sqlType": "xml",
+          "nullable": true,
+          "isPk": false,
+          "isFk": false
+        }
+      ]
+    }
+  ]
+}

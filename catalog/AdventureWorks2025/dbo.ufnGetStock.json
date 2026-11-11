@@ -1,0 +1,34 @@
+{
+  "object": "dbo.ufnGetStock",
+  "type": "FN",
+  "tables": [
+    {
+      "schema": "Production",
+      "name": "ProductInventory",
+      "objectType": "U",
+      "columns": [
+        {
+          "name": "ProductID",
+          "sqlType": "int",
+          "nullable": false,
+          "isPk": true,
+          "isFk": true
+        },
+        {
+          "name": "LocationID",
+          "sqlType": "smallint",
+          "nullable": false,
+          "isPk": true,
+          "isFk": true
+        },
+        {
+          "name": "Quantity",
+          "sqlType": "smallint",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        }
+      ]
+    }
+  ]
+}

@@ -58,8 +58,15 @@ export async function prepareSqlServer(conn: Connections, spec: ObjectSpec, defi
   await conn.mssqlMaster.query(`CREATE DATABASE ${SCRATCH_DB}`, []);
   const scratch = new MssqlClient({ server: "localhost", port: 1433, user: "sa", password: conn.saPassword, database: SCRATCH_DB });
   const schemas = new Set<string>([spec.schema, ...spec.tables.map((t) => t.schema)]);
+  schemas.delete("dbo");   // exists in every new database
   for (const s of schemas) await scratch.query(`CREATE SCHEMA [${s}]`, []);
-  for (const t of spec.tables) await scratch.query(sqlServerDdl(t), []);
+  for (const t of spec.tables) {
+    await scratch.query(sqlServerDdl(t), []);
+    // Modelling assumption, applied to both engines: every foreign-key column is indexed (as real schemas usually do).
+    for (const c of t.columns.filter((x) => x.role === "ref")) {
+      await scratch.query(`CREATE INDEX [ix_${t.name}_${c.name}] ON [${t.schema}].[${t.name}] ([${c.name}])`, []);
+    }
+  }
   await scratch.query(definition, []);
   return scratch;
 }
@@ -72,6 +79,9 @@ export async function preparePostgres(conn: Connections, spec: ObjectSpec): Prom
   for (const t of spec.tables) {
     await conn.pg.query(`DROP TABLE IF EXISTS ${pgTableName(t)} CASCADE`, []);
     await conn.pg.query(postgresDdl(t), []);
+    for (const c of t.columns.filter((x) => x.role === "ref")) {
+      await conn.pg.query(`CREATE INDEX "ix_${t.name}_${c.name}" ON ${pgTableName(t)} ("${c.name}")`, []);
+    }
   }
 }
 

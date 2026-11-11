@@ -1,0 +1,48 @@
+{
+  "object": "Production.vProductModelCatalogDescription",
+  "type": "V",
+  "tables": [
+    {
+      "schema": "Production",
+      "name": "ProductModel",
+      "objectType": "U",
+      "columns": [
+        {
+          "name": "ProductModelID",
+          "sqlType": "int",
+          "nullable": false,
+          "isPk": true,
+          "isFk": false
+        },
+        {
+          "name": "Name",
+          "sqlType": "nvarchar(50)",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        },
+        {
+          "name": "CatalogDescription",
+          "sqlType": "xml",
+          "nullable": true,
+          "isPk": false,
+          "isFk": false
+        },
+        {
+          "name": "rowguid",
+          "sqlType": "uniqueidentifier",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        },
+        {
+          "name": "ModifiedDate",
+          "sqlType": "datetime",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        }
+      ]
+    }
+  ]
+}

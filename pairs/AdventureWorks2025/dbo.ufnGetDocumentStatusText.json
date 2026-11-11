@@ -1,0 +1,61 @@
+{
+  "origin": {
+    "repo": "https://github.com/microsoft/sql-server-samples",
+    "release": "adventureworks",
+    "license": "MIT",
+    "assetUrl": "https://github.com/microsoft/sql-server-samples/releases/download/adventureworks/AdventureWorks2025.bak",
+    "sha256": "fa6a2a5d431ad88123f89b36b1f2c7e42ca4bdf6b293269a44df80f6de3738a5"
+  },
+  "conversionType": "tsql-to-plpgsql",
+  "objectClass": "function",
+  "tier": "simple",
+  "code": {
+    "source": "\r\nCREATE FUNCTION [dbo].[ufnGetDocumentStatusText](@Status [tinyint])\r\nRETURNS [nvarchar](16)\r\nAS\r\n-- Returns the sales order status text representation for the status value.\r\nBEGIN\r\n    DECLARE @ret [nvarchar](16);\r\n\r\n    SET @ret =\r\n        CASE @Status\r\n            WHEN 1 THEN N'Pending approval'\r\n            WHEN 2 THEN N'Approved'\r\n            WHEN 3 THEN N'Obsolete'\r\n            ELSE N'** Invalid **'\r\n        END;\r\n   \r\n    RETURN @ret\r\nEND;\r\n",
+    "engineOutput": "-- PostgreSQL conversion of dbo.ufnGetDocumentStatusText (AdventureWorks2025).\n-- Engine: Kiro first draft (see pair record).\n-- tinyint -> smallint (PostgreSQL has no 1-byte integer); nvarchar(16) -> varchar(16).\n\nCREATE OR REPLACE FUNCTION dbo.ufn_get_document_status_text(status smallint)\nRETURNS varchar(16)\nLANGUAGE sql\nIMMUTABLE\nAS $$\n    SELECT CASE status\n               WHEN 1 THEN 'Pending approval'\n               WHEN 2 THEN 'Approved'\n               WHEN 3 THEN 'Obsolete'\n               ELSE '** Invalid **'\n           END\n$$;\n",
+    "final": "-- PostgreSQL conversion of dbo.ufnGetDocumentStatusText (AdventureWorks2025).\n-- Engine: Kiro first draft (see pair record).\n-- tinyint -> smallint (PostgreSQL has no 1-byte integer); nvarchar(16) -> varchar(16).\n\nCREATE OR REPLACE FUNCTION dbo.ufn_get_document_status_text(status smallint)\nRETURNS varchar(16)\nLANGUAGE sql\nIMMUTABLE\nAS $$\n    SELECT CASE status\n               WHEN 1 THEN 'Pending approval'\n               WHEN 2 THEN 'Approved'\n               WHEN 3 THEN 'Obsolete'\n               ELSE '** Invalid **'\n           END\n$$;\n",
+    "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
+    "engine": "kiro",
+    "notes": [
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign keys and no pre-existing rows."
+    ]
+  },
+  "columnMappings": [],
+  "evidence": {
+    "step1": "pass",
+    "step2": "not-run",
+    "step3": "pass",
+    "step4": "pass",
+    "step5": "not-run",
+    "step6": "not-run",
+    "runtimeRatio": 0.26,
+    "runtime": {
+      "volume": 10,
+      "timedRuns": 7,
+      "sqlServerMs": 15,
+      "postgresMs": 3.83,
+      "ratio": 0.26,
+      "threshold": 1.5,
+      "passed": true,
+      "resultRows": 100,
+      "volumeMismatch": null
+    },
+    "rowsCompared": 200,
+    "trapsCovered": [],
+    "pbtSeeds": [
+      1164533016
+    ],
+    "samples": 200,
+    "samplesWithRows": 200,
+    "subMicrosecondNormalised": 0,
+    "mutantsDetected": [
+      "auto: first CASE result text altered"
+    ],
+    "harnessVersion": "harness-generic-0.3.0"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "Kiro",
+    "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
+  },
+  "status": "pending"
+}

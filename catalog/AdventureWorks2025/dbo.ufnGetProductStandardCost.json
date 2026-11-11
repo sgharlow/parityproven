@@ -1,0 +1,55 @@
+{
+  "object": "dbo.ufnGetProductStandardCost",
+  "type": "FN",
+  "tables": [
+    {
+      "schema": "Production",
+      "name": "Product",
+      "objectType": "U",
+      "columns": [
+        {
+          "name": "ProductID",
+          "sqlType": "int",
+          "nullable": false,
+          "isPk": true,
+          "isFk": false
+        }
+      ]
+    },
+    {
+      "schema": "Production",
+      "name": "ProductCostHistory",
+      "objectType": "U",
+      "columns": [
+        {
+          "name": "ProductID",
+          "sqlType": "int",
+          "nullable": false,
+          "isPk": true,
+          "isFk": true
+        },
+        {
+          "name": "StartDate",
+          "sqlType": "datetime",
+          "nullable": false,
+          "isPk": true,
+          "isFk": false
+        },
+        {
+          "name": "EndDate",
+          "sqlType": "datetime",
+          "nullable": true,
+          "isPk": false,
+          "isFk": false
+        },
+        {
+          "name": "StandardCost",
+          "sqlType": "money",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        }
+      ]
+    }
+  ]
+}

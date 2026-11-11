@@ -5,6 +5,7 @@
  */
 
 import type { ColSpec, ObjectSpec, TableSpec } from "../harness/generic/spec.js";
+import { AW_SPECS } from "./specs-aw.js";
 
 const int = { kind: "int" } as const;
 const date = { kind: "date" } as const;
@@ -275,6 +276,8 @@ SPECS.push(
     notes: ["WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted.", "Scalar function: coverage counts samples where the result is not NULL."],
   }
 );
+
+SPECS.push(...AW_SPECS);
 
 export const specByName = (qualified: string): ObjectSpec | undefined =>
   SPECS.find((s) => `${s.schema}.${s.name}` === qualified);

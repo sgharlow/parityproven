@@ -1,6 +1,96 @@
 {
-  "builtAt": "2026-11-11T01:42:43.255Z",
+  "builtAt": "2026-11-11T02:07:18.696Z",
   "receipts": [
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "dbo",
+      "objectName": "ufnGetAccountingEndDate",
+      "objectClass": "function",
+      "tier": "simple",
+      "status": "pending",
+      "path": "AdventureWorks2025/dbo.ufnGetAccountingEndDate.json"
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "dbo",
+      "objectName": "ufnGetAccountingStartDate",
+      "objectClass": "function",
+      "tier": "simple",
+      "status": "pending",
+      "path": "AdventureWorks2025/dbo.ufnGetAccountingStartDate.json"
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "dbo",
+      "objectName": "ufnGetDocumentStatusText",
+      "objectClass": "function",
+      "tier": "simple",
+      "status": "pending",
+      "path": "AdventureWorks2025/dbo.ufnGetDocumentStatusText.json"
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "dbo",
+      "objectName": "ufnGetProductDealerPrice",
+      "objectClass": "function",
+      "tier": "simple",
+      "status": "pending",
+      "path": "AdventureWorks2025/dbo.ufnGetProductDealerPrice.json"
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "dbo",
+      "objectName": "ufnGetProductListPrice",
+      "objectClass": "function",
+      "tier": "simple",
+      "status": "pending",
+      "path": "AdventureWorks2025/dbo.ufnGetProductListPrice.json"
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "dbo",
+      "objectName": "ufnGetProductStandardCost",
+      "objectClass": "function",
+      "tier": "simple",
+      "status": "pending",
+      "path": "AdventureWorks2025/dbo.ufnGetProductStandardCost.json"
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "dbo",
+      "objectName": "ufnGetPurchaseOrderStatusText",
+      "objectClass": "function",
+      "tier": "simple",
+      "status": "pending",
+      "path": "AdventureWorks2025/dbo.ufnGetPurchaseOrderStatusText.json"
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "dbo",
+      "objectName": "ufnGetSalesOrderStatusText",
+      "objectClass": "function",
+      "tier": "simple",
+      "status": "pending",
+      "path": "AdventureWorks2025/dbo.ufnGetSalesOrderStatusText.json"
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "dbo",
+      "objectName": "ufnGetStock",
+      "objectClass": "function",
+      "tier": "simple",
+      "status": "pending",
+      "path": "AdventureWorks2025/dbo.ufnGetStock.json"
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "dbo",
+      "objectName": "ufnLeadingZeros",
+      "objectClass": "function",
+      "tier": "simple",
+      "status": "pending",
+      "path": "AdventureWorks2025/dbo.ufnLeadingZeros.json"
+    },
     {
       "database": "WideWorldImporters",
       "schemaName": "Integration",
@@ -84,9 +174,9 @@
     }
   ],
   "summary": {
-    "total": 9,
+    "total": 19,
     "verified": 0,
-    "pending": 9,
+    "pending": 19,
     "failed": 0
   }
 }

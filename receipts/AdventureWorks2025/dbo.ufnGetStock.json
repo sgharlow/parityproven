@@ -1,0 +1,97 @@
+{
+  "database": "AdventureWorks2025",
+  "schemaName": "dbo",
+  "objectName": "ufnGetStock",
+  "objectClass": "function",
+  "tier": "simple",
+  "status": "pending",
+  "code": {
+    "source": "\r\nCREATE FUNCTION [dbo].[ufnGetStock](@ProductID [int])\r\nRETURNS [int]\r\nAS\r\n-- Returns the stock level for the product. This function is used internally only\r\nBEGIN\r\n    DECLARE @ret int;\r\n   \r\n    SELECT @ret = SUM(p.[Quantity])\r\n    FROM [Production].[ProductInventory] p\r\n    WHERE p.[ProductID] = @ProductID\r\n        AND p.[LocationID] = '6'; -- Only look at inventory in the misc storage\r\n   \r\n    IF (@ret IS NULL)\r\n        SET @ret = 0\r\n   \r\n    RETURN @ret\r\nEND;\r\n",
+    "engineOutput": "-- PostgreSQL conversion of dbo.ufnGetStock (AdventureWorks2025).\n-- Engine: Kiro first draft (see pair record).\n-- SUM(smallint) is int in T-SQL; the PostgreSQL SUM(smallint) is bigint, so it is cast back to integer.\n-- The source compares LocationID (smallint) with the string '6'; here it is the number 6.\n\nCREATE OR REPLACE FUNCTION dbo.ufn_get_stock(product_id integer)\nRETURNS integer\nLANGUAGE sql\nSTABLE\nAS $$\n    SELECT COALESCE(SUM(p.\"Quantity\"), 0)::integer\n      FROM production.product_inventory AS p\n     WHERE p.\"ProductID\" = product_id\n       AND p.\"LocationID\" = 6          -- only look at inventory in the misc storage\n$$;\n",
+    "final": "-- PostgreSQL conversion of dbo.ufnGetStock (AdventureWorks2025).\n-- Engine: Kiro first draft (see pair record).\n-- SUM(smallint) is int in T-SQL; the PostgreSQL SUM(smallint) is bigint, so it is cast back to integer.\n-- The source compares LocationID (smallint) with the string '6'; here it is the number 6.\n\nCREATE OR REPLACE FUNCTION dbo.ufn_get_stock(product_id integer)\nRETURNS integer\nLANGUAGE sql\nSTABLE\nAS $$\n    SELECT COALESCE(SUM(p.\"Quantity\"), 0)::integer\n      FROM production.product_inventory AS p\n     WHERE p.\"ProductID\" = product_id\n       AND p.\"LocationID\" = 6          -- only look at inventory in the misc storage\n$$;\n",
+    "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
+    "engine": "kiro",
+    "notes": [
+      "Step 4 finding: SQL Server 2025 inlines this scalar function into the calling query (sys.sql_modules.is_inlineable = 1, Froid). PostgreSQL runs the function once per call, so per-row calls cost about 2x more at 20,000 calls. Equivalence is unaffected; a caller that needs the speed would inline the expression or use a set-based join.",
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
+    ]
+  },
+  "columnMappings": [
+    {
+      "sqlServerType": "int NOT NULL",
+      "postgresType": "integer NOT NULL"
+    },
+    {
+      "sqlServerType": "smallint NOT NULL",
+      "postgresType": "smallint NOT NULL"
+    }
+  ],
+  "verificationSteps": [
+    {
+      "step": 1,
+      "label": "Compiles and deploys on PostgreSQL",
+      "status": "pass"
+    },
+    {
+      "step": 2,
+      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "status": "not-run"
+    },
+    {
+      "step": 3,
+      "label": "Result sets match on generated data",
+      "status": "pass"
+    },
+    {
+      "step": 4,
+      "label": "Runtime within 1.5× factor",
+      "status": "fail"
+    },
+    {
+      "step": 5,
+      "label": "Second human review",
+      "status": "not-run"
+    },
+    {
+      "step": 6,
+      "label": "Acceptance on real data",
+      "status": "not-run"
+    }
+  ],
+  "evidence": {
+    "pbtSeeds": [
+      1892798173
+    ],
+    "rowsCompared": 200,
+    "samples": 200,
+    "samplesWithRows": 200,
+    "trapsCovered": [],
+    "mutantsDetected": [
+      "auto: first AND becomes OR"
+    ],
+    "runtime": {
+      "volume": 2000,
+      "timedRuns": 7,
+      "sqlServerMs": 57,
+      "postgresMs": 116.31,
+      "ratio": 2.04,
+      "threshold": 1.5,
+      "passed": false,
+      "belowResolution": false,
+      "resultRows": 100,
+      "volumeMismatch": null
+    },
+    "subMicrosecondNormalised": 0,
+    "harnessVersion": "harness-generic-0.3.0"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "Kiro",
+    "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
+  },
+  "predictionCell": {
+    "p50Hours": 1.5,
+    "p90Hours": 4
+  },
+  "builtAt": "2026-11-11T02:07:18.691Z"
+}

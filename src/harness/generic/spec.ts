@@ -9,6 +9,14 @@ import type { ObjectClass } from "../../pairs/schema.js";
 
 export type ColType =
   | { kind: "int" }
+  | { kind: "tinyint" }
+  | { kind: "smallint" }
+  | { kind: "bigint" }
+  /** SQL Server money (4 decimal places) <-> numeric(19,4); not PostgreSQL's locale-dependent money type. */
+  | { kind: "money" }
+  /** SQL Server datetime (rounds to .000/.003/.007) <-> timestamp(3). Generated values are ones datetime can represent. */
+  | { kind: "datetime" }
+  | { kind: "char"; n: number }
   | { kind: "decimal"; p: number; s: number }
   | { kind: "nvarchar"; n: number }
   | { kind: "date" }
@@ -23,6 +31,10 @@ export interface ColSpec {
   nullable?: boolean;
   /** pk: unique sequential 1..n. ref: small-domain int (1..4) so joins hit. */
   role?: "pk" | "ref";
+  /** Inclusive bounds for integer columns/arguments (e.g. a tinyint status, or the full int range). */
+  range?: [number, number];
+  /** Extra values always mixed in (boundaries such as 0, -1, the int limits). */
+  special?: number[];
 }
 
 export interface TableSpec {
@@ -96,6 +108,12 @@ export const pgTableName = (t: { schema: string; name: string }): string =>
 export function sqlServerType(t: ColType): string {
   switch (t.kind) {
     case "int": return "int";
+    case "tinyint": return "tinyint";
+    case "smallint": return "smallint";
+    case "bigint": return "bigint";
+    case "money": return "money";
+    case "datetime": return "datetime";
+    case "char": return `char(${t.n})`;
     case "decimal": return `decimal(${t.p},${t.s})`;
     case "nvarchar": return `nvarchar(${t.n})`;
     case "date": return "date";
@@ -108,6 +126,12 @@ export function sqlServerType(t: ColType): string {
 export function postgresType(t: ColType): string {
   switch (t.kind) {
     case "int": return "integer";
+    case "tinyint": return "smallint";      // PostgreSQL has no 1-byte integer; range 0..255 is enforced by the generator
+    case "smallint": return "smallint";
+    case "bigint": return "bigint";
+    case "money": return "numeric(19,4)";
+    case "datetime": return "timestamp(3)";
+    case "char": return `char(${t.n})`;
     case "decimal": return `numeric(${t.p},${t.s})`;
     case "nvarchar": return `varchar(${t.n})`;
     case "date": return "date";
@@ -149,6 +173,9 @@ export function mappingsFor(spec: ObjectSpec): Array<{ sqlServerType: string; po
         m.notes = "datetime2(7) holds 100 ns ticks; PostgreSQL timestamp holds 1 µs. Harness inputs are normalised to µs and the count of normalised values is recorded as a finding.";
       }
       if (c.type.kind === "bit") m.notes = "bit maps to boolean; the driver returns true/false on both sides.";
+      if (c.type.kind === "tinyint") m.notes = "PostgreSQL has no tinyint; smallint holds it, so out-of-range values (>255, <0) are not rejected the way SQL Server rejects them.";
+      if (c.type.kind === "money") m.notes = "money -> numeric(19,4), not PostgreSQL's locale-dependent money type. Money arithmetic rounds to 4 places on SQL Server.";
+      if (c.type.kind === "datetime") m.notes = "datetime rounds to .000/.003/.007 s on SQL Server; timestamp(3) does not. Only SQL Server-representable values are generated, and results are compared at microsecond resolution.";
       if (c.type.kind === "geography") m.notes = "SQL Server geography maps to PostGIS geography (SRID 4326). Only point values are generated and compared, as well-known text.";
       seen.set(ss, m);
     }

@@ -1,0 +1,132 @@
+{
+  "object": "Sales.vSalesPersonSalesByFiscalYears",
+  "type": "V",
+  "tables": [
+    {
+      "schema": "HumanResources",
+      "name": "Employee",
+      "objectType": "U",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlType": "int",
+          "nullable": false,
+          "isPk": true,
+          "isFk": true
+        },
+        {
+          "name": "JobTitle",
+          "sqlType": "nvarchar(50)",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        }
+      ]
+    },
+    {
+      "schema": "Person",
+      "name": "Person",
+      "objectType": "U",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlType": "int",
+          "nullable": false,
+          "isPk": true,
+          "isFk": true
+        },
+        {
+          "name": "FirstName",
+          "sqlType": "nvarchar(50)",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        },
+        {
+          "name": "MiddleName",
+          "sqlType": "nvarchar(50)",
+          "nullable": true,
+          "isPk": false,
+          "isFk": false
+        },
+        {
+          "name": "LastName",
+          "sqlType": "nvarchar(50)",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        }
+      ]
+    },
+    {
+      "schema": "Sales",
+      "name": "SalesOrderHeader",
+      "objectType": "U",
+      "columns": [
+        {
+          "name": "OrderDate",
+          "sqlType": "datetime",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        },
+        {
+          "name": "SalesPersonID",
+          "sqlType": "int",
+          "nullable": true,
+          "isPk": false,
+          "isFk": true
+        },
+        {
+          "name": "SubTotal",
+          "sqlType": "money",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        }
+      ]
+    },
+    {
+      "schema": "Sales",
+      "name": "SalesPerson",
+      "objectType": "U",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlType": "int",
+          "nullable": false,
+          "isPk": true,
+          "isFk": true
+        },
+        {
+          "name": "TerritoryID",
+          "sqlType": "int",
+          "nullable": true,
+          "isPk": false,
+          "isFk": true
+        }
+      ]
+    },
+    {
+      "schema": "Sales",
+      "name": "SalesTerritory",
+      "objectType": "U",
+      "columns": [
+        {
+          "name": "TerritoryID",
+          "sqlType": "int",
+          "nullable": false,
+          "isPk": true,
+          "isFk": false
+        },
+        {
+          "name": "Name",
+          "sqlType": "nvarchar(50)",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        }
+      ]
+    }
+  ]
+}

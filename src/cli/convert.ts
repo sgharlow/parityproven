@@ -26,6 +26,7 @@ import { clearAll, runBenchmark, type BenchResult } from "../harness/generic/ben
 import { mappingsFor, type ObjectSpec } from "../harness/generic/spec.js";
 import { SPECS, specByName } from "../conversions/specs.js";
 import { lineDiff } from "../pairs/diff.js";
+import { autoMutants } from "../conversions/automutants.js";
 import type { PairRecord } from "../pairs/schema.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -58,10 +59,12 @@ function traps(spec: ObjectSpec): string[] {
 }
 
 function mutantSql(spec: ObjectSpec, finalSql: string, from: string, to: string): string {
-  if (!finalSql.includes(from)) throw new Error(`mutant text not found in ${spec.name}: ${JSON.stringify(from)}`);
+  // work on executable text only, so a mutation can never land inside a comment
+  const code = finalSql.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+  if (!code.includes(from)) throw new Error(`mutant text not found in ${spec.name}: ${JSON.stringify(from)}`);
   const esc = spec.pgFunction.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   // rename the object (first whole-name occurrence) so the mutant never replaces the real conversion
-  return finalSql.replace(from, to).replace(new RegExp(`${esc}(?![\\w])`), `${spec.pgFunction}_mutant`);
+  return code.replace(from, to).replace(new RegExp(`${esc}(?![\\w])`), `${spec.pgFunction}_mutant`);
 }
 
 async function convertOne(conn: Connections, spec: ObjectSpec, seed: number, runs: number): Promise<boolean> {
@@ -129,9 +132,14 @@ async function convertOne(conn: Connections, spec: ObjectSpec, seed: number, run
       return false;
     }
 
-    // 4. mutants must be caught
+    // 4. mutants must be caught (declared by the spec, otherwise generated automatically)
+    const mutants = spec.mutants.length ? spec.mutants : autoMutants(finalSql);
+    if (mutants.length === 0) {
+      console.error("no planted defect could be derived for this conversion; declare mutants in its spec. Not recording a pass.");
+      return false;
+    }
     const detected: string[] = [];
-    for (const m of spec.mutants) {
+    for (const m of mutants) {
       await deployPgFunction(conn, spec, mutantSql(spec, finalSql, m.from, m.to));
       const r = await runProperty(conn, scratch, spec, { fn: `${spec.pgFunction}_mutant`, seed, numRuns: Math.max(runs, 300) });
       const caught = !r.passed && !r.failure?.startsWith("vacuous");
@@ -139,7 +147,7 @@ async function convertOne(conn: Connections, spec: ObjectSpec, seed: number, run
       if (caught) detected.push(m.name);
     }
     await dropPgObject(conn, spec, `${spec.pgFunction}_mutant`);
-    if (detected.length !== spec.mutants.length) {
+    if (detected.length !== mutants.length) {
       console.error("harness is not trustworthy for this object: a planted defect passed. Not recording a pass.");
       return false;
     }
@@ -202,7 +210,7 @@ function writePair(p: PairInput): void {
       engine: "kiro",
       notes: [
         ...(spec.notes ?? []),
-        "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign keys and no pre-existing rows.",
+        "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step).",
       ],
     },
     columnMappings: mappingsFor(spec),

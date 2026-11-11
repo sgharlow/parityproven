@@ -1,0 +1,279 @@
+{
+  "object": "HumanResources.vEmployee",
+  "type": "V",
+  "tables": [
+    {
+      "schema": "HumanResources",
+      "name": "Employee",
+      "objectType": "U",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlType": "int",
+          "nullable": false,
+          "isPk": true,
+          "isFk": true
+        },
+        {
+          "name": "JobTitle",
+          "sqlType": "nvarchar(50)",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        }
+      ]
+    },
+    {
+      "schema": "Person",
+      "name": "Address",
+      "objectType": "U",
+      "columns": [
+        {
+          "name": "AddressID",
+          "sqlType": "int",
+          "nullable": false,
+          "isPk": true,
+          "isFk": false
+        },
+        {
+          "name": "AddressLine1",
+          "sqlType": "nvarchar(60)",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        },
+        {
+          "name": "AddressLine2",
+          "sqlType": "nvarchar(60)",
+          "nullable": true,
+          "isPk": false,
+          "isFk": false
+        },
+        {
+          "name": "City",
+          "sqlType": "nvarchar(30)",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        },
+        {
+          "name": "StateProvinceID",
+          "sqlType": "int",
+          "nullable": false,
+          "isPk": false,
+          "isFk": true
+        },
+        {
+          "name": "PostalCode",
+          "sqlType": "nvarchar(15)",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        }
+      ]
+    },
+    {
+      "schema": "Person",
+      "name": "BusinessEntityAddress",
+      "objectType": "U",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlType": "int",
+          "nullable": false,
+          "isPk": true,
+          "isFk": true
+        },
+        {
+          "name": "AddressID",
+          "sqlType": "int",
+          "nullable": false,
+          "isPk": true,
+          "isFk": true
+        }
+      ]
+    },
+    {
+      "schema": "Person",
+      "name": "CountryRegion",
+      "objectType": "U",
+      "columns": [
+        {
+          "name": "CountryRegionCode",
+          "sqlType": "nvarchar(3)",
+          "nullable": false,
+          "isPk": true,
+          "isFk": false
+        },
+        {
+          "name": "Name",
+          "sqlType": "nvarchar(50)",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        }
+      ]
+    },
+    {
+      "schema": "Person",
+      "name": "EmailAddress",
+      "objectType": "U",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlType": "int",
+          "nullable": false,
+          "isPk": true,
+          "isFk": true
+        },
+        {
+          "name": "EmailAddress",
+          "sqlType": "nvarchar(50)",
+          "nullable": true,
+          "isPk": false,
+          "isFk": false
+        }
+      ]
+    },
+    {
+      "schema": "Person",
+      "name": "Person",
+      "objectType": "U",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlType": "int",
+          "nullable": false,
+          "isPk": true,
+          "isFk": true
+        },
+        {
+          "name": "Title",
+          "sqlType": "nvarchar(8)",
+          "nullable": true,
+          "isPk": false,
+          "isFk": false
+        },
+        {
+          "name": "FirstName",
+          "sqlType": "nvarchar(50)",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        },
+        {
+          "name": "MiddleName",
+          "sqlType": "nvarchar(50)",
+          "nullable": true,
+          "isPk": false,
+          "isFk": false
+        },
+        {
+          "name": "LastName",
+          "sqlType": "nvarchar(50)",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        },
+        {
+          "name": "Suffix",
+          "sqlType": "nvarchar(10)",
+          "nullable": true,
+          "isPk": false,
+          "isFk": false
+        },
+        {
+          "name": "EmailPromotion",
+          "sqlType": "int",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        },
+        {
+          "name": "AdditionalContactInfo",
+          "sqlType": "xml",
+          "nullable": true,
+          "isPk": false,
+          "isFk": false
+        }
+      ]
+    },
+    {
+      "schema": "Person",
+      "name": "PersonPhone",
+      "objectType": "U",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlType": "int",
+          "nullable": false,
+          "isPk": true,
+          "isFk": true
+        },
+        {
+          "name": "PhoneNumber",
+          "sqlType": "nvarchar(25)",
+          "nullable": false,
+          "isPk": true,
+          "isFk": false
+        },
+        {
+          "name": "PhoneNumberTypeID",
+          "sqlType": "int",
+          "nullable": false,
+          "isPk": true,
+          "isFk": true
+        }
+      ]
+    },
+    {
+      "schema": "Person",
+      "name": "PhoneNumberType",
+      "objectType": "U",
+      "columns": [
+        {
+          "name": "PhoneNumberTypeID",
+          "sqlType": "int",
+          "nullable": false,
+          "isPk": true,
+          "isFk": false
+        },
+        {
+          "name": "Name",
+          "sqlType": "nvarchar(50)",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        }
+      ]
+    },
+    {
+      "schema": "Person",
+      "name": "StateProvince",
+      "objectType": "U",
+      "columns": [
+        {
+          "name": "StateProvinceID",
+          "sqlType": "int",
+          "nullable": false,
+          "isPk": true,
+          "isFk": false
+        },
+        {
+          "name": "CountryRegionCode",
+          "sqlType": "nvarchar(3)",
+          "nullable": false,
+          "isPk": false,
+          "isFk": true
+        },
+        {
+          "name": "Name",
+          "sqlType": "nvarchar(50)",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        }
+      ]
+    }
+  ]
+}

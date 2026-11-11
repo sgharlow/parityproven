@@ -1,0 +1,93 @@
+{
+  "database": "AdventureWorks2025",
+  "schemaName": "dbo",
+  "objectName": "ufnGetAccountingEndDate",
+  "objectClass": "function",
+  "tier": "simple",
+  "status": "pending",
+  "code": {
+    "source": "\r\nCREATE FUNCTION [dbo].[ufnGetAccountingEndDate]()\r\nRETURNS [datetime]\r\nAS\r\nBEGIN\r\n    RETURN DATEADD(millisecond, -2, CONVERT(datetime, '20040701', 112));\r\nEND;\r\n",
+    "engineOutput": "-- First draft: subtract 2 milliseconds exactly, as the T-SQL reads.\n\nCREATE OR REPLACE FUNCTION dbo.ufn_get_accounting_end_date()\nRETURNS timestamp(3)\nLANGUAGE sql\nIMMUTABLE\nAS $$\n    SELECT TIMESTAMP '2004-07-01 00:00:00' - INTERVAL '2 milliseconds'\n$$;\n",
+    "final": "-- PostgreSQL conversion of dbo.ufnGetAccountingEndDate (AdventureWorks2025).\n-- Engine: Kiro; first draft was corrected after the harness failed it (see pair record).\n--\n-- The source is DATEADD(millisecond, -2, CONVERT(datetime, '20040701', 112)). SQL Server datetime has\n-- 3.33 ms resolution, so midnight minus 2 ms is stored as .997, not .998. PostgreSQL timestamp keeps\n-- the exact value, so the result is written as the value datetime actually yields.\n\nCREATE OR REPLACE FUNCTION dbo.ufn_get_accounting_end_date()\nRETURNS timestamp(3)\nLANGUAGE sql\nIMMUTABLE\nAS $$\n    SELECT TIMESTAMP '2004-06-30 23:59:59.997'\n$$;\n",
+    "diff": "--- engineOutput\n+++ final\n+-- PostgreSQL conversion of dbo.ufnGetAccountingEndDate (AdventureWorks2025).\n+-- Engine: Kiro; first draft was corrected after the harness failed it (see pair record).\n+--\n+-- The source is DATEADD(millisecond, -2, CONVERT(datetime, '20040701', 112)). SQL Server datetime has\n+-- 3.33 ms resolution, so midnight minus 2 ms is stored as .997, not .998. PostgreSQL timestamp keeps\n+-- the exact value, so the result is written as the value datetime actually yields.\n--- First draft: subtract 2 milliseconds exactly, as the T-SQL reads.\n@@ engineOutput line 8 / final line 13 @@\n+    SELECT TIMESTAMP '2004-06-30 23:59:59.997'\n-    SELECT TIMESTAMP '2004-07-01 00:00:00' - INTERVAL '2 milliseconds'",
+    "engine": "kiro",
+    "notes": [
+      "DATEADD(millisecond, -2, '20040701') on datetime rounds to .997, not .998: SQL Server datetime has 3.33 ms resolution.",
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign keys and no pre-existing rows."
+    ]
+  },
+  "columnMappings": [],
+  "verificationSteps": [
+    {
+      "step": 1,
+      "label": "Compiles and deploys on PostgreSQL",
+      "status": "pass"
+    },
+    {
+      "step": 2,
+      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "status": "not-run"
+    },
+    {
+      "step": 3,
+      "label": "Result sets match on generated data",
+      "status": "pass"
+    },
+    {
+      "step": 4,
+      "label": "Runtime within 1.5× factor",
+      "status": "pass"
+    },
+    {
+      "step": 5,
+      "label": "Second human review",
+      "status": "not-run"
+    },
+    {
+      "step": 6,
+      "label": "Acceptance on real data",
+      "status": "not-run"
+    }
+  ],
+  "evidence": {
+    "pbtSeeds": [
+      265041268
+    ],
+    "rowsCompared": 200,
+    "samples": 200,
+    "samplesWithRows": 200,
+    "trapsCovered": [],
+    "mutantsDetected": [
+      "end date is exactly 2 ms before midnight (datetime would give .997)"
+    ],
+    "runtime": {
+      "volume": 10,
+      "timedRuns": 7,
+      "sqlServerMs": 1,
+      "postgresMs": 0,
+      "ratio": 0,
+      "threshold": 1.5,
+      "passed": true,
+      "belowResolution": true,
+      "resultRows": 1,
+      "volumeMismatch": null
+    },
+    "engineOutputCheck": {
+      "step3": "fail",
+      "seed": 265041268,
+      "detail": "random sample: value differs in group 0 (key \"*\"), column \"result\": SQL Server t:2004-06-30T23:59:59.997000 vs PostgreSQL t:2004-06-30T23:59:59.998000"
+    },
+    "subMicrosecondNormalised": 0,
+    "harnessVersion": "harness-generic-0.3.0"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "Kiro",
+    "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
+  },
+  "predictionCell": {
+    "p50Hours": 1.5,
+    "p90Hours": 4
+  },
+  "builtAt": "2026-11-11T02:07:18.689Z"
+}

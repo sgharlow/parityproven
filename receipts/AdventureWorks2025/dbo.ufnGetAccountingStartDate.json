@@ -1,0 +1,87 @@
+{
+  "database": "AdventureWorks2025",
+  "schemaName": "dbo",
+  "objectName": "ufnGetAccountingStartDate",
+  "objectClass": "function",
+  "tier": "simple",
+  "status": "pending",
+  "code": {
+    "source": "\r\nCREATE FUNCTION [dbo].[ufnGetAccountingStartDate]()\r\nRETURNS [datetime]\r\nAS\r\nBEGIN\r\n    RETURN CONVERT(datetime, '20030701', 112);\r\nEND;\r\n",
+    "engineOutput": "-- PostgreSQL conversion of dbo.ufnGetAccountingStartDate (AdventureWorks2025).\n-- Engine: Kiro first draft (see pair record).\n-- datetime -> timestamp(3).\n\nCREATE OR REPLACE FUNCTION dbo.ufn_get_accounting_start_date()\nRETURNS timestamp(3)\nLANGUAGE sql\nIMMUTABLE\nAS $$\n    SELECT TIMESTAMP '2003-07-01 00:00:00'\n$$;\n",
+    "final": "-- PostgreSQL conversion of dbo.ufnGetAccountingStartDate (AdventureWorks2025).\n-- Engine: Kiro first draft (see pair record).\n-- datetime -> timestamp(3).\n\nCREATE OR REPLACE FUNCTION dbo.ufn_get_accounting_start_date()\nRETURNS timestamp(3)\nLANGUAGE sql\nIMMUTABLE\nAS $$\n    SELECT TIMESTAMP '2003-07-01 00:00:00'\n$$;\n",
+    "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
+    "engine": "kiro",
+    "notes": [
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign keys and no pre-existing rows."
+    ]
+  },
+  "columnMappings": [],
+  "verificationSteps": [
+    {
+      "step": 1,
+      "label": "Compiles and deploys on PostgreSQL",
+      "status": "pass"
+    },
+    {
+      "step": 2,
+      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "status": "not-run"
+    },
+    {
+      "step": 3,
+      "label": "Result sets match on generated data",
+      "status": "pass"
+    },
+    {
+      "step": 4,
+      "label": "Runtime within 1.5× factor",
+      "status": "pass"
+    },
+    {
+      "step": 5,
+      "label": "Second human review",
+      "status": "not-run"
+    },
+    {
+      "step": 6,
+      "label": "Acceptance on real data",
+      "status": "not-run"
+    }
+  ],
+  "evidence": {
+    "pbtSeeds": [
+      1616299978
+    ],
+    "rowsCompared": 200,
+    "samples": 200,
+    "samplesWithRows": 200,
+    "trapsCovered": [],
+    "mutantsDetected": [
+      "start date one day late"
+    ],
+    "runtime": {
+      "volume": 10,
+      "timedRuns": 7,
+      "sqlServerMs": 1,
+      "postgresMs": 0,
+      "ratio": 0,
+      "threshold": 1.5,
+      "passed": true,
+      "belowResolution": true,
+      "resultRows": 1,
+      "volumeMismatch": null
+    },
+    "subMicrosecondNormalised": 0,
+    "harnessVersion": "harness-generic-0.3.0"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "Kiro",
+    "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
+  },
+  "predictionCell": {
+    "p50Hours": 1.5,
+    "p90Hours": 4
+  },
+  "builtAt": "2026-11-11T02:07:18.690Z"
+}

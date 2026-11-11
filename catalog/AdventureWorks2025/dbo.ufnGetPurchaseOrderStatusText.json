@@ -1,0 +1,5 @@
+{
+  "object": "dbo.ufnGetPurchaseOrderStatusText",
+  "type": "FN",
+  "tables": []
+}

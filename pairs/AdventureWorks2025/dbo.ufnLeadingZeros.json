@@ -1,0 +1,67 @@
+{
+  "origin": {
+    "repo": "https://github.com/microsoft/sql-server-samples",
+    "release": "adventureworks",
+    "license": "MIT",
+    "assetUrl": "https://github.com/microsoft/sql-server-samples/releases/download/adventureworks/AdventureWorks2025.bak",
+    "sha256": "fa6a2a5d431ad88123f89b36b1f2c7e42ca4bdf6b293269a44df80f6de3738a5"
+  },
+  "conversionType": "tsql-to-plpgsql",
+  "objectClass": "function",
+  "tier": "simple",
+  "code": {
+    "source": "\r\nCREATE FUNCTION [dbo].[ufnLeadingZeros](\r\n    @Value int\r\n)\r\nRETURNS varchar(8)\r\nWITH SCHEMABINDING\r\nAS\r\nBEGIN\r\n    DECLARE @ReturnValue varchar(8);\r\n\r\n    SET @ReturnValue = CONVERT(varchar(8), @Value);\r\n    SET @ReturnValue = REPLICATE('0', 8 - DATALENGTH(@ReturnValue)) + @ReturnValue;\r\n\r\n    RETURN (@ReturnValue);\r\nEND;\r\n",
+    "engineOutput": "-- First draft: left-pad with zeros to 8 characters.\n\nCREATE OR REPLACE FUNCTION dbo.ufn_leading_zeros(value integer)\nRETURNS varchar(8)\nLANGUAGE sql\nIMMUTABLE\nAS $$\n    SELECT lpad(value::text, 8, '0')\n$$;\n",
+    "final": "-- PostgreSQL conversion of dbo.ufnLeadingZeros (AdventureWorks2025).\n-- Engine: Kiro; first draft (lpad) was corrected after the harness failed it (see pair record).\n--\n-- CONVERT(varchar(8), int) returns '*' when the number needs more than 8 characters, and the source then\n-- pads that single character to 8 ('0000000*'). lpad() would silently truncate to the first 8 digits.\n-- Negative numbers keep their sign inside the padding, as in the source ('000000-5'). NULL stays NULL.\n\nCREATE OR REPLACE FUNCTION dbo.ufn_leading_zeros(value integer)\nRETURNS varchar(8)\nLANGUAGE plpgsql\nIMMUTABLE\nAS $$\nDECLARE\n    return_value text;\nBEGIN\n    return_value := value::text;\n    IF length(return_value) > 8 THEN\n        return_value := '*';\n    END IF;\n    RETURN repeat('0', 8 - length(return_value)) || return_value;\nEND;\n$$;\n",
+    "diff": "--- engineOutput\n+++ final\n+-- PostgreSQL conversion of dbo.ufnLeadingZeros (AdventureWorks2025).\n+-- Engine: Kiro; first draft (lpad) was corrected after the harness failed it (see pair record).\n+--\n+-- CONVERT(varchar(8), int) returns '*' when the number needs more than 8 characters, and the source then\n+-- pads that single character to 8 ('0000000*'). lpad() would silently truncate to the first 8 digits.\n+-- Negative numbers keep their sign inside the padding, as in the source ('000000-5'). NULL stays NULL.\n--- First draft: left-pad with zeros to 8 characters.\n@@ engineOutput line 5 / final line 10 @@\n+LANGUAGE plpgsql\n-LANGUAGE sql\n@@ engineOutput line 8 / final line 13 @@\n+DECLARE\n+    return_value text;\n+BEGIN\n+    return_value := value::text;\n+    IF length(return_value) > 8 THEN\n+        return_value := '*';\n+    END IF;\n+    RETURN repeat('0', 8 - length(return_value)) || return_value;\n+END;\n-    SELECT lpad(value::text, 8, '0')",
+    "engine": "kiro",
+    "notes": [
+      "CONVERT(varchar(8), int) yields '*' when the number needs more than 8 characters; DATALENGTH counts bytes.",
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign keys and no pre-existing rows."
+    ]
+  },
+  "columnMappings": [],
+  "evidence": {
+    "step1": "pass",
+    "step2": "not-run",
+    "step3": "pass",
+    "step4": "pass",
+    "step5": "not-run",
+    "step6": "not-run",
+    "runtimeRatio": 1.07,
+    "runtime": {
+      "volume": 10,
+      "timedRuns": 7,
+      "sqlServerMs": 16,
+      "postgresMs": 17.11,
+      "ratio": 1.07,
+      "threshold": 1.5,
+      "passed": true,
+      "resultRows": 100,
+      "volumeMismatch": null
+    },
+    "rowsCompared": 200,
+    "trapsCovered": [],
+    "pbtSeeds": [
+      1448665316
+    ],
+    "engineOutputCheck": {
+      "step3": "fail",
+      "seed": 1448665316,
+      "detail": "random sample: value differs in group 0 (key \"*\"), column \"result\": SQL Server s:0000000* vs PostgreSQL s:-2147483"
+    },
+    "samples": 200,
+    "samplesWithRows": 163,
+    "subMicrosecondNormalised": 0,
+    "mutantsDetected": [
+      "auto: strict comparison made inclusive"
+    ],
+    "harnessVersion": "harness-generic-0.3.0"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "Kiro",
+    "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
+  },
+  "status": "pending"
+}

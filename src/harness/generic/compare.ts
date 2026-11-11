@@ -20,6 +20,8 @@ function canonicalCell(value: unknown, declaredType: string): string {
   if (typeof value === "boolean") return `b:${value ? 1 : 0}`;
   if (typeof value === "number") return `n:${Object.is(value, -0) ? 0 : value}`;
   if (typeof value === "bigint") return `n:${value}`;
+  // the SQL Server driver returns bigint as a string to avoid precision loss; values here stay within 2^53
+  if (typeof value === "string" && declaredType === "bigint" && /^-?\d+$/.test(value)) return `n:${Number(value)}`;
   if (value instanceof Date) {
     if (declaredType === "date") return `d:${value.toISOString().slice(0, 10)}`;
     const delta = (value as DtDate).nanosecondsDelta ?? 0;   // seconds below 1 ms (tedious)

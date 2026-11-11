@@ -1,0 +1,62 @@
+{
+  "object": "Person.vAdditionalContactInfo",
+  "type": "V",
+  "tables": [
+    {
+      "schema": "Person",
+      "name": "Person",
+      "objectType": "U",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlType": "int",
+          "nullable": false,
+          "isPk": true,
+          "isFk": true
+        },
+        {
+          "name": "FirstName",
+          "sqlType": "nvarchar(50)",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        },
+        {
+          "name": "MiddleName",
+          "sqlType": "nvarchar(50)",
+          "nullable": true,
+          "isPk": false,
+          "isFk": false
+        },
+        {
+          "name": "LastName",
+          "sqlType": "nvarchar(50)",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        },
+        {
+          "name": "AdditionalContactInfo",
+          "sqlType": "xml",
+          "nullable": true,
+          "isPk": false,
+          "isFk": false
+        },
+        {
+          "name": "rowguid",
+          "sqlType": "uniqueidentifier",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        },
+        {
+          "name": "ModifiedDate",
+          "sqlType": "datetime",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        }
+      ]
+    }
+  ]
+}

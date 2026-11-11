@@ -1,0 +1,34 @@
+{
+  "object": "Sales.vStoreWithDemographics",
+  "type": "V",
+  "tables": [
+    {
+      "schema": "Sales",
+      "name": "Store",
+      "objectType": "U",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlType": "int",
+          "nullable": false,
+          "isPk": true,
+          "isFk": true
+        },
+        {
+          "name": "Name",
+          "sqlType": "nvarchar(50)",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        },
+        {
+          "name": "Demographics",
+          "sqlType": "xml",
+          "nullable": true,
+          "isPk": false,
+          "isFk": false
+        }
+      ]
+    }
+  ]
+}

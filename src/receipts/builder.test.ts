@@ -18,7 +18,8 @@ describe("buildReceipts", () => {
     // At least one receipt (Integration.GetMovementUpdates)
     expect(output.receipts.length).toBeGreaterThanOrEqual(1);
 
-    const r = output.receipts[0];
+    const r = output.receipts.find((x) => x.objectName === "GetMovementUpdates")!;
+    expect(r).toBeDefined();
     expect(r.database).toBe("WideWorldImporters");
     expect(r.objectName).toBe("GetMovementUpdates");
     expect(r.schemaName).toBe("Integration");

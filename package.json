@@ -12,6 +12,7 @@
     "verify": "node dist/cli/convert.js --all",
     "inventory": "node dist/cli/inventory.js",
     "convert": "node dist/cli/convert.js",
+    "scaffold": "node dist/cli/scaffold.js",
     "predictions:validate": "node dist/cli/predictions.js validate",
     "predictions:score": "node dist/cli/predictions.js score",
     "receipts:build": "node dist/cli/receipts.js",

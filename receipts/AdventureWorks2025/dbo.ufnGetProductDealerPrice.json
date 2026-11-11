@@ -1,0 +1,117 @@
+{
+  "database": "AdventureWorks2025",
+  "schemaName": "dbo",
+  "objectName": "ufnGetProductDealerPrice",
+  "objectClass": "function",
+  "tier": "simple",
+  "status": "pending",
+  "code": {
+    "source": "\r\nCREATE FUNCTION [dbo].[ufnGetProductDealerPrice](@ProductID [int], @OrderDate [datetime])\r\nRETURNS [money]\r\nAS\r\n-- Returns the dealer price for the product on a specific date.\r\nBEGIN\r\n    DECLARE @DealerPrice money;\r\n    DECLARE @DealerDiscount money;\r\n\r\n    SET @DealerDiscount = 0.60  -- 60% of list price\r\n\r\n    SELECT @DealerPrice = plph.[ListPrice] * @DealerDiscount\r\n    FROM [Production].[Product] p\r\n        INNER JOIN [Production].[ProductListPriceHistory] plph\r\n        ON p.[ProductID] = plph.[ProductID]\r\n            AND p.[ProductID] = @ProductID\r\n            AND @OrderDate BETWEEN plph.[StartDate] AND COALESCE(plph.[EndDate], CONVERT(datetime, '99991231', 112)); -- Make sure we get all the prices!\r\n\r\n    RETURN @DealerPrice;\r\nEND;\r\n",
+    "engineOutput": "-- First draft: multiply list price by 0.60 in numeric arithmetic.\n\nCREATE OR REPLACE FUNCTION dbo.ufn_get_product_dealer_price(product_id integer, order_date timestamp)\nRETURNS numeric(19,4)\nLANGUAGE sql\nSTABLE\nAS $$\n    SELECT plph.\"ListPrice\" * 0.60            -- 60% of list price\n      FROM production.product AS p\n     INNER JOIN production.product_list_price_history AS plph\n        ON p.\"ProductID\" = plph.\"ProductID\"\n       AND p.\"ProductID\" = product_id\n       AND order_date BETWEEN plph.\"StartDate\" AND COALESCE(plph.\"EndDate\", TIMESTAMP '9999-12-31 00:00:00')\n     LIMIT 1\n$$;\n",
+    "final": "-- PostgreSQL conversion of dbo.ufnGetProductDealerPrice (AdventureWorks2025).\n-- Engine: Kiro; first draft corrected after the harness failed it (see pair record).\n-- money -> numeric(19,4) (not PostgreSQL's locale-dependent money type); datetime -> timestamp.\n-- Precondition: at most one price period per product (T-SQL `SELECT @x = ...` keeps the last row read).\n--\n-- In T-SQL, money * money is computed at 4 decimal places and rounded, so the product of the list price\n-- and @DealerDiscount (a money variable) is rounded to 4 places (e.g. -0.0001 * 0.60 = -0.0001, not\n-- -0.00006). The 0.60 literal alone would give exact numeric arithmetic, so the rounding is explicit.\n\nCREATE OR REPLACE FUNCTION dbo.ufn_get_product_dealer_price(product_id integer, order_date timestamp)\nRETURNS numeric(19,4)\nLANGUAGE sql\nSTABLE\nAS $$\n    SELECT round(plph.\"ListPrice\" * 0.60, 4)  -- 60% of list price, at money precision\n      FROM production.product AS p\n     INNER JOIN production.product_list_price_history AS plph\n        ON p.\"ProductID\" = plph.\"ProductID\"\n       AND p.\"ProductID\" = product_id\n       AND order_date BETWEEN plph.\"StartDate\" AND COALESCE(plph.\"EndDate\", TIMESTAMP '9999-12-31 00:00:00')\n     LIMIT 1\n$$;\n",
+    "diff": "--- engineOutput\n+++ final\n+-- PostgreSQL conversion of dbo.ufnGetProductDealerPrice (AdventureWorks2025).\n+-- Engine: Kiro; first draft corrected after the harness failed it (see pair record).\n+-- money -> numeric(19,4) (not PostgreSQL's locale-dependent money type); datetime -> timestamp.\n+-- Precondition: at most one price period per product (T-SQL `SELECT @x = ...` keeps the last row read).\n+--\n+-- In T-SQL, money * money is computed at 4 decimal places and rounded, so the product of the list price\n+-- and @DealerDiscount (a money variable) is rounded to 4 places (e.g. -0.0001 * 0.60 = -0.0001, not\n+-- -0.00006). The 0.60 literal alone would give exact numeric arithmetic, so the rounding is explicit.\n--- First draft: multiply list price by 0.60 in numeric arithmetic.\n@@ engineOutput line 8 / final line 15 @@\n+    SELECT round(plph.\"ListPrice\" * 0.60, 4)  -- 60% of list price, at money precision\n-    SELECT plph.\"ListPrice\" * 0.60            -- 60% of list price",
+    "engine": "kiro",
+    "notes": [
+      "At most one price period per product (precondition): with overlapping periods the T-SQL `SELECT @x = ...` keeps the last row read, which is undefined.",
+      "Step 4 finding: SQL Server 2025 inlines this scalar function into the calling query (sys.sql_modules.is_inlineable = 1, Froid). PostgreSQL runs the function once per call, so per-row calls cost about 2x more at 20,000 calls. Equivalence is unaffected; a caller that needs the speed would inline the expression or use a set-based join.",
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
+    ]
+  },
+  "columnMappings": [
+    {
+      "sqlServerType": "int NOT NULL",
+      "postgresType": "integer NOT NULL"
+    },
+    {
+      "sqlServerType": "datetime NOT NULL",
+      "postgresType": "timestamp(3) NOT NULL",
+      "notes": "datetime rounds to .000/.003/.007 s on SQL Server; timestamp(3) does not. Only SQL Server-representable values are generated, and results are compared at microsecond resolution."
+    },
+    {
+      "sqlServerType": "datetime NULL",
+      "postgresType": "timestamp(3)",
+      "notes": "datetime rounds to .000/.003/.007 s on SQL Server; timestamp(3) does not. Only SQL Server-representable values are generated, and results are compared at microsecond resolution."
+    },
+    {
+      "sqlServerType": "money NOT NULL",
+      "postgresType": "numeric(19,4) NOT NULL",
+      "notes": "money -> numeric(19,4), not PostgreSQL's locale-dependent money type. Money arithmetic rounds to 4 places on SQL Server."
+    }
+  ],
+  "verificationSteps": [
+    {
+      "step": 1,
+      "label": "Compiles and deploys on PostgreSQL",
+      "status": "pass"
+    },
+    {
+      "step": 2,
+      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "status": "not-run"
+    },
+    {
+      "step": 3,
+      "label": "Result sets match on generated data",
+      "status": "pass"
+    },
+    {
+      "step": 4,
+      "label": "Runtime within 1.5× factor",
+      "status": "fail"
+    },
+    {
+      "step": 5,
+      "label": "Second human review",
+      "status": "not-run"
+    },
+    {
+      "step": 6,
+      "label": "Acceptance on real data",
+      "status": "not-run"
+    }
+  ],
+  "evidence": {
+    "pbtSeeds": [
+      1306456025
+    ],
+    "rowsCompared": 200,
+    "samples": 200,
+    "samplesWithRows": 101,
+    "trapsCovered": [
+      "NULL in every nullable column"
+    ],
+    "mutantsDetected": [
+      "auto: first numeric literal changed",
+      "auto: round() becomes trunc()"
+    ],
+    "runtime": {
+      "volume": 2000,
+      "timedRuns": 7,
+      "sqlServerMs": 78,
+      "postgresMs": 172.04,
+      "ratio": 2.21,
+      "threshold": 1.5,
+      "passed": false,
+      "belowResolution": false,
+      "resultRows": 100,
+      "volumeMismatch": null
+    },
+    "engineOutputCheck": {
+      "step3": "fail",
+      "seed": 1306456025,
+      "detail": "random sample: value differs in group 0 (key \"*\"), column \"result\": SQL Server n:0.235 vs PostgreSQL n:0.23496"
+    },
+    "subMicrosecondNormalised": 0,
+    "harnessVersion": "harness-generic-0.3.0"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "Kiro",
+    "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
+  },
+  "predictionCell": {
+    "p50Hours": 1.5,
+    "p90Hours": 4
+  },
+  "builtAt": "2026-11-11T02:07:18.691Z"
+}

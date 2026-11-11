@@ -134,7 +134,7 @@ async function initReceipt() {
   const runtime = ev.runtime
     ? `<li><strong>Runtime (step 4):</strong> PostgreSQL ${ev.runtime.postgresMs} ms vs SQL Server ${ev.runtime.sqlServerMs} ms server-side execution
          = <strong>${ev.runtime.ratio}×</strong> (limit ${ev.runtime.threshold}×), median of ${ev.runtime.timedRuns} runs on ${ev.runtime.volume} rows per table.
-         <span style="color:var(--c-muted);font-size:0.85rem">Both engines run in Docker on one machine; SQL Server reports whole milliseconds; indicative, not a benchmark.</span></li>
+         <span style="color:var(--c-muted);font-size:0.85rem">${ev.runtime.belowResolution ? 'Both finished in under 5 ms, so this ratio is below measurement resolution and shows no speed difference. ' : ''}Both engines run in Docker on one machine; SQL Server reports whole milliseconds; indicative, not a benchmark.</span></li>
        <li><strong>Result at volume:</strong> ${ev.runtime.volumeMismatch ? 'MISMATCH — ' + esc(ev.runtime.volumeMismatch) : `${ev.runtime.resultRows} rows returned, identical on both engines`}</li>`
     : '';
   const precision = ev.subMicrosecondNormalised

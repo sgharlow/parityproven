@@ -1,0 +1,68 @@
+{
+  "origin": {
+    "repo": "https://github.com/microsoft/sql-server-samples",
+    "release": "adventureworks",
+    "license": "MIT",
+    "assetUrl": "https://github.com/microsoft/sql-server-samples/releases/download/adventureworks/AdventureWorks2025.bak",
+    "sha256": "fa6a2a5d431ad88123f89b36b1f2c7e42ca4bdf6b293269a44df80f6de3738a5"
+  },
+  "conversionType": "tsql-to-plpgsql",
+  "objectClass": "function",
+  "tier": "simple",
+  "code": {
+    "source": "\r\nCREATE FUNCTION [dbo].[ufnGetAccountingEndDate]()\r\nRETURNS [datetime]\r\nAS\r\nBEGIN\r\n    RETURN DATEADD(millisecond, -2, CONVERT(datetime, '20040701', 112));\r\nEND;\r\n",
+    "engineOutput": "-- First draft: subtract 2 milliseconds exactly, as the T-SQL reads.\n\nCREATE OR REPLACE FUNCTION dbo.ufn_get_accounting_end_date()\nRETURNS timestamp(3)\nLANGUAGE sql\nIMMUTABLE\nAS $$\n    SELECT TIMESTAMP '2004-07-01 00:00:00' - INTERVAL '2 milliseconds'\n$$;\n",
+    "final": "-- PostgreSQL conversion of dbo.ufnGetAccountingEndDate (AdventureWorks2025).\n-- Engine: Kiro; first draft was corrected after the harness failed it (see pair record).\n--\n-- The source is DATEADD(millisecond, -2, CONVERT(datetime, '20040701', 112)). SQL Server datetime has\n-- 3.33 ms resolution, so midnight minus 2 ms is stored as .997, not .998. PostgreSQL timestamp keeps\n-- the exact value, so the result is written as the value datetime actually yields.\n\nCREATE OR REPLACE FUNCTION dbo.ufn_get_accounting_end_date()\nRETURNS timestamp(3)\nLANGUAGE sql\nIMMUTABLE\nAS $$\n    SELECT TIMESTAMP '2004-06-30 23:59:59.997'\n$$;\n",
+    "diff": "--- engineOutput\n+++ final\n+-- PostgreSQL conversion of dbo.ufnGetAccountingEndDate (AdventureWorks2025).\n+-- Engine: Kiro; first draft was corrected after the harness failed it (see pair record).\n+--\n+-- The source is DATEADD(millisecond, -2, CONVERT(datetime, '20040701', 112)). SQL Server datetime has\n+-- 3.33 ms resolution, so midnight minus 2 ms is stored as .997, not .998. PostgreSQL timestamp keeps\n+-- the exact value, so the result is written as the value datetime actually yields.\n--- First draft: subtract 2 milliseconds exactly, as the T-SQL reads.\n@@ engineOutput line 8 / final line 13 @@\n+    SELECT TIMESTAMP '2004-06-30 23:59:59.997'\n-    SELECT TIMESTAMP '2004-07-01 00:00:00' - INTERVAL '2 milliseconds'",
+    "engine": "kiro",
+    "notes": [
+      "DATEADD(millisecond, -2, '20040701') on datetime rounds to .997, not .998: SQL Server datetime has 3.33 ms resolution.",
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign keys and no pre-existing rows."
+    ]
+  },
+  "columnMappings": [],
+  "evidence": {
+    "step1": "pass",
+    "step2": "not-run",
+    "step3": "pass",
+    "step4": "pass",
+    "step5": "not-run",
+    "step6": "not-run",
+    "runtimeRatio": 0,
+    "runtime": {
+      "volume": 10,
+      "timedRuns": 7,
+      "sqlServerMs": 1,
+      "postgresMs": 0,
+      "ratio": 0,
+      "threshold": 1.5,
+      "passed": true,
+      "belowResolution": true,
+      "resultRows": 1,
+      "volumeMismatch": null
+    },
+    "rowsCompared": 200,
+    "trapsCovered": [],
+    "pbtSeeds": [
+      265041268
+    ],
+    "engineOutputCheck": {
+      "step3": "fail",
+      "seed": 265041268,
+      "detail": "random sample: value differs in group 0 (key \"*\"), column \"result\": SQL Server t:2004-06-30T23:59:59.997000 vs PostgreSQL t:2004-06-30T23:59:59.998000"
+    },
+    "samples": 200,
+    "samplesWithRows": 200,
+    "subMicrosecondNormalised": 0,
+    "mutantsDetected": [
+      "end date is exactly 2 ms before midnight (datetime would give .997)"
+    ],
+    "harnessVersion": "harness-generic-0.3.0"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "Kiro",
+    "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
+  },
+  "status": "pending"
+}
