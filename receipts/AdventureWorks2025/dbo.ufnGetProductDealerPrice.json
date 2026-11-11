@@ -4,7 +4,7 @@
   "objectName": "ufnGetProductDealerPrice",
   "objectClass": "function",
   "tier": "simple",
-  "status": "pending",
+  "status": "failed",
   "code": {
     "source": "\r\nCREATE FUNCTION [dbo].[ufnGetProductDealerPrice](@ProductID [int], @OrderDate [datetime])\r\nRETURNS [money]\r\nAS\r\n-- Returns the dealer price for the product on a specific date.\r\nBEGIN\r\n    DECLARE @DealerPrice money;\r\n    DECLARE @DealerDiscount money;\r\n\r\n    SET @DealerDiscount = 0.60  -- 60% of list price\r\n\r\n    SELECT @DealerPrice = plph.[ListPrice] * @DealerDiscount\r\n    FROM [Production].[Product] p\r\n        INNER JOIN [Production].[ProductListPriceHistory] plph\r\n        ON p.[ProductID] = plph.[ProductID]\r\n            AND p.[ProductID] = @ProductID\r\n            AND @OrderDate BETWEEN plph.[StartDate] AND COALESCE(plph.[EndDate], CONVERT(datetime, '99991231', 112)); -- Make sure we get all the prices!\r\n\r\n    RETURN @DealerPrice;\r\nEND;\r\n",
     "engineOutput": "-- First draft: multiply list price by 0.60 in numeric arithmetic.\n\nCREATE OR REPLACE FUNCTION dbo.ufn_get_product_dealer_price(product_id integer, order_date timestamp)\nRETURNS numeric(19,4)\nLANGUAGE sql\nSTABLE\nAS $$\n    SELECT plph.\"ListPrice\" * 0.60            -- 60% of list price\n      FROM production.product AS p\n     INNER JOIN production.product_list_price_history AS plph\n        ON p.\"ProductID\" = plph.\"ProductID\"\n       AND p.\"ProductID\" = product_id\n       AND order_date BETWEEN plph.\"StartDate\" AND COALESCE(plph.\"EndDate\", TIMESTAMP '9999-12-31 00:00:00')\n     LIMIT 1\n$$;\n",
@@ -72,24 +72,25 @@
   ],
   "evidence": {
     "pbtSeeds": [
-      1306456025
+      978994767
     ],
     "rowsCompared": 200,
     "samples": 200,
-    "samplesWithRows": 101,
+    "samplesWithRows": 131,
     "trapsCovered": [
       "NULL in every nullable column"
     ],
     "mutantsDetected": [
-      "auto: first numeric literal changed",
-      "auto: round() becomes trunc()"
+      "auto: join condition uses a different key",
+      "auto: first numeric literal changed"
     ],
+    "failureDetail": "Step 4: PostgreSQL 145.34 ms vs SQL Server 69 ms = 2.11x, above the 1.5x limit. Results are equivalent (step 3 pass); see the notes for the cause.",
     "runtime": {
       "volume": 2000,
       "timedRuns": 7,
-      "sqlServerMs": 78,
-      "postgresMs": 172.04,
-      "ratio": 2.21,
+      "sqlServerMs": 69,
+      "postgresMs": 145.34,
+      "ratio": 2.11,
       "threshold": 1.5,
       "passed": false,
       "belowResolution": false,
@@ -98,8 +99,8 @@
     },
     "engineOutputCheck": {
       "step3": "fail",
-      "seed": 1306456025,
-      "detail": "random sample: value differs in group 0 (key \"*\"), column \"result\": SQL Server n:0.235 vs PostgreSQL n:0.23496"
+      "seed": 978994767,
+      "detail": "random sample: value differs in group 0 (key \"*\"), column \"result\": SQL Server n:0.0001 vs PostgreSQL n:0.00006"
     },
     "subMicrosecondNormalised": 0,
     "harnessVersion": "harness-generic-0.3.0"
@@ -113,5 +114,5 @@
     "p50Hours": 1.5,
     "p90Hours": 4
   },
-  "builtAt": "2026-11-11T02:07:18.691Z"
+  "builtAt": "2026-11-11T04:03:31.170Z"
 }

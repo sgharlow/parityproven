@@ -12,7 +12,7 @@
     "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
     "engine": "kiro",
     "notes": [
-      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign keys and no pre-existing rows."
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
     ]
   },
   "columnMappings": [],
@@ -50,7 +50,7 @@
   ],
   "evidence": {
     "pbtSeeds": [
-      1164533016
+      616903286
     ],
     "rowsCompared": 200,
     "samples": 200,
@@ -62,11 +62,12 @@
     "runtime": {
       "volume": 10,
       "timedRuns": 7,
-      "sqlServerMs": 15,
-      "postgresMs": 3.83,
-      "ratio": 0.26,
+      "sqlServerMs": 20,
+      "postgresMs": 4.46,
+      "ratio": 0.22,
       "threshold": 1.5,
       "passed": true,
+      "belowResolution": false,
       "resultRows": 100,
       "volumeMismatch": null
     },
@@ -82,5 +83,5 @@
     "p50Hours": 1.5,
     "p90Hours": 4
   },
-  "builtAt": "2026-11-11T02:07:18.690Z"
+  "builtAt": "2026-11-11T04:03:31.170Z"
 }

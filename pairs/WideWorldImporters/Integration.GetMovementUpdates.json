@@ -17,7 +17,7 @@
     "engine": "kiro",
     "notes": [
       "WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted.",
-      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign keys and no pre-existing rows."
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
     ]
   },
   "columnMappings": [
@@ -46,19 +46,20 @@
     "step4": "pass",
     "step5": "not-run",
     "step6": "not-run",
-    "runtimeRatio": 0.32,
+    "runtimeRatio": 0.38,
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
       "sqlServerMs": 9,
-      "postgresMs": 2.88,
-      "ratio": 0.32,
+      "postgresMs": 3.44,
+      "ratio": 0.38,
       "threshold": 1.5,
       "passed": true,
+      "belowResolution": false,
       "resultRows": 3110,
       "volumeMismatch": null
     },
-    "rowsCompared": 158,
+    "rowsCompared": 159,
     "trapsCovered": [
       "NULL in every nullable column",
       "numeric rounding and scale (decimal edge values)",
@@ -66,16 +67,16 @@
       "ORDER BY key (ties compared as multisets)"
     ],
     "pbtSeeds": [
-      864051402
+      1533636382
     ],
     "engineOutputCheck": {
       "step3": "fail",
-      "seed": 864051402,
+      "seed": 1533636382,
       "detail": "fixed case \"fractional Quantity (decimal -> int cast)\": value differs in group 0 (key \"n:1\"), column \"Quantity\": SQL Server n:2 vs PostgreSQL n:3"
     },
     "samples": 200,
-    "samplesWithRows": 104,
-    "subMicrosecondNormalised": 916,
+    "samplesWithRows": 110,
+    "subMicrosecondNormalised": 929,
     "mutantsDetected": [
       "Quantity rounds instead of truncating",
       "upper cutoff exclusive"

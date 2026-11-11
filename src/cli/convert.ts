@@ -140,8 +140,9 @@ async function convertOne(conn: Connections, spec: ObjectSpec, seed: number, run
     }
     const detected: string[] = [];
     for (const m of mutants) {
-      await deployPgFunction(conn, spec, mutantSql(spec, finalSql, m.from, m.to));
-      const r = await runProperty(conn, scratch, spec, { fn: `${spec.pgFunction}_mutant`, seed, numRuns: Math.max(runs, 300) });
+      // drop the previous mutant first: CREATE OR REPLACE VIEW cannot change a column's type
+      await deployPgFunction(conn, spec, mutantSql(spec, finalSql, m.from, m.to), `${spec.pgFunction}_mutant`);
+      const r = await runProperty(conn, scratch, spec, { fn: `${spec.pgFunction}_mutant`, seed, numRuns: Math.max(runs, 300), shrink: false });
       const caught = !r.passed && !r.failure?.startsWith("vacuous");
       console.log(`mutant "${m.name}": ${caught ? "detected" : "NOT DETECTED"}`);
       if (caught) detected.push(m.name);
@@ -164,11 +165,17 @@ async function convertOne(conn: Connections, spec: ObjectSpec, seed: number, run
     if (runtime.volumeMismatch) console.error(`RESULT MISMATCH AT VOLUME: ${runtime.volumeMismatch}`);
 
     // 6. pair record
+    // any failed step among 1-4 means the object cannot be verified as converted: status "failed"
+    const failureDetail = runtime.volumeMismatch
+      ? `Results differ at ${runtime.volume} rows per table: ${runtime.volumeMismatch}`
+      : !runtime.passed
+        ? `Step 4: PostgreSQL ${runtime.postgresMs} ms vs SQL Server ${runtime.sqlServerMs} ms = ${runtime.ratio}x, above the ${runtime.threshold}x limit. Results are equivalent (step 3 pass); see the notes for the cause.`
+        : undefined;
     writePair({
       spec, label, definition, draftSql, finalSql, f, detected, draftCheck, seed, runtime,
-      status: runtime.volumeMismatch ? "failed" : "pending",
+      status: failureDetail ? "failed" : "pending",
       step3: runtime.volumeMismatch ? "fail" : "pass",
-      failureDetail: runtime.volumeMismatch ? `Results differ at ${runtime.volume} rows per table: ${runtime.volumeMismatch}` : undefined,
+      failureDetail,
     });
     return true;
   } finally {

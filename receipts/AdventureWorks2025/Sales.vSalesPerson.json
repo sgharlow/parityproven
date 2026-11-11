@@ -1,0 +1,150 @@
+{
+  "database": "AdventureWorks2025",
+  "schemaName": "Sales",
+  "objectName": "vSalesPerson",
+  "objectClass": "view",
+  "tier": "simple",
+  "status": "pending",
+  "code": {
+    "source": "\r\nCREATE VIEW [Sales].[vSalesPerson]\r\nAS\r\nSELECT\r\n    s.[BusinessEntityID]\r\n    ,p.[Title]\r\n    ,p.[FirstName]\r\n    ,p.[MiddleName]\r\n    ,p.[LastName]\r\n    ,p.[Suffix]\r\n    ,e.[JobTitle]\r\n    ,pp.[PhoneNumber]\r\n\t,pnt.[Name] AS [PhoneNumberType]\r\n    ,ea.[EmailAddress]\r\n    ,p.[EmailPromotion]\r\n    ,a.[AddressLine1]\r\n    ,a.[AddressLine2]\r\n    ,a.[City]\r\n    ,[StateProvinceName] = sp.[Name]\r\n    ,a.[PostalCode]\r\n    ,[CountryRegionName] = cr.[Name]\r\n    ,[TerritoryName] = st.[Name]\r\n    ,[TerritoryGroup] = st.[Group]\r\n    ,s.[SalesQuota]\r\n    ,s.[SalesYTD]\r\n    ,s.[SalesLastYear]\r\nFROM [Sales].[SalesPerson] s\r\n    INNER JOIN [HumanResources].[Employee] e\r\n    ON e.[BusinessEntityID] = s.[BusinessEntityID]\r\n\tINNER JOIN [Person].[Person] p\r\n\tON p.[BusinessEntityID] = s.[BusinessEntityID]\r\n    INNER JOIN [Person].[BusinessEntityAddress] bea\r\n    ON bea.[BusinessEntityID] = s.[BusinessEntityID]\r\n    INNER JOIN [Person].[Address] a\r\n    ON a.[AddressID] = bea.[AddressID]\r\n    INNER JOIN [Person].[StateProvince] sp\r\n    ON sp.[StateProvinceID] = a.[StateProvinceID]\r\n    INNER JOIN [Person].[CountryRegion] cr\r\n    ON cr.[CountryRegionCode] = sp.[CountryRegionCode]\r\n    LEFT OUTER JOIN [Sales].[SalesTerritory] st\r\n    ON st.[TerritoryID] = s.[TerritoryID]\r\n\tLEFT OUTER JOIN [Person].[EmailAddress] ea\r\n\tON ea.[BusinessEntityID] = p.[BusinessEntityID]\r\n\tLEFT OUTER JOIN [Person].[PersonPhone] pp\r\n\tON pp.[BusinessEntityID] = p.[BusinessEntityID]\r\n\tLEFT OUTER JOIN [Person].[PhoneNumberType] pnt\r\n\tON pnt.[PhoneNumberTypeID] = pp.[PhoneNumberTypeID];\r\n",
+    "engineOutput": "-- PostgreSQL conversion of the view Sales.vSalesPerson (AdventureWorks2025).\n-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case).\n-- Verified by the property-based harness, not by this script.\n\nCREATE OR REPLACE VIEW sales.v_sales_person AS\nSELECT\r\n    s.\"BusinessEntityID\" AS \"BusinessEntityID\"\r\n    ,p.\"Title\" AS \"Title\"\r\n    ,p.\"FirstName\" AS \"FirstName\"\r\n    ,p.\"MiddleName\" AS \"MiddleName\"\r\n    ,p.\"LastName\" AS \"LastName\"\r\n    ,p.\"Suffix\" AS \"Suffix\"\r\n    ,e.\"JobTitle\" AS \"JobTitle\"\r\n    ,pp.\"PhoneNumber\" AS \"PhoneNumber\"\r\n\t,pnt.\"Name\" AS \"PhoneNumberType\"\r\n    ,ea.\"EmailAddress\" AS \"EmailAddress\"\r\n    ,p.\"EmailPromotion\" AS \"EmailPromotion\"\r\n    ,a.\"AddressLine1\" AS \"AddressLine1\"\r\n    ,a.\"AddressLine2\" AS \"AddressLine2\"\r\n    ,a.\"City\" AS \"City\"\r\n    ,sp.\"Name\" AS \"StateProvinceName\"\n    ,a.\"PostalCode\" AS \"PostalCode\"\r\n    ,cr.\"Name\" AS \"CountryRegionName\"\n    ,st.\"Name\" AS \"TerritoryName\"\n    ,st.\"Group\" AS \"TerritoryGroup\"\n    ,s.\"SalesQuota\" AS \"SalesQuota\"\r\n    ,s.\"SalesYTD\" AS \"SalesYTD\"\r\n    ,s.\"SalesLastYear\" AS \"SalesLastYear\"\r\nFROM sales.sales_person s\r\n    INNER JOIN humanresources.employee e\r\n    ON e.\"BusinessEntityID\" = s.\"BusinessEntityID\"\r\n\tINNER JOIN person.person p\r\n\tON p.\"BusinessEntityID\" = s.\"BusinessEntityID\"\r\n    INNER JOIN person.business_entity_address bea\r\n    ON bea.\"BusinessEntityID\" = s.\"BusinessEntityID\"\r\n    INNER JOIN person.address a\r\n    ON a.\"AddressID\" = bea.\"AddressID\"\r\n    INNER JOIN person.state_province sp\r\n    ON sp.\"StateProvinceID\" = a.\"StateProvinceID\"\r\n    INNER JOIN person.country_region cr\r\n    ON cr.\"CountryRegionCode\" = sp.\"CountryRegionCode\"\r\n    LEFT OUTER JOIN sales.sales_territory st\r\n    ON st.\"TerritoryID\" = s.\"TerritoryID\"\r\n\tLEFT OUTER JOIN person.email_address ea\r\n\tON ea.\"BusinessEntityID\" = p.\"BusinessEntityID\"\r\n\tLEFT OUTER JOIN person.person_phone pp\r\n\tON pp.\"BusinessEntityID\" = p.\"BusinessEntityID\"\r\n\tLEFT OUTER JOIN person.phone_number_type pnt\r\n\tON pnt.\"PhoneNumberTypeID\" = pp.\"PhoneNumberTypeID\";\n",
+    "final": "-- PostgreSQL conversion of the view Sales.vSalesPerson (AdventureWorks2025).\n-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case).\n-- Verified by the property-based harness, not by this script.\n\nCREATE OR REPLACE VIEW sales.v_sales_person AS\nSELECT\r\n    s.\"BusinessEntityID\" AS \"BusinessEntityID\"\r\n    ,p.\"Title\" AS \"Title\"\r\n    ,p.\"FirstName\" AS \"FirstName\"\r\n    ,p.\"MiddleName\" AS \"MiddleName\"\r\n    ,p.\"LastName\" AS \"LastName\"\r\n    ,p.\"Suffix\" AS \"Suffix\"\r\n    ,e.\"JobTitle\" AS \"JobTitle\"\r\n    ,pp.\"PhoneNumber\" AS \"PhoneNumber\"\r\n\t,pnt.\"Name\" AS \"PhoneNumberType\"\r\n    ,ea.\"EmailAddress\" AS \"EmailAddress\"\r\n    ,p.\"EmailPromotion\" AS \"EmailPromotion\"\r\n    ,a.\"AddressLine1\" AS \"AddressLine1\"\r\n    ,a.\"AddressLine2\" AS \"AddressLine2\"\r\n    ,a.\"City\" AS \"City\"\r\n    ,sp.\"Name\" AS \"StateProvinceName\"\n    ,a.\"PostalCode\" AS \"PostalCode\"\r\n    ,cr.\"Name\" AS \"CountryRegionName\"\n    ,st.\"Name\" AS \"TerritoryName\"\n    ,st.\"Group\" AS \"TerritoryGroup\"\n    ,s.\"SalesQuota\" AS \"SalesQuota\"\r\n    ,s.\"SalesYTD\" AS \"SalesYTD\"\r\n    ,s.\"SalesLastYear\" AS \"SalesLastYear\"\r\nFROM sales.sales_person s\r\n    INNER JOIN humanresources.employee e\r\n    ON e.\"BusinessEntityID\" = s.\"BusinessEntityID\"\r\n\tINNER JOIN person.person p\r\n\tON p.\"BusinessEntityID\" = s.\"BusinessEntityID\"\r\n    INNER JOIN person.business_entity_address bea\r\n    ON bea.\"BusinessEntityID\" = s.\"BusinessEntityID\"\r\n    INNER JOIN person.address a\r\n    ON a.\"AddressID\" = bea.\"AddressID\"\r\n    INNER JOIN person.state_province sp\r\n    ON sp.\"StateProvinceID\" = a.\"StateProvinceID\"\r\n    INNER JOIN person.country_region cr\r\n    ON cr.\"CountryRegionCode\" = sp.\"CountryRegionCode\"\r\n    LEFT OUTER JOIN sales.sales_territory st\r\n    ON st.\"TerritoryID\" = s.\"TerritoryID\"\r\n\tLEFT OUTER JOIN person.email_address ea\r\n\tON ea.\"BusinessEntityID\" = p.\"BusinessEntityID\"\r\n\tLEFT OUTER JOIN person.person_phone pp\r\n\tON pp.\"BusinessEntityID\" = p.\"BusinessEntityID\"\r\n\tLEFT OUTER JOIN person.phone_number_type pnt\r\n\tON pnt.\"PhoneNumberTypeID\" = pp.\"PhoneNumberTypeID\";\n",
+    "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
+    "engine": "kiro",
+    "notes": [
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
+    ]
+  },
+  "columnMappings": [
+    {
+      "sqlServerType": "int NOT NULL",
+      "postgresType": "integer NOT NULL"
+    },
+    {
+      "sqlServerType": "nvarchar(50) NOT NULL",
+      "postgresType": "varchar(50) NOT NULL"
+    },
+    {
+      "sqlServerType": "nvarchar(60) NOT NULL",
+      "postgresType": "varchar(60) NOT NULL"
+    },
+    {
+      "sqlServerType": "nvarchar(60) NULL",
+      "postgresType": "varchar(60)"
+    },
+    {
+      "sqlServerType": "nvarchar(30) NOT NULL",
+      "postgresType": "varchar(30) NOT NULL"
+    },
+    {
+      "sqlServerType": "nvarchar(15) NOT NULL",
+      "postgresType": "varchar(15) NOT NULL"
+    },
+    {
+      "sqlServerType": "nvarchar(3) NOT NULL",
+      "postgresType": "varchar(3) NOT NULL"
+    },
+    {
+      "sqlServerType": "nvarchar(50) NULL",
+      "postgresType": "varchar(50)"
+    },
+    {
+      "sqlServerType": "nvarchar(8) NULL",
+      "postgresType": "varchar(8)"
+    },
+    {
+      "sqlServerType": "nvarchar(10) NULL",
+      "postgresType": "varchar(10)"
+    },
+    {
+      "sqlServerType": "nvarchar(25) NOT NULL",
+      "postgresType": "varchar(25) NOT NULL"
+    },
+    {
+      "sqlServerType": "int NULL",
+      "postgresType": "integer"
+    },
+    {
+      "sqlServerType": "money NULL",
+      "postgresType": "numeric(19,4)",
+      "notes": "money -> numeric(19,4), not PostgreSQL's locale-dependent money type. Money arithmetic rounds to 4 places on SQL Server."
+    },
+    {
+      "sqlServerType": "money NOT NULL",
+      "postgresType": "numeric(19,4) NOT NULL",
+      "notes": "money -> numeric(19,4), not PostgreSQL's locale-dependent money type. Money arithmetic rounds to 4 places on SQL Server."
+    }
+  ],
+  "verificationSteps": [
+    {
+      "step": 1,
+      "label": "Compiles and deploys on PostgreSQL",
+      "status": "pass"
+    },
+    {
+      "step": 2,
+      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "status": "not-run"
+    },
+    {
+      "step": 3,
+      "label": "Result sets match on generated data",
+      "status": "pass"
+    },
+    {
+      "step": 4,
+      "label": "Runtime within 1.5× factor",
+      "status": "pass"
+    },
+    {
+      "step": 5,
+      "label": "Second human review",
+      "status": "not-run"
+    },
+    {
+      "step": 6,
+      "label": "Acceptance on real data",
+      "status": "not-run"
+    }
+  ],
+  "evidence": {
+    "pbtSeeds": [
+      444802632
+    ],
+    "rowsCompared": 200,
+    "samples": 200,
+    "samplesWithRows": 101,
+    "trapsCovered": [
+      "NULL in every nullable column",
+      "empty string and trailing spaces"
+    ],
+    "mutantsDetected": [
+      "auto: LEFT JOIN becomes INNER JOIN",
+      "auto: two output columns swap values"
+    ],
+    "runtime": {
+      "volume": 5000,
+      "timedRuns": 7,
+      "sqlServerMs": 68,
+      "postgresMs": 37.52,
+      "ratio": 0.55,
+      "threshold": 1.5,
+      "passed": true,
+      "belowResolution": false,
+      "resultRows": 6788,
+      "volumeMismatch": null
+    },
+    "subMicrosecondNormalised": 0,
+    "harnessVersion": "harness-generic-0.3.0"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "Kiro",
+    "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
+  },
+  "predictionCell": {
+    "p50Hours": 0.75,
+    "p90Hours": 2
+  },
+  "builtAt": "2026-11-11T04:03:31.173Z"
+}

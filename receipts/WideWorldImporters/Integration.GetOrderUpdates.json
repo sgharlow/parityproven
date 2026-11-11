@@ -12,7 +12,7 @@
     "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
     "engine": "kiro",
     "notes": [
-      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign keys and no pre-existing rows."
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
     ]
   },
   "columnMappings": [
@@ -89,11 +89,11 @@
   ],
   "evidence": {
     "pbtSeeds": [
-      1157213283
+      1712493027
     ],
-    "rowsCompared": 120,
+    "rowsCompared": 127,
     "samples": 200,
-    "samplesWithRows": 80,
+    "samplesWithRows": 83,
     "trapsCovered": [
       "NULL in every nullable column",
       "numeric rounding and scale (decimal edge values)",
@@ -108,15 +108,16 @@
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
-      "sqlServerMs": 59,
-      "postgresMs": 23.11,
-      "ratio": 0.39,
+      "sqlServerMs": 27,
+      "postgresMs": 12.18,
+      "ratio": 0.45,
       "threshold": 1.5,
       "passed": true,
-      "resultRows": 3574,
+      "belowResolution": false,
+      "resultRows": 3471,
       "volumeMismatch": null
     },
-    "subMicrosecondNormalised": 1170,
+    "subMicrosecondNormalised": 1201,
     "harnessVersion": "harness-generic-0.3.0"
   },
   "effort": {
@@ -128,5 +129,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-11T02:07:18.695Z"
+  "builtAt": "2026-11-11T04:03:31.177Z"
 }

@@ -13,7 +13,7 @@
     "engine": "kiro",
     "notes": [
       "ORDER BY i.InvoiceID, il.InvoiceLineID: InvoiceLineID is not an output column, so rows sharing an InvoiceID are compared as a multiset.",
-      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign keys and no pre-existing rows."
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
     ]
   },
   "columnMappings": [
@@ -95,11 +95,11 @@
   ],
   "evidence": {
     "pbtSeeds": [
-      1387502738
+      77826119
     ],
-    "rowsCompared": 93,
+    "rowsCompared": 113,
     "samples": 200,
-    "samplesWithRows": 66,
+    "samplesWithRows": 71,
     "trapsCovered": [
       "NULL in every nullable column",
       "numeric rounding and scale (decimal edge values)",
@@ -114,15 +114,16 @@
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
-      "sqlServerMs": 44,
-      "postgresMs": 20.35,
-      "ratio": 0.46,
+      "sqlServerMs": 32,
+      "postgresMs": 16.28,
+      "ratio": 0.51,
       "threshold": 1.5,
       "passed": true,
-      "resultRows": 3496,
+      "belowResolution": false,
+      "resultRows": 3463,
       "volumeMismatch": null
     },
-    "subMicrosecondNormalised": 1228,
+    "subMicrosecondNormalised": 1184,
     "harnessVersion": "harness-generic-0.3.0"
   },
   "effort": {
@@ -134,5 +135,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-11T02:07:18.695Z"
+  "builtAt": "2026-11-11T04:03:31.178Z"
 }

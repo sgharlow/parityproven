@@ -4,7 +4,7 @@
   "objectName": "ufnGetStock",
   "objectClass": "function",
   "tier": "simple",
-  "status": "pending",
+  "status": "failed",
   "code": {
     "source": "\r\nCREATE FUNCTION [dbo].[ufnGetStock](@ProductID [int])\r\nRETURNS [int]\r\nAS\r\n-- Returns the stock level for the product. This function is used internally only\r\nBEGIN\r\n    DECLARE @ret int;\r\n   \r\n    SELECT @ret = SUM(p.[Quantity])\r\n    FROM [Production].[ProductInventory] p\r\n    WHERE p.[ProductID] = @ProductID\r\n        AND p.[LocationID] = '6'; -- Only look at inventory in the misc storage\r\n   \r\n    IF (@ret IS NULL)\r\n        SET @ret = 0\r\n   \r\n    RETURN @ret\r\nEND;\r\n",
     "engineOutput": "-- PostgreSQL conversion of dbo.ufnGetStock (AdventureWorks2025).\n-- Engine: Kiro first draft (see pair record).\n-- SUM(smallint) is int in T-SQL; the PostgreSQL SUM(smallint) is bigint, so it is cast back to integer.\n-- The source compares LocationID (smallint) with the string '6'; here it is the number 6.\n\nCREATE OR REPLACE FUNCTION dbo.ufn_get_stock(product_id integer)\nRETURNS integer\nLANGUAGE sql\nSTABLE\nAS $$\n    SELECT COALESCE(SUM(p.\"Quantity\"), 0)::integer\n      FROM production.product_inventory AS p\n     WHERE p.\"ProductID\" = product_id\n       AND p.\"LocationID\" = 6          -- only look at inventory in the misc storage\n$$;\n",
@@ -60,7 +60,7 @@
   ],
   "evidence": {
     "pbtSeeds": [
-      1892798173
+      1386843720
     ],
     "rowsCompared": 200,
     "samples": 200,
@@ -69,12 +69,13 @@
     "mutantsDetected": [
       "auto: first AND becomes OR"
     ],
+    "failureDetail": "Step 4: PostgreSQL 135.94 ms vs SQL Server 72 ms = 1.89x, above the 1.5x limit. Results are equivalent (step 3 pass); see the notes for the cause.",
     "runtime": {
       "volume": 2000,
       "timedRuns": 7,
-      "sqlServerMs": 57,
-      "postgresMs": 116.31,
-      "ratio": 2.04,
+      "sqlServerMs": 72,
+      "postgresMs": 135.94,
+      "ratio": 1.89,
       "threshold": 1.5,
       "passed": false,
       "belowResolution": false,
@@ -93,5 +94,5 @@
     "p50Hours": 1.5,
     "p90Hours": 4
   },
-  "builtAt": "2026-11-11T02:07:18.691Z"
+  "builtAt": "2026-11-11T04:03:31.171Z"
 }

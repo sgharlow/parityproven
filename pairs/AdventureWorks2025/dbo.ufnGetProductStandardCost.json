@@ -49,13 +49,13 @@
     "step4": "fail",
     "step5": "not-run",
     "step6": "not-run",
-    "runtimeRatio": 2.08,
+    "runtimeRatio": 1.81,
     "runtime": {
       "volume": 2000,
       "timedRuns": 7,
-      "sqlServerMs": 73,
-      "postgresMs": 152.03,
-      "ratio": 2.08,
+      "sqlServerMs": 78,
+      "postgresMs": 141.5,
+      "ratio": 1.81,
       "threshold": 1.5,
       "passed": false,
       "belowResolution": false,
@@ -67,21 +67,22 @@
       "NULL in every nullable column"
     ],
     "pbtSeeds": [
-      1778954492
+      1488233840
     ],
     "samples": 200,
-    "samplesWithRows": 118,
+    "samplesWithRows": 109,
     "subMicrosecondNormalised": 0,
     "mutantsDetected": [
-      "auto: first AND becomes OR",
-      "auto: COALESCE first argument dropped"
+      "auto: join condition uses a different key",
+      "auto: first AND becomes OR"
     ],
-    "harnessVersion": "harness-generic-0.3.0"
+    "harnessVersion": "harness-generic-0.3.0",
+    "failureDetail": "Step 4: PostgreSQL 141.5 ms vs SQL Server 78 ms = 1.81x, above the 1.5x limit. Results are equivalent (step 3 pass); see the notes for the cause."
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "failed"
 }

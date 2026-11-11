@@ -5,7 +5,7 @@
  */
 
 import type { ColSpec, ObjectSpec, TableSpec } from "../harness/generic/spec.js";
-import { AW_SPECS } from "./specs-aw.js";
+import { AW_SPECS, AW_VIEWS } from "./specs-aw.js";
 
 const int = { kind: "int" } as const;
 const date = { kind: "date" } as const;
@@ -277,7 +277,7 @@ SPECS.push(
   }
 );
 
-SPECS.push(...AW_SPECS);
+SPECS.push(...AW_SPECS, ...AW_VIEWS);
 
 export const specByName = (qualified: string): ObjectSpec | undefined =>
   SPECS.find((s) => `${s.schema}.${s.name}` === qualified);

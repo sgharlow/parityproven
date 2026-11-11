@@ -1,0 +1,87 @@
+{
+  "origin": {
+    "repo": "https://github.com/microsoft/sql-server-samples",
+    "release": "adventureworks",
+    "license": "MIT",
+    "assetUrl": "https://github.com/microsoft/sql-server-samples/releases/download/adventureworks/AdventureWorks2025.bak",
+    "sha256": "fa6a2a5d431ad88123f89b36b1f2c7e42ca4bdf6b293269a44df80f6de3738a5"
+  },
+  "conversionType": "tsql-to-plpgsql",
+  "objectClass": "view",
+  "tier": "simple",
+  "code": {
+    "source": "\r\nCREATE VIEW [Production].[vProductAndDescription]\r\nWITH SCHEMABINDING\r\nAS\r\n-- View (indexed or standard) to display products and product descriptions by language.\r\nSELECT\r\n    p.[ProductID]\r\n    ,p.[Name]\r\n    ,pm.[Name] AS [ProductModel]\r\n    ,pmx.[CultureID]\r\n    ,pd.[Description]\r\nFROM [Production].[Product] p\r\n    INNER JOIN [Production].[ProductModel] pm\r\n    ON p.[ProductModelID] = pm.[ProductModelID]\r\n    INNER JOIN [Production].[ProductModelProductDescriptionCulture] pmx\r\n    ON pm.[ProductModelID] = pmx.[ProductModelID]\r\n    INNER JOIN [Production].[ProductDescription] pd\r\n    ON pmx.[ProductDescriptionID] = pd.[ProductDescriptionID];\r\n",
+    "engineOutput": "-- PostgreSQL conversion of the view Production.vProductAndDescription (AdventureWorks2025).\n-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case).\n-- Verified by the property-based harness, not by this script.\n\nCREATE OR REPLACE VIEW production.v_product_and_description AS\nSELECT\r\n    p.\"ProductID\" AS \"ProductID\"\r\n    ,p.\"Name\" AS \"Name\"\r\n    ,pm.\"Name\" AS \"ProductModel\"\r\n    ,pmx.\"CultureID\" AS \"CultureID\"\r\n    ,pd.\"Description\" AS \"Description\"\r\nFROM production.product p\r\n    INNER JOIN production.product_model pm\r\n    ON p.\"ProductModelID\" = pm.\"ProductModelID\"\r\n    INNER JOIN production.product_model_product_description_culture pmx\r\n    ON pm.\"ProductModelID\" = pmx.\"ProductModelID\"\r\n    INNER JOIN production.product_description pd\r\n    ON pmx.\"ProductDescriptionID\" = pd.\"ProductDescriptionID\";\n",
+    "final": "-- PostgreSQL conversion of the view Production.vProductAndDescription (AdventureWorks2025).\n-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case).\n-- Verified by the property-based harness, not by this script.\n\nCREATE OR REPLACE VIEW production.v_product_and_description AS\nSELECT\r\n    p.\"ProductID\" AS \"ProductID\"\r\n    ,p.\"Name\" AS \"Name\"\r\n    ,pm.\"Name\" AS \"ProductModel\"\r\n    ,pmx.\"CultureID\" AS \"CultureID\"\r\n    ,pd.\"Description\" AS \"Description\"\r\nFROM production.product p\r\n    INNER JOIN production.product_model pm\r\n    ON p.\"ProductModelID\" = pm.\"ProductModelID\"\r\n    INNER JOIN production.product_model_product_description_culture pmx\r\n    ON pm.\"ProductModelID\" = pmx.\"ProductModelID\"\r\n    INNER JOIN production.product_description pd\r\n    ON pmx.\"ProductDescriptionID\" = pd.\"ProductDescriptionID\";\n",
+    "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
+    "engine": "kiro",
+    "notes": [
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
+    ]
+  },
+  "columnMappings": [
+    {
+      "sqlServerType": "int NOT NULL",
+      "postgresType": "integer NOT NULL"
+    },
+    {
+      "sqlServerType": "nvarchar(50) NOT NULL",
+      "postgresType": "varchar(50) NOT NULL"
+    },
+    {
+      "sqlServerType": "int NULL",
+      "postgresType": "integer"
+    },
+    {
+      "sqlServerType": "nvarchar(400) NOT NULL",
+      "postgresType": "varchar(400) NOT NULL"
+    },
+    {
+      "sqlServerType": "char(6) NOT NULL",
+      "postgresType": "char(6) NOT NULL"
+    }
+  ],
+  "evidence": {
+    "step1": "pass",
+    "step2": "not-run",
+    "step3": "pass",
+    "step4": "pass",
+    "step5": "not-run",
+    "step6": "not-run",
+    "runtimeRatio": 0.3,
+    "runtime": {
+      "volume": 5000,
+      "timedRuns": 7,
+      "sqlServerMs": 16,
+      "postgresMs": 4.82,
+      "ratio": 0.3,
+      "threshold": 1.5,
+      "passed": true,
+      "belowResolution": false,
+      "resultRows": 4104,
+      "volumeMismatch": null
+    },
+    "rowsCompared": 213,
+    "trapsCovered": [
+      "NULL in every nullable column",
+      "empty string and trailing spaces"
+    ],
+    "pbtSeeds": [
+      2135151101
+    ],
+    "samples": 200,
+    "samplesWithRows": 123,
+    "subMicrosecondNormalised": 0,
+    "mutantsDetected": [
+      "auto: two output columns swap values",
+      "auto: join condition uses a different key"
+    ],
+    "harnessVersion": "harness-generic-0.3.0"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "Kiro",
+    "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
+  },
+  "status": "pending"
+}

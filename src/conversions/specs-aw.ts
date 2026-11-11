@@ -49,7 +49,8 @@ const priceFn = (name: string, pgName: string): ObjectSpec =>
     DB, `dbo.${name}`,
     {
       orderKey: [], mutants: [], pgFunction: `dbo.${pgName}`,
-      params: [ref("ProductID"), dtm("OrderDate")],
+      // argument name only steers generation; "OrderDate" would pick up the fiscal-year dates meant for SalesOrderHeader
+      params: [ref("ProductID"), dtm("PricingInstant")],
       ssCall: `SELECT dbo.${name}(?, ?) AS result`,
       pgCall: "SELECT {fn}($1::integer, $2::timestamp) AS result",
       // 20,000 calls so per-call execution dominates the timing (not statement start-up)
@@ -71,6 +72,29 @@ const statusFn = (name: string, pgName: string, special: number[]): ObjectSpec =
     benchVolume: 10,
     ...scalarBench({ ssFn: `dbo.${name}`, pgFn: `dbo.${pgName}`, ssArgs: "CAST(v.n % 8 AS tinyint)", pgArgs: "(n % 8)::smallint", calls: 20000, ssAgg: "SUM(LEN({call}))", pgAgg: "sum(length({call}))" }),
   });
+
+/**
+ * Plain projection views. pgFunction is the PostgreSQL view name. orderKey is [] (views have no order).
+ * Mutants are generated automatically from the conversion text.
+ * Views whose Person/Address joins fan out (one row per email x phone) are kept small by the key universe.
+ */
+const view = (qualified: string, pgName: string, opts: CatalogOptions = {}): ObjectSpec =>
+  specFromCatalog(DB, qualified, { orderKey: [], mutants: [], pgFunction: pgName }, opts);
+
+export const AW_VIEWS: ObjectSpec[] = [
+  view("Person.vStateProvinceCountryRegion", "person.v_state_province_country_region"),
+  view("HumanResources.vEmployeeDepartment", "humanresources.v_employee_department"),
+  view("HumanResources.vEmployeeDepartmentHistory", "humanresources.v_employee_department_history"),
+  view("Production.vProductAndDescription", "production.v_product_and_description"),
+  view("Purchasing.vVendorWithAddresses", "purchasing.v_vendor_with_addresses"),
+  view("Purchasing.vVendorWithContacts", "purchasing.v_vendor_with_contacts"),
+  view("Sales.vSalesPerson", "sales.v_sales_person"),
+  view("Sales.vStoreWithAddresses", "sales.v_store_with_addresses"),
+  view("Sales.vStoreWithContacts", "sales.v_store_with_contacts"),
+  view("Sales.vSalesPersonSalesByFiscalYears", "sales.v_sales_person_sales_by_fiscal_years", {
+    columns: { "Sales.SalesOrderHeader.OrderDate": { special: [] } },
+  }),
+];
 
 export const AW_SPECS: ObjectSpec[] = [
   noTables("dbo.ufnGetAccountingStartDate", "dbo.ufn_get_accounting_start_date", {

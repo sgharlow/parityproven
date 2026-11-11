@@ -1,0 +1,93 @@
+{
+  "origin": {
+    "repo": "https://github.com/microsoft/sql-server-samples",
+    "release": "adventureworks",
+    "license": "MIT",
+    "assetUrl": "https://github.com/microsoft/sql-server-samples/releases/download/adventureworks/AdventureWorks2025.bak",
+    "sha256": "fa6a2a5d431ad88123f89b36b1f2c7e42ca4bdf6b293269a44df80f6de3738a5"
+  },
+  "conversionType": "tsql-to-plpgsql",
+  "objectClass": "view",
+  "tier": "simple",
+  "code": {
+    "source": "\r\nCREATE VIEW [Sales].[vSalesPersonSalesByFiscalYears]\r\nAS\r\nSELECT\r\n    pvt.[SalesPersonID]\r\n    ,pvt.[FullName]\r\n    ,pvt.[JobTitle]\r\n    ,pvt.[SalesTerritory]\r\n    ,pvt.[2002]\r\n    ,pvt.[2003]\r\n    ,pvt.[2004]\r\nFROM (SELECT\r\n        soh.[SalesPersonID]\r\n        ,p.[FirstName] + ' ' + COALESCE(p.[MiddleName], '') + ' ' + p.[LastName] AS [FullName]\r\n        ,e.[JobTitle]\r\n        ,st.[Name] AS [SalesTerritory]\r\n        ,soh.[SubTotal]\r\n        ,YEAR(DATEADD(m, 6, soh.[OrderDate])) AS [FiscalYear]\r\n    FROM [Sales].[SalesPerson] sp\r\n        INNER JOIN [Sales].[SalesOrderHeader] soh\r\n        ON sp.[BusinessEntityID] = soh.[SalesPersonID]\r\n        INNER JOIN [Sales].[SalesTerritory] st\r\n        ON sp.[TerritoryID] = st.[TerritoryID]\r\n        INNER JOIN [HumanResources].[Employee] e\r\n        ON soh.[SalesPersonID] = e.[BusinessEntityID]\r\n\t\tINNER JOIN [Person].[Person] p\r\n\t\tON p.[BusinessEntityID] = sp.[BusinessEntityID]\r\n\t ) AS soh\r\nPIVOT\r\n(\r\n    SUM([SubTotal])\r\n    FOR [FiscalYear]\r\n    IN ([2002], [2003], [2004])\r\n) AS pvt;\r\n",
+    "engineOutput": "-- PostgreSQL conversion of the view Sales.vSalesPersonSalesByFiscalYears (AdventureWorks2025).\n-- Engine: Kiro first draft (see pair record). Written by hand: PIVOT has no PostgreSQL equivalent.\n--\n-- PIVOT (SUM(SubTotal) FOR FiscalYear IN (2002, 2003, 2004)) becomes conditional aggregation.\n-- PIVOT groups by every non-pivoted column of the source derived table (SalesPersonID, FullName,\n-- JobTitle, SalesTerritory), so the same columns are the GROUP BY here.\n-- YEAR(DATEADD(m, 6, OrderDate)) -> extract(year from OrderDate + interval '6 months').\n-- T-SQL string + yields NULL if any operand is NULL; || does too, so FirstName/LastName NULLs agree.\n\nCREATE OR REPLACE VIEW sales.v_sales_person_sales_by_fiscal_years AS\nSELECT\n    soh.\"SalesPersonID\"                                              AS \"SalesPersonID\",\n    soh.\"FullName\"                                                   AS \"FullName\",\n    soh.\"JobTitle\"                                                   AS \"JobTitle\",\n    soh.\"SalesTerritory\"                                             AS \"SalesTerritory\",\n    sum(soh.\"SubTotal\") FILTER (WHERE soh.\"FiscalYear\" = 2002)       AS \"2002\",\n    sum(soh.\"SubTotal\") FILTER (WHERE soh.\"FiscalYear\" = 2003)       AS \"2003\",\n    sum(soh.\"SubTotal\") FILTER (WHERE soh.\"FiscalYear\" = 2004)       AS \"2004\"\nFROM (SELECT\n        soh.\"SalesPersonID\",\n        p.\"FirstName\" || ' ' || COALESCE(p.\"MiddleName\", '') || ' ' || p.\"LastName\" AS \"FullName\",\n        e.\"JobTitle\",\n        st.\"Name\" AS \"SalesTerritory\",\n        soh.\"SubTotal\",\n        extract(year FROM soh.\"OrderDate\" + interval '6 months')::integer AS \"FiscalYear\"\n    FROM sales.sales_person sp\n        INNER JOIN sales.sales_order_header soh ON sp.\"BusinessEntityID\" = soh.\"SalesPersonID\"\n        INNER JOIN sales.sales_territory st ON sp.\"TerritoryID\" = st.\"TerritoryID\"\n        INNER JOIN humanresources.employee e ON soh.\"SalesPersonID\" = e.\"BusinessEntityID\"\n        INNER JOIN person.person p ON p.\"BusinessEntityID\" = sp.\"BusinessEntityID\"\n     ) AS soh\nGROUP BY soh.\"SalesPersonID\", soh.\"FullName\", soh.\"JobTitle\", soh.\"SalesTerritory\";\n",
+    "final": "-- PostgreSQL conversion of the view Sales.vSalesPersonSalesByFiscalYears (AdventureWorks2025).\n-- Engine: Kiro first draft (see pair record). Written by hand: PIVOT has no PostgreSQL equivalent.\n--\n-- PIVOT (SUM(SubTotal) FOR FiscalYear IN (2002, 2003, 2004)) becomes conditional aggregation.\n-- PIVOT groups by every non-pivoted column of the source derived table (SalesPersonID, FullName,\n-- JobTitle, SalesTerritory), so the same columns are the GROUP BY here.\n-- YEAR(DATEADD(m, 6, OrderDate)) -> extract(year from OrderDate + interval '6 months').\n-- T-SQL string + yields NULL if any operand is NULL; || does too, so FirstName/LastName NULLs agree.\n\nCREATE OR REPLACE VIEW sales.v_sales_person_sales_by_fiscal_years AS\nSELECT\n    soh.\"SalesPersonID\"                                              AS \"SalesPersonID\",\n    soh.\"FullName\"                                                   AS \"FullName\",\n    soh.\"JobTitle\"                                                   AS \"JobTitle\",\n    soh.\"SalesTerritory\"                                             AS \"SalesTerritory\",\n    sum(soh.\"SubTotal\") FILTER (WHERE soh.\"FiscalYear\" = 2002)       AS \"2002\",\n    sum(soh.\"SubTotal\") FILTER (WHERE soh.\"FiscalYear\" = 2003)       AS \"2003\",\n    sum(soh.\"SubTotal\") FILTER (WHERE soh.\"FiscalYear\" = 2004)       AS \"2004\"\nFROM (SELECT\n        soh.\"SalesPersonID\",\n        p.\"FirstName\" || ' ' || COALESCE(p.\"MiddleName\", '') || ' ' || p.\"LastName\" AS \"FullName\",\n        e.\"JobTitle\",\n        st.\"Name\" AS \"SalesTerritory\",\n        soh.\"SubTotal\",\n        extract(year FROM soh.\"OrderDate\" + interval '6 months')::integer AS \"FiscalYear\"\n    FROM sales.sales_person sp\n        INNER JOIN sales.sales_order_header soh ON sp.\"BusinessEntityID\" = soh.\"SalesPersonID\"\n        INNER JOIN sales.sales_territory st ON sp.\"TerritoryID\" = st.\"TerritoryID\"\n        INNER JOIN humanresources.employee e ON soh.\"SalesPersonID\" = e.\"BusinessEntityID\"\n        INNER JOIN person.person p ON p.\"BusinessEntityID\" = sp.\"BusinessEntityID\"\n     ) AS soh\nGROUP BY soh.\"SalesPersonID\", soh.\"FullName\", soh.\"JobTitle\", soh.\"SalesTerritory\";\n",
+    "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
+    "engine": "kiro",
+    "notes": [
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
+    ]
+  },
+  "columnMappings": [
+    {
+      "sqlServerType": "int NOT NULL",
+      "postgresType": "integer NOT NULL"
+    },
+    {
+      "sqlServerType": "nvarchar(50) NOT NULL",
+      "postgresType": "varchar(50) NOT NULL"
+    },
+    {
+      "sqlServerType": "nvarchar(50) NULL",
+      "postgresType": "varchar(50)"
+    },
+    {
+      "sqlServerType": "datetime NOT NULL",
+      "postgresType": "timestamp(3) NOT NULL",
+      "notes": "datetime rounds to .000/.003/.007 s on SQL Server; timestamp(3) does not. Only SQL Server-representable values are generated, and results are compared at microsecond resolution."
+    },
+    {
+      "sqlServerType": "int NULL",
+      "postgresType": "integer"
+    },
+    {
+      "sqlServerType": "money NOT NULL",
+      "postgresType": "numeric(19,4) NOT NULL",
+      "notes": "money -> numeric(19,4), not PostgreSQL's locale-dependent money type. Money arithmetic rounds to 4 places on SQL Server."
+    }
+  ],
+  "evidence": {
+    "step1": "pass",
+    "step2": "not-run",
+    "step3": "pass",
+    "step4": "pass",
+    "step5": "not-run",
+    "step6": "not-run",
+    "runtimeRatio": 0.44,
+    "runtime": {
+      "volume": 5000,
+      "timedRuns": 7,
+      "sqlServerMs": 26,
+      "postgresMs": 11.43,
+      "ratio": 0.44,
+      "threshold": 1.5,
+      "passed": true,
+      "belowResolution": false,
+      "resultRows": 2215,
+      "volumeMismatch": null
+    },
+    "rowsCompared": 129,
+    "trapsCovered": [
+      "NULL in every nullable column",
+      "empty string and trailing spaces"
+    ],
+    "pbtSeeds": [
+      713772977
+    ],
+    "samples": 200,
+    "samplesWithRows": 108,
+    "subMicrosecondNormalised": 0,
+    "mutantsDetected": [
+      "auto: two output columns swap values",
+      "auto: join condition uses a different key"
+    ],
+    "harnessVersion": "harness-generic-0.3.0"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "Kiro",
+    "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
+  },
+  "status": "pending"
+}

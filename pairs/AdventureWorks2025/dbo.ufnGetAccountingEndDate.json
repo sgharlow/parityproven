@@ -17,7 +17,7 @@
     "engine": "kiro",
     "notes": [
       "DATEADD(millisecond, -2, '20040701') on datetime rounds to .997, not .998: SQL Server datetime has 3.33 ms resolution.",
-      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign keys and no pre-existing rows."
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
     ]
   },
   "columnMappings": [],
@@ -44,11 +44,11 @@
     "rowsCompared": 200,
     "trapsCovered": [],
     "pbtSeeds": [
-      265041268
+      398126013
     ],
     "engineOutputCheck": {
       "step3": "fail",
-      "seed": 265041268,
+      "seed": 398126013,
       "detail": "random sample: value differs in group 0 (key \"*\"), column \"result\": SQL Server t:2004-06-30T23:59:59.997000 vs PostgreSQL t:2004-06-30T23:59:59.998000"
     },
     "samples": 200,

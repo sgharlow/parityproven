@@ -4,7 +4,7 @@
   "objectName": "ufnGetProductStandardCost",
   "objectClass": "function",
   "tier": "simple",
-  "status": "pending",
+  "status": "failed",
   "code": {
     "source": "\r\nCREATE FUNCTION [dbo].[ufnGetProductStandardCost](@ProductID [int], @OrderDate [datetime])\r\nRETURNS [money]\r\nAS\r\n-- Returns the standard cost for the product on a specific date.\r\nBEGIN\r\n    DECLARE @StandardCost money;\r\n\r\n    SELECT @StandardCost = pch.[StandardCost]\r\n    FROM [Production].[Product] p\r\n        INNER JOIN [Production].[ProductCostHistory] pch\r\n        ON p.[ProductID] = pch.[ProductID]\r\n            AND p.[ProductID] = @ProductID\r\n            AND @OrderDate BETWEEN pch.[StartDate] AND COALESCE(pch.[EndDate], CONVERT(datetime, '99991231', 112)); -- Make sure we get all the prices!\r\n\r\n    RETURN @StandardCost;\r\nEND;\r\n",
     "engineOutput": "-- PostgreSQL conversion of dbo.ufnGetProductStandardCost (AdventureWorks2025).\n-- Engine: Kiro first draft (see pair record).\n-- money -> numeric(19,4); datetime -> timestamp.\n-- Precondition: at most one cost period per product (T-SQL `SELECT @x = ...` keeps the last row read).\n\nCREATE OR REPLACE FUNCTION dbo.ufn_get_product_standard_cost(product_id integer, order_date timestamp)\nRETURNS numeric(19,4)\nLANGUAGE sql\nSTABLE\nAS $$\n    SELECT pch.\"StandardCost\"\n      FROM production.product AS p\n     INNER JOIN production.product_cost_history AS pch\n        ON p.\"ProductID\" = pch.\"ProductID\"\n       AND p.\"ProductID\" = product_id\n       AND order_date BETWEEN pch.\"StartDate\" AND COALESCE(pch.\"EndDate\", TIMESTAMP '9999-12-31 00:00:00')\n     LIMIT 1\n$$;\n",
@@ -72,24 +72,25 @@
   ],
   "evidence": {
     "pbtSeeds": [
-      1778954492
+      1488233840
     ],
     "rowsCompared": 200,
     "samples": 200,
-    "samplesWithRows": 118,
+    "samplesWithRows": 109,
     "trapsCovered": [
       "NULL in every nullable column"
     ],
     "mutantsDetected": [
-      "auto: first AND becomes OR",
-      "auto: COALESCE first argument dropped"
+      "auto: join condition uses a different key",
+      "auto: first AND becomes OR"
     ],
+    "failureDetail": "Step 4: PostgreSQL 141.5 ms vs SQL Server 78 ms = 1.81x, above the 1.5x limit. Results are equivalent (step 3 pass); see the notes for the cause.",
     "runtime": {
       "volume": 2000,
       "timedRuns": 7,
-      "sqlServerMs": 73,
-      "postgresMs": 152.03,
-      "ratio": 2.08,
+      "sqlServerMs": 78,
+      "postgresMs": 141.5,
+      "ratio": 1.81,
       "threshold": 1.5,
       "passed": false,
       "belowResolution": false,
@@ -108,5 +109,5 @@
     "p50Hours": 1.5,
     "p90Hours": 4
   },
-  "builtAt": "2026-11-11T02:07:18.691Z"
+  "builtAt": "2026-11-11T04:03:31.171Z"
 }

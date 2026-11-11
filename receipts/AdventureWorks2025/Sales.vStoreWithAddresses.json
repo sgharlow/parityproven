@@ -1,0 +1,120 @@
+{
+  "database": "AdventureWorks2025",
+  "schemaName": "Sales",
+  "objectName": "vStoreWithAddresses",
+  "objectClass": "view",
+  "tier": "simple",
+  "status": "pending",
+  "code": {
+    "source": "\r\nCREATE VIEW [Sales].[vStoreWithAddresses] AS\r\nSELECT\r\n    s.[BusinessEntityID]\r\n    ,s.[Name]\r\n    ,at.[Name] AS [AddressType]\r\n    ,a.[AddressLine1]\r\n    ,a.[AddressLine2]\r\n    ,a.[City]\r\n    ,sp.[Name] AS [StateProvinceName]\r\n    ,a.[PostalCode]\r\n    ,cr.[Name] AS [CountryRegionName]\r\nFROM [Sales].[Store] s\r\n    INNER JOIN [Person].[BusinessEntityAddress] bea\r\n    ON bea.[BusinessEntityID] = s.[BusinessEntityID]\r\n    INNER JOIN [Person].[Address] a\r\n    ON a.[AddressID] = bea.[AddressID]\r\n    INNER JOIN [Person].[StateProvince] sp\r\n    ON sp.[StateProvinceID] = a.[StateProvinceID]\r\n    INNER JOIN [Person].[CountryRegion] cr\r\n    ON cr.[CountryRegionCode] = sp.[CountryRegionCode]\r\n    INNER JOIN [Person].[AddressType] at\r\n    ON at.[AddressTypeID] = bea.[AddressTypeID];\r\n",
+    "engineOutput": "-- PostgreSQL conversion of the view Sales.vStoreWithAddresses (AdventureWorks2025).\n-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case).\n-- Verified by the property-based harness, not by this script.\n\nCREATE OR REPLACE VIEW sales.v_store_with_addresses AS\nSELECT\r\n    s.\"BusinessEntityID\" AS \"BusinessEntityID\"\r\n    ,s.\"Name\" AS \"Name\"\r\n    ,at.\"Name\" AS \"AddressType\"\r\n    ,a.\"AddressLine1\" AS \"AddressLine1\"\r\n    ,a.\"AddressLine2\" AS \"AddressLine2\"\r\n    ,a.\"City\" AS \"City\"\r\n    ,sp.\"Name\" AS \"StateProvinceName\"\r\n    ,a.\"PostalCode\" AS \"PostalCode\"\r\n    ,cr.\"Name\" AS \"CountryRegionName\"\r\nFROM sales.store s\r\n    INNER JOIN person.business_entity_address bea\r\n    ON bea.\"BusinessEntityID\" = s.\"BusinessEntityID\"\r\n    INNER JOIN person.address a\r\n    ON a.\"AddressID\" = bea.\"AddressID\"\r\n    INNER JOIN person.state_province sp\r\n    ON sp.\"StateProvinceID\" = a.\"StateProvinceID\"\r\n    INNER JOIN person.country_region cr\r\n    ON cr.\"CountryRegionCode\" = sp.\"CountryRegionCode\"\r\n    INNER JOIN person.address_type at\r\n    ON at.\"AddressTypeID\" = bea.\"AddressTypeID\";\n",
+    "final": "-- PostgreSQL conversion of the view Sales.vStoreWithAddresses (AdventureWorks2025).\n-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case).\n-- Verified by the property-based harness, not by this script.\n\nCREATE OR REPLACE VIEW sales.v_store_with_addresses AS\nSELECT\r\n    s.\"BusinessEntityID\" AS \"BusinessEntityID\"\r\n    ,s.\"Name\" AS \"Name\"\r\n    ,at.\"Name\" AS \"AddressType\"\r\n    ,a.\"AddressLine1\" AS \"AddressLine1\"\r\n    ,a.\"AddressLine2\" AS \"AddressLine2\"\r\n    ,a.\"City\" AS \"City\"\r\n    ,sp.\"Name\" AS \"StateProvinceName\"\r\n    ,a.\"PostalCode\" AS \"PostalCode\"\r\n    ,cr.\"Name\" AS \"CountryRegionName\"\r\nFROM sales.store s\r\n    INNER JOIN person.business_entity_address bea\r\n    ON bea.\"BusinessEntityID\" = s.\"BusinessEntityID\"\r\n    INNER JOIN person.address a\r\n    ON a.\"AddressID\" = bea.\"AddressID\"\r\n    INNER JOIN person.state_province sp\r\n    ON sp.\"StateProvinceID\" = a.\"StateProvinceID\"\r\n    INNER JOIN person.country_region cr\r\n    ON cr.\"CountryRegionCode\" = sp.\"CountryRegionCode\"\r\n    INNER JOIN person.address_type at\r\n    ON at.\"AddressTypeID\" = bea.\"AddressTypeID\";\n",
+    "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
+    "engine": "kiro",
+    "notes": [
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
+    ]
+  },
+  "columnMappings": [
+    {
+      "sqlServerType": "int NOT NULL",
+      "postgresType": "integer NOT NULL"
+    },
+    {
+      "sqlServerType": "nvarchar(60) NOT NULL",
+      "postgresType": "varchar(60) NOT NULL"
+    },
+    {
+      "sqlServerType": "nvarchar(60) NULL",
+      "postgresType": "varchar(60)"
+    },
+    {
+      "sqlServerType": "nvarchar(30) NOT NULL",
+      "postgresType": "varchar(30) NOT NULL"
+    },
+    {
+      "sqlServerType": "nvarchar(15) NOT NULL",
+      "postgresType": "varchar(15) NOT NULL"
+    },
+    {
+      "sqlServerType": "nvarchar(50) NOT NULL",
+      "postgresType": "varchar(50) NOT NULL"
+    },
+    {
+      "sqlServerType": "nvarchar(3) NOT NULL",
+      "postgresType": "varchar(3) NOT NULL"
+    }
+  ],
+  "verificationSteps": [
+    {
+      "step": 1,
+      "label": "Compiles and deploys on PostgreSQL",
+      "status": "pass"
+    },
+    {
+      "step": 2,
+      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "status": "not-run"
+    },
+    {
+      "step": 3,
+      "label": "Result sets match on generated data",
+      "status": "pass"
+    },
+    {
+      "step": 4,
+      "label": "Runtime within 1.5× factor",
+      "status": "pass"
+    },
+    {
+      "step": 5,
+      "label": "Second human review",
+      "status": "not-run"
+    },
+    {
+      "step": 6,
+      "label": "Acceptance on real data",
+      "status": "not-run"
+    }
+  ],
+  "evidence": {
+    "pbtSeeds": [
+      184029497
+    ],
+    "rowsCompared": 192,
+    "samples": 200,
+    "samplesWithRows": 114,
+    "trapsCovered": [
+      "NULL in every nullable column",
+      "empty string and trailing spaces"
+    ],
+    "mutantsDetected": [
+      "auto: two output columns swap values",
+      "auto: join condition uses a different key"
+    ],
+    "runtime": {
+      "volume": 5000,
+      "timedRuns": 7,
+      "sqlServerMs": 35,
+      "postgresMs": 12.88,
+      "ratio": 0.37,
+      "threshold": 1.5,
+      "passed": true,
+      "belowResolution": false,
+      "resultRows": 5000,
+      "volumeMismatch": null
+    },
+    "subMicrosecondNormalised": 0,
+    "harnessVersion": "harness-generic-0.3.0"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "Kiro",
+    "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
+  },
+  "predictionCell": {
+    "p50Hours": 0.75,
+    "p90Hours": 2
+  },
+  "builtAt": "2026-11-11T04:03:31.174Z"
+}

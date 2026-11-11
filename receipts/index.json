@@ -1,5 +1,5 @@
 {
-  "builtAt": "2026-11-11T02:07:18.696Z",
+  "builtAt": "2026-11-11T04:03:31.179Z",
   "receipts": [
     {
       "database": "AdventureWorks2025",
@@ -34,7 +34,7 @@
       "objectName": "ufnGetProductDealerPrice",
       "objectClass": "function",
       "tier": "simple",
-      "status": "pending",
+      "status": "failed",
       "path": "AdventureWorks2025/dbo.ufnGetProductDealerPrice.json"
     },
     {
@@ -43,7 +43,7 @@
       "objectName": "ufnGetProductListPrice",
       "objectClass": "function",
       "tier": "simple",
-      "status": "pending",
+      "status": "failed",
       "path": "AdventureWorks2025/dbo.ufnGetProductListPrice.json"
     },
     {
@@ -52,7 +52,7 @@
       "objectName": "ufnGetProductStandardCost",
       "objectClass": "function",
       "tier": "simple",
-      "status": "pending",
+      "status": "failed",
       "path": "AdventureWorks2025/dbo.ufnGetProductStandardCost.json"
     },
     {
@@ -79,7 +79,7 @@
       "objectName": "ufnGetStock",
       "objectClass": "function",
       "tier": "simple",
-      "status": "pending",
+      "status": "failed",
       "path": "AdventureWorks2025/dbo.ufnGetStock.json"
     },
     {
@@ -90,6 +90,96 @@
       "tier": "simple",
       "status": "pending",
       "path": "AdventureWorks2025/dbo.ufnLeadingZeros.json"
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "HumanResources",
+      "objectName": "vEmployeeDepartment",
+      "objectClass": "view",
+      "tier": "simple",
+      "status": "pending",
+      "path": "AdventureWorks2025/HumanResources.vEmployeeDepartment.json"
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "HumanResources",
+      "objectName": "vEmployeeDepartmentHistory",
+      "objectClass": "view",
+      "tier": "simple",
+      "status": "pending",
+      "path": "AdventureWorks2025/HumanResources.vEmployeeDepartmentHistory.json"
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "Person",
+      "objectName": "vStateProvinceCountryRegion",
+      "objectClass": "view",
+      "tier": "simple",
+      "status": "pending",
+      "path": "AdventureWorks2025/Person.vStateProvinceCountryRegion.json"
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "Production",
+      "objectName": "vProductAndDescription",
+      "objectClass": "view",
+      "tier": "simple",
+      "status": "pending",
+      "path": "AdventureWorks2025/Production.vProductAndDescription.json"
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "Purchasing",
+      "objectName": "vVendorWithAddresses",
+      "objectClass": "view",
+      "tier": "simple",
+      "status": "pending",
+      "path": "AdventureWorks2025/Purchasing.vVendorWithAddresses.json"
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "Purchasing",
+      "objectName": "vVendorWithContacts",
+      "objectClass": "view",
+      "tier": "simple",
+      "status": "pending",
+      "path": "AdventureWorks2025/Purchasing.vVendorWithContacts.json"
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "Sales",
+      "objectName": "vSalesPerson",
+      "objectClass": "view",
+      "tier": "simple",
+      "status": "pending",
+      "path": "AdventureWorks2025/Sales.vSalesPerson.json"
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "Sales",
+      "objectName": "vSalesPersonSalesByFiscalYears",
+      "objectClass": "view",
+      "tier": "simple",
+      "status": "pending",
+      "path": "AdventureWorks2025/Sales.vSalesPersonSalesByFiscalYears.json"
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "Sales",
+      "objectName": "vStoreWithAddresses",
+      "objectClass": "view",
+      "tier": "simple",
+      "status": "pending",
+      "path": "AdventureWorks2025/Sales.vStoreWithAddresses.json"
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "Sales",
+      "objectName": "vStoreWithContacts",
+      "objectClass": "view",
+      "tier": "simple",
+      "status": "pending",
+      "path": "AdventureWorks2025/Sales.vStoreWithContacts.json"
     },
     {
       "database": "WideWorldImporters",
@@ -174,9 +264,9 @@
     }
   ],
   "summary": {
-    "total": 19,
+    "total": 29,
     "verified": 0,
-    "pending": 19,
-    "failed": 0
+    "pending": 25,
+    "failed": 4
   }
 }

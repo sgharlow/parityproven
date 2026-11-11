@@ -16,7 +16,7 @@
     "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
     "engine": "kiro",
     "notes": [
-      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign keys and no pre-existing rows."
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
     ]
   },
   "columnMappings": [
@@ -50,16 +50,17 @@
     "step4": "pass",
     "step5": "not-run",
     "step6": "not-run",
-    "runtimeRatio": 0.24,
+    "runtimeRatio": 0.31,
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
-      "sqlServerMs": 33,
-      "postgresMs": 7.79,
-      "ratio": 0.24,
+      "sqlServerMs": 21,
+      "postgresMs": 6.49,
+      "ratio": 0.31,
       "threshold": 1.5,
       "passed": true,
-      "resultRows": 3448,
+      "belowResolution": false,
+      "resultRows": 3500,
       "volumeMismatch": null
     },
     "rowsCompared": 129,
@@ -69,11 +70,11 @@
       "ORDER BY key (ties compared as multisets)"
     ],
     "pbtSeeds": [
-      1596997200
+      2030759755
     ],
     "samples": 200,
-    "samplesWithRows": 92,
-    "subMicrosecondNormalised": 931,
+    "samplesWithRows": 89,
+    "subMicrosecondNormalised": 940,
     "mutantsDetected": [
       "ordered quantity uses outers only",
       "upper cutoff exclusive"

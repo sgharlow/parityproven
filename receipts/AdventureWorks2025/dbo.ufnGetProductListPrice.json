@@ -4,7 +4,7 @@
   "objectName": "ufnGetProductListPrice",
   "objectClass": "function",
   "tier": "simple",
-  "status": "pending",
+  "status": "failed",
   "code": {
     "source": "\r\nCREATE FUNCTION [dbo].[ufnGetProductListPrice](@ProductID [int], @OrderDate [datetime])\r\nRETURNS [money]\r\nAS\r\nBEGIN\r\n    DECLARE @ListPrice money;\r\n\r\n    SELECT @ListPrice = plph.[ListPrice]\r\n    FROM [Production].[Product] p\r\n        INNER JOIN [Production].[ProductListPriceHistory] plph\r\n        ON p.[ProductID] = plph.[ProductID]\r\n            AND p.[ProductID] = @ProductID\r\n            AND @OrderDate BETWEEN plph.[StartDate] AND COALESCE(plph.[EndDate], CONVERT(datetime, '99991231', 112)); -- Make sure we get all the prices!\r\n\r\n    RETURN @ListPrice;\r\nEND;\r\n",
     "engineOutput": "-- PostgreSQL conversion of dbo.ufnGetProductListPrice (AdventureWorks2025).\n-- Engine: Kiro first draft (see pair record).\n-- money -> numeric(19,4); datetime -> timestamp.\n-- Precondition: at most one price period per product (T-SQL `SELECT @x = ...` keeps the last row read).\n\nCREATE OR REPLACE FUNCTION dbo.ufn_get_product_list_price(product_id integer, order_date timestamp)\nRETURNS numeric(19,4)\nLANGUAGE sql\nSTABLE\nAS $$\n    SELECT plph.\"ListPrice\"\n      FROM production.product AS p\n     INNER JOIN production.product_list_price_history AS plph\n        ON p.\"ProductID\" = plph.\"ProductID\"\n       AND p.\"ProductID\" = product_id\n       AND order_date BETWEEN plph.\"StartDate\" AND COALESCE(plph.\"EndDate\", TIMESTAMP '9999-12-31 00:00:00')\n     LIMIT 1\n$$;\n",
@@ -72,23 +72,24 @@
   ],
   "evidence": {
     "pbtSeeds": [
-      1190314903
+      1797539367
     ],
     "rowsCompared": 200,
     "samples": 200,
-    "samplesWithRows": 116,
+    "samplesWithRows": 123,
     "trapsCovered": [
       "NULL in every nullable column"
     ],
     "mutantsDetected": [
-      "auto: first AND becomes OR",
-      "auto: COALESCE first argument dropped"
+      "auto: join condition uses a different key",
+      "auto: first AND becomes OR"
     ],
+    "failureDetail": "Step 4: PostgreSQL 138.44 ms vs SQL Server 67 ms = 2.07x, above the 1.5x limit. Results are equivalent (step 3 pass); see the notes for the cause.",
     "runtime": {
       "volume": 2000,
       "timedRuns": 7,
-      "sqlServerMs": 71,
-      "postgresMs": 146.97,
+      "sqlServerMs": 67,
+      "postgresMs": 138.44,
       "ratio": 2.07,
       "threshold": 1.5,
       "passed": false,
@@ -108,5 +109,5 @@
     "p50Hours": 1.5,
     "p90Hours": 4
   },
-  "builtAt": "2026-11-11T02:07:18.691Z"
+  "builtAt": "2026-11-11T04:03:31.171Z"
 }

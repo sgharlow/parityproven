@@ -101,6 +101,7 @@ export async function dropPgObject(conn: Connections, spec: ObjectSpec, qualifie
   );
 }
 
+/** Deploy a PostgreSQL object. `qualified` names what is being deployed (the real object or its mutant), so the right one is dropped first. */
 export async function deployPgFunction(conn: Connections, spec: ObjectSpec, sqlText: string, qualified: string = spec.pgFunction): Promise<void> {
   const [schema] = qualified.split(".");
   await conn.pg.query(`CREATE SCHEMA IF NOT EXISTS ${schema}`, []);
@@ -166,7 +167,7 @@ export async function runProperty(
   conn: Connections,
   scratch: MssqlClient,
   spec: ObjectSpec,
-  opts: { fn: string; seed: number; numRuns: number; excludeColumns?: string[] }
+  opts: { fn: string; seed: number; numRuns: number; excludeColumns?: string[]; shrink?: boolean }
 ): Promise<RunOutcome> {
   const outcome: RunOutcome = {
     passed: true, seed: opts.seed, numRuns: opts.numRuns, subMicrosecondNormalised: 0, rowsCompared: 0,
@@ -205,7 +206,9 @@ export async function runProperty(
   const prop = fc.asyncProperty(datasetArb(spec), async (d) => {
     await check(materialise(spec, d), "random sample", true);
   });
-  const result = await fc.check(prop, { seed: opts.seed, numRuns: opts.numRuns });
+  // Shrinking replays the database round trips many times to minimise a counterexample. Worth it for a
+  // real failure; not for a planted defect, where detection is all that matters (it also made runs crawl).
+  const result = await fc.check(prop, { seed: opts.seed, numRuns: opts.numRuns, endOnFailure: opts.shrink === false });
   if (result.failed) {
     const err = result.errorInstance instanceof Error ? result.errorInstance.message : String(result.error);
     return { ...outcome, passed: false, failure: `${err}\n  (shrunk in ${result.numShrinks} step(s))` };

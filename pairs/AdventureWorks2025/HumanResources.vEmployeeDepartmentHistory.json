@@ -1,0 +1,104 @@
+{
+  "origin": {
+    "repo": "https://github.com/microsoft/sql-server-samples",
+    "release": "adventureworks",
+    "license": "MIT",
+    "assetUrl": "https://github.com/microsoft/sql-server-samples/releases/download/adventureworks/AdventureWorks2025.bak",
+    "sha256": "fa6a2a5d431ad88123f89b36b1f2c7e42ca4bdf6b293269a44df80f6de3738a5"
+  },
+  "conversionType": "tsql-to-plpgsql",
+  "objectClass": "view",
+  "tier": "simple",
+  "code": {
+    "source": "\r\nCREATE VIEW [HumanResources].[vEmployeeDepartmentHistory]\r\nAS\r\nSELECT\r\n    e.[BusinessEntityID]\r\n    ,p.[Title]\r\n    ,p.[FirstName]\r\n    ,p.[MiddleName]\r\n    ,p.[LastName]\r\n    ,p.[Suffix]\r\n    ,s.[Name] AS [Shift]\r\n    ,d.[Name] AS [Department]\r\n    ,d.[GroupName]\r\n    ,edh.[StartDate]\r\n    ,edh.[EndDate]\r\nFROM [HumanResources].[Employee] e\r\n\tINNER JOIN [Person].[Person] p\r\n\tON p.[BusinessEntityID] = e.[BusinessEntityID]\r\n    INNER JOIN [HumanResources].[EmployeeDepartmentHistory] edh\r\n    ON e.[BusinessEntityID] = edh.[BusinessEntityID]\r\n    INNER JOIN [HumanResources].[Department] d\r\n    ON edh.[DepartmentID] = d.[DepartmentID]\r\n    INNER JOIN [HumanResources].[Shift] s\r\n    ON s.[ShiftID] = edh.[ShiftID];\r\n",
+    "engineOutput": "-- PostgreSQL conversion of the view HumanResources.vEmployeeDepartmentHistory (AdventureWorks2025).\n-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case).\n-- Verified by the property-based harness, not by this script.\n\nCREATE OR REPLACE VIEW humanresources.v_employee_department_history AS\nSELECT\r\n    e.\"BusinessEntityID\" AS \"BusinessEntityID\"\r\n    ,p.\"Title\" AS \"Title\"\r\n    ,p.\"FirstName\" AS \"FirstName\"\r\n    ,p.\"MiddleName\" AS \"MiddleName\"\r\n    ,p.\"LastName\" AS \"LastName\"\r\n    ,p.\"Suffix\" AS \"Suffix\"\r\n    ,s.\"Name\" AS \"Shift\"\r\n    ,d.\"Name\" AS \"Department\"\r\n    ,d.\"GroupName\" AS \"GroupName\"\r\n    ,edh.\"StartDate\" AS \"StartDate\"\r\n    ,edh.\"EndDate\" AS \"EndDate\"\r\nFROM humanresources.employee e\r\n\tINNER JOIN person.person p\r\n\tON p.\"BusinessEntityID\" = e.\"BusinessEntityID\"\r\n    INNER JOIN humanresources.employee_department_history edh\r\n    ON e.\"BusinessEntityID\" = edh.\"BusinessEntityID\"\r\n    INNER JOIN humanresources.department d\r\n    ON edh.\"DepartmentID\" = d.\"DepartmentID\"\r\n    INNER JOIN humanresources.shift s\r\n    ON s.\"ShiftID\" = edh.\"ShiftID\";\n",
+    "final": "-- PostgreSQL conversion of the view HumanResources.vEmployeeDepartmentHistory (AdventureWorks2025).\n-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case).\n-- Verified by the property-based harness, not by this script.\n\nCREATE OR REPLACE VIEW humanresources.v_employee_department_history AS\nSELECT\r\n    e.\"BusinessEntityID\" AS \"BusinessEntityID\"\r\n    ,p.\"Title\" AS \"Title\"\r\n    ,p.\"FirstName\" AS \"FirstName\"\r\n    ,p.\"MiddleName\" AS \"MiddleName\"\r\n    ,p.\"LastName\" AS \"LastName\"\r\n    ,p.\"Suffix\" AS \"Suffix\"\r\n    ,s.\"Name\" AS \"Shift\"\r\n    ,d.\"Name\" AS \"Department\"\r\n    ,d.\"GroupName\" AS \"GroupName\"\r\n    ,edh.\"StartDate\" AS \"StartDate\"\r\n    ,edh.\"EndDate\" AS \"EndDate\"\r\nFROM humanresources.employee e\r\n\tINNER JOIN person.person p\r\n\tON p.\"BusinessEntityID\" = e.\"BusinessEntityID\"\r\n    INNER JOIN humanresources.employee_department_history edh\r\n    ON e.\"BusinessEntityID\" = edh.\"BusinessEntityID\"\r\n    INNER JOIN humanresources.department d\r\n    ON edh.\"DepartmentID\" = d.\"DepartmentID\"\r\n    INNER JOIN humanresources.shift s\r\n    ON s.\"ShiftID\" = edh.\"ShiftID\";\n",
+    "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
+    "engine": "kiro",
+    "notes": [
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
+    ]
+  },
+  "columnMappings": [
+    {
+      "sqlServerType": "smallint NOT NULL",
+      "postgresType": "smallint NOT NULL"
+    },
+    {
+      "sqlServerType": "nvarchar(50) NOT NULL",
+      "postgresType": "varchar(50) NOT NULL"
+    },
+    {
+      "sqlServerType": "int NOT NULL",
+      "postgresType": "integer NOT NULL"
+    },
+    {
+      "sqlServerType": "tinyint NOT NULL",
+      "postgresType": "smallint NOT NULL",
+      "notes": "PostgreSQL has no tinyint; smallint holds it, so out-of-range values (>255, <0) are not rejected the way SQL Server rejects them."
+    },
+    {
+      "sqlServerType": "date NOT NULL",
+      "postgresType": "date NOT NULL"
+    },
+    {
+      "sqlServerType": "date NULL",
+      "postgresType": "date"
+    },
+    {
+      "sqlServerType": "nvarchar(8) NULL",
+      "postgresType": "varchar(8)"
+    },
+    {
+      "sqlServerType": "nvarchar(50) NULL",
+      "postgresType": "varchar(50)"
+    },
+    {
+      "sqlServerType": "nvarchar(10) NULL",
+      "postgresType": "varchar(10)"
+    }
+  ],
+  "evidence": {
+    "step1": "pass",
+    "step2": "not-run",
+    "step3": "pass",
+    "step4": "pass",
+    "step5": "not-run",
+    "step6": "not-run",
+    "runtimeRatio": 0.36,
+    "runtime": {
+      "volume": 5000,
+      "timedRuns": 7,
+      "sqlServerMs": 30,
+      "postgresMs": 10.67,
+      "ratio": 0.36,
+      "threshold": 1.5,
+      "passed": true,
+      "belowResolution": false,
+      "resultRows": 5000,
+      "volumeMismatch": null
+    },
+    "rowsCompared": 209,
+    "trapsCovered": [
+      "NULL in every nullable column",
+      "empty string and trailing spaces"
+    ],
+    "pbtSeeds": [
+      528168215
+    ],
+    "samples": 200,
+    "samplesWithRows": 132,
+    "subMicrosecondNormalised": 0,
+    "mutantsDetected": [
+      "auto: two output columns swap values",
+      "auto: join condition uses a different key"
+    ],
+    "harnessVersion": "harness-generic-0.3.0"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "Kiro",
+    "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
+  },
+  "status": "pending"
+}

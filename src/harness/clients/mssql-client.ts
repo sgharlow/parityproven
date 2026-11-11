@@ -58,37 +58,17 @@ export class MssqlClient implements DatabaseClient {
       parameterisedSql = parameterisedSql.replace(/\?/g, () => `@p${idx++}`);
     }
 
-    const result = await request.query(parameterisedSql);
-    const recordset = result.recordset;
+    // arrayRowMode: rows come back as arrays in server column order. (Keying rows by name loses
+    // the order: JavaScript lists integer-like names such as "2002" before all other keys.)
+    request.arrayRowMode = true;
+    const result = (await request.query(parameterisedSql)) as unknown as {
+      recordset?: unknown[][];
+      columns?: Array<Array<{ index: number; name: string; type?: { declaration?: string } }>>;
+    };
 
-    // mssql's recordsets type can be an array or an object; cast to array access
-    type RecordSetsArray = sql.IRecordSet<Record<string, unknown>>[];
-    const firstRecordset = (result.recordsets as unknown as RecordSetsArray)[0];
-    type ColumnsMeta = Record<string, { type: { declaration: string } }>;
-
-    if (!recordset || recordset.length === 0) {
-      const columns: ColumnMeta[] = firstRecordset?.columns
-        ? Object.entries(firstRecordset.columns as unknown as ColumnsMeta).map(
-            ([name, meta]) => ({
-              name,
-              declaredType: meta?.type?.declaration ?? "unknown",
-            })
-          )
-        : [];
-      return { columns, rows: [] };
-    }
-
-    const columns: ColumnMeta[] = Object.keys(recordset[0]).map((name) => ({
-      name,
-      declaredType:
-        (firstRecordset?.columns as unknown as ColumnsMeta)?.[name]?.type?.declaration ?? "unknown",
-    }));
-
-    const rows = recordset.map((row: Record<string, unknown>) =>
-      columns.map((col) => row[col.name])
-    );
-
-    return { columns, rows };
+    const meta = [...(result.columns?.[0] ?? [])].sort((a, b) => a.index - b.index);
+    const columns: ColumnMeta[] = meta.map((m) => ({ name: m.name, declaredType: m.type?.declaration ?? "unknown" }));
+    return { columns, rows: (result.recordset ?? []) as unknown[][] };
   }
 
   async loadRows(

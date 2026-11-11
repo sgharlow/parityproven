@@ -12,7 +12,7 @@
     "diff": "--- engineOutput\n+++ final\n@@ engineOutput line 4 / final line 4 @@\n+-- DeliveryLocation is a SQL Server geography column; it maps to PostGIS geography (SRID 4326)\n+-- in the pinned postgis/postgis:18-3.6 image. History: the first draft omitted this column\n+-- because the earlier image had no PostGIS; that draft was recorded as a failed pair.\n--- First draft: omits s.DeliveryLocation (SQL Server geography) because the image then in use had no PostGIS.\n@@ engineOutput line 17 / final line 19 @@\n+       s.\"DeliveryLocation\"      AS \"DeliveryLocation\",",
     "engine": "kiro",
     "notes": [
-      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign keys and no pre-existing rows."
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
     ]
   },
   "columnMappings": [
@@ -84,11 +84,11 @@
   ],
   "evidence": {
     "pbtSeeds": [
-      44520797
+      1573978543
     ],
-    "rowsCompared": 388,
+    "rowsCompared": 364,
     "samples": 200,
-    "samplesWithRows": 192,
+    "samplesWithRows": 189,
     "trapsCovered": [
       "NULL in every nullable column",
       "empty string and trailing spaces"
@@ -100,17 +100,18 @@
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
-      "sqlServerMs": 138,
-      "postgresMs": 21.88,
-      "ratio": 0.16,
+      "sqlServerMs": 701,
+      "postgresMs": 11.09,
+      "ratio": 0.02,
       "threshold": 1.5,
       "passed": true,
+      "belowResolution": false,
       "resultRows": 5000,
       "volumeMismatch": null
     },
     "engineOutputCheck": {
       "step3": "fail",
-      "seed": 44520797,
+      "seed": 1573978543,
       "detail": "column \"DeliveryLocation\" does not exist"
     },
     "subMicrosecondNormalised": 0,
@@ -125,5 +126,5 @@
     "p50Hours": 0.75,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-11T02:07:18.696Z"
+  "builtAt": "2026-11-11T04:03:31.179Z"
 }

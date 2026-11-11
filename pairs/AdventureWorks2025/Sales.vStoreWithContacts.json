@@ -1,0 +1,91 @@
+{
+  "origin": {
+    "repo": "https://github.com/microsoft/sql-server-samples",
+    "release": "adventureworks",
+    "license": "MIT",
+    "assetUrl": "https://github.com/microsoft/sql-server-samples/releases/download/adventureworks/AdventureWorks2025.bak",
+    "sha256": "fa6a2a5d431ad88123f89b36b1f2c7e42ca4bdf6b293269a44df80f6de3738a5"
+  },
+  "conversionType": "tsql-to-plpgsql",
+  "objectClass": "view",
+  "tier": "simple",
+  "code": {
+    "source": "\r\nCREATE VIEW [Sales].[vStoreWithContacts] AS\r\nSELECT\r\n    s.[BusinessEntityID]\r\n    ,s.[Name]\r\n    ,ct.[Name] AS [ContactType]\r\n    ,p.[Title]\r\n    ,p.[FirstName]\r\n    ,p.[MiddleName]\r\n    ,p.[LastName]\r\n    ,p.[Suffix]\r\n    ,pp.[PhoneNumber]\r\n\t,pnt.[Name] AS [PhoneNumberType]\r\n    ,ea.[EmailAddress]\r\n    ,p.[EmailPromotion]\r\nFROM [Sales].[Store] s\r\n    INNER JOIN [Person].[BusinessEntityContact] bec\r\n    ON bec.[BusinessEntityID] = s.[BusinessEntityID]\r\n\tINNER JOIN [Person].[ContactType] ct\r\n\tON ct.[ContactTypeID] = bec.[ContactTypeID]\r\n\tINNER JOIN [Person].[Person] p\r\n\tON p.[BusinessEntityID] = bec.[PersonID]\r\n\tLEFT OUTER JOIN [Person].[EmailAddress] ea\r\n\tON ea.[BusinessEntityID] = p.[BusinessEntityID]\r\n\tLEFT OUTER JOIN [Person].[PersonPhone] pp\r\n\tON pp.[BusinessEntityID] = p.[BusinessEntityID]\r\n\tLEFT OUTER JOIN [Person].[PhoneNumberType] pnt\r\n\tON pnt.[PhoneNumberTypeID] = pp.[PhoneNumberTypeID];\r\n",
+    "engineOutput": "-- PostgreSQL conversion of the view Sales.vStoreWithContacts (AdventureWorks2025).\n-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case).\n-- Verified by the property-based harness, not by this script.\n\nCREATE OR REPLACE VIEW sales.v_store_with_contacts AS\nSELECT\r\n    s.\"BusinessEntityID\" AS \"BusinessEntityID\"\r\n    ,s.\"Name\" AS \"Name\"\r\n    ,ct.\"Name\" AS \"ContactType\"\r\n    ,p.\"Title\" AS \"Title\"\r\n    ,p.\"FirstName\" AS \"FirstName\"\r\n    ,p.\"MiddleName\" AS \"MiddleName\"\r\n    ,p.\"LastName\" AS \"LastName\"\r\n    ,p.\"Suffix\" AS \"Suffix\"\r\n    ,pp.\"PhoneNumber\" AS \"PhoneNumber\"\r\n\t,pnt.\"Name\" AS \"PhoneNumberType\"\r\n    ,ea.\"EmailAddress\" AS \"EmailAddress\"\r\n    ,p.\"EmailPromotion\" AS \"EmailPromotion\"\r\nFROM sales.store s\r\n    INNER JOIN person.business_entity_contact bec\r\n    ON bec.\"BusinessEntityID\" = s.\"BusinessEntityID\"\r\n\tINNER JOIN person.contact_type ct\r\n\tON ct.\"ContactTypeID\" = bec.\"ContactTypeID\"\r\n\tINNER JOIN person.person p\r\n\tON p.\"BusinessEntityID\" = bec.\"PersonID\"\r\n\tLEFT OUTER JOIN person.email_address ea\r\n\tON ea.\"BusinessEntityID\" = p.\"BusinessEntityID\"\r\n\tLEFT OUTER JOIN person.person_phone pp\r\n\tON pp.\"BusinessEntityID\" = p.\"BusinessEntityID\"\r\n\tLEFT OUTER JOIN person.phone_number_type pnt\r\n\tON pnt.\"PhoneNumberTypeID\" = pp.\"PhoneNumberTypeID\";\n",
+    "final": "-- PostgreSQL conversion of the view Sales.vStoreWithContacts (AdventureWorks2025).\n-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case).\n-- Verified by the property-based harness, not by this script.\n\nCREATE OR REPLACE VIEW sales.v_store_with_contacts AS\nSELECT\r\n    s.\"BusinessEntityID\" AS \"BusinessEntityID\"\r\n    ,s.\"Name\" AS \"Name\"\r\n    ,ct.\"Name\" AS \"ContactType\"\r\n    ,p.\"Title\" AS \"Title\"\r\n    ,p.\"FirstName\" AS \"FirstName\"\r\n    ,p.\"MiddleName\" AS \"MiddleName\"\r\n    ,p.\"LastName\" AS \"LastName\"\r\n    ,p.\"Suffix\" AS \"Suffix\"\r\n    ,pp.\"PhoneNumber\" AS \"PhoneNumber\"\r\n\t,pnt.\"Name\" AS \"PhoneNumberType\"\r\n    ,ea.\"EmailAddress\" AS \"EmailAddress\"\r\n    ,p.\"EmailPromotion\" AS \"EmailPromotion\"\r\nFROM sales.store s\r\n    INNER JOIN person.business_entity_contact bec\r\n    ON bec.\"BusinessEntityID\" = s.\"BusinessEntityID\"\r\n\tINNER JOIN person.contact_type ct\r\n\tON ct.\"ContactTypeID\" = bec.\"ContactTypeID\"\r\n\tINNER JOIN person.person p\r\n\tON p.\"BusinessEntityID\" = bec.\"PersonID\"\r\n\tLEFT OUTER JOIN person.email_address ea\r\n\tON ea.\"BusinessEntityID\" = p.\"BusinessEntityID\"\r\n\tLEFT OUTER JOIN person.person_phone pp\r\n\tON pp.\"BusinessEntityID\" = p.\"BusinessEntityID\"\r\n\tLEFT OUTER JOIN person.phone_number_type pnt\r\n\tON pnt.\"PhoneNumberTypeID\" = pp.\"PhoneNumberTypeID\";\n",
+    "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
+    "engine": "kiro",
+    "notes": [
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
+    ]
+  },
+  "columnMappings": [
+    {
+      "sqlServerType": "int NOT NULL",
+      "postgresType": "integer NOT NULL"
+    },
+    {
+      "sqlServerType": "nvarchar(50) NOT NULL",
+      "postgresType": "varchar(50) NOT NULL"
+    },
+    {
+      "sqlServerType": "nvarchar(50) NULL",
+      "postgresType": "varchar(50)"
+    },
+    {
+      "sqlServerType": "nvarchar(8) NULL",
+      "postgresType": "varchar(8)"
+    },
+    {
+      "sqlServerType": "nvarchar(10) NULL",
+      "postgresType": "varchar(10)"
+    },
+    {
+      "sqlServerType": "nvarchar(25) NOT NULL",
+      "postgresType": "varchar(25) NOT NULL"
+    }
+  ],
+  "evidence": {
+    "step1": "pass",
+    "step2": "not-run",
+    "step3": "pass",
+    "step4": "pass",
+    "step5": "not-run",
+    "step6": "not-run",
+    "runtimeRatio": 0.39,
+    "runtime": {
+      "volume": 5000,
+      "timedRuns": 7,
+      "sqlServerMs": 35,
+      "postgresMs": 13.8,
+      "ratio": 0.39,
+      "threshold": 1.5,
+      "passed": true,
+      "belowResolution": false,
+      "resultRows": 6830,
+      "volumeMismatch": null
+    },
+    "rowsCompared": 309,
+    "trapsCovered": [
+      "NULL in every nullable column",
+      "empty string and trailing spaces"
+    ],
+    "pbtSeeds": [
+      347712006
+    ],
+    "samples": 200,
+    "samplesWithRows": 147,
+    "subMicrosecondNormalised": 0,
+    "mutantsDetected": [
+      "auto: LEFT JOIN becomes INNER JOIN",
+      "auto: two output columns swap values"
+    ],
+    "harnessVersion": "harness-generic-0.3.0"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "Kiro",
+    "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
+  },
+  "status": "pending"
+}

@@ -16,7 +16,7 @@
     "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
     "engine": "kiro",
     "notes": [
-      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign keys and no pre-existing rows."
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
     ]
   },
   "columnMappings": [
@@ -66,19 +66,20 @@
     "step4": "pass",
     "step5": "not-run",
     "step6": "not-run",
-    "runtimeRatio": 0.39,
+    "runtimeRatio": 0.45,
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
-      "sqlServerMs": 59,
-      "postgresMs": 23.11,
-      "ratio": 0.39,
+      "sqlServerMs": 27,
+      "postgresMs": 12.18,
+      "ratio": 0.45,
       "threshold": 1.5,
       "passed": true,
-      "resultRows": 3574,
+      "belowResolution": false,
+      "resultRows": 3471,
       "volumeMismatch": null
     },
-    "rowsCompared": 120,
+    "rowsCompared": 127,
     "trapsCovered": [
       "NULL in every nullable column",
       "numeric rounding and scale (decimal edge values)",
@@ -87,11 +88,11 @@
       "ORDER BY key (ties compared as multisets)"
     ],
     "pbtSeeds": [
-      1157213283
+      1712493027
     ],
     "samples": 200,
-    "samplesWithRows": 80,
-    "subMicrosecondNormalised": 1170,
+    "samplesWithRows": 83,
+    "subMicrosecondNormalised": 1201,
     "mutantsDetected": [
       "tax amount truncates instead of rounding at 2dp",
       "lower cutoff inclusive"

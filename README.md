@@ -42,11 +42,26 @@ For each object, `convert`:
 2. Creates a scratch SQL Server database and deploys the **original T-SQL unchanged**. Its tables hold only the columns the object references, with no foreign keys and no existing rows.
 3. Creates the matching PostgreSQL tables and, if `conversions/<db>/<Object>.draft.sql` exists, runs the property against the engine's **first draft** and records the result.
 4. Deploys the final conversion (verification step 1) and runs a seeded fast-check property: generated rows are loaded into both engines, each object runs on its own engine through its own client, and results are compared on row count, column names, values and order (order only where the source `ORDER BY` guarantees it; ties compare as multisets).
-5. Requires every **planted defect** (mutant of the final conversion) to be reported as failing. A harness that has never been seen failing is not evidence.
+5. Requires every **planted defect** (mutant of the final conversion) to be reported as failing. A harness that has never been seen failing is not evidence. Objects that declare no defects get two generated ones (`src/conversions/automutants.ts`).
 6. Refuses to record a pass if too few samples returned any rows (the property would be vacuous).
-7. Writes `pairs/<db>/<Object>.json` with step 1 and step 3 results and status `pending`. Steps 2, 4, 5 and 6 stay `not-run` until they are actually performed.
+7. Writes `pairs/<db>/<Object>.json` with the step 1, 3 and 4 results. Steps 2, 5 and 6 stay `not-run` until they are actually performed.
+
+8. Measures **step 4**, runtime within 1.5×: the same synthetic volume is loaded into both engines, and server-side execution time is compared (`SET STATISTICS TIME` vs `EXPLAIN ANALYZE`, median of 7). The full result set at volume is compared too.
 
 Then `npm run receipts:build` renders the pair records into `receipts/`, which the static site in `web/` displays.
+
+### Other commands
+
+```sh
+npm run scaffold -- --database AdventureWorks2025 --type V      # catalog/<db>/*.json from SQL Server's own metadata
+npm run draft-view -- --object Sales.vStoreWithAddresses         # mechanical first draft of a plain view
+npm run log-effort -- --object Sales.vSalesPerson --minutes 20   # add human review time
+npm run log-effort -- --object Sales.vSalesPerson --review "Name" --date 2026-11-12   # record step 5
+npm run predictions:score -- --database WideWorldImporters       # predicted vs actual, incl. unpredicted failures
+pwsh scripts/run-all.ps1                                         # every object, one at a time, time-limited
+```
+
+An object becomes **verified** only when steps 1–4 pass and step 5 (a second review at least a day after the first pass) is recorded. Step 2 (tSQLt/pgTAP) is not implemented yet, so no object is verified today.
 
 ### Known limits
 

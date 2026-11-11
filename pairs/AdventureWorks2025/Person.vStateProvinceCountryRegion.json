@@ -1,0 +1,87 @@
+{
+  "origin": {
+    "repo": "https://github.com/microsoft/sql-server-samples",
+    "release": "adventureworks",
+    "license": "MIT",
+    "assetUrl": "https://github.com/microsoft/sql-server-samples/releases/download/adventureworks/AdventureWorks2025.bak",
+    "sha256": "fa6a2a5d431ad88123f89b36b1f2c7e42ca4bdf6b293269a44df80f6de3738a5"
+  },
+  "conversionType": "tsql-to-plpgsql",
+  "objectClass": "view",
+  "tier": "simple",
+  "code": {
+    "source": "\r\nCREATE VIEW [Person].[vStateProvinceCountryRegion]\r\nWITH SCHEMABINDING\r\nAS\r\nSELECT\r\n    sp.[StateProvinceID]\r\n    ,sp.[StateProvinceCode]\r\n    ,sp.[IsOnlyStateProvinceFlag]\r\n    ,sp.[Name] AS [StateProvinceName]\r\n    ,sp.[TerritoryID]\r\n    ,cr.[CountryRegionCode]\r\n    ,cr.[Name] AS [CountryRegionName]\r\nFROM [Person].[StateProvince] sp\r\n    INNER JOIN [Person].[CountryRegion] cr\r\n    ON sp.[CountryRegionCode] = cr.[CountryRegionCode];\r\n",
+    "engineOutput": "-- PostgreSQL conversion of the view Person.vStateProvinceCountryRegion (AdventureWorks2025).\n-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case).\n-- Verified by the property-based harness, not by this script.\n\nCREATE OR REPLACE VIEW person.v_state_province_country_region AS\nSELECT\r\n    sp.\"StateProvinceID\" AS \"StateProvinceID\"\r\n    ,sp.\"StateProvinceCode\" AS \"StateProvinceCode\"\r\n    ,sp.\"IsOnlyStateProvinceFlag\" AS \"IsOnlyStateProvinceFlag\"\r\n    ,sp.\"Name\" AS \"StateProvinceName\"\r\n    ,sp.\"TerritoryID\" AS \"TerritoryID\"\r\n    ,cr.\"CountryRegionCode\" AS \"CountryRegionCode\"\r\n    ,cr.\"Name\" AS \"CountryRegionName\"\r\nFROM person.state_province sp\r\n    INNER JOIN person.country_region cr\r\n    ON sp.\"CountryRegionCode\" = cr.\"CountryRegionCode\";\n",
+    "final": "-- PostgreSQL conversion of the view Person.vStateProvinceCountryRegion (AdventureWorks2025).\n-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case).\n-- Verified by the property-based harness, not by this script.\n\nCREATE OR REPLACE VIEW person.v_state_province_country_region AS\nSELECT\r\n    sp.\"StateProvinceID\" AS \"StateProvinceID\"\r\n    ,sp.\"StateProvinceCode\" AS \"StateProvinceCode\"\r\n    ,sp.\"IsOnlyStateProvinceFlag\" AS \"IsOnlyStateProvinceFlag\"\r\n    ,sp.\"Name\" AS \"StateProvinceName\"\r\n    ,sp.\"TerritoryID\" AS \"TerritoryID\"\r\n    ,cr.\"CountryRegionCode\" AS \"CountryRegionCode\"\r\n    ,cr.\"Name\" AS \"CountryRegionName\"\r\nFROM person.state_province sp\r\n    INNER JOIN person.country_region cr\r\n    ON sp.\"CountryRegionCode\" = cr.\"CountryRegionCode\";\n",
+    "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
+    "engine": "kiro",
+    "notes": [
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
+    ]
+  },
+  "columnMappings": [
+    {
+      "sqlServerType": "nvarchar(3) NOT NULL",
+      "postgresType": "varchar(3) NOT NULL"
+    },
+    {
+      "sqlServerType": "nvarchar(50) NOT NULL",
+      "postgresType": "varchar(50) NOT NULL"
+    },
+    {
+      "sqlServerType": "int NOT NULL",
+      "postgresType": "integer NOT NULL"
+    },
+    {
+      "sqlServerType": "char(3) NOT NULL",
+      "postgresType": "char(3) NOT NULL"
+    },
+    {
+      "sqlServerType": "bit NOT NULL",
+      "postgresType": "boolean NOT NULL",
+      "notes": "bit maps to boolean; the driver returns true/false on both sides."
+    }
+  ],
+  "evidence": {
+    "step1": "pass",
+    "step2": "not-run",
+    "step3": "pass",
+    "step4": "pass",
+    "step5": "not-run",
+    "step6": "not-run",
+    "runtimeRatio": 0.17,
+    "runtime": {
+      "volume": 5000,
+      "timedRuns": 7,
+      "sqlServerMs": 13,
+      "postgresMs": 2.18,
+      "ratio": 0.17,
+      "threshold": 1.5,
+      "passed": true,
+      "belowResolution": false,
+      "resultRows": 5000,
+      "volumeMismatch": null
+    },
+    "rowsCompared": 330,
+    "trapsCovered": [
+      "empty string and trailing spaces"
+    ],
+    "pbtSeeds": [
+      2101348674
+    ],
+    "samples": 200,
+    "samplesWithRows": 177,
+    "subMicrosecondNormalised": 0,
+    "mutantsDetected": [
+      "auto: two output columns swap values",
+      "auto: join condition uses a different key"
+    ],
+    "harnessVersion": "harness-generic-0.3.0"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "Kiro",
+    "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
+  },
+  "status": "pending"
+}

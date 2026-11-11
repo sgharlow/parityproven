@@ -1,0 +1,95 @@
+{
+  "origin": {
+    "repo": "https://github.com/microsoft/sql-server-samples",
+    "release": "adventureworks",
+    "license": "MIT",
+    "assetUrl": "https://github.com/microsoft/sql-server-samples/releases/download/adventureworks/AdventureWorks2025.bak",
+    "sha256": "fa6a2a5d431ad88123f89b36b1f2c7e42ca4bdf6b293269a44df80f6de3738a5"
+  },
+  "conversionType": "tsql-to-plpgsql",
+  "objectClass": "view",
+  "tier": "simple",
+  "code": {
+    "source": "\r\nCREATE VIEW [Purchasing].[vVendorWithAddresses] AS\r\nSELECT\r\n    v.[BusinessEntityID]\r\n    ,v.[Name]\r\n    ,at.[Name] AS [AddressType]\r\n    ,a.[AddressLine1]\r\n    ,a.[AddressLine2]\r\n    ,a.[City]\r\n    ,sp.[Name] AS [StateProvinceName]\r\n    ,a.[PostalCode]\r\n    ,cr.[Name] AS [CountryRegionName]\r\nFROM [Purchasing].[Vendor] v\r\n    INNER JOIN [Person].[BusinessEntityAddress] bea\r\n    ON bea.[BusinessEntityID] = v.[BusinessEntityID]\r\n    INNER JOIN [Person].[Address] a\r\n    ON a.[AddressID] = bea.[AddressID]\r\n    INNER JOIN [Person].[StateProvince] sp\r\n    ON sp.[StateProvinceID] = a.[StateProvinceID]\r\n    INNER JOIN [Person].[CountryRegion] cr\r\n    ON cr.[CountryRegionCode] = sp.[CountryRegionCode]\r\n    INNER JOIN [Person].[AddressType] at\r\n    ON at.[AddressTypeID] = bea.[AddressTypeID];\r\n",
+    "engineOutput": "-- PostgreSQL conversion of the view Purchasing.vVendorWithAddresses (AdventureWorks2025).\n-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case).\n-- Verified by the property-based harness, not by this script.\n\nCREATE OR REPLACE VIEW purchasing.v_vendor_with_addresses AS\nSELECT\r\n    v.\"BusinessEntityID\" AS \"BusinessEntityID\"\r\n    ,v.\"Name\" AS \"Name\"\r\n    ,at.\"Name\" AS \"AddressType\"\r\n    ,a.\"AddressLine1\" AS \"AddressLine1\"\r\n    ,a.\"AddressLine2\" AS \"AddressLine2\"\r\n    ,a.\"City\" AS \"City\"\r\n    ,sp.\"Name\" AS \"StateProvinceName\"\r\n    ,a.\"PostalCode\" AS \"PostalCode\"\r\n    ,cr.\"Name\" AS \"CountryRegionName\"\r\nFROM purchasing.vendor v\r\n    INNER JOIN person.business_entity_address bea\r\n    ON bea.\"BusinessEntityID\" = v.\"BusinessEntityID\"\r\n    INNER JOIN person.address a\r\n    ON a.\"AddressID\" = bea.\"AddressID\"\r\n    INNER JOIN person.state_province sp\r\n    ON sp.\"StateProvinceID\" = a.\"StateProvinceID\"\r\n    INNER JOIN person.country_region cr\r\n    ON cr.\"CountryRegionCode\" = sp.\"CountryRegionCode\"\r\n    INNER JOIN person.address_type at\r\n    ON at.\"AddressTypeID\" = bea.\"AddressTypeID\";\n",
+    "final": "-- PostgreSQL conversion of the view Purchasing.vVendorWithAddresses (AdventureWorks2025).\n-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case).\n-- Verified by the property-based harness, not by this script.\n\nCREATE OR REPLACE VIEW purchasing.v_vendor_with_addresses AS\nSELECT\r\n    v.\"BusinessEntityID\" AS \"BusinessEntityID\"\r\n    ,v.\"Name\" AS \"Name\"\r\n    ,at.\"Name\" AS \"AddressType\"\r\n    ,a.\"AddressLine1\" AS \"AddressLine1\"\r\n    ,a.\"AddressLine2\" AS \"AddressLine2\"\r\n    ,a.\"City\" AS \"City\"\r\n    ,sp.\"Name\" AS \"StateProvinceName\"\r\n    ,a.\"PostalCode\" AS \"PostalCode\"\r\n    ,cr.\"Name\" AS \"CountryRegionName\"\r\nFROM purchasing.vendor v\r\n    INNER JOIN person.business_entity_address bea\r\n    ON bea.\"BusinessEntityID\" = v.\"BusinessEntityID\"\r\n    INNER JOIN person.address a\r\n    ON a.\"AddressID\" = bea.\"AddressID\"\r\n    INNER JOIN person.state_province sp\r\n    ON sp.\"StateProvinceID\" = a.\"StateProvinceID\"\r\n    INNER JOIN person.country_region cr\r\n    ON cr.\"CountryRegionCode\" = sp.\"CountryRegionCode\"\r\n    INNER JOIN person.address_type at\r\n    ON at.\"AddressTypeID\" = bea.\"AddressTypeID\";\n",
+    "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
+    "engine": "kiro",
+    "notes": [
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
+    ]
+  },
+  "columnMappings": [
+    {
+      "sqlServerType": "int NOT NULL",
+      "postgresType": "integer NOT NULL"
+    },
+    {
+      "sqlServerType": "nvarchar(60) NOT NULL",
+      "postgresType": "varchar(60) NOT NULL"
+    },
+    {
+      "sqlServerType": "nvarchar(60) NULL",
+      "postgresType": "varchar(60)"
+    },
+    {
+      "sqlServerType": "nvarchar(30) NOT NULL",
+      "postgresType": "varchar(30) NOT NULL"
+    },
+    {
+      "sqlServerType": "nvarchar(15) NOT NULL",
+      "postgresType": "varchar(15) NOT NULL"
+    },
+    {
+      "sqlServerType": "nvarchar(50) NOT NULL",
+      "postgresType": "varchar(50) NOT NULL"
+    },
+    {
+      "sqlServerType": "nvarchar(3) NOT NULL",
+      "postgresType": "varchar(3) NOT NULL"
+    }
+  ],
+  "evidence": {
+    "step1": "pass",
+    "step2": "not-run",
+    "step3": "pass",
+    "step4": "pass",
+    "step5": "not-run",
+    "step6": "not-run",
+    "runtimeRatio": 0.3,
+    "runtime": {
+      "volume": 5000,
+      "timedRuns": 7,
+      "sqlServerMs": 29,
+      "postgresMs": 8.71,
+      "ratio": 0.3,
+      "threshold": 1.5,
+      "passed": true,
+      "belowResolution": false,
+      "resultRows": 5000,
+      "volumeMismatch": null
+    },
+    "rowsCompared": 191,
+    "trapsCovered": [
+      "NULL in every nullable column",
+      "empty string and trailing spaces"
+    ],
+    "pbtSeeds": [
+      1382847503
+    ],
+    "samples": 200,
+    "samplesWithRows": 114,
+    "subMicrosecondNormalised": 0,
+    "mutantsDetected": [
+      "auto: two output columns swap values",
+      "auto: join condition uses a different key"
+    ],
+    "harnessVersion": "harness-generic-0.3.0"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "Kiro",
+    "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
+  },
+  "status": "pending"
+}

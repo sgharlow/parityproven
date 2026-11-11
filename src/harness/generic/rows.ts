@@ -95,6 +95,13 @@ export function baseColArb(col: ColSpec, c: Cutoffs | null, k: number): fc.Arbit
     case "money":
       return decimalArb(19, 4);
     case "datetime": {
+      // Columns named *OrderDate drive fiscal-year logic: generate around the 1 July / year-end boundaries.
+      if (/orderdate$/i.test(col.name)) {
+        return fc.constantFrom(
+          "2001-06-30T23:59:59.997", "2001-07-01T00:00:00.000", "2002-01-01T00:00:00.000",
+          "2002-06-30T12:00:00.000", "2002-07-01T00:00:00.000", "2003-03-15T00:00:00.000", "2003-07-01T00:00:00.003"
+        );
+      }
       // Values SQL Server datetime can represent exactly. Two populations:
       //  - columns named Start*/End* (validity periods) sit on either side of the canonical probe instant
       //    2020-01-02 12:00:00 (End* is often NULL = open period), with the probe itself and +/-3 ms as edges
@@ -146,7 +153,9 @@ function tableArb(t: TableSpec, c: Cutoffs | null, k: number): fc.Arbitrary<Row[
   for (const col of t.columns) {
     if (col.role === "pk") continue;
     const base = baseColArb(col, c, k);
-    shape[col.name] = col.nullable ? fc.option(base, { nil: null, freq: 4 }) : base;
+    // nullable End* columns are open validity periods: NULL is the common case (and what views filter on)
+    const nullFreq = /^end/i.test(col.name) ? 1 : 4;   // fc.option: 1 => NULL ~50%, 4 => NULL ~20%
+    shape[col.name] = col.nullable ? fc.option(base, { nil: null, freq: nullFreq }) : base;
   }
   const pks = t.columns.filter((x) => x.role === "pk");
   // About k rows so every key in 1..k usually has a partner; empty (~5%) and larger tables still occur.

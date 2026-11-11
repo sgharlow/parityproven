@@ -18,7 +18,7 @@
 import * as fc from "fast-check";
 import type { MssqlClient } from "../clients/mssql-client.js";
 import type { Connections } from "./run.js";
-import type { ObjectSpec, Row, TableSpec } from "./spec.js";
+import type { ColSpec, ObjectSpec, Row, TableSpec } from "./spec.js";
 import { pgTableName, tableKey } from "./spec.js";
 import { baseColArb, materialise, T0, type Dataset } from "./rows.js";
 import { compareResults } from "./compare.js";
@@ -58,6 +58,22 @@ function median(xs: number[]): number {
   return s[Math.floor(s.length / 2)];
 }
 
+/**
+ * Largest key a column can hold. Text keys are "K<n>", so their width bounds n. Every table shares
+ * one key space, so a narrow key column (tinyint shift id, char(3) country code) caps the keys used.
+ */
+function keyCap(c: ColSpec): number {
+  switch (c.type.kind) {
+    case "tinyint": return 255;
+    case "smallint": return 32767;
+    case "nvarchar":
+    case "char": return Math.max(1, 10 ** Math.min(c.type.n - 1, 8) - 1);   // "K" + digits
+    default: return Number.MAX_SAFE_INTEGER;
+  }
+}
+
+const keyValue = (c: ColSpec, n: number): unknown => (c.type.kind === "nvarchar" || c.type.kind === "char" ? `K${n}` : n);
+
 function volumeRows(t: TableSpec, n: number, cutoffs: { last: bigint; new: bigint } | null, seed: number): Row[] {
   const rnd = prng(seed ^ (t.name.length * 2654435761));
   const sampled: Record<string, unknown[]> = {};
@@ -65,12 +81,15 @@ function volumeRows(t: TableSpec, n: number, cutoffs: { last: bigint; new: bigin
     if (c.role === "pk" || c.role === "ref") continue;
     sampled[c.name] = fc.sample(baseColArb(c, cutoffs, 1), { numRuns: n, seed: seed + c.name.length });
   }
+  // a table whose primary key is narrow cannot have more rows than distinct keys
+  const pkCols = t.columns.filter((c) => c.role === "pk");
+  const rowsHere = Math.min(n, ...pkCols.map(keyCap), n);
   const rows: Row[] = [];
-  for (let i = 0; i < n; i++) {
+  for (let i = 0; i < rowsHere; i++) {
     const row: Row = {};
     for (const c of t.columns) {
-      if (c.role === "pk") row[c.name] = i + 1;
-      else if (c.role === "ref") row[c.name] = c.nullable && rnd() < 0.2 ? null : 1 + Math.floor(rnd() * n);
+      if (c.role === "pk") row[c.name] = keyValue(c, i + 1);
+      else if (c.role === "ref") row[c.name] = c.nullable && rnd() < 0.2 ? null : keyValue(c, 1 + Math.floor(rnd() * Math.min(n, keyCap(c))));
       else row[c.name] = c.nullable && rnd() < 0.2 ? null : sampled[c.name][i];
     }
     rows.push(row);

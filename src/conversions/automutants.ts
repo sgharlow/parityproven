@@ -14,6 +14,14 @@ interface Operator { name: string; pattern: RegExp; replace: (m: RegExpMatchArra
 
 const OPERATORS: Operator[] = [
   { name: "LEFT JOIN becomes INNER JOIN", pattern: /LEFT (?:OUTER )?JOIN/i, replace: () => "INNER JOIN" },
+  // two projected columns swap values (keeps names, so only a value comparison can catch it)
+  {
+    name: "two output columns swap values",
+    pattern: /(\w+\."\w+") AS "(\w+)"([\s\S]*?)(\w+\."\w+") AS "(\w+)"/,
+    replace: (m) => `${m[4]} AS "${m[2]}"${m[3]}${m[1]} AS "${m[5]}"`,
+  },
+  // a join condition points at the wrong column of the same table
+  { name: "join condition uses a different key", pattern: /ON (\w+)\."(\w+)" = (\w+)\."(\w+)"/, replace: (m) => `ON ${m[1]}."${m[2]}" = ${m[1]}."${m[2]}"` },
   { name: "first CASE result text altered", pattern: /THEN '([^']+)'/, replace: (m) => `THEN '${m[1]}!'` },
   { name: "first numeric literal changed", pattern: /(?<![\w.'"])(\d+\.\d+)(?![\w'"])/, replace: (m) => String(Number(m[1]) + (Number(m[1]) < 1 ? 0.01 : 1)) },
   { name: "strict comparison made inclusive", pattern: /(\S) > (\S)/, replace: (m) => `${m[1]} >= ${m[2]}` },

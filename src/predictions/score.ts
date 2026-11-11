@@ -24,11 +24,15 @@ export interface ScoreResult {
   database: string;
   cells: CellScore[];
   failurePredictions: FailurePredictionScore[];
+  /** Objects that failed although they were not predicted to. Shown, never filtered out. */
+  unpredictedFailures?: Array<{ object: string; detail: string }>;
 }
 
 export function scorePredictions(
   pred: PredictionFile,
-  pairs: PairRecord[]
+  pairs: PairRecord[],
+  /** "Schema.Object" for each pair, same order (from the pair file names). */
+  names?: string[]
 ): ScoreResult {
   type CellKey = string;
   const pairsByCell = new Map<CellKey, PairRecord[]>();
@@ -71,25 +75,28 @@ export function scorePredictions(
     };
   });
 
+  // match on the pair's own name (pairs/<db>/<Schema>.<Object>.json); fall back to the T-SQL text
+  const nameOf = (p: PairRecord, i: number): string => names?.[i] ?? "";
+  const findPair = (schema: string, object: string): PairRecord | undefined => {
+    const byName = pairs.findIndex((p, i) => nameOf(p, i) === `${schema}.${object}`);
+    if (byName >= 0) return pairs[byName];
+    return pairs.find((p) => p.code.source.includes(`${schema}.${object}`) || p.code.source.includes(`[${schema}].[${object}]`));
+  };
+
   const failurePredictions: FailurePredictionScore[] = pred.expectedFailures.map((ef) => {
-    const matchingPair = pairs.find(
-      (p) =>
-        // pair records don't store schema/object separately — match by searching code.source
-        // or by checking the pair file name convention: pairs/<db>/<schema>.<object>.json
-        // For now match by checking if any pair's source contains the object name
-        p.code.source.includes(`${ef.schema}.${ef.object}`) ||
-        p.code.source.includes(`[${ef.schema}].[${ef.object}]`)
-    );
-
-    let confirmed: boolean | null = null;
-    if (matchingPair) {
-      confirmed = matchingPair.status === "failed";
-    }
-
+    const matchingPair = findPair(ef.schema, ef.object);
+    const confirmed: boolean | null = matchingPair ? matchingPair.status === "failed" : null;
     return { schema: ef.schema, object: ef.object, reason: ef.reason, confirmed };
   });
 
-  return { database: pred.database, cells, failurePredictions };
+  // outcomes nobody predicted: failures that were not on the expected-failure list
+  const expected = new Set(pred.expectedFailures.map((ef) => `${ef.schema}.${ef.object}`));
+  const unpredictedFailures = pairs
+    .map((p, i) => ({ p, name: nameOf(p, i) }))
+    .filter(({ p, name }) => p.status === "failed" && name && !expected.has(name))
+    .map(({ p, name }) => ({ object: name, detail: p.evidence.failureDetail ?? "" }));
+
+  return { database: pred.database, cells, failurePredictions, unpredictedFailures };
 }
 
 /** Format a score table for stdout. */
@@ -123,7 +130,11 @@ export function formatScoreTable(result: ScoreResult): string {
   const predicted = result.failurePredictions.length;
   const confirmed = result.failurePredictions.filter((f) => f.confirmed === true).length;
   const notRun    = result.failurePredictions.filter((f) => f.confirmed === null).length;
-  const failureLine = `Expected failures: ${predicted} predicted, ${confirmed} confirmed, ${notRun} not-yet-run`;
+  const passedInstead = result.failurePredictions.filter((f) => f.confirmed === false).length;
+  const surprises = result.unpredictedFailures ?? [];
+  const failureLine =
+    `Expected failures: ${predicted} predicted, ${confirmed} confirmed, ${passedInstead} did not fail, ${notRun} not-yet-run` +
+    `\nUnpredicted failures: ${surprises.length}${surprises.length ? "\n" + surprises.map((s) => `  - ${s.object}: ${s.detail}`).join("\n") : ""}`;
 
   return [header, HR, headerRow, HR, ...dataRows, HR, failureLine].join("\n");
 }

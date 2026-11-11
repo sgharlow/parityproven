@@ -1,0 +1,112 @@
+{
+  "database": "AdventureWorks2025",
+  "schemaName": "Person",
+  "objectName": "vStateProvinceCountryRegion",
+  "objectClass": "view",
+  "tier": "simple",
+  "status": "pending",
+  "code": {
+    "source": "\r\nCREATE VIEW [Person].[vStateProvinceCountryRegion]\r\nWITH SCHEMABINDING\r\nAS\r\nSELECT\r\n    sp.[StateProvinceID]\r\n    ,sp.[StateProvinceCode]\r\n    ,sp.[IsOnlyStateProvinceFlag]\r\n    ,sp.[Name] AS [StateProvinceName]\r\n    ,sp.[TerritoryID]\r\n    ,cr.[CountryRegionCode]\r\n    ,cr.[Name] AS [CountryRegionName]\r\nFROM [Person].[StateProvince] sp\r\n    INNER JOIN [Person].[CountryRegion] cr\r\n    ON sp.[CountryRegionCode] = cr.[CountryRegionCode];\r\n",
+    "engineOutput": "-- PostgreSQL conversion of the view Person.vStateProvinceCountryRegion (AdventureWorks2025).\n-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case).\n-- Verified by the property-based harness, not by this script.\n\nCREATE OR REPLACE VIEW person.v_state_province_country_region AS\nSELECT\r\n    sp.\"StateProvinceID\" AS \"StateProvinceID\"\r\n    ,sp.\"StateProvinceCode\" AS \"StateProvinceCode\"\r\n    ,sp.\"IsOnlyStateProvinceFlag\" AS \"IsOnlyStateProvinceFlag\"\r\n    ,sp.\"Name\" AS \"StateProvinceName\"\r\n    ,sp.\"TerritoryID\" AS \"TerritoryID\"\r\n    ,cr.\"CountryRegionCode\" AS \"CountryRegionCode\"\r\n    ,cr.\"Name\" AS \"CountryRegionName\"\r\nFROM person.state_province sp\r\n    INNER JOIN person.country_region cr\r\n    ON sp.\"CountryRegionCode\" = cr.\"CountryRegionCode\";\n",
+    "final": "-- PostgreSQL conversion of the view Person.vStateProvinceCountryRegion (AdventureWorks2025).\n-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case).\n-- Verified by the property-based harness, not by this script.\n\nCREATE OR REPLACE VIEW person.v_state_province_country_region AS\nSELECT\r\n    sp.\"StateProvinceID\" AS \"StateProvinceID\"\r\n    ,sp.\"StateProvinceCode\" AS \"StateProvinceCode\"\r\n    ,sp.\"IsOnlyStateProvinceFlag\" AS \"IsOnlyStateProvinceFlag\"\r\n    ,sp.\"Name\" AS \"StateProvinceName\"\r\n    ,sp.\"TerritoryID\" AS \"TerritoryID\"\r\n    ,cr.\"CountryRegionCode\" AS \"CountryRegionCode\"\r\n    ,cr.\"Name\" AS \"CountryRegionName\"\r\nFROM person.state_province sp\r\n    INNER JOIN person.country_region cr\r\n    ON sp.\"CountryRegionCode\" = cr.\"CountryRegionCode\";\n",
+    "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
+    "engine": "kiro",
+    "notes": [
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
+    ]
+  },
+  "columnMappings": [
+    {
+      "sqlServerType": "nvarchar(3) NOT NULL",
+      "postgresType": "varchar(3) NOT NULL"
+    },
+    {
+      "sqlServerType": "nvarchar(50) NOT NULL",
+      "postgresType": "varchar(50) NOT NULL"
+    },
+    {
+      "sqlServerType": "int NOT NULL",
+      "postgresType": "integer NOT NULL"
+    },
+    {
+      "sqlServerType": "char(3) NOT NULL",
+      "postgresType": "char(3) NOT NULL"
+    },
+    {
+      "sqlServerType": "bit NOT NULL",
+      "postgresType": "boolean NOT NULL",
+      "notes": "bit maps to boolean; the driver returns true/false on both sides."
+    }
+  ],
+  "verificationSteps": [
+    {
+      "step": 1,
+      "label": "Compiles and deploys on PostgreSQL",
+      "status": "pass"
+    },
+    {
+      "step": 2,
+      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "status": "not-run"
+    },
+    {
+      "step": 3,
+      "label": "Result sets match on generated data",
+      "status": "pass"
+    },
+    {
+      "step": 4,
+      "label": "Runtime within 1.5× factor",
+      "status": "pass"
+    },
+    {
+      "step": 5,
+      "label": "Second human review",
+      "status": "not-run"
+    },
+    {
+      "step": 6,
+      "label": "Acceptance on real data",
+      "status": "not-run"
+    }
+  ],
+  "evidence": {
+    "pbtSeeds": [
+      2101348674
+    ],
+    "rowsCompared": 330,
+    "samples": 200,
+    "samplesWithRows": 177,
+    "trapsCovered": [
+      "empty string and trailing spaces"
+    ],
+    "mutantsDetected": [
+      "auto: two output columns swap values",
+      "auto: join condition uses a different key"
+    ],
+    "runtime": {
+      "volume": 5000,
+      "timedRuns": 7,
+      "sqlServerMs": 13,
+      "postgresMs": 2.18,
+      "ratio": 0.17,
+      "threshold": 1.5,
+      "passed": true,
+      "belowResolution": false,
+      "resultRows": 5000,
+      "volumeMismatch": null
+    },
+    "subMicrosecondNormalised": 0,
+    "harnessVersion": "harness-generic-0.3.0"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "Kiro",
+    "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
+  },
+  "predictionCell": {
+    "p50Hours": 0.75,
+    "p90Hours": 2
+  },
+  "builtAt": "2026-11-11T04:03:31.172Z"
+}

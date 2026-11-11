@@ -13,7 +13,7 @@
     "engine": "kiro",
     "notes": [
       "CONVERT(varchar(8), int) yields '*' when the number needs more than 8 characters; DATALENGTH counts bytes.",
-      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign keys and no pre-existing rows."
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
     ]
   },
   "columnMappings": [],
@@ -51,11 +51,11 @@
   ],
   "evidence": {
     "pbtSeeds": [
-      1448665316
+      963468011
     ],
     "rowsCompared": 200,
     "samples": 200,
-    "samplesWithRows": 163,
+    "samplesWithRows": 169,
     "trapsCovered": [],
     "mutantsDetected": [
       "auto: strict comparison made inclusive"
@@ -63,17 +63,18 @@
     "runtime": {
       "volume": 10,
       "timedRuns": 7,
-      "sqlServerMs": 16,
-      "postgresMs": 17.11,
-      "ratio": 1.07,
+      "sqlServerMs": 18,
+      "postgresMs": 18.63,
+      "ratio": 1.04,
       "threshold": 1.5,
       "passed": true,
+      "belowResolution": false,
       "resultRows": 100,
       "volumeMismatch": null
     },
     "engineOutputCheck": {
       "step3": "fail",
-      "seed": 1448665316,
+      "seed": 963468011,
       "detail": "random sample: value differs in group 0 (key \"*\"), column \"result\": SQL Server s:0000000* vs PostgreSQL s:-2147483"
     },
     "subMicrosecondNormalised": 0,
@@ -88,5 +89,5 @@
     "p50Hours": 1.5,
     "p90Hours": 4
   },
-  "builtAt": "2026-11-11T02:07:18.691Z"
+  "builtAt": "2026-11-11T04:03:31.172Z"
 }

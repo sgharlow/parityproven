@@ -53,8 +53,8 @@
     "runtime": {
       "volume": 2000,
       "timedRuns": 7,
-      "sqlServerMs": 71,
-      "postgresMs": 146.97,
+      "sqlServerMs": 67,
+      "postgresMs": 138.44,
       "ratio": 2.07,
       "threshold": 1.5,
       "passed": false,
@@ -67,21 +67,22 @@
       "NULL in every nullable column"
     ],
     "pbtSeeds": [
-      1190314903
+      1797539367
     ],
     "samples": 200,
-    "samplesWithRows": 116,
+    "samplesWithRows": 123,
     "subMicrosecondNormalised": 0,
     "mutantsDetected": [
-      "auto: first AND becomes OR",
-      "auto: COALESCE first argument dropped"
+      "auto: join condition uses a different key",
+      "auto: first AND becomes OR"
     ],
-    "harnessVersion": "harness-generic-0.3.0"
+    "harnessVersion": "harness-generic-0.3.0",
+    "failureDetail": "Step 4: PostgreSQL 138.44 ms vs SQL Server 67 ms = 2.07x, above the 1.5x limit. Results are equivalent (step 3 pass); see the notes for the cause."
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "failed"
 }

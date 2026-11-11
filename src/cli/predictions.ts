@@ -82,16 +82,18 @@ async function main(): Promise<void> {
   if (subcommand === "score") {
     const pairsDir = resolve(REPO_ROOT, "pairs", database);
     const pairs: PairRecord[] = [];
+    const names: string[] = [];
 
     if (existsSync(pairsDir)) {
       for (const file of readdirSync(pairsDir)) {
         if (file.endsWith(".json")) {
           pairs.push(loadJson<PairRecord>(resolve(pairsDir, file), file));
+          names.push(file.replace(/\.json$/, ""));
         }
       }
     }
 
-    const result = scorePredictions(pred, pairs);
+    const result = scorePredictions(pred, pairs, names);
     console.log(formatScoreTable(result));
     process.exit(0);
   }
