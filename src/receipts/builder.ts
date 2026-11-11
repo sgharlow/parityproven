@@ -90,6 +90,7 @@ export function buildReceipts(input: BuildInput): BuildOutput {
           trapsCovered: evidence.trapsCovered,
           mutantsDetected: evidence.mutantsDetected,
           failureDetail: evidence.failureDetail,
+          runtime: evidence.runtime,
           engineOutputCheck: evidence.engineOutputCheck,
           subMicrosecondNormalised: evidence.subMicrosecondNormalised,
           loadTimeFindings: pair.loadTimeFindings,

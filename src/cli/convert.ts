@@ -17,11 +17,12 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs";
 
 import { MssqlClient } from "../harness/clients/mssql-client.js";
 import { PgClient } from "../harness/clients/pg-client.js";
-import { ensureWwiRestored } from "../harness/restore.js";
+import { ensureAdventureWorksRestored, ensureWwiRestored } from "../harness/restore.js";
 import {
   deployPgFunction, dropPgObject, fetchSourceDefinition, prepareSqlServer, preparePostgres, readSql, runProperty,
-  type Connections, type RunOutcome,
+  ssCall, pgCall, type Connections, type RunOutcome,
 } from "../harness/generic/run.js";
+import { clearAll, runBenchmark, type BenchResult } from "../harness/generic/bench.js";
 import { mappingsFor, type ObjectSpec } from "../harness/generic/spec.js";
 import { SPECS, specByName } from "../conversions/specs.js";
 import { lineDiff } from "../pairs/diff.js";
@@ -29,7 +30,8 @@ import type { PairRecord } from "../pairs/schema.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..", "..");
-const HARNESS_VERSION = "harness-generic-0.2.0";
+const HARNESS_VERSION = "harness-generic-0.3.0";
+const VOLUME = 5000;   // rows per table for step 4; kept modest so Docker stays light
 
 const envFile = resolve(ROOT, ".env");
 if (existsSync(envFile)) {
@@ -72,7 +74,14 @@ async function convertOne(conn: Connections, spec: ObjectSpec, seed: number, run
   const finalSql = readSql(finalPath);
   const draftSql = existsSync(draftPath) ? readSql(draftPath) : null;
 
-  const definition = await fetchSourceDefinition(conn.mssqlSource, spec);
+  // the original T-SQL comes from the restored sample database this object belongs to
+  const source = new MssqlClient({ server: "localhost", port: 1433, user: "sa", password: conn.saPassword, database: spec.database });
+  let definition: string;
+  try {
+    definition = await fetchSourceDefinition(source, spec);
+  } finally {
+    await source.close();
+  }
   const scratch = await prepareSqlServer(conn, spec, definition);
   try {
     await preparePostgres(conn, spec);
@@ -135,8 +144,24 @@ async function convertOne(conn: Connections, spec: ObjectSpec, seed: number, run
       return false;
     }
 
-    // 5. pair record
-    writePair({ spec, label, definition, draftSql, finalSql, f, detected, draftCheck, status: "pending", step3: "pass", seed });
+    // 5. step 4: runtime on a synthetic volume (also compares the full results at volume)
+    await deployPgFunction(conn, spec, finalSql);
+    const runtime = await runBenchmark(conn, scratch, spec, {
+      fn: spec.pgFunction, seed, volume: spec.benchVolume ?? VOLUME, ssSql: ssCall(spec), pgSql: pgCall(spec, spec.pgFunction),
+    });
+    await clearAll(conn, scratch, spec);
+    console.log(
+      `runtime: PostgreSQL ${runtime.postgresMs} ms vs SQL Server ${runtime.sqlServerMs} ms = ${runtime.ratio}x (limit ${runtime.threshold}x) on ${runtime.volume} rows/table -> ${runtime.passed ? "step 4 pass" : "step 4 FAIL"}`
+    );
+    if (runtime.volumeMismatch) console.error(`RESULT MISMATCH AT VOLUME: ${runtime.volumeMismatch}`);
+
+    // 6. pair record
+    writePair({
+      spec, label, definition, draftSql, finalSql, f, detected, draftCheck, seed, runtime,
+      status: runtime.volumeMismatch ? "failed" : "pending",
+      step3: runtime.volumeMismatch ? "fail" : "pass",
+      failureDetail: runtime.volumeMismatch ? `Results differ at ${runtime.volume} rows per table: ${runtime.volumeMismatch}` : undefined,
+    });
     return true;
   } finally {
     await scratch.close();
@@ -156,6 +181,7 @@ interface PairInput {
   step3: "pass" | "fail";
   seed: number;
   failureDetail?: string;
+  runtime?: BenchResult;
 }
 
 function writePair(p: PairInput): void {
@@ -164,13 +190,7 @@ function writePair(p: PairInput): void {
   const previous: PairRecord | null = existsSync(pairPath) ? (JSON.parse(readFileSync(pairPath, "utf-8")) as PairRecord) : null;
   const engineOutput = p.draftSql ?? p.finalSql;
   const record: PairRecord = {
-    origin: {
-      repo: "https://github.com/microsoft/sql-server-samples",
-      release: "wide-world-importers-v1.0",
-      license: "MIT",
-      assetUrl: "https://github.com/microsoft/sql-server-samples/releases/download/wide-world-importers-v1.0/WideWorldImporters-Full.bak",
-      sha256: "e842bad6ce02f74f166947e559dab1b476edd7eaae3da2ab9e3f522f1dd87124",
-    },
+    origin: originFor(spec.database),
     conversionType: "tsql-to-plpgsql",
     objectClass: spec.objectClass,
     tier: previous?.tier ?? tierFromInventory(spec),
@@ -187,7 +207,9 @@ function writePair(p: PairInput): void {
     },
     columnMappings: mappingsFor(spec),
     evidence: {
-      step1: "pass", step2: "not-run", step3: p.step3, step4: "not-run", step5: "not-run", step6: "not-run",
+      step1: "pass", step2: "not-run", step3: p.step3, step4: p.runtime ? (p.runtime.passed ? "pass" : "fail") : "not-run", step5: "not-run", step6: "not-run",
+      runtimeRatio: p.runtime?.ratio,
+      runtime: p.runtime,
       rowsCompared: f.rowsCompared,
       trapsCovered: traps(spec),
       pbtSeeds: [p.seed],
@@ -211,6 +233,21 @@ function writePair(p: PairInput): void {
   console.log(`pair record written: pairs/${spec.database}/${label}.json (step1 pass, step3 ${p.step3}, status ${p.status})`);
 }
 
+const ASSET_BY_DATABASE: Record<string, string> = {
+  WideWorldImporters: "WideWorldImporters-Full.bak",
+  AdventureWorks2025: "AdventureWorks2025.bak",
+};
+
+/** Origin (repo, release, licence, sha256) from sources/manifest.json — never typed by hand. */
+function originFor(database: string): Exclude<PairRecord["origin"], "synthetic"> {
+  const manifest = JSON.parse(readFileSync(resolve(ROOT, "sources", "manifest.json"), "utf-8")) as {
+    entries: Array<{ repo: string; release: string; license: string; assetUrl: string; sha256: string; assetName: string }>;
+  };
+  const e = manifest.entries.find((x) => x.assetName === ASSET_BY_DATABASE[database]);
+  if (!e) throw new Error(`No manifest entry for database ${database}`);
+  return { repo: e.repo, release: e.release, license: e.license, assetUrl: e.assetUrl, sha256: e.sha256 };
+}
+
 function tierFromInventory(spec: ObjectSpec): PairRecord["tier"] {
   const p = resolve(ROOT, "inventory", `${spec.database}.json`);
   if (!existsSync(p)) return "simple";
@@ -224,15 +261,14 @@ async function main(): Promise<void> {
   if (!sa || !pgPw) throw new Error("MSSQL_SA_PASSWORD and PG_PASSWORD must be set (.env)");
 
   const project = process.env["COMPOSE_PROJECT_NAME"] ?? "docker";
-  await ensureWwiRestored({
+  const restoreOpts = {
     containerName: `${project}-mssql-1`, saPassword: sa,
     manifestPath: resolve(ROOT, "sources", "manifest.json"), tmpDir: resolve(ROOT, ".tmp"),
-  });
+  };
 
   const conn: Connections = {
     saPassword: sa,
     mssqlMaster: new MssqlClient({ server: "localhost", port: 1433, user: "sa", password: sa, database: "master" }),
-    mssqlSource: new MssqlClient({ server: "localhost", port: 1433, user: "sa", password: sa, database: "WideWorldImporters" }),
     pg: new PgClient({ host: "localhost", port: 5432, user: "postgres", password: pgPw, database: "parityproven" }),
   };
 
@@ -247,14 +283,19 @@ async function main(): Promise<void> {
 
   const runs = Number(arg("--runs") ?? 200);
   let ok = true;
+  const restored = new Set<string>();
   try {
     for (const spec of specs) {
+      if (!restored.has(spec.database)) {
+        if (spec.database === "AdventureWorks2025") await ensureAdventureWorksRestored(restoreOpts);
+        else await ensureWwiRestored(restoreOpts);
+        restored.add(spec.database);
+      }
       const seed = arg("--seed") ? Number(arg("--seed")) : Math.floor(Math.random() * 2 ** 31);
       ok = (await convertOne(conn, spec, seed, runs)) && ok;
     }
   } finally {
     await conn.mssqlMaster.close();
-    await conn.mssqlSource.close();
     await conn.pg.close();
   }
   process.exit(ok ? 0 : 1);

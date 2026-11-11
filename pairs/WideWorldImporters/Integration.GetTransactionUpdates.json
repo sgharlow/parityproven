@@ -56,10 +56,22 @@
     "step1": "pass",
     "step2": "not-run",
     "step3": "pass",
-    "step4": "not-run",
+    "step4": "pass",
     "step5": "not-run",
     "step6": "not-run",
-    "rowsCompared": 346,
+    "runtimeRatio": 0.35,
+    "runtime": {
+      "volume": 5000,
+      "timedRuns": 7,
+      "sqlServerMs": 24,
+      "postgresMs": 8.32,
+      "ratio": 0.35,
+      "threshold": 1.5,
+      "passed": true,
+      "resultRows": 6236,
+      "volumeMismatch": null
+    },
+    "rowsCompared": 356,
     "trapsCovered": [
       "NULL in every nullable column",
       "numeric rounding and scale (decimal edge values)",
@@ -67,16 +79,16 @@
       "empty string and trailing spaces"
     ],
     "pbtSeeds": [
-      1219930027
+      65734396
     ],
     "samples": 200,
-    "samplesWithRows": 147,
-    "subMicrosecondNormalised": 1028,
+    "samplesWithRows": 153,
+    "subMicrosecondNormalised": 948,
     "mutantsDetected": [
       "customer id taken from transaction only",
       "LEFT OUTER JOIN to invoices becomes INNER JOIN"
     ],
-    "harnessVersion": "harness-generic-0.2.0"
+    "harnessVersion": "harness-generic-0.3.0"
   },
   "effort": {
     "humanMinutes": 0,

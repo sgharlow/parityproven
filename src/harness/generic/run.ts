@@ -22,7 +22,6 @@ export const MIN_NON_EMPTY_FRACTION = 0.3;
 
 export interface Connections {
   mssqlMaster: MssqlClient;
-  mssqlSource: MssqlClient;   // the restored sample database (source of the T-SQL definition)
   pg: PgClient;
   saPassword: string;
 }
@@ -103,7 +102,7 @@ export function readSql(path: string): string {
   return readFileSync(path, "utf-8");
 }
 
-const ssCall = (spec: ObjectSpec): string => {
+export const ssCall = (spec: ObjectSpec): string => {
   if (spec.ssCall) return spec.ssCall;
   if (spec.objectClass === "view") return `SELECT * FROM ${spec.schema}.${spec.name}`;
   return spec.windowParams
@@ -111,7 +110,7 @@ const ssCall = (spec: ObjectSpec): string => {
     : `EXEC ${spec.schema}.${spec.name}`;
 };
 
-const pgCall = (spec: ObjectSpec, fn: string): string => {
+export const pgCall = (spec: ObjectSpec, fn: string): string => {
   if (spec.pgCall) return spec.pgCall.replace("{fn}", fn);
   if (spec.objectClass === "view") return `SELECT * FROM ${fn}`;
   return spec.windowParams ? `SELECT * FROM ${fn}($1::timestamp, $2::timestamp)` : `SELECT * FROM ${fn}()`;

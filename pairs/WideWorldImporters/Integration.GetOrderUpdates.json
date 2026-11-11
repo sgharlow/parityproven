@@ -63,10 +63,22 @@
     "step1": "pass",
     "step2": "not-run",
     "step3": "pass",
-    "step4": "not-run",
+    "step4": "pass",
     "step5": "not-run",
     "step6": "not-run",
-    "rowsCompared": 103,
+    "runtimeRatio": 0.39,
+    "runtime": {
+      "volume": 5000,
+      "timedRuns": 7,
+      "sqlServerMs": 59,
+      "postgresMs": 23.11,
+      "ratio": 0.39,
+      "threshold": 1.5,
+      "passed": true,
+      "resultRows": 3574,
+      "volumeMismatch": null
+    },
+    "rowsCompared": 120,
     "trapsCovered": [
       "NULL in every nullable column",
       "numeric rounding and scale (decimal edge values)",
@@ -75,16 +87,16 @@
       "ORDER BY key (ties compared as multisets)"
     ],
     "pbtSeeds": [
-      1809753295
+      1157213283
     ],
     "samples": 200,
-    "samplesWithRows": 74,
-    "subMicrosecondNormalised": 1175,
+    "samplesWithRows": 80,
+    "subMicrosecondNormalised": 1170,
     "mutantsDetected": [
       "tax amount truncates instead of rounding at 2dp",
       "lower cutoff inclusive"
     ],
-    "harnessVersion": "harness-generic-0.2.0"
+    "harnessVersion": "harness-generic-0.3.0"
   },
   "effort": {
     "humanMinutes": 0,

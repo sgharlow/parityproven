@@ -74,7 +74,7 @@
     {
       "step": 4,
       "label": "Runtime within 1.5× factor",
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "step": 5,
@@ -89,11 +89,11 @@
   ],
   "evidence": {
     "pbtSeeds": [
-      1809753295
+      1157213283
     ],
-    "rowsCompared": 103,
+    "rowsCompared": 120,
     "samples": 200,
-    "samplesWithRows": 74,
+    "samplesWithRows": 80,
     "trapsCovered": [
       "NULL in every nullable column",
       "numeric rounding and scale (decimal edge values)",
@@ -105,8 +105,19 @@
       "tax amount truncates instead of rounding at 2dp",
       "lower cutoff inclusive"
     ],
-    "subMicrosecondNormalised": 1175,
-    "harnessVersion": "harness-generic-0.2.0"
+    "runtime": {
+      "volume": 5000,
+      "timedRuns": 7,
+      "sqlServerMs": 59,
+      "postgresMs": 23.11,
+      "ratio": 0.39,
+      "threshold": 1.5,
+      "passed": true,
+      "resultRows": 3574,
+      "volumeMismatch": null
+    },
+    "subMicrosecondNormalised": 1170,
+    "harnessVersion": "harness-generic-0.3.0"
   },
   "effort": {
     "humanMinutes": 0,
@@ -117,5 +128,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-10T05:24:16.475Z"
+  "builtAt": "2026-11-11T01:42:43.254Z"
 }

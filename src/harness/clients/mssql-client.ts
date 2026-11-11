@@ -5,6 +5,8 @@ export interface DatabaseClient {
   query(sqlText: string, params: unknown[]): Promise<RowSet>;
   /** wrap: per-column SQL expression around the parameter placeholder, e.g. to build a spatial value from WKT. */
   loadRows(table: string, rows: Record<string, unknown>[], wrap?: Record<string, (placeholder: string) => string>): Promise<void>;
+  /** Batched multi-row insert for synthetic volume. */
+  loadRowsBulk(table: string, rows: Record<string, unknown>[], wrap?: Record<string, (placeholder: string) => string>): Promise<void>;
   close(): Promise<void>;
 }
 
@@ -33,6 +35,7 @@ export class MssqlClient implements DatabaseClient {
           trustServerCertificate: true,
           encrypt: false,
         },
+        requestTimeout: 60000,   // fail fast rather than leave a runaway query on the container
         pool: { min: 1, max: 5 },
       }).connect();
     }
@@ -106,6 +109,56 @@ export class MssqlClient implements DatabaseClient {
       });
       const insertSql = `INSERT INTO ${table} (${columns.map((c) => `[${c}]`).join(", ")}) VALUES (${placeholders.join(", ")})`;
       await request.query(insertSql);
+    }
+  }
+
+  /**
+   * Server-side elapsed time (ms) for a statement, from SET STATISTICS TIME. The largest
+   * "SQL Server Execution Times" entry is the outer statement, which includes any inner ones.
+   * Resolution is 1 ms, so callers should repeat and aggregate.
+   */
+  async serverElapsedMs(sqlText: string, params: unknown[]): Promise<number> {
+    const pool = await this.getPool();
+    const request = pool.request();
+    const times: number[] = [];
+    request.on("info", (info: { message?: string }) => {
+      const m = /Execution Times[\s\S]*?elapsed time = (\d+) ms/.exec(info.message ?? "");
+      if (m) times.push(Number(m[1]));
+    });
+    params.forEach((v, i) => request.input(`p${i}`, v));
+    let idx = 0;
+    const text = params.length > 0 ? sqlText.replace(/\?/g, () => `@p${idx++}`) : sqlText;
+    await request.query(`SET STATISTICS TIME ON; ${text}`);
+    await pool.request().query("SET STATISTICS TIME OFF");
+    return times.length ? Math.max(...times) : NaN;
+  }
+
+  async loadRowsBulk(
+    table: string,
+    rows: Record<string, unknown>[],
+    wrap?: Record<string, (placeholder: string) => string>
+  ): Promise<void> {
+    if (rows.length === 0) return;
+    const pool = await this.getPool();
+    const columns = Object.keys(rows[0]);
+    const perStatement = Math.min(1000, Math.max(1, Math.floor(2000 / columns.length)));   // SQL Server: 2100 parameters, 1000 row values
+    for (let i = 0; i < rows.length; i += perStatement) {
+      const request = pool.request();
+      let p = 0;
+      const tuples = rows.slice(i, i + perStatement).map(
+        (row) =>
+          "(" +
+          columns
+            .map((col) => {
+              const ph = `@p${p}`;
+              request.input(`p${p}`, row[col]);
+              p++;
+              return wrap?.[col] ? wrap[col](ph) : ph;
+            })
+            .join(", ") +
+          ")"
+      );
+      await request.query(`INSERT INTO ${table} (${columns.map((c) => `[${c}]`).join(", ")}) VALUES ${tuples.join(", ")}`);
     }
   }
 

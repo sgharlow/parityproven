@@ -58,30 +58,42 @@
     "step1": "pass",
     "step2": "not-run",
     "step3": "pass",
-    "step4": "not-run",
+    "step4": "pass",
     "step5": "not-run",
     "step6": "not-run",
-    "rowsCompared": 355,
+    "runtimeRatio": 0.11,
+    "runtime": {
+      "volume": 5000,
+      "timedRuns": 7,
+      "sqlServerMs": 173,
+      "postgresMs": 19.26,
+      "ratio": 0.11,
+      "threshold": 1.5,
+      "passed": true,
+      "resultRows": 5000,
+      "volumeMismatch": null
+    },
+    "rowsCompared": 330,
     "trapsCovered": [
       "NULL in every nullable column",
       "empty string and trailing spaces"
     ],
     "pbtSeeds": [
-      515626203
+      804484614
     ],
     "engineOutputCheck": {
       "step3": "fail",
-      "seed": 515626203,
+      "seed": 804484614,
       "detail": "column \"DeliveryLocation\" does not exist"
     },
     "samples": 200,
-    "samplesWithRows": 188,
+    "samplesWithRows": 187,
     "subMicrosecondNormalised": 0,
     "mutantsDetected": [
       "alternate contact joined on the primary contact id",
       "buying group LEFT JOIN becomes INNER JOIN"
     ],
-    "harnessVersion": "harness-generic-0.2.0"
+    "harnessVersion": "harness-generic-0.3.0"
   },
   "effort": {
     "humanMinutes": 0,

@@ -47,26 +47,38 @@
     "step1": "pass",
     "step2": "not-run",
     "step3": "pass",
-    "step4": "not-run",
+    "step4": "pass",
     "step5": "not-run",
     "step6": "not-run",
-    "rowsCompared": 132,
+    "runtimeRatio": 0.24,
+    "runtime": {
+      "volume": 5000,
+      "timedRuns": 7,
+      "sqlServerMs": 33,
+      "postgresMs": 7.79,
+      "ratio": 0.24,
+      "threshold": 1.5,
+      "passed": true,
+      "resultRows": 3448,
+      "volumeMismatch": null
+    },
+    "rowsCompared": 129,
     "trapsCovered": [
       "datetime boundaries at the cutoffs (inputs normalised to µs)",
       "empty string and trailing spaces",
       "ORDER BY key (ties compared as multisets)"
     ],
     "pbtSeeds": [
-      1627717152
+      1596997200
     ],
     "samples": 200,
-    "samplesWithRows": 87,
-    "subMicrosecondNormalised": 953,
+    "samplesWithRows": 92,
+    "subMicrosecondNormalised": 931,
     "mutantsDetected": [
       "ordered quantity uses outers only",
       "upper cutoff exclusive"
     ],
-    "harnessVersion": "harness-generic-0.2.0"
+    "harnessVersion": "harness-generic-0.3.0"
   },
   "effort": {
     "humanMinutes": 0,

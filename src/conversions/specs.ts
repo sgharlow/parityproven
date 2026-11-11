@@ -221,6 +221,12 @@ SPECS.push(
     params: [ref("CustomerID"), ref("StockItemID"), col("PricingDate", date)],
     ssCall: "SELECT Website.CalculateCustomerPrice(?, ?, ?) AS result",
     pgCall: "SELECT {fn}($1::integer, $2::integer, $3::date) AS result",
+    // runtime: one call per customer row (volume rows) inside a single statement, so execution time is the database's
+    // Each call scans special deals and, per deal, the stock-group table (no secondary indexes in the scratch tables),
+    // so cost is quadratic in volume. 1,000 rows per table and 100 calls keeps the run to seconds.
+    benchVolume: 1000,
+    benchSs: "SELECT SUM(Website.CalculateCustomerPrice(c.CustomerID, c.CustomerID, CAST('2020-01-02' AS date))) AS total FROM Sales.Customers AS c WHERE c.CustomerID <= 100",
+    benchPg: "SELECT SUM({fn}(c.\"CustomerID\", c.\"CustomerID\", DATE '2020-01-02')) AS total FROM sales.customers AS c WHERE c.\"CustomerID\" <= 100",
     tables: [
       { schema: "Sales", name: "Customers", columns: [pk("CustomerID"), ref("BuyingGroupID", true), ref("CustomerCategoryID")] },
       { schema: "Warehouse", name: "StockItems", columns: [pk("StockItemID"), col("UnitPrice", dec(18, 2))] },
@@ -237,6 +243,15 @@ SPECS.push(
         "Sales.Customers": [{ CustomerID: 1, BuyingGroupID: null, CustomerCategoryID: 1 }],
         "Warehouse.StockItems": [{ StockItemID: 1, UnitPrice: "19.99" }],
         "Sales.SpecialDeals": [{ SpecialDealID: 1, StockItemID: 1, CustomerID: null, BuyingGroupID: null, CustomerCategoryID: null, StockGroupID: null, StartDate: "2020-01-01", EndDate: "2020-01-03", DiscountAmount: null, DiscountPercentage: "12.500", UnitPrice: null }],
+        "Warehouse.StockItemStockGroups": [],
+      },
+    }, {
+      label: "pricing date equals the deal's end date: BETWEEN is inclusive, so the special price 5.00 applies",
+      args: [1, 1, "2020-01-02"],
+      tables: {
+        "Sales.Customers": [{ CustomerID: 1, BuyingGroupID: null, CustomerCategoryID: 1 }],
+        "Warehouse.StockItems": [{ StockItemID: 1, UnitPrice: "10.00" }],
+        "Sales.SpecialDeals": [{ SpecialDealID: 1, StockItemID: 1, CustomerID: null, BuyingGroupID: null, CustomerCategoryID: null, StockGroupID: null, StartDate: "2020-01-01", EndDate: "2020-01-02", DiscountAmount: null, DiscountPercentage: null, UnitPrice: "5.00" }],
         "Warehouse.StockItemStockGroups": [],
       },
     }, {

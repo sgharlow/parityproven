@@ -43,10 +43,22 @@
     "step1": "pass",
     "step2": "not-run",
     "step3": "pass",
-    "step4": "not-run",
+    "step4": "pass",
     "step5": "not-run",
     "step6": "not-run",
-    "rowsCompared": 175,
+    "runtimeRatio": 0.32,
+    "runtime": {
+      "volume": 5000,
+      "timedRuns": 7,
+      "sqlServerMs": 9,
+      "postgresMs": 2.88,
+      "ratio": 0.32,
+      "threshold": 1.5,
+      "passed": true,
+      "resultRows": 3110,
+      "volumeMismatch": null
+    },
+    "rowsCompared": 158,
     "trapsCovered": [
       "NULL in every nullable column",
       "numeric rounding and scale (decimal edge values)",
@@ -54,21 +66,21 @@
       "ORDER BY key (ties compared as multisets)"
     ],
     "pbtSeeds": [
-      447024626
+      864051402
     ],
     "engineOutputCheck": {
       "step3": "fail",
-      "seed": 447024626,
+      "seed": 864051402,
       "detail": "fixed case \"fractional Quantity (decimal -> int cast)\": value differs in group 0 (key \"n:1\"), column \"Quantity\": SQL Server n:2 vs PostgreSQL n:3"
     },
     "samples": 200,
-    "samplesWithRows": 123,
-    "subMicrosecondNormalised": 964,
+    "samplesWithRows": 104,
+    "subMicrosecondNormalised": 916,
     "mutantsDetected": [
       "Quantity rounds instead of truncating",
       "upper cutoff exclusive"
     ],
-    "harnessVersion": "harness-generic-0.2.0"
+    "harnessVersion": "harness-generic-0.3.0"
   },
   "effort": {
     "humanMinutes": 0,

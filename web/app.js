@@ -131,13 +131,19 @@ async function initReceipt() {
     ? `<li><strong>Planted defects caught:</strong> ${ev.mutantsDetected.map(m => esc(m)).join('; ')}</li>` : '';
   const traps = ev.trapsCovered?.length
     ? `<li><strong>Traps generated:</strong> ${ev.trapsCovered.map(t => esc(t)).join('; ')}</li>` : '';
+  const runtime = ev.runtime
+    ? `<li><strong>Runtime (step 4):</strong> PostgreSQL ${ev.runtime.postgresMs} ms vs SQL Server ${ev.runtime.sqlServerMs} ms server-side execution
+         = <strong>${ev.runtime.ratio}×</strong> (limit ${ev.runtime.threshold}×), median of ${ev.runtime.timedRuns} runs on ${ev.runtime.volume} rows per table.
+         <span style="color:var(--c-muted);font-size:0.85rem">Both engines run in Docker on one machine; SQL Server reports whole milliseconds; indicative, not a benchmark.</span></li>
+       <li><strong>Result at volume:</strong> ${ev.runtime.volumeMismatch ? 'MISMATCH — ' + esc(ev.runtime.volumeMismatch) : `${ev.runtime.resultRows} rows returned, identical on both engines`}</li>`
+    : '';
   const precision = ev.subMicrosecondNormalised
     ? `<li><strong>Load-time finding:</strong> ${ev.subMicrosecondNormalised} generated datetime2(7) values had sub-microsecond ticks that PostgreSQL <code>timestamp</code> cannot hold; they were normalised to microseconds on both engines before comparing.</li>` : '';
 
   const pbtHtml = ev.pbtSeeds?.length
     ? `<ul style="padding-left:1.2rem">
          <li><strong>Seed:</strong> ${ev.pbtSeeds.join(', ')}</li>
-         ${draft}${coverage}${traps}${mutants}${precision}
+         ${draft}${coverage}${traps}${mutants}${runtime}${precision}
          <li><strong>Harness:</strong> ${esc(ev.harnessVersion)}</li>
        </ul>
        <p style="color:var(--c-muted);font-size:0.85rem;margin-bottom:0.25rem">Re-run from the public repo:</p>

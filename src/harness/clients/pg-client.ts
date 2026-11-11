@@ -87,6 +87,41 @@ export class PgClient implements DatabaseClient {
     }
   }
 
+  /** Server-side execution time (ms) of a statement via EXPLAIN ANALYZE. Parameters must already be literals. */
+  async explainMs(sqlText: string): Promise<number> {
+    const client = await this.getClient();
+    const r = await client.query({ text: `EXPLAIN (ANALYZE, TIMING OFF, FORMAT JSON) ${sqlText}`, rowMode: "array" });
+    const plan = r.rows[0][0] as Array<{ "Execution Time": number }>;
+    return plan[0]["Execution Time"];
+  }
+
+  async loadRowsBulk(
+    table: string,
+    rows: Record<string, unknown>[],
+    wrap?: Record<string, (placeholder: string) => string>
+  ): Promise<void> {
+    if (rows.length === 0) return;
+    const client = await this.getClient();
+    const columns = Object.keys(rows[0]);
+    const perStatement = Math.max(1, Math.floor(30000 / columns.length));
+    for (let i = 0; i < rows.length; i += perStatement) {
+      const values: unknown[] = [];
+      const tuples = rows.slice(i, i + perStatement).map(
+        (row) =>
+          "(" +
+          columns
+            .map((col) => {
+              values.push(row[col]);
+              const ph = `$${values.length}`;
+              return wrap?.[col] ? wrap[col](ph) : ph;
+            })
+            .join(", ") +
+          ")"
+      );
+      await client.query(`INSERT INTO ${table} (${columns.map((c) => `"${c}"`).join(", ")}) VALUES ${tuples.join(", ")}`, values);
+    }
+  }
+
   async close(): Promise<void> {
     if (this.client) {
       await this.client.end();

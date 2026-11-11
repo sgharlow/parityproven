@@ -69,7 +69,7 @@
     {
       "step": 4,
       "label": "Runtime within 1.5× factor",
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "step": 5,
@@ -84,11 +84,11 @@
   ],
   "evidence": {
     "pbtSeeds": [
-      515626203
+      804484614
     ],
-    "rowsCompared": 355,
+    "rowsCompared": 330,
     "samples": 200,
-    "samplesWithRows": 188,
+    "samplesWithRows": 187,
     "trapsCovered": [
       "NULL in every nullable column",
       "empty string and trailing spaces"
@@ -97,13 +97,24 @@
       "alternate contact joined on the primary contact id",
       "buying group LEFT JOIN becomes INNER JOIN"
     ],
+    "runtime": {
+      "volume": 5000,
+      "timedRuns": 7,
+      "sqlServerMs": 173,
+      "postgresMs": 19.26,
+      "ratio": 0.11,
+      "threshold": 1.5,
+      "passed": true,
+      "resultRows": 5000,
+      "volumeMismatch": null
+    },
     "engineOutputCheck": {
       "step3": "fail",
-      "seed": 515626203,
+      "seed": 804484614,
       "detail": "column \"DeliveryLocation\" does not exist"
     },
     "subMicrosecondNormalised": 0,
-    "harnessVersion": "harness-generic-0.2.0"
+    "harnessVersion": "harness-generic-0.3.0"
   },
   "effort": {
     "humanMinutes": 0,
@@ -114,5 +125,5 @@
     "p50Hours": 0.75,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-10T05:24:16.477Z"
+  "builtAt": "2026-11-11T01:42:43.255Z"
 }

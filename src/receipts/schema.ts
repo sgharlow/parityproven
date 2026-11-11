@@ -32,6 +32,10 @@ export interface ReceiptFile {
     trapsCovered?: string[];
     mutantsDetected?: string[];
     failureDetail?: string;
+    runtime?: {
+      volume: number; timedRuns: number; sqlServerMs: number; postgresMs: number; ratio: number;
+      threshold: number; resultRows: number; volumeMismatch: string | null;
+    };
     engineOutputCheck?: { step3: StepStatus; seed: number; detail?: string };
     subMicrosecondNormalised?: number;
     loadTimeFindings?: string[];

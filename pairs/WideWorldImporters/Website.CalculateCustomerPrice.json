@@ -51,26 +51,38 @@
     "step1": "pass",
     "step2": "not-run",
     "step3": "pass",
-    "step4": "not-run",
+    "step4": "pass",
     "step5": "not-run",
     "step6": "not-run",
-    "rowsCompared": 202,
+    "runtimeRatio": 0.19,
+    "runtime": {
+      "volume": 1000,
+      "timedRuns": 7,
+      "sqlServerMs": 237,
+      "postgresMs": 44.06,
+      "ratio": 0.19,
+      "threshold": 1.5,
+      "passed": true,
+      "resultRows": 100,
+      "volumeMismatch": null
+    },
+    "rowsCompared": 203,
     "trapsCovered": [
       "NULL in every nullable column",
       "numeric rounding and scale (decimal edge values)"
     ],
     "pbtSeeds": [
-      67584922
+      1471267531
     ],
     "samples": 200,
-    "samplesWithRows": 180,
+    "samplesWithRows": 182,
     "subMicrosecondNormalised": 0,
     "mutantsDetected": [
       "deal end date exclusive",
       "lowest discount amount instead of highest",
       "percentage price truncates instead of rounding"
     ],
-    "harnessVersion": "harness-generic-0.2.0"
+    "harnessVersion": "harness-generic-0.3.0"
   },
   "effort": {
     "humanMinutes": 0,

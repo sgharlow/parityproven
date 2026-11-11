@@ -62,7 +62,7 @@
     {
       "step": 4,
       "label": "Runtime within 1.5× factor",
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "step": 5,
@@ -77,11 +77,11 @@
   ],
   "evidence": {
     "pbtSeeds": [
-      67584922
+      1471267531
     ],
-    "rowsCompared": 202,
+    "rowsCompared": 203,
     "samples": 200,
-    "samplesWithRows": 180,
+    "samplesWithRows": 182,
     "trapsCovered": [
       "NULL in every nullable column",
       "numeric rounding and scale (decimal edge values)"
@@ -91,8 +91,19 @@
       "lowest discount amount instead of highest",
       "percentage price truncates instead of rounding"
     ],
+    "runtime": {
+      "volume": 1000,
+      "timedRuns": 7,
+      "sqlServerMs": 237,
+      "postgresMs": 44.06,
+      "ratio": 0.19,
+      "threshold": 1.5,
+      "passed": true,
+      "resultRows": 100,
+      "volumeMismatch": null
+    },
     "subMicrosecondNormalised": 0,
-    "harnessVersion": "harness-generic-0.2.0"
+    "harnessVersion": "harness-generic-0.3.0"
   },
   "effort": {
     "humanMinutes": 0,
@@ -103,5 +114,5 @@
     "p50Hours": 1,
     "p90Hours": 3
   },
-  "builtAt": "2026-11-10T05:24:16.476Z"
+  "builtAt": "2026-11-11T01:42:43.255Z"
 }

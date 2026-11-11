@@ -54,7 +54,7 @@
     {
       "step": 4,
       "label": "Runtime within 1.5× factor",
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "step": 5,
@@ -69,11 +69,11 @@
   ],
   "evidence": {
     "pbtSeeds": [
-      447024626
+      864051402
     ],
-    "rowsCompared": 175,
+    "rowsCompared": 158,
     "samples": 200,
-    "samplesWithRows": 123,
+    "samplesWithRows": 104,
     "trapsCovered": [
       "NULL in every nullable column",
       "numeric rounding and scale (decimal edge values)",
@@ -84,13 +84,24 @@
       "Quantity rounds instead of truncating",
       "upper cutoff exclusive"
     ],
+    "runtime": {
+      "volume": 5000,
+      "timedRuns": 7,
+      "sqlServerMs": 9,
+      "postgresMs": 2.88,
+      "ratio": 0.32,
+      "threshold": 1.5,
+      "passed": true,
+      "resultRows": 3110,
+      "volumeMismatch": null
+    },
     "engineOutputCheck": {
       "step3": "fail",
-      "seed": 447024626,
+      "seed": 864051402,
       "detail": "fixed case \"fractional Quantity (decimal -> int cast)\": value differs in group 0 (key \"n:1\"), column \"Quantity\": SQL Server n:2 vs PostgreSQL n:3"
     },
-    "subMicrosecondNormalised": 964,
-    "harnessVersion": "harness-generic-0.2.0"
+    "subMicrosecondNormalised": 916,
+    "harnessVersion": "harness-generic-0.3.0"
   },
   "effort": {
     "humanMinutes": 0,
@@ -101,5 +112,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-10T05:24:16.474Z"
+  "builtAt": "2026-11-11T01:42:43.253Z"
 }

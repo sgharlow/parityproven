@@ -66,6 +66,18 @@ export interface PairRecord {
     mutantsDetected?: string[];
     /** Why the object did not pass, in plain words, when status is "failed". */
     failureDetail?: string;
+    /** Step 4 measurement: client-observed latency, median of timed runs, on a synthetic volume. */
+    runtime?: {
+      volume: number;
+      timedRuns: number;
+      sqlServerMs: number;
+      postgresMs: number;
+      ratio: number;
+      threshold: number;
+      resultRows: number;
+      /** Rows compared at volume (step 3, large row counts); mismatch text if the results differed. */
+      volumeMismatch: string | null;
+    };
     harnessVersion: string;
     reviewer?: string;
     reviewDate?: string;

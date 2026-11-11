@@ -71,6 +71,11 @@ export interface ObjectSpec {
   /** Override the default call. SQL Server uses ? placeholders; PostgreSQL uses $n and {fn} for the function name. */
   ssCall?: string;
   pgCall?: string;
+  /** Set-based statements for the runtime measurement (scalar functions: call once per row of a volume table). {fn} = PostgreSQL function. */
+  benchSs?: string;
+  benchPg?: string;
+  /** Rows per table for the runtime step when the default is too heavy for the object (e.g. row-by-row scalar functions). */
+  benchVolume?: number;
   /** Set when the object is known not to convert cleanly; a failing run is then recorded as a failed pair, not discarded. */
   knownLimitation?: KnownLimitation;
   /** Hand-derived trap inputs that always run before the random samples. */

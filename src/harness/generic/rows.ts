@@ -71,7 +71,7 @@ function decimalArb(p: number, s: number): fc.Arbitrary<string> {
   });
 }
 
-function baseColArb(col: ColSpec, c: Cutoffs | null, k: number): fc.Arbitrary<unknown> {
+export function baseColArb(col: ColSpec, c: Cutoffs | null, k: number): fc.Arbitrary<unknown> {
   const t = col.type;
   switch (t.kind) {
     case "int":
