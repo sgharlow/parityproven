@@ -1,0 +1,176 @@
+{
+  "object": "Sales.vSalesPerson",
+  "database": "AdventureWorks2025",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-12T23:30:26.989Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "no territory, two phones, no email; trailing space kept; a sales person without an address is dropped",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Title",
+          "sqlServerType": "nvarchar(8)"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "MiddleName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Suffix",
+          "sqlServerType": "nvarchar(10)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PhoneNumber",
+          "sqlServerType": "nvarchar(25)"
+        },
+        {
+          "name": "PhoneNumberType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailAddress",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailPromotion",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "AddressLine1",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "AddressLine2",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "City",
+          "sqlServerType": "nvarchar(30)"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PostalCode",
+          "sqlServerType": "nvarchar(15)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TerritoryName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TerritoryGroup",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "SalesQuota",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "SalesYTD",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "SalesLastYear",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "∅",
+          "s:First1",
+          "∅",
+          "s:Last1",
+          "∅",
+          "s:Sales Representative",
+          "s:555-0100",
+          "s:Cell",
+          "∅",
+          "n:0",
+          "s:1 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Washington",
+          "s:98011",
+          "s:United States",
+          "∅",
+          "∅",
+          "∅",
+          "n:0.0001",
+          "n:1234567.8912"
+        ],
+        [
+          "n:1",
+          "∅",
+          "s:First1",
+          "∅",
+          "s:Last1",
+          "∅",
+          "s:Sales Representative",
+          "s:555-0199",
+          "∅",
+          "∅",
+          "n:0",
+          "s:1 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Washington",
+          "s:98011",
+          "s:United States",
+          "∅",
+          "∅",
+          "∅",
+          "n:0.0001",
+          "n:1234567.8912"
+        ],
+        [
+          "n:2",
+          "s:Ms.",
+          "s:Ann ",
+          "∅",
+          "s:Last2",
+          "s:Jr.",
+          "s:Sales Representative",
+          "∅",
+          "∅",
+          "s:ann@example.com",
+          "n:2",
+          "s:2 High St",
+          "s:Suite 5",
+          "s:Seattle",
+          "s:Washington",
+          "s:98104",
+          "s:United States",
+          "s:Northwest",
+          "s:North America",
+          "n:300000",
+          "n:-5.5",
+          "n:0"
+        ]
+      ]
+    }
+  ]
+}

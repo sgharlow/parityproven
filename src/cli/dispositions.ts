@@ -53,7 +53,7 @@ for (const d of DISPOSITIONS.filter((x) => x.kind === "failed")) {
     },
     columnMappings: [],
     evidence: {
-      step1: "not-run", step2: "not-run", step3: "not-run", step4: "not-run", step5: "not-run", step6: "not-run",
+      step1: "not-run", step2: "not-run", step3: "not-run", step4: "not-run", step5: "not-run", step6: "n/a",
       failureDetail: d.reason,
       harnessVersion: "none (not converted)",
     },

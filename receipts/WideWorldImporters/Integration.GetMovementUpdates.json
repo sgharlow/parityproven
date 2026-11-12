@@ -44,7 +44,7 @@
     {
       "step": 2,
       "label": "Agreed tests pass (tSQLt / pgTAP)",
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "step": 3,
@@ -64,16 +64,16 @@
     {
       "step": 6,
       "label": "Acceptance on real data",
-      "status": "not-run"
+      "status": "n/a"
     }
   ],
   "evidence": {
     "pbtSeeds": [
-      362396954
+      1708074372
     ],
-    "rowsCompared": 178,
+    "rowsCompared": 194,
     "samples": 200,
-    "samplesWithRows": 115,
+    "samplesWithRows": 126,
     "trapsCovered": [
       "NULL in every nullable column",
       "numeric rounding and scale (decimal edge values)",
@@ -88,21 +88,27 @@
       "volume": 5000,
       "timedRuns": 7,
       "sqlServerMs": 7,
-      "postgresMs": 2.27,
-      "ratio": 0.32,
+      "postgresMs": 2.48,
+      "ratio": 0.35,
       "threshold": 1.5,
       "passed": true,
       "belowResolution": false,
-      "resultRows": 3119,
+      "resultRows": 3126,
       "volumeMismatch": null
     },
     "engineOutputCheck": {
       "step3": "fail",
-      "seed": 362396954,
+      "seed": 1708074372,
       "detail": "fixed case \"fractional Quantity (decimal -> int cast)\": value differs in group 0 (key \"n:1\"), column \"Quantity\": SQL Server n:2 vs PostgreSQL n:3"
     },
-    "subMicrosecondNormalised": 963,
-    "harnessVersion": "harness-generic-0.3.0"
+    "subMicrosecondNormalised": 998,
+    "harnessVersion": "harness-generic-0.3.0",
+    "testsRun": [
+      "tSQLt V1.0.8083.3529 on SQL Server (tests/WideWorldImporters/Integration.GetMovementUpdates.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/WideWorldImporters/Integration.GetMovementUpdates.pg.sql); expected results tests/WideWorldImporters/Integration.GetMovementUpdates.expected.json",
+      "SQL Server: AgreedTests.[test 01 fractional Quantity (decimal -> int cast)]: pass",
+      "PostgreSQL: AgreedTests.[test 01 fractional Quantity (decimal -> int cast)]: pass",
+      "planted defects caught by the agreed tests: 1 of 2"
+    ]
   },
   "effort": {
     "humanMinutes": 0,
@@ -113,5 +119,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-12T18:03:35.125Z"
+  "builtAt": "2026-11-12T23:33:17.858Z"
 }

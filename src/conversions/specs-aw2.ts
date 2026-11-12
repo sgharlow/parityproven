@@ -136,9 +136,42 @@ const contactInformation: ObjectSpec = specFromCatalog(DB, "dbo.ufnGetContactInf
 export const AW2_SPECS: ObjectSpec[] = [
   view("HumanResources.vEmployee", "humanresources.v_employee", [XML_NOTE]),
   // the view keeps only customers without a store (StoreID IS NULL), so that must be the common case
-  view("Sales.vIndividualCustomer", "sales.v_individual_customer", [XML_NOTE],   // ten joined tables: none is generated empty, or most samples would join to nothing (empty joins are covered elsewhere)
-  { rows: [1, 4], columns: { "Sales.Customer.StoreID": { nullFraction: 0.8 }, "Sales.Customer.PersonID": { nullFraction: 0.05 } } }),
+  {
+    ...view("Sales.vIndividualCustomer", "sales.v_individual_customer", [XML_NOTE],   // ten joined tables: none is generated empty, or most samples would join to nothing (empty joins are covered elsewhere)
+      { rows: [1, 4], columns: { "Sales.Customer.StoreID": { nullFraction: 0.8 }, "Sales.Customer.PersonID": { nullFraction: 0.05 } } }),
+    // Generated email/phone tables are keyed like Person, so a person without either is rare once seven inner joins and
+    // the StoreID filter have applied (seed 1787570662 produced none in 300 samples, and the planted LEFT -> INNER JOIN
+    // defect passed). This hand-derived case makes those rows certain on every seed.
+    fixedCases: [individualCustomerCase()],
+  },
   contactInformation,
   bom("uspGetBillOfMaterials", "usp_get_bill_of_materials", "down"),
   bom("uspGetWhereUsedProductID", "usp_get_where_used_product_id", "up"),
 ];
+
+/**
+ * Sales.vIndividualCustomer trap case (hand-derived). Expected: 2 rows.
+ *  - person 1: no email and no phone (the three LEFT JOINs give NULL EmailAddress, PhoneNumber, PhoneNumberType)
+ *  - person 2: email, and a phone whose type 9 has no PhoneNumberType row (NULL PhoneNumberType)
+ *  - person 3: a customer of a store (StoreID not NULL), so the view drops them
+ */
+function individualCustomerCase(): FixedCase {
+  const person = (id: number): Row => ({
+    BusinessEntityID: id, Title: null, FirstName: `First${id}`, MiddleName: null, LastName: `Last${id}`, Suffix: null, EmailPromotion: 0, Demographics: null,
+  });
+  return {
+    label: "a customer without email or phone keeps a row (LEFT JOINs); unknown phone type; a store customer is dropped",
+    tables: {
+      "Person.Person": [person(1), person(2), person(3)],
+      "Person.BusinessEntityAddress": [1, 2, 3].map((id) => ({ BusinessEntityID: id, AddressID: 1, AddressTypeID: 1 })),
+      "Person.Address": [{ AddressID: 1, AddressLine1: "1 Main St", AddressLine2: null, City: "Bothell", StateProvinceID: 1, PostalCode: "98011" }],
+      "Person.AddressType": [{ AddressTypeID: 1, Name: "Home" }],
+      "Person.StateProvince": [{ StateProvinceID: 1, CountryRegionCode: "US", Name: "Washington" }],
+      "Person.CountryRegion": [{ CountryRegionCode: "US", Name: "United States" }],
+      "Sales.Customer": [{ PersonID: 1, StoreID: null }, { PersonID: 2, StoreID: null }, { PersonID: 3, StoreID: 1 }],
+      "Person.EmailAddress": [{ BusinessEntityID: 2, EmailAddress: "two@example.com" }],
+      "Person.PersonPhone": [{ BusinessEntityID: 2, PhoneNumber: "555-0102", PhoneNumberTypeID: 9 }],
+      "Person.PhoneNumberType": [{ PhoneNumberTypeID: 1, Name: "Cell" }],
+    },
+  };
+}

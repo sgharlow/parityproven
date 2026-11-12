@@ -28,6 +28,32 @@ export const DISPOSITIONS: Disposition[] = [
       "each sample under real logins and roles on both engines, which it does not do. Recorded as a failure, not hidden (decision 2026-11-11).",
   },
 
+  // Predicted on 2026-11-08 to fail; recorded as not converted (decision G1a, 2026-11-12). Not attempted, so the
+  // prediction is not tested by these records.
+  ...([
+    ["GetCityUpdates", "Application.Cities", 9],
+    ["GetCustomerUpdates", "Sales.Customers", 15],
+    ["GetEmployeeUpdates", "Application.People", 1],
+    ["GetPaymentMethodUpdates", "Application.PaymentMethods", 1],
+    ["GetStockItemUpdates", "Warehouse.StockItems", 4],
+    ["GetSupplierUpdates", "Purchasing.Suppliers", 6],
+    ["GetTransactionTypeUpdates", "Application.TransactionTypes", 1],
+  ] as const).map(([name, table, n]): Disposition => ({
+    database: WWI, schema: "Integration", name, kind: "failed",
+    reason:
+      `Not converted. It walks a cursor over the changes in the cutoff window and reads ${table} FOR SYSTEM_TIME AS OF ` +
+      `each change time (${n} such read${n === 1 ? "" : "s"}), collecting rows in a #temp table. PostgreSQL has no system-versioned temporal ` +
+      "tables; a faithful conversion needs history tables and an AS OF emulation, which is out of scope for this phase " +
+      "(decision 2026-11-12). Predicted on 2026-11-08 to fail; not attempted.",
+  })),
+  {
+    database: WWI, schema: "Website", name: "VehicleTemperatures", kind: "failed",
+    reason:
+      "Not converted. Rows marked IsCompressed are decoded with DECOMPRESS (GZIP) and cast to nvarchar. PostgreSQL has no " +
+      "built-in GZIP decompression; it would need an extension or decoding outside the database (decision 2026-11-12). " +
+      "Predicted on 2026-11-08 to fail; not attempted.",
+  },
+
   // Application: database administration
   { database: WWI, schema: "Application", name: "AddRoleMemberIfNonexistent", kind: "excluded", reason: `${ADMIN} adds a database user to a role with dynamic SQL.` },
   { database: WWI, schema: "Application", name: "CreateRoleIfNonexistent", kind: "excluded", reason: `${ADMIN} creates a database role with dynamic SQL.` },

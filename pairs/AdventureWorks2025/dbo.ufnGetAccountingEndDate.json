@@ -27,7 +27,7 @@
     "step3": "pass",
     "step4": "pass",
     "step5": "not-run",
-    "step6": "not-run",
+    "step6": "n/a",
     "runtimeRatio": 0,
     "runtime": {
       "volume": 10,
@@ -44,11 +44,11 @@
     "rowsCompared": 200,
     "trapsCovered": [],
     "pbtSeeds": [
-      114104554
+      1059531247
     ],
     "engineOutputCheck": {
       "step3": "fail",
-      "seed": 114104554,
+      "seed": 1059531247,
       "detail": "random sample: value differs in group 0 (key \"*\"), column \"result\": SQL Server t:2004-06-30T23:59:59.997000 vs PostgreSQL t:2004-06-30T23:59:59.998000"
     },
     "samples": 200,

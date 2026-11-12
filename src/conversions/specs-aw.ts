@@ -4,7 +4,7 @@
  * the runtime statement, and any planted defects worth naming.
  */
 
-import type { ColSpec, ObjectSpec } from "../harness/generic/spec.js";
+import type { ColSpec, FixedCase, ObjectSpec, Row } from "../harness/generic/spec.js";
 import { specFromCatalog, type CatalogOptions } from "./catalog.js";
 
 const DB = "AdventureWorks2025";
@@ -88,7 +88,7 @@ export const AW_VIEWS: ObjectSpec[] = [
   view("Production.vProductAndDescription", "production.v_product_and_description"),
   view("Purchasing.vVendorWithAddresses", "purchasing.v_vendor_with_addresses"),
   view("Purchasing.vVendorWithContacts", "purchasing.v_vendor_with_contacts"),
-  view("Sales.vSalesPerson", "sales.v_sales_person"),
+  { ...view("Sales.vSalesPerson", "sales.v_sales_person"), fixedCases: [salesPersonCase()] },
   view("Sales.vStoreWithAddresses", "sales.v_store_with_addresses"),
   view("Sales.vStoreWithContacts", "sales.v_store_with_contacts"),
   view("Sales.vSalesPersonSalesByFiscalYears", "sales.v_sales_person_sales_by_fiscal_years", {
@@ -144,3 +144,42 @@ export const AW_SPECS: ObjectSpec[] = [
     notes: ["CONVERT(varchar(8), int) yields '*' when the number needs more than 8 characters; DATALENGTH counts bytes."],
   }),
 ];
+
+/**
+ * Sales.vSalesPerson trap case (hand-derived). Expected: 3 rows.
+ *  - person 1: no territory (LEFT JOIN gives NULL TerritoryName/Group), two phones (one row each; phone type 9 has no
+ *    PhoneNumberType row, so PhoneNumberType is NULL), no email, NULL MiddleName and SalesQuota, money at 4 decimal places
+ *  - person 2: territory, email, no phone (NULL phone columns), a first name with a trailing space (kept)
+ *  - person 3: no address row, so the INNER JOIN to BusinessEntityAddress drops them
+ */
+function salesPersonCase(): FixedCase {
+  const person = (id: number, over: Row = {}): Row => ({
+    BusinessEntityID: id, Title: null, FirstName: `First${id}`, MiddleName: null, LastName: `Last${id}`, Suffix: null, EmailPromotion: 0, ...over,
+  });
+  return {
+    label: "no territory, two phones, no email; trailing space kept; a sales person without an address is dropped",
+    tables: {
+      "Sales.SalesPerson": [
+        { BusinessEntityID: 1, TerritoryID: null, SalesQuota: null, SalesYTD: "0.0001", SalesLastYear: "1234567.8912" },
+        { BusinessEntityID: 2, TerritoryID: 1, SalesQuota: "300000.0000", SalesYTD: "-5.5000", SalesLastYear: "0.0000" },
+        { BusinessEntityID: 3, TerritoryID: 1, SalesQuota: null, SalesYTD: "1.0000", SalesLastYear: "1.0000" },
+      ],
+      "HumanResources.Employee": [1, 2, 3].map((id) => ({ BusinessEntityID: id, JobTitle: "Sales Representative" })),
+      "Person.Person": [person(1), person(2, { Title: "Ms.", FirstName: "Ann ", Suffix: "Jr.", EmailPromotion: 2 }), person(3)],
+      "Person.BusinessEntityAddress": [{ BusinessEntityID: 1, AddressID: 1 }, { BusinessEntityID: 2, AddressID: 2 }],
+      "Person.Address": [
+        { AddressID: 1, AddressLine1: "1 Main St", AddressLine2: null, City: "Bothell", StateProvinceID: 1, PostalCode: "98011" },
+        { AddressID: 2, AddressLine1: "2 High St", AddressLine2: "Suite 5", City: "Seattle", StateProvinceID: 1, PostalCode: "98104" },
+      ],
+      "Person.StateProvince": [{ StateProvinceID: 1, CountryRegionCode: "US", Name: "Washington" }],
+      "Person.CountryRegion": [{ CountryRegionCode: "US", Name: "United States" }],
+      "Sales.SalesTerritory": [{ TerritoryID: 1, Name: "Northwest", Group: "North America" }],
+      "Person.EmailAddress": [{ BusinessEntityID: 2, EmailAddress: "ann@example.com" }],
+      "Person.PersonPhone": [
+        { BusinessEntityID: 1, PhoneNumber: "555-0100", PhoneNumberTypeID: 1 },
+        { BusinessEntityID: 1, PhoneNumber: "555-0199", PhoneNumberTypeID: 9 },
+      ],
+      "Person.PhoneNumberType": [{ PhoneNumberTypeID: 1, Name: "Cell" }],
+    },
+  };
+}

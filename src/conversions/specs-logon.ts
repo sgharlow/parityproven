@@ -47,7 +47,6 @@ const NOTES = [
   "Converted to a PostgreSQL PROCEDURE. THROW 51000 becomes RAISE EXCEPTION (SQLSTATE P0001); the harness compares whether each engine raised, not the message text. The PRINT lines before THROW are informational messages and are not compared.",
   "HASHBYTES('SHA2_256', nvarchar) hashes UTF-16LE bytes. PostgreSQL has no UTF-16 client encoding, so tsql_compat.utf16le() builds those bytes; sha256() hashes them. Verified for the generated text, which includes non-ASCII (é); characters outside the Basic Multilingual Plane are encoded as surrogate pairs but are not generated.",
   "Step 3 is the state form: the outcome and every row of Application.People are compared after the same call on both engines.",
-  "Step 4 is not run: the call changes the data it reads, so repeated timed runs on the same data are not the same work.",
 ];
 
 const HELPERS_NOTE = "Shared helper tsql_compat.utf16le is created by the conversion file.";

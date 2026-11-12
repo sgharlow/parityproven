@@ -66,21 +66,21 @@
     "step3": "pass",
     "step4": "pass",
     "step5": "not-run",
-    "step6": "not-run",
-    "runtimeRatio": 0.87,
+    "step6": "n/a",
+    "runtimeRatio": 0.88,
     "runtime": {
       "volume": 25,
       "timedRuns": 7,
       "sqlServerMs": 1,
-      "postgresMs": 0.87,
-      "ratio": 0.87,
+      "postgresMs": 0.88,
+      "ratio": 0.88,
       "threshold": 1.5,
       "passed": true,
       "belowResolution": true,
       "resultRows": 100,
       "volumeMismatch": null
     },
-    "rowsCompared": 198,
+    "rowsCompared": 199,
     "trapsCovered": [
       "NULL in every nullable column",
       "numeric rounding and scale (decimal edge values)",
@@ -88,10 +88,10 @@
       "ORDER BY key (ties compared as multisets)"
     ],
     "pbtSeeds": [
-      1476347547
+      1211695441
     ],
     "samples": 200,
-    "samplesWithRows": 133,
+    "samplesWithRows": 130,
     "subMicrosecondNormalised": 0,
     "mutantsDetected": [
       "no recursion limit check (rows returned up to the depth guard)",

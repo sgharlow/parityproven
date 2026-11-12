@@ -26,7 +26,7 @@
     "step3": "not-run",
     "step4": "not-run",
     "step5": "not-run",
-    "step6": "not-run",
+    "step6": "n/a",
     "failureDetail": "Not converted. The result depends on the caller's security context, not on table data: IS_ROLEMEMBER(N'db_owner'), IS_ROLEMEMBER(<SalesTerritory> + N' Sales'), ORIGINAL_LOGIN() = N'Website' and SESSION_CONTEXT(N'SalesTerritory'). PostgreSQL has counterparts (pg_has_role, session_user, current_setting), but proving equivalence needs the harness to run each sample under real logins and roles on both engines, which it does not do. Recorded as a failure, not hidden (decision 2026-11-11).",
     "harnessVersion": "none (not converted)"
   },

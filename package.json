@@ -19,6 +19,9 @@
     "predictions:score": "node dist/cli/predictions.js score",
     "receipts:build": "node dist/cli/receipts.js",
     "dispositions": "node dist/cli/dispositions.js",
+    "apply-rulings": "node dist/cli/apply-rulings.js",
+    "review-packet": "node dist/cli/review-packet.js",
+    "agreed-tests": "node dist/cli/agreed-tests.js",
     "test": "vitest run"
   },
   "dependencies": {

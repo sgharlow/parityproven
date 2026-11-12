@@ -29,6 +29,7 @@ import { SPECS, specByName } from "../conversions/specs.js";
 import { lineDiff } from "../pairs/diff.js";
 import { autoMutants } from "../conversions/automutants.js";
 import type { PairRecord } from "../pairs/schema.js";
+import { computeStatus, STEP4_NA_REASON } from "../pairs/status.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..", "..");
@@ -177,8 +178,8 @@ async function convertOne(conn: Connections, spec: ObjectSpec, seed: number, run
     await deployPgFunction(conn, spec, finalSql);
     if (spec.stateCheck) {
       // A data-changing call is not repeatable on the same data (the first call changes what the next one sees), so the
-      // median-of-runs measurement does not apply. Step 4 stays not-run; it is not claimed.
-      console.log("runtime: not measured (object changes data; step 4 not-run)");
+      // median-of-runs measurement does not apply. Step 4 is n/a for these objects (ruling 2026-11-12).
+      console.log("runtime: not measured (object changes data; step 4 n/a by ruling 2026-11-12)");
       writePair({
         spec, label, definition, draftSql, finalSql, f, detected, draftCheck, seed,
         status: "pending", step3: "pass",
@@ -252,7 +253,16 @@ function writePair(p: PairInput): void {
     },
     columnMappings: mappingsFor(spec),
     evidence: {
-      step1: "pass", step2: "not-run", step3: p.step3, step4: p.runtime ? (p.runtime.passed ? "pass" : "fail") : "not-run", step5: "not-run", step6: "not-run",
+      step1: "pass", step2: previous?.evidence.step2 ?? "not-run", step3: p.step3,
+      // ruling 2026-11-12: step 4 is n/a for objects that change data
+      step4: p.runtime ? (p.runtime.passed ? "pass" : "fail") : spec.stateCheck ? "n/a" : "not-run",
+      // a re-run of the harness does not undo a recorded second review
+      step5: previous?.evidence.step5 ?? "not-run",
+      // public sample databases: acceptance on real data does not apply
+      step6: "n/a",
+      reviewer: previous?.evidence.reviewer,
+      reviewDate: previous?.evidence.reviewDate,
+      testsRun: previous?.evidence.testsRun,
       runtimeRatio: p.runtime?.ratio,
       runtime: p.runtime,
       rowsCompared: f.rowsCompared,
@@ -273,6 +283,9 @@ function writePair(p: PairInput): void {
     },
     status: p.status,
   };
+  if (spec.stateCheck) record.code.notes = [...(record.code.notes ?? []), STEP4_NA_REASON];
+  // the harness decides steps 1, 3 and 4; the status follows the shared rule (a failure stays a failure)
+  record.status = p.status === "failed" ? "failed" : computeStatus(record.evidence);
   mkdirSync(dirname(pairPath), { recursive: true });
   writeFileSync(pairPath, JSON.stringify(record, null, 2) + "\n", "utf-8");
   console.log(`pair record written: pairs/${spec.database}/${label}.json (step1 pass, step3 ${p.step3}, status ${p.status})`);

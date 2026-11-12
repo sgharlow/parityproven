@@ -40,14 +40,14 @@
     "step3": "pass",
     "step4": "pass",
     "step5": "not-run",
-    "step6": "not-run",
-    "runtimeRatio": 0.66,
+    "step6": "n/a",
+    "runtimeRatio": 0.69,
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
       "sqlServerMs": 5,
-      "postgresMs": 3.32,
-      "ratio": 0.66,
+      "postgresMs": 3.43,
+      "ratio": 0.69,
       "threshold": 1.5,
       "passed": true,
       "belowResolution": false,
@@ -59,11 +59,11 @@
       "empty string and trailing spaces"
     ],
     "pbtSeeds": [
-      1584206028
+      1150224899
     ],
     "engineOutputCheck": {
       "step3": "fail",
-      "seed": 1584206028,
+      "seed": 1150224899,
       "detail": "fixed case \"SearchDetails: LIKE \"[a-c]\"\": value differs in group 0 (key \"*\"), column \"result\": SQL Server j:{\"StockItems\":[{\"StockItemID\":1,\"StockItemName\":\"Item0001\"},{\"StockItemID\":4,\"StockItemName\":\"Item0004\"},{\"StockItemID\":5,\"StockItemName\":\"Item0005\"}]} vs PostgreSQL j:{\"StockItems\":[{\"StockItemID\":5,\"StockItemName\":\"Item0005\"}]}"
     },
     "samples": 200,

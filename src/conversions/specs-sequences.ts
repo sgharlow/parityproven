@@ -133,7 +133,6 @@ export const SEQUENCE_SPECS: ObjectSpec[] = [
       "Identifier mapping follows this project's PostgreSQL naming: schema lower case, table snake_case, column and sequence names quoted as in SQL Server. The source resolves names case-insensitively (CI collation); the PostgreSQL version needs the names in their declared case. Only correctly cased names are generated, so case-insensitive name resolution is not claimed.",
       "sys.sequences.current_value maps to the sequence relation's last_value (measured: start value before first use, last value issued after use, restart value after RESTART WITH).",
       "Step 3 is the state form: the next value each sequence issues after the call is compared. Sequences are recreated per sample at generated start values, with 0-3 values consumed first.",
-      "Step 4 is not run: the call changes the state it reads.",
       "Harness-only table Harness.SequenceStart carries the generated sequence start values; the object does not read it.",
     ],
   },

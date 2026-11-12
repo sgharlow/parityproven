@@ -19,8 +19,8 @@
       "TRY/CATCH with XACT_ABORT, ROLLBACK and THROW (re-raise) -> an exception block that re-raises. The outcome compares the error class each engine raised (NOT NULL violation 515/23502, string truncation 8152 or 2628/22001, numeric overflow 8115/22003).",
       "Depends on Website.CalculateCustomerPrice: SQL Server runs its original definition, PostgreSQL its verified conversion. Generated special deals are dated around the day of the run so that customer pricing applies.",
       "Preconditions: OrderReference is unique within @Orders (it is the key of @OrdersToGenerate). Sales.Orders and Sales.OrderLines start empty.",
-      "Step 4 is not run: the call changes the data it reads.",
-      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step).",
+      "Step 4 is n/a for objects that change data (ruling 2026-11-12): each call changes the data it reads, so repeated timed runs on the same data are not the same work."
     ]
   },
   "columnMappings": [
@@ -112,7 +112,7 @@
     {
       "step": 4,
       "label": "Runtime within 1.5× factor",
-      "status": "not-run"
+      "status": "n/a"
     },
     {
       "step": 5,
@@ -122,16 +122,16 @@
     {
       "step": 6,
       "label": "Acceptance on real data",
-      "status": "not-run"
+      "status": "n/a"
     }
   ],
   "evidence": {
     "pbtSeeds": [
-      215915212
+      1587702404
     ],
     "rowsCompared": 209,
     "samples": 200,
-    "samplesWithRows": 180,
+    "samplesWithRows": 179,
     "trapsCovered": [
       "NULL in every nullable column",
       "numeric rounding and scale (decimal edge values)",
@@ -159,5 +159,5 @@
     "p50Hours": 3,
     "p90Hours": 6
   },
-  "builtAt": "2026-11-12T18:03:35.153Z"
+  "builtAt": "2026-11-12T23:33:17.860Z"
 }

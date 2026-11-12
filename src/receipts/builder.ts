@@ -104,6 +104,9 @@ export function buildReceipts(input: BuildInput): BuildOutput {
           subMicrosecondNormalised: evidence.subMicrosecondNormalised,
           loadTimeFindings: pair.loadTimeFindings,
           harnessVersion: evidence.harnessVersion,
+          testsRun: evidence.testsRun,
+          reviewer: evidence.reviewer,
+          reviewDate: evidence.reviewDate,
         },
         effort: pair.effort,
         predictionCell: predCell

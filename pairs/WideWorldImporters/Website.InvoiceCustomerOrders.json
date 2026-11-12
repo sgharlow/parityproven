@@ -24,8 +24,8 @@
       "TRY/CATCH with XACT_ABORT, THROW 51000 and THROW (re-raise) -> an exception block that undoes every write and re-raises the same error. The outcome compares the error class each engine raised.",
       "Transaction types are looked up by name ('Stock Issue', 'Customer Invoice'). SQL Server compares under the database's case-insensitive collation and PostgreSQL case-sensitively; the generated names are the source's exact names, so case differences are not claimed.",
       "Scratch modelling: Sales.InvoiceLines.InvoiceLineID is an identity column (a sequence default in the source; the procedure only uses it to order inserts). StockItemTransactionID and CustomerTransactionID (sequence defaults, not referenced) are not modelled.",
-      "Step 4 is not run: the call changes the data it reads.",
-      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step).",
+      "Step 4 is n/a for objects that change data (ruling 2026-11-12): each call changes the data it reads, so repeated timed runs on the same data are not the same work."
     ]
   },
   "columnMappings": [
@@ -105,9 +105,9 @@
     "step1": "pass",
     "step2": "not-run",
     "step3": "pass",
-    "step4": "not-run",
+    "step4": "n/a",
     "step5": "not-run",
-    "step6": "not-run",
+    "step6": "n/a",
     "rowsCompared": 206,
     "trapsCovered": [
       "NULL in every nullable column",
@@ -117,11 +117,11 @@
       "state after the call (every row of the changed tables) and the error outcome"
     ],
     "pbtSeeds": [
-      281453508
+      1519383177
     ],
     "samples": 200,
-    "samplesWithRows": 89,
-    "subMicrosecondNormalised": 693,
+    "samplesWithRows": 78,
+    "subMicrosecondNormalised": 714,
     "mutantsDetected": [
       "unpicked orders are invoiced",
       "chiller and dry item counts swapped",

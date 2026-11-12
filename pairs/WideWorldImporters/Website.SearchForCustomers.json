@@ -49,14 +49,14 @@
     "step3": "pass",
     "step4": "fail",
     "step5": "not-run",
-    "step6": "not-run",
-    "runtimeRatio": 3.27,
+    "step6": "n/a",
+    "runtimeRatio": 2.36,
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
-      "sqlServerMs": 6,
-      "postgresMs": 19.6,
-      "ratio": 3.27,
+      "sqlServerMs": 5,
+      "postgresMs": 11.8,
+      "ratio": 2.36,
       "threshold": 1.5,
       "passed": false,
       "belowResolution": false,
@@ -68,7 +68,7 @@
       "empty string and trailing spaces"
     ],
     "pbtSeeds": [
-      2069392384
+      970416841
     ],
     "samples": 200,
     "samplesWithRows": 200,
@@ -83,7 +83,7 @@
       "ILIKE path is case-sensitive (LIKE)",
       "|| instead of concat (NULL contact hides the customer)"
     ],
-    "failureDetail": "Step 4: PostgreSQL 19.6 ms vs SQL Server 6 ms = 3.27x, above the 1.5x limit. Results are equivalent (step 3 pass); see the notes for the cause.",
+    "failureDetail": "Step 4: PostgreSQL 11.8 ms vs SQL Server 5 ms = 2.36x, above the 1.5x limit. Results are equivalent (step 3 pass); see the notes for the cause.",
     "harnessVersion": "harness-generic-0.3.0"
   },
   "effort": {

@@ -17,8 +17,8 @@
       "OPENJSON ... WITH is reproduced by tsql_compat helpers on the json type (not jsonb, which would normalise the AS JSON text): lax paths with the first duplicate key winning; object and array values read as NULL for scalar columns; nvarchar(40) truncation; an object at $.Recordings is one row (the object) whose '$' AS JSON is NULL; T-SQL string conversion rules for int, decimal(18,2) and datetime2 as measured on SQL Server 2025 at compatibility level 130.",
       "datetime2 strings: only the measured formats are generated (ISO with T and seconds, space-separated, date only, yyyymmdd, m/d/yyyy, empty string = 1900-01-01, time-zone suffix ignored). Values with more than 6 fractional digits are not generated: PostgreSQL timestamp holds microseconds.",
       "The scratch Warehouse.VehicleTemperatures is a disk-based table without the identity column (the procedure does not reference it). In the source it is memory-optimized; the procedure is interpreted T-SQL, so storage does not change its result.",
-      "Step 4 is not run: the call changes the data it reads.",
-      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step).",
+      "Step 4 is n/a for objects that change data (ruling 2026-11-12): each call changes the data it reads, so repeated timed runs on the same data are not the same work."
     ]
   },
   "columnMappings": [
@@ -72,7 +72,7 @@
     {
       "step": 4,
       "label": "Runtime within 1.5× factor",
-      "status": "not-run"
+      "status": "n/a"
     },
     {
       "step": 5,
@@ -82,16 +82,16 @@
     {
       "step": 6,
       "label": "Acceptance on real data",
-      "status": "not-run"
+      "status": "n/a"
     }
   ],
   "evidence": {
     "pbtSeeds": [
-      1445796697
+      1078809522
     ],
     "rowsCompared": 212,
     "samples": 200,
-    "samplesWithRows": 106,
+    "samplesWithRows": 105,
     "trapsCovered": [
       "NULL in every nullable column",
       "numeric rounding and scale (decimal edge values)",
@@ -107,7 +107,7 @@
       "decimal accepts exponent notation",
       "AS JSON fragment normalised (jsonb)"
     ],
-    "subMicrosecondNormalised": 82,
+    "subMicrosecondNormalised": 85,
     "harnessVersion": "harness-generic-0.3.0"
   },
   "effort": {
@@ -119,5 +119,5 @@
     "p50Hours": 3,
     "p90Hours": 6
   },
-  "builtAt": "2026-11-12T18:03:35.163Z"
+  "builtAt": "2026-11-12T23:33:17.860Z"
 }

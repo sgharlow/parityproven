@@ -48,14 +48,14 @@
     "step3": "pass",
     "step4": "fail",
     "step5": "not-run",
-    "step6": "not-run",
-    "runtimeRatio": 2.2,
+    "step6": "n/a",
+    "runtimeRatio": 2,
     "runtime": {
       "volume": 2000,
       "timedRuns": 7,
-      "sqlServerMs": 76,
-      "postgresMs": 166.83,
-      "ratio": 2.2,
+      "sqlServerMs": 70,
+      "postgresMs": 139.83,
+      "ratio": 2,
       "threshold": 1.5,
       "passed": false,
       "belowResolution": false,
@@ -67,16 +67,16 @@
       "NULL in every nullable column"
     ],
     "pbtSeeds": [
-      1663967597
+      1607008544
     ],
     "samples": 200,
-    "samplesWithRows": 129,
+    "samplesWithRows": 130,
     "subMicrosecondNormalised": 0,
     "mutantsDetected": [
       "auto: join condition uses a different key",
       "auto: first AND becomes OR"
     ],
-    "failureDetail": "Step 4: PostgreSQL 166.83 ms vs SQL Server 76 ms = 2.2x, above the 1.5x limit. Results are equivalent (step 3 pass); see the notes for the cause.",
+    "failureDetail": "Step 4: PostgreSQL 139.83 ms vs SQL Server 70 ms = 2x, above the 1.5x limit. Results are equivalent (step 3 pass); see the notes for the cause.",
     "harnessVersion": "harness-generic-0.3.0"
   },
   "effort": {

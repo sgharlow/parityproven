@@ -26,7 +26,7 @@
     "step3": "pass",
     "step4": "pass",
     "step5": "not-run",
-    "step6": "not-run",
+    "step6": "n/a",
     "runtimeRatio": 0,
     "runtime": {
       "volume": 10,
@@ -43,7 +43,7 @@
     "rowsCompared": 200,
     "trapsCovered": [],
     "pbtSeeds": [
-      545961035
+      981850092
     ],
     "samples": 200,
     "samplesWithRows": 200,

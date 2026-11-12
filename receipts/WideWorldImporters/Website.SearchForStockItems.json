@@ -59,12 +59,12 @@
     {
       "step": 6,
       "label": "Acceptance on real data",
-      "status": "not-run"
+      "status": "n/a"
     }
   ],
   "evidence": {
     "pbtSeeds": [
-      1584206028
+      1150224899
     ],
     "rowsCompared": 207,
     "samples": 200,
@@ -83,8 +83,8 @@
       "volume": 5000,
       "timedRuns": 7,
       "sqlServerMs": 5,
-      "postgresMs": 3.32,
-      "ratio": 0.66,
+      "postgresMs": 3.43,
+      "ratio": 0.69,
       "threshold": 1.5,
       "passed": true,
       "belowResolution": false,
@@ -93,7 +93,7 @@
     },
     "engineOutputCheck": {
       "step3": "fail",
-      "seed": 1584206028,
+      "seed": 1150224899,
       "detail": "fixed case \"SearchDetails: LIKE \"[a-c]\"\": value differs in group 0 (key \"*\"), column \"result\": SQL Server j:{\"StockItems\":[{\"StockItemID\":1,\"StockItemName\":\"Item0001\"},{\"StockItemID\":4,\"StockItemName\":\"Item0004\"},{\"StockItemID\":5,\"StockItemName\":\"Item0005\"}]} vs PostgreSQL j:{\"StockItems\":[{\"StockItemID\":5,\"StockItemName\":\"Item0005\"}]}"
     },
     "subMicrosecondNormalised": 0,
@@ -108,5 +108,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-12T18:03:35.173Z"
+  "builtAt": "2026-11-12T23:33:17.862Z"
 }

@@ -130,11 +130,18 @@ async function initReceipt() {
     ? `<div class="banner-warning">⚠️ This object has not passed all 6 verification steps. Status: <strong>${receipt.status}</strong>.${failureNote}</div>`
     : '';
 
+  const stepDetail = (n) => {
+    const e = receipt.evidence;
+    if (n === 2 && e.testsRun?.length) return `<span style="color:var(--c-muted);font-size:0.85rem">${e.testsRun.length} agreed test(s) on each engine</span>`;
+    if (n === 5 && e.reviewer) return `<span style="color:var(--c-muted);font-size:0.85rem">by ${esc(e.reviewer)} on ${esc(e.reviewDate ?? '')}</span>`;
+    return '';
+  };
   const stepsHtml = receipt.verificationSteps.map(s => `
     <li>
       <span class="step-num">${s.step}</span>
       ${statusBadge(s.status)}
       <span>${esc(s.label)}</span>
+      ${stepDetail(s.step)}
     </li>`).join('');
 
   const ev = receipt.evidence;
@@ -158,6 +165,9 @@ async function initReceipt() {
     : '';
   const precision = ev.subMicrosecondNormalised
     ? `<li><strong>Load-time finding:</strong> ${ev.subMicrosecondNormalised} generated datetime2(7) values had sub-microsecond ticks that PostgreSQL <code>timestamp</code> cannot hold; they were normalised to microseconds on both engines before comparing.</li>` : '';
+
+  const testsHtml = ev.testsRun?.length
+    ? `<h3>Agreed tests (step 2)</h3><ul>${ev.testsRun.map(t => `<li style="font-size:0.85rem">${esc(t)}</li>`).join('')}</ul>` : '';
 
   const pbtHtml = ev.pbtSeeds?.length
     ? `<ul style="padding-left:1.2rem">
@@ -211,7 +221,7 @@ async function initReceipt() {
     <div class="card">
       <div style="display:flex;gap:2rem;flex-wrap:wrap;font-size:0.875rem">
         <div><span style="color:var(--c-muted)">Engine:</span> ${esc(receipt.code.engine)}</div>
-        <div><span style="color:var(--c-muted)">Human effort:</span> ${receipt.effort.humanMinutes}min</div>
+        <div><span style="color:var(--c-muted)">Human effort:</span> ${receipt.effort.humanMinutes > 0 ? `${receipt.effort.humanMinutes} min` : '<span style="color:var(--c-muted)">not logged</span>'}</div>
         <div><span style="color:var(--c-muted)">Prediction:</span> ${predHtml}</div>
       </div>
     </div>
@@ -233,6 +243,7 @@ async function initReceipt() {
 
     <h2>Evidence</h2>
     ${pbtHtml}
+    ${testsHtml}
     ${loadFindings}
 
     <p style="color:var(--c-muted);font-size:0.78rem;margin-top:2rem">Receipt built ${new Date(receipt.builtAt).toLocaleString()}</p>`;

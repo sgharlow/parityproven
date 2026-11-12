@@ -58,7 +58,6 @@ export const COLDROOM_SPECS: ObjectSpec[] = [
       "SELECT @a = ... WHERE SensorDataListID = @Counter leaves the variables unchanged when no row matches; the conversion keeps the previous values in that case too (it cannot happen with identity-assigned IDs, which have no gaps).",
       "Scratch modelling: the SQL Server call fills a table variable of Website.SensorDataList (memory-optimized, SensorDataListID IDENTITY as in the source) one INSERT per reading, so the readings are numbered 1..n; PostgreSQL receives the same readings with the same numbers. Warehouse.ColdRoomTemperatures is memory-optimized but not system-versioned and has no identity key; the procedure references neither.",
       "Step 3 is the state form: whether each engine raised, and every row of Warehouse.ColdRoomTemperatures (compared as a multiset; the table has no key the procedure uses).",
-      "Step 4 is not run: the call changes the data it reads.",
     ],
   },
 ];

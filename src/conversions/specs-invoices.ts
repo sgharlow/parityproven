@@ -260,7 +260,6 @@ export const INVOICE_SPECS: ObjectSpec[] = [
       "TRY/CATCH with XACT_ABORT, THROW 51000 and THROW (re-raise) -> an exception block that undoes every write and re-raises the same error. The outcome compares the error class each engine raised.",
       "Transaction types are looked up by name ('Stock Issue', 'Customer Invoice'). SQL Server compares under the database's case-insensitive collation and PostgreSQL case-sensitively; the generated names are the source's exact names, so case differences are not claimed.",
       "Scratch modelling: Sales.InvoiceLines.InvoiceLineID is an identity column (a sequence default in the source; the procedure only uses it to order inserts). StockItemTransactionID and CustomerTransactionID (sequence defaults, not referenced) are not modelled.",
-      "Step 4 is not run: the call changes the data it reads.",
     ],
   },
 ];

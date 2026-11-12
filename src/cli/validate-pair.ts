@@ -8,6 +8,7 @@
 
 import { readFileSync, existsSync } from "fs";
 import type { PairRecord, StepStatus } from "../pairs/schema.js";
+import { computeStatus, missingForVerified } from "../pairs/status.js";
 
 const VALID_STEP_STATUSES: StepStatus[] = ["pass", "fail", "not-run", "n/a"];
 const VALID_STATUSES = ["pending", "failed", "verified"] as const;
@@ -73,13 +74,9 @@ function validatePairRecord(record: unknown): string[] {
     if (!e["harnessVersion"]) {
       errors.push("evidence.harnessVersion is required");
     }
-    // Consistency: status=verified requires all steps 1-4 = pass
-    if (r["status"] === "verified") {
-      for (const step of ["step1", "step2", "step3", "step4"]) {
-        if (e[step] !== "pass") {
-          errors.push(`status is "verified" but evidence.${step} is "${e[step]}" — all steps 1-4 must be "pass" for verified status`);
-        }
-      }
+    // Consistency: "verified" exactly as the status rule (src/pairs/status.ts) defines it
+    if (r["status"] === "verified" && computeStatus(e as unknown as PairRecord["evidence"]) !== "verified") {
+      errors.push(`status is "verified" but the steps do not allow it (needs ${missingForVerified(e as unknown as PairRecord["evidence"]).join(", ")})`);
     }
   }
 

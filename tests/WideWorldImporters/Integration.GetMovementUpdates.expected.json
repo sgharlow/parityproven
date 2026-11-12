@@ -1,0 +1,92 @@
+{
+  "object": "Integration.GetMovementUpdates",
+  "database": "WideWorldImporters",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-12T23:26:51.461Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "fractional Quantity (decimal -> int cast)",
+      "columns": [
+        {
+          "name": "Date Key",
+          "sqlServerType": "date"
+        },
+        {
+          "name": "WWI Stock Item Transaction ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Invoice ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Purchase Order ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Quantity",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Stock Item ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Customer ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Supplier ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Transaction Type ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Transaction Occurred When",
+          "sqlServerType": "datetime2(7)"
+        }
+      ],
+      "rows": [
+        [
+          "d:2020-06-15",
+          "n:1",
+          "∅",
+          "∅",
+          "n:2",
+          "n:1",
+          "∅",
+          "∅",
+          "n:1",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-15",
+          "n:2",
+          "∅",
+          "∅",
+          "n:-2",
+          "n:1",
+          "∅",
+          "∅",
+          "n:1",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-15",
+          "n:3",
+          "∅",
+          "∅",
+          "n:0",
+          "n:1",
+          "∅",
+          "∅",
+          "n:1",
+          "t:2020-06-15T12:00:00.000000"
+        ]
+      ]
+    }
+  ]
+}

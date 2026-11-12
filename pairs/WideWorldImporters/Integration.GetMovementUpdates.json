@@ -41,25 +41,25 @@
   ],
   "evidence": {
     "step1": "pass",
-    "step2": "not-run",
+    "step2": "pass",
     "step3": "pass",
     "step4": "pass",
     "step5": "not-run",
-    "step6": "not-run",
-    "runtimeRatio": 0.32,
+    "step6": "n/a",
+    "runtimeRatio": 0.35,
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
       "sqlServerMs": 7,
-      "postgresMs": 2.27,
-      "ratio": 0.32,
+      "postgresMs": 2.48,
+      "ratio": 0.35,
       "threshold": 1.5,
       "passed": true,
       "belowResolution": false,
-      "resultRows": 3119,
+      "resultRows": 3126,
       "volumeMismatch": null
     },
-    "rowsCompared": 178,
+    "rowsCompared": 194,
     "trapsCovered": [
       "NULL in every nullable column",
       "numeric rounding and scale (decimal edge values)",
@@ -67,21 +67,27 @@
       "ORDER BY key (ties compared as multisets)"
     ],
     "pbtSeeds": [
-      362396954
+      1708074372
     ],
     "engineOutputCheck": {
       "step3": "fail",
-      "seed": 362396954,
+      "seed": 1708074372,
       "detail": "fixed case \"fractional Quantity (decimal -> int cast)\": value differs in group 0 (key \"n:1\"), column \"Quantity\": SQL Server n:2 vs PostgreSQL n:3"
     },
     "samples": 200,
-    "samplesWithRows": 115,
-    "subMicrosecondNormalised": 963,
+    "samplesWithRows": 126,
+    "subMicrosecondNormalised": 998,
     "mutantsDetected": [
       "Quantity rounds instead of truncating",
       "upper cutoff exclusive"
     ],
-    "harnessVersion": "harness-generic-0.3.0"
+    "harnessVersion": "harness-generic-0.3.0",
+    "testsRun": [
+      "tSQLt V1.0.8083.3529 on SQL Server (tests/WideWorldImporters/Integration.GetMovementUpdates.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/WideWorldImporters/Integration.GetMovementUpdates.pg.sql); expected results tests/WideWorldImporters/Integration.GetMovementUpdates.expected.json",
+      "SQL Server: AgreedTests.[test 01 fractional Quantity (decimal -> int cast)]: pass",
+      "PostgreSQL: AgreedTests.[test 01 fractional Quantity (decimal -> int cast)]: pass",
+      "planted defects caught by the agreed tests: 1 of 2"
+    ]
   },
   "effort": {
     "humanMinutes": 0,

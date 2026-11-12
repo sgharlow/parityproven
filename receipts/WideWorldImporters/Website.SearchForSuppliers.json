@@ -68,12 +68,12 @@
     {
       "step": 6,
       "label": "Acceptance on real data",
-      "status": "not-run"
+      "status": "n/a"
     }
   ],
   "evidence": {
     "pbtSeeds": [
-      1648949262
+      1401826337
     ],
     "rowsCompared": 207,
     "samples": 200,
@@ -91,13 +91,13 @@
       "ILIKE path is case-sensitive (LIKE)",
       "|| instead of concat (NULL contact hides the supplier)"
     ],
-    "failureDetail": "Step 4: PostgreSQL 14.05 ms vs SQL Server 5 ms = 2.81x, above the 1.5x limit. Results are equivalent (step 3 pass); see the notes for the cause.",
+    "failureDetail": "Step 4: PostgreSQL 12.99 ms vs SQL Server 5 ms = 2.6x, above the 1.5x limit. Results are equivalent (step 3 pass); see the notes for the cause.",
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
       "sqlServerMs": 5,
-      "postgresMs": 14.05,
-      "ratio": 2.81,
+      "postgresMs": 12.99,
+      "ratio": 2.6,
       "threshold": 1.5,
       "passed": false,
       "belowResolution": false,
@@ -116,5 +116,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-12T18:03:35.180Z"
+  "builtAt": "2026-11-12T23:33:17.862Z"
 }

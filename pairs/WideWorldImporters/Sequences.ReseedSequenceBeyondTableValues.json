@@ -20,9 +20,9 @@
       "Identifier mapping follows this project's PostgreSQL naming: schema lower case, table snake_case, column and sequence names quoted as in SQL Server. The source resolves names case-insensitively (CI collation); the PostgreSQL version needs the names in their declared case. Only correctly cased names are generated, so case-insensitive name resolution is not claimed.",
       "sys.sequences.current_value maps to the sequence relation's last_value (measured: start value before first use, last value issued after use, restart value after RESTART WITH).",
       "Step 3 is the state form: the next value each sequence issues after the call is compared. Sequences are recreated per sample at generated start values, with 0-3 values consumed first.",
-      "Step 4 is not run: the call changes the state it reads.",
       "Harness-only table Harness.SequenceStart carries the generated sequence start values; the object does not read it.",
-      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step).",
+      "Step 4 is n/a for objects that change data (ruling 2026-11-12): each call changes the data it reads, so repeated timed runs on the same data are not the same work."
     ]
   },
   "columnMappings": [
@@ -43,9 +43,9 @@
     "step1": "pass",
     "step2": "not-run",
     "step3": "pass",
-    "step4": "not-run",
+    "step4": "n/a",
     "step5": "not-run",
-    "step6": "not-run",
+    "step6": "n/a",
     "rowsCompared": 207,
     "trapsCovered": [
       "NULL in every nullable column",
@@ -53,15 +53,15 @@
       "state after the call (every row of the changed tables) and the error outcome"
     ],
     "pbtSeeds": [
-      656735272
+      1574381440
     ],
     "engineOutputCheck": {
       "step3": "fail",
-      "seed": 656735272,
+      "seed": 1574381440,
       "detail": "relation \"Sales.Orders\" does not exist"
     },
     "samples": 200,
-    "samplesWithRows": 128,
+    "samplesWithRows": 117,
     "subMicrosecondNormalised": 0,
     "mutantsDetected": [
       "reads pg_sequences.last_value (NULL after a restart or before first use)",

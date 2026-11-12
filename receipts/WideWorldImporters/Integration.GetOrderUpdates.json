@@ -84,16 +84,16 @@
     {
       "step": 6,
       "label": "Acceptance on real data",
-      "status": "not-run"
+      "status": "n/a"
     }
   ],
   "evidence": {
     "pbtSeeds": [
-      1696677720
+      2046834710
     ],
-    "rowsCompared": 130,
+    "rowsCompared": 157,
     "samples": 200,
-    "samplesWithRows": 90,
+    "samplesWithRows": 102,
     "trapsCovered": [
       "NULL in every nullable column",
       "numeric rounding and scale (decimal edge values)",
@@ -108,16 +108,16 @@
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
-      "sqlServerMs": 41,
-      "postgresMs": 15.76,
-      "ratio": 0.38,
+      "sqlServerMs": 50,
+      "postgresMs": 15.06,
+      "ratio": 0.3,
       "threshold": 1.5,
       "passed": true,
       "belowResolution": false,
-      "resultRows": 3506,
+      "resultRows": 3467,
       "volumeMismatch": null
     },
-    "subMicrosecondNormalised": 1132,
+    "subMicrosecondNormalised": 1190,
     "harnessVersion": "harness-generic-0.3.0"
   },
   "effort": {
@@ -129,5 +129,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-12T18:03:35.128Z"
+  "builtAt": "2026-11-12T23:33:17.858Z"
 }

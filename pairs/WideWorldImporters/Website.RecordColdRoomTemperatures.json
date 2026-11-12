@@ -21,8 +21,8 @@
       "SELECT @a = ... WHERE SensorDataListID = @Counter leaves the variables unchanged when no row matches; the conversion keeps the previous values in that case too (it cannot happen with identity-assigned IDs, which have no gaps).",
       "Scratch modelling: the SQL Server call fills a table variable of Website.SensorDataList (memory-optimized, SensorDataListID IDENTITY as in the source) one INSERT per reading, so the readings are numbered 1..n; PostgreSQL receives the same readings with the same numbers. Warehouse.ColdRoomTemperatures is memory-optimized but not system-versioned and has no identity key; the procedure references neither.",
       "Step 3 is the state form: whether each engine raised, and every row of Warehouse.ColdRoomTemperatures (compared as a multiset; the table has no key the procedure uses).",
-      "Step 4 is not run: the call changes the data it reads.",
-      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step).",
+      "Step 4 is n/a for objects that change data (ruling 2026-11-12): each call changes the data it reads, so repeated timed runs on the same data are not the same work."
     ]
   },
   "columnMappings": [
@@ -57,9 +57,9 @@
     "step1": "pass",
     "step2": "not-run",
     "step3": "pass",
-    "step4": "not-run",
+    "step4": "n/a",
     "step5": "not-run",
-    "step6": "not-run",
+    "step6": "n/a",
     "rowsCompared": 205,
     "trapsCovered": [
       "NULL in every nullable column",
@@ -68,11 +68,11 @@
       "state after the call (every row of the changed tables) and the error outcome"
     ],
     "pbtSeeds": [
-      1882481152
+      1668109746
     ],
     "samples": 200,
-    "samplesWithRows": 74,
-    "subMicrosecondNormalised": 557,
+    "samplesWithRows": 68,
+    "subMicrosecondNormalised": 601,
     "mutantsDetected": [
       "insert even when the update found rows",
       "loop bounds swapped (a call with several readings applies none)",

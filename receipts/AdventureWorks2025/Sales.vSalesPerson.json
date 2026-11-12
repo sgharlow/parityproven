@@ -84,7 +84,7 @@
     {
       "step": 2,
       "label": "Agreed tests pass (tSQLt / pgTAP)",
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "step": 3,
@@ -104,16 +104,16 @@
     {
       "step": 6,
       "label": "Acceptance on real data",
-      "status": "not-run"
+      "status": "n/a"
     }
   ],
   "evidence": {
     "pbtSeeds": [
-      1778446189
+      185133778
     ],
-    "rowsCompared": 316,
+    "rowsCompared": 250,
     "samples": 200,
-    "samplesWithRows": 126,
+    "samplesWithRows": 118,
     "trapsCovered": [
       "NULL in every nullable column",
       "empty string and trailing spaces"
@@ -125,17 +125,23 @@
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
-      "sqlServerMs": 73,
-      "postgresMs": 25.73,
-      "ratio": 0.35,
+      "sqlServerMs": 63,
+      "postgresMs": 26.06,
+      "ratio": 0.41,
       "threshold": 1.5,
       "passed": true,
       "belowResolution": false,
-      "resultRows": 6908,
+      "resultRows": 6902,
       "volumeMismatch": null
     },
     "subMicrosecondNormalised": 0,
-    "harnessVersion": "harness-generic-0.3.0"
+    "harnessVersion": "harness-generic-0.3.0",
+    "testsRun": [
+      "tSQLt V1.0.8083.3529 on SQL Server (tests/AdventureWorks2025/Sales.vSalesPerson.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/AdventureWorks2025/Sales.vSalesPerson.pg.sql); expected results tests/AdventureWorks2025/Sales.vSalesPerson.expected.json",
+      "SQL Server: AgreedTests.[test 01 no territory, two phones, no email; trailing space kept; a sales person without an address is dropped]: pass",
+      "PostgreSQL: AgreedTests.[test 01 no territory, two phones, no email; trailing space kept; a sales person without an address is dropped]: pass",
+      "planted defects caught by the agreed tests: 2 of 2"
+    ]
   },
   "effort": {
     "humanMinutes": 0,
@@ -146,5 +152,5 @@
     "p50Hours": 0.75,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-12T18:03:35.115Z"
+  "builtAt": "2026-11-12T23:33:17.853Z"
 }

@@ -15,7 +15,7 @@ import { microsToIso } from "./rows.js";
 
 type DtDate = Date & { nanosecondsDelta?: number };
 
-function canonicalCell(value: unknown, declaredType: string, isJson = false): string {
+export function canonicalCell(value: unknown, declaredType: string, isJson = false): string {
   if (value === null || value === undefined) return "∅";
   if (isJson && typeof value === "string") {
     // Compared as a parsed value: whitespace and escaping are normalised; key order, array order, nulls and strings are kept.

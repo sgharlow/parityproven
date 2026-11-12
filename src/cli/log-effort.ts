@@ -17,6 +17,7 @@ import { fileURLToPath } from "url";
 import { existsSync, readFileSync, writeFileSync, readdirSync } from "fs";
 import { execFileSync } from "child_process";
 import type { PairRecord } from "../pairs/schema.js";
+import { computeStatus, missingForVerified } from "../pairs/status.js";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const arg = (n: string): string | undefined => {
@@ -76,16 +77,14 @@ function main(): void {
   if (rec.evidence.step6 === "not-run" && typeof rec.origin === "object") rec.evidence.step6 = "n/a";
 
   const e = rec.evidence;
-  const core = [e.step1, e.step2, e.step3, e.step4];
-  if (core.includes("fail") || e.step5 === "fail") rec.status = "failed";
-  else if (core.every((s) => s === "pass") && e.step5 === "pass") rec.status = "verified";
-  else rec.status = before === "failed" ? "failed" : "pending";
+  const computed = computeStatus(e);
+  // a record failed for a reason outside the steps (e.g. not converted) stays failed
+  rec.status = computed === "pending" && before === "failed" ? "failed" : computed;
 
   writeFileSync(path, JSON.stringify(rec, null, 2) + "\n", "utf-8");
   if (rec.status !== before) console.log(`${object}: status ${before} -> ${rec.status}`);
   else if (rec.status !== "verified") {
-    const missing = (["step1", "step2", "step3", "step4", "step5"] as const).filter((s) => e[s] !== "pass");
-    console.log(`${object}: status stays ${rec.status} (not yet passing: ${missing.join(", ")})`);
+    console.log(`${object}: status stays ${rec.status} (not yet passing: ${missingForVerified(e).join(", ")})`);
   }
 }
 

@@ -55,30 +55,30 @@
     "step3": "pass",
     "step4": "pass",
     "step5": "not-run",
-    "step6": "not-run",
-    "runtimeRatio": 0.28,
+    "step6": "n/a",
+    "runtimeRatio": 0.4,
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
-      "sqlServerMs": 36,
-      "postgresMs": 10.19,
-      "ratio": 0.28,
+      "sqlServerMs": 31,
+      "postgresMs": 12.36,
+      "ratio": 0.4,
       "threshold": 1.5,
       "passed": true,
       "belowResolution": false,
       "resultRows": 5000,
       "volumeMismatch": null
     },
-    "rowsCompared": 196,
+    "rowsCompared": 190,
     "trapsCovered": [
       "NULL in every nullable column",
       "empty string and trailing spaces"
     ],
     "pbtSeeds": [
-      995394417
+      1221632823
     ],
     "samples": 200,
-    "samplesWithRows": 111,
+    "samplesWithRows": 112,
     "subMicrosecondNormalised": 0,
     "mutantsDetected": [
       "auto: two output columns swap values",

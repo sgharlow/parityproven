@@ -17,7 +17,9 @@ export interface FailurePredictionScore {
   schema: string;
   object: string;
   reason: string;
-  confirmed: boolean | null;  // null = not yet run
+  confirmed: boolean | null;  // null = not yet run (or recorded as not converted)
+  /** Recorded as not converted: the prediction is neither confirmed nor refuted. */
+  notAttempted?: boolean;
 }
 
 export interface ScoreResult {
@@ -85,8 +87,10 @@ export function scorePredictions(
 
   const failurePredictions: FailurePredictionScore[] = pred.expectedFailures.map((ef) => {
     const matchingPair = findPair(ef.schema, ef.object);
-    const confirmed: boolean | null = matchingPair ? matchingPair.status === "failed" : null;
-    return { schema: ef.schema, object: ef.object, reason: ef.reason, confirmed };
+    // a record of an object that was never converted does not test the prediction either way
+    const attempted = matchingPair && matchingPair.code.engine !== "not converted";
+    const confirmed: boolean | null = attempted ? matchingPair.status === "failed" : null;
+    return { schema: ef.schema, object: ef.object, reason: ef.reason, confirmed, notAttempted: !!matchingPair && !attempted };
   });
 
   // outcomes nobody predicted: failures that were not on the expected-failure list
@@ -129,11 +133,12 @@ export function formatScoreTable(result: ScoreResult): string {
 
   const predicted = result.failurePredictions.length;
   const confirmed = result.failurePredictions.filter((f) => f.confirmed === true).length;
-  const notRun    = result.failurePredictions.filter((f) => f.confirmed === null).length;
+  const notAttempted = result.failurePredictions.filter((f) => f.notAttempted).length;
+  const notRun    = result.failurePredictions.filter((f) => f.confirmed === null && !f.notAttempted).length;
   const passedInstead = result.failurePredictions.filter((f) => f.confirmed === false).length;
   const surprises = result.unpredictedFailures ?? [];
   const failureLine =
-    `Expected failures: ${predicted} predicted, ${confirmed} confirmed, ${passedInstead} did not fail, ${notRun} not-yet-run` +
+    `Expected failures: ${predicted} predicted, ${confirmed} confirmed, ${passedInstead} did not fail, ${notAttempted} recorded as not converted (not tested), ${notRun} not-yet-run` +
     `\nUnpredicted failures: ${surprises.length}${surprises.length ? "\n" + surprises.map((s) => `  - ${s.object}: ${s.detail}`).join("\n") : ""}`;
 
   return [header, HR, headerRow, HR, ...dataRows, HR, failureLine].join("\n");

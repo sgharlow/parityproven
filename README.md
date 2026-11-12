@@ -53,7 +53,7 @@ For each object, `convert`:
 4. Deploys the final conversion (verification step 1) and runs a seeded fast-check property: generated rows are loaded into both engines, each object runs on its own engine through its own client, and results are compared on row count, column names, values and order (order only where the source `ORDER BY` guarantees it; ties compare as multisets).
 5. Requires every **planted defect** (mutant of the final conversion) to be reported as failing. A harness that has never been seen failing is not evidence. Objects that declare no defects get two generated ones (`src/conversions/automutants.ts`).
 6. Refuses to record a pass if too few samples returned any rows (the property would be vacuous).
-7. Writes `pairs/<db>/<Object>.json` with the step 1, 3 and 4 results. Steps 2, 5 and 6 stay `not-run` until they are actually performed.
+7. Writes `pairs/<db>/<Object>.json` with the step 1, 3 and 4 results. Steps 2 and 5 stay `not-run` until they are actually performed. Step 6 (acceptance on real data) is `n/a` for public sample databases, and step 4 is `n/a` for objects that change data (rulings of 2026-11-12 in `.kiro/steering/verification-standard.md`).
 
 8. Measures **step 4**, runtime within 1.5×: the same synthetic volume is loaded into both engines, and server-side execution time is compared (`SET STATISTICS TIME` vs `EXPLAIN ANALYZE`, median of 7). The full result set at volume is compared too.
 
@@ -68,9 +68,14 @@ npm run log-effort -- --object Sales.vSalesPerson --minutes 20   # add human rev
 npm run log-effort -- --object Sales.vSalesPerson --review "Name" --date 2026-11-12   # record step 5
 npm run predictions:score -- --database WideWorldImporters       # predicted vs actual, incl. unpredicted failures
 pwsh scripts/run-all.ps1                                         # every object, one at a time, time-limited
+pwsh scripts/get-tsqlt.ps1                                       # pinned tSQLt from tsqlt.org, sha256 checked (for step 2)
+npm run agreed-tests -- --object Website.ChangePassword          # step 2: tSQLt + plain-SQL assertions from the fixed cases
+npm run review-packet -- --object Website.ChangePassword         # step 5: review packet for a human reviewer
 ```
 
-An object becomes **verified** only when steps 1–4 pass and step 5 (a second review at least a day after the first pass) is recorded. Step 2 (tSQLt/pgTAP) is not implemented yet, so no object is verified today.
+**Step 2 (agreed tests)** turns an object's hand-derived fixed cases into a tSQLt test class for SQL Server and a plain-SQL assertion script for PostgreSQL (pgTAP is not in the pinned PostgreSQL image). Expected results are captured once from the original T-SQL and committed in `tests/<db>/<Object>.expected.json`, so a reviewer can check them against each case's label at step 5. `agreed-tests` also deploys each planted defect and reports how many the agreed tests catch (the gate for planted defects remains step 3).
+
+An object becomes **verified** only when steps 1, 2 and 3 pass, step 4 passes or is ruled n/a, and step 5 (a second review at least a day after the first pass) is recorded. Step 2 has run for four objects so far (`Integration.GetMovementUpdates`, `Website.CalculateCustomerPrice`, `Sales.vSalesPerson`, `Website.ChangePassword`); no second review is recorded yet, so no object is verified today.
 
 ### Known limits
 

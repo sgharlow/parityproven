@@ -36,14 +36,14 @@
     "step3": "pass",
     "step4": "fail",
     "step5": "not-run",
-    "step6": "not-run",
-    "runtimeRatio": 1.99,
+    "step6": "n/a",
+    "runtimeRatio": 2.02,
     "runtime": {
       "volume": 2000,
       "timedRuns": 7,
-      "sqlServerMs": 62,
-      "postgresMs": 123.32,
-      "ratio": 1.99,
+      "sqlServerMs": 59,
+      "postgresMs": 119.12,
+      "ratio": 2.02,
       "threshold": 1.5,
       "passed": false,
       "belowResolution": false,
@@ -53,7 +53,7 @@
     "rowsCompared": 200,
     "trapsCovered": [],
     "pbtSeeds": [
-      1959128505
+      2145429899
     ],
     "samples": 200,
     "samplesWithRows": 200,
@@ -61,7 +61,7 @@
     "mutantsDetected": [
       "auto: first AND becomes OR"
     ],
-    "failureDetail": "Step 4: PostgreSQL 123.32 ms vs SQL Server 62 ms = 1.99x, above the 1.5x limit. Results are equivalent (step 3 pass); see the notes for the cause.",
+    "failureDetail": "Step 4: PostgreSQL 119.12 ms vs SQL Server 59 ms = 2.02x, above the 1.5x limit. Results are equivalent (step 3 pass); see the notes for the cause.",
     "harnessVersion": "harness-generic-0.3.0"
   },
   "effort": {

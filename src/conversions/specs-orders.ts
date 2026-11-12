@@ -184,7 +184,6 @@ export const ORDER_SPECS: ObjectSpec[] = [
       "TRY/CATCH with XACT_ABORT, ROLLBACK and THROW (re-raise) -> an exception block that re-raises. The outcome compares the error class each engine raised (NOT NULL violation 515/23502, string truncation 8152 or 2628/22001, numeric overflow 8115/22003).",
       "Depends on Website.CalculateCustomerPrice: SQL Server runs its original definition, PostgreSQL its verified conversion. Generated special deals are dated around the day of the run so that customer pricing applies.",
       "Preconditions: OrderReference is unique within @Orders (it is the key of @OrdersToGenerate). Sales.Orders and Sales.OrderLines start empty.",
-      "Step 4 is not run: the call changes the data it reads.",
     ],
   },
 ];

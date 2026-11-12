@@ -49,17 +49,17 @@
   ],
   "evidence": {
     "step1": "pass",
-    "step2": "not-run",
+    "step2": "pass",
     "step3": "pass",
     "step4": "pass",
     "step5": "not-run",
-    "step6": "not-run",
+    "step6": "n/a",
     "runtimeRatio": 0.06,
     "runtime": {
       "volume": 1000,
       "timedRuns": 7,
-      "sqlServerMs": 234,
-      "postgresMs": 14.93,
+      "sqlServerMs": 258,
+      "postgresMs": 16.36,
       "ratio": 0.06,
       "threshold": 1.5,
       "passed": true,
@@ -73,17 +73,27 @@
       "numeric rounding and scale (decimal edge values)"
     ],
     "pbtSeeds": [
-      1951926405
+      227858056
     ],
     "samples": 200,
-    "samplesWithRows": 180,
+    "samplesWithRows": 184,
     "subMicrosecondNormalised": 0,
     "mutantsDetected": [
       "deal end date exclusive",
       "lowest discount amount instead of highest",
       "percentage price truncates instead of rounding"
     ],
-    "harnessVersion": "harness-generic-0.3.0"
+    "harnessVersion": "harness-generic-0.3.0",
+    "testsRun": [
+      "tSQLt V1.0.8083.3529 on SQL Server (tests/WideWorldImporters/Website.CalculateCustomerPrice.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/WideWorldImporters/Website.CalculateCustomerPrice.pg.sql); expected results tests/WideWorldImporters/Website.CalculateCustomerPrice.expected.json",
+      "SQL Server: AgreedTests.[test 01 percentage discount price: 19.99 * 12.5 / 100 = 2.49875 rounds to 2.50]: pass",
+      "SQL Server: AgreedTests.[test 02 pricing date equals the deals end date: BETWEEN is inclusive, so the special price 5.00 applies]: pass",
+      "SQL Server: AgreedTests.[test 03 two competing discount amounts: the highest (25.00) must win, giving 75.00]: pass",
+      "PostgreSQL: AgreedTests.[test 01 percentage discount price: 19.99 * 12.5 / 100 = 2.49875 rounds to 2.50]: pass",
+      "PostgreSQL: AgreedTests.[test 02 pricing date equals the deals end date: BETWEEN is inclusive, so the special price 5.00 applies]: pass",
+      "PostgreSQL: AgreedTests.[test 03 two competing discount amounts: the highest (25.00) must win, giving 75.00]: pass",
+      "planted defects caught by the agreed tests: 3 of 3"
+    ]
   },
   "effort": {
     "humanMinutes": 0,

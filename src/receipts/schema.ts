@@ -40,6 +40,11 @@ export interface ReceiptFile {
     subMicrosecondNormalised?: number;
     loadTimeFindings?: string[];
     harnessVersion: string;
+    /** Step 2: the agreed tests that ran on each engine. */
+    testsRun?: string[];
+    /** Step 5: the second review. */
+    reviewer?: string;
+    reviewDate?: string;
   };
   effort: { humanMinutes: number; engineName: string; engineVersion: string };
   predictionCell: { p50Hours: number; p90Hours: number } | null;

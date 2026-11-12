@@ -1,0 +1,65 @@
+{
+  "database": "WideWorldImporters",
+  "schemaName": "Integration",
+  "objectName": "GetTransactionTypeUpdates",
+  "objectClass": "procedure",
+  "tier": "complex",
+  "status": "failed",
+  "code": {
+    "source": "\r\nCREATE PROCEDURE Integration.GetTransactionTypeUpdates\r\n@LastCutoff datetime2(7),\r\n@NewCutoff datetime2(7)\r\nWITH EXECUTE AS OWNER\r\nAS\r\nBEGIN\r\n    SET NOCOUNT ON;\r\n    SET XACT_ABORT ON;\r\n\r\n    DECLARE @EndOfTime datetime2(7) = '99991231 23:59:59.9999999';\r\n\r\n    CREATE TABLE #TransactionTypeChanges\r\n    (\r\n        [WWI Transaction Type ID] int,\r\n        [Transaction Type] nvarchar(50),\r\n        [Valid From] datetime2(7),\r\n        [Valid To] datetime2(7)\r\n    );\r\n\r\n    DECLARE @TransactionTypeID int;\r\n    DECLARE @ValidFrom datetime2(7);\r\n\r\n    -- need to find any Transaction Type changes that have occurred, including during the initial load\r\n\r\n    DECLARE ChangeList CURSOR FAST_FORWARD READ_ONLY\r\n    FOR\r\n    SELECT tt.TransactionTypeID,\r\n           tt.ValidFrom\r\n    FROM [Application].TransactionTypes_Archive AS tt\r\n    WHERE tt.ValidFrom > @LastCutoff\r\n    AND tt.ValidFrom <= @NewCutoff\r\n    UNION ALL\r\n    SELECT tt.TransactionTypeID,\r\n           tt.ValidFrom\r\n    FROM [Application].TransactionTypes AS tt\r\n    WHERE tt.ValidFrom > @LastCutoff\r\n    AND tt.ValidFrom <= @NewCutoff\r\n    ORDER BY ValidFrom;\r\n\r\n    OPEN ChangeList;\r\n    FETCH NEXT FROM ChangeList INTO @TransactionTypeID, @ValidFrom;\r\n\r\n    WHILE @@FETCH_STATUS = 0\r\n    BEGIN\r\n        INSERT #TransactionTypeChanges\r\n            ([WWI Transaction Type ID], [Transaction Type], [Valid From], [Valid To])\r\n        SELECT p.TransactionTypeID, p.TransactionTypeName, p.ValidFrom, p.ValidTo\r\n        FROM [Application].TransactionTypes FOR SYSTEM_TIME AS OF @ValidFrom AS p\r\n        WHERE p.TransactionTypeID = @TransactionTypeID;\r\n\r\n        FETCH NEXT FROM ChangeList INTO @TransactionTypeID, @ValidFrom;\r\n    END;\r\n\r\n    CLOSE ChangeList;\r\n    DEALLOCATE ChangeList;\r\n\r\n    -- add an index to make lookups faster\r\n\r\n    CREATE INDEX IX_TransactionTypeChanges ON #TransactionTypeChanges ([WWI Transaction Type ID], [Valid From]);\r\n\r\n    -- work out the [Valid To] value by taking the [Valid From] of any row that's for the same entry but later\r\n    -- otherwise take the end of time\r\n\r\n    UPDATE cc\r\n    SET [Valid To] = COALESCE((SELECT MIN([Valid From]) FROM #TransactionTypeChanges AS cc2\r\n                                                        WHERE cc2.[WWI Transaction Type ID] = cc.[WWI Transaction Type ID]\r\n                                                        AND cc2.[Valid From] > cc.[Valid From]), @EndOfTime)\r\n    FROM #TransactionTypeChanges AS cc;\r\n\r\n    SELECT [WWI Transaction Type ID], [Transaction Type], [Valid From], [Valid To]\r\n    FROM #TransactionTypeChanges\r\n    ORDER BY [Valid From];\r\n\r\n    DROP TABLE #TransactionTypeChanges;\r\n\r\n    RETURN 0;\r\nEND;\r\n",
+    "engineOutput": "-- Integration.GetTransactionTypeUpdates was not converted.\n-- Not converted. It walks a cursor over the changes in the cutoff window and reads Application.TransactionTypes FOR SYSTEM_TIME AS OF each change time (1 such read), collecting rows in a #temp table. PostgreSQL has no system-versioned temporal tables; a faithful conversion needs history tables and an AS OF emulation, which is out of scope for this phase (decision 2026-11-12). Predicted on 2026-11-08 to fail; not attempted.\n",
+    "final": "-- Integration.GetTransactionTypeUpdates was not converted.\n-- Not converted. It walks a cursor over the changes in the cutoff window and reads Application.TransactionTypes FOR SYSTEM_TIME AS OF each change time (1 such read), collecting rows in a #temp table. PostgreSQL has no system-versioned temporal tables; a faithful conversion needs history tables and an AS OF emulation, which is out of scope for this phase (decision 2026-11-12). Predicted on 2026-11-08 to fail; not attempted.\n",
+    "diff": "",
+    "engine": "not converted",
+    "notes": [
+      "No conversion was attempted, so no harness run exists for this object (steps 1-4 not-run)."
+    ]
+  },
+  "columnMappings": [],
+  "verificationSteps": [
+    {
+      "step": 1,
+      "label": "Compiles and deploys on PostgreSQL",
+      "status": "not-run"
+    },
+    {
+      "step": 2,
+      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "status": "not-run"
+    },
+    {
+      "step": 3,
+      "label": "Result sets match on generated data",
+      "status": "not-run"
+    },
+    {
+      "step": 4,
+      "label": "Runtime within 1.5× factor",
+      "status": "not-run"
+    },
+    {
+      "step": 5,
+      "label": "Second human review",
+      "status": "not-run"
+    },
+    {
+      "step": 6,
+      "label": "Acceptance on real data",
+      "status": "n/a"
+    }
+  ],
+  "evidence": {
+    "failureDetail": "Not converted. It walks a cursor over the changes in the cutoff window and reads Application.TransactionTypes FOR SYSTEM_TIME AS OF each change time (1 such read), collecting rows in a #temp table. PostgreSQL has no system-versioned temporal tables; a faithful conversion needs history tables and an AS OF emulation, which is out of scope for this phase (decision 2026-11-12). Predicted on 2026-11-08 to fail; not attempted.",
+    "harnessVersion": "none (not converted)"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "Kiro",
+    "engineVersion": "not applicable (not converted)"
+  },
+  "predictionCell": {
+    "p50Hours": 9,
+    "p90Hours": 20
+  },
+  "builtAt": "2026-11-12T23:33:17.859Z"
+}

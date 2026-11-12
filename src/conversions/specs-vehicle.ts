@@ -101,7 +101,6 @@ export const VEHICLE_SPECS: ObjectSpec[] = [
       "OPENJSON ... WITH is reproduced by tsql_compat helpers on the json type (not jsonb, which would normalise the AS JSON text): lax paths with the first duplicate key winning; object and array values read as NULL for scalar columns; nvarchar(40) truncation; an object at $.Recordings is one row (the object) whose '$' AS JSON is NULL; T-SQL string conversion rules for int, decimal(18,2) and datetime2 as measured on SQL Server 2025 at compatibility level 130.",
       "datetime2 strings: only the measured formats are generated (ISO with T and seconds, space-separated, date only, yyyymmdd, m/d/yyyy, empty string = 1900-01-01, time-zone suffix ignored). Values with more than 6 fractional digits are not generated: PostgreSQL timestamp holds microseconds.",
       "The scratch Warehouse.VehicleTemperatures is a disk-based table without the identity column (the procedure does not reference it). In the source it is memory-optimized; the procedure is interpreted T-SQL, so storage does not change its result.",
-      "Step 4 is not run: the call changes the data it reads.",
     ],
   },
 ];

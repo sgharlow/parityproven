@@ -49,32 +49,32 @@
     "step3": "pass",
     "step4": "pass",
     "step5": "not-run",
-    "step6": "not-run",
-    "runtimeRatio": 0.28,
+    "step6": "n/a",
+    "runtimeRatio": 0.32,
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
-      "sqlServerMs": 36,
-      "postgresMs": 10.24,
-      "ratio": 0.28,
+      "sqlServerMs": 28,
+      "postgresMs": 8.91,
+      "ratio": 0.32,
       "threshold": 1.5,
       "passed": true,
       "belowResolution": false,
-      "resultRows": 3537,
+      "resultRows": 3517,
       "volumeMismatch": null
     },
-    "rowsCompared": 119,
+    "rowsCompared": 116,
     "trapsCovered": [
       "datetime boundaries at the cutoffs (inputs normalised to µs)",
       "empty string and trailing spaces",
       "ORDER BY key (ties compared as multisets)"
     ],
     "pbtSeeds": [
-      152355897
+      94169551
     ],
     "samples": 200,
-    "samplesWithRows": 79,
-    "subMicrosecondNormalised": 985,
+    "samplesWithRows": 81,
+    "subMicrosecondNormalised": 929,
     "mutantsDetected": [
       "ordered quantity uses outers only",
       "upper cutoff exclusive"

@@ -1,0 +1,51 @@
+{
+  "object": "Website.CalculateCustomerPrice",
+  "database": "WideWorldImporters",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-12T23:30:18.760Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "percentage discount price: 19.99 * 12.5 / 100 = 2.49875 rounds to 2.50",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "decimal(18,2)"
+        }
+      ],
+      "rows": [
+        [
+          "n:2.5"
+        ]
+      ]
+    },
+    {
+      "label": "pricing date equals the deal's end date: BETWEEN is inclusive, so the special price 5.00 applies",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "decimal(18,2)"
+        }
+      ],
+      "rows": [
+        [
+          "n:5"
+        ]
+      ]
+    },
+    {
+      "label": "two competing discount amounts: the highest (25.00) must win, giving 75.00",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "decimal(18,2)"
+        }
+      ],
+      "rows": [
+        [
+          "n:75"
+        ]
+      ]
+    }
+  ]
+}

@@ -46,16 +46,16 @@
     {
       "step": 6,
       "label": "Acceptance on real data",
-      "status": "not-run"
+      "status": "n/a"
     }
   ],
   "evidence": {
     "pbtSeeds": [
-      778905791
+      126286285
     ],
     "rowsCompared": 200,
     "samples": 200,
-    "samplesWithRows": 159,
+    "samplesWithRows": 156,
     "trapsCovered": [],
     "mutantsDetected": [
       "auto: strict comparison made inclusive"
@@ -64,8 +64,8 @@
       "volume": 10,
       "timedRuns": 7,
       "sqlServerMs": 16,
-      "postgresMs": 17.37,
-      "ratio": 1.09,
+      "postgresMs": 17.22,
+      "ratio": 1.08,
       "threshold": 1.5,
       "passed": true,
       "belowResolution": false,
@@ -74,8 +74,8 @@
     },
     "engineOutputCheck": {
       "step3": "fail",
-      "seed": 778905791,
-      "detail": "random sample: value differs in group 0 (key \"*\"), column \"result\": SQL Server s:0000000* vs PostgreSQL s:-1000000"
+      "seed": 126286285,
+      "detail": "random sample: value differs in group 0 (key \"*\"), column \"result\": SQL Server s:0000000* vs PostgreSQL s:-2147483"
     },
     "subMicrosecondNormalised": 0,
     "harnessVersion": "harness-generic-0.3.0"
@@ -89,5 +89,5 @@
     "p50Hours": 1.5,
     "p90Hours": 4
   },
-  "builtAt": "2026-11-12T18:03:35.088Z"
+  "builtAt": "2026-11-12T23:33:17.849Z"
 }

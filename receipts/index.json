@@ -1,5 +1,5 @@
 {
-  "builtAt": "2026-11-12T18:03:35.215Z",
+  "builtAt": "2026-11-12T23:33:17.936Z",
   "receipts": [
     {
       "database": "AdventureWorks2025",
@@ -238,6 +238,33 @@
     {
       "database": "WideWorldImporters",
       "schemaName": "Integration",
+      "objectName": "GetCityUpdates",
+      "objectClass": "procedure",
+      "tier": "complex",
+      "status": "failed",
+      "path": "WideWorldImporters/Integration.GetCityUpdates.json"
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Integration",
+      "objectName": "GetCustomerUpdates",
+      "objectClass": "procedure",
+      "tier": "complex",
+      "status": "failed",
+      "path": "WideWorldImporters/Integration.GetCustomerUpdates.json"
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Integration",
+      "objectName": "GetEmployeeUpdates",
+      "objectClass": "procedure",
+      "tier": "complex",
+      "status": "failed",
+      "path": "WideWorldImporters/Integration.GetEmployeeUpdates.json"
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Integration",
       "objectName": "GetMovementUpdates",
       "objectClass": "procedure",
       "tier": "simple",
@@ -252,6 +279,15 @@
       "tier": "simple",
       "status": "pending",
       "path": "WideWorldImporters/Integration.GetOrderUpdates.json"
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Integration",
+      "objectName": "GetPaymentMethodUpdates",
+      "objectClass": "procedure",
+      "tier": "complex",
+      "status": "failed",
+      "path": "WideWorldImporters/Integration.GetPaymentMethodUpdates.json"
     },
     {
       "database": "WideWorldImporters",
@@ -279,6 +315,33 @@
       "tier": "simple",
       "status": "pending",
       "path": "WideWorldImporters/Integration.GetStockHoldingUpdates.json"
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Integration",
+      "objectName": "GetStockItemUpdates",
+      "objectClass": "procedure",
+      "tier": "complex",
+      "status": "failed",
+      "path": "WideWorldImporters/Integration.GetStockItemUpdates.json"
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Integration",
+      "objectName": "GetSupplierUpdates",
+      "objectClass": "procedure",
+      "tier": "complex",
+      "status": "failed",
+      "path": "WideWorldImporters/Integration.GetSupplierUpdates.json"
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Integration",
+      "objectName": "GetTransactionTypeUpdates",
+      "objectClass": "procedure",
+      "tier": "complex",
+      "status": "failed",
+      "path": "WideWorldImporters/Integration.GetTransactionTypeUpdates.json"
     },
     {
       "database": "WideWorldImporters",
@@ -423,6 +486,15 @@
       "tier": "simple",
       "status": "pending",
       "path": "WideWorldImporters/Website.Suppliers.json"
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Website",
+      "objectName": "VehicleTemperatures",
+      "objectClass": "view",
+      "tier": "simple",
+      "status": "failed",
+      "path": "WideWorldImporters/Website.VehicleTemperatures.json"
     }
   ],
   "excluded": [
@@ -564,10 +636,10 @@
     }
   ],
   "summary": {
-    "total": 47,
+    "total": 55,
     "verified": 0,
     "pending": 40,
-    "failed": 7,
+    "failed": 15,
     "excluded": 17
   }
 }

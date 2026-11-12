@@ -83,16 +83,16 @@
     {
       "step": 6,
       "label": "Acceptance on real data",
-      "status": "not-run"
+      "status": "n/a"
     }
   ],
   "evidence": {
     "pbtSeeds": [
-      699038361
+      1528956623
     ],
-    "rowsCompared": 238,
+    "rowsCompared": 247,
     "samples": 200,
-    "samplesWithRows": 139,
+    "samplesWithRows": 137,
     "trapsCovered": [
       "NULL in every nullable column",
       "empty string and trailing spaces"
@@ -104,9 +104,9 @@
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
-      "sqlServerMs": 28,
-      "postgresMs": 11.61,
-      "ratio": 0.41,
+      "sqlServerMs": 24,
+      "postgresMs": 8.13,
+      "ratio": 0.34,
       "threshold": 1.5,
       "passed": true,
       "belowResolution": false,
@@ -125,5 +125,5 @@
     "p50Hours": 0.75,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-12T18:03:35.104Z"
+  "builtAt": "2026-11-12T23:33:17.851Z"
 }

@@ -20,8 +20,8 @@
       "TRY/CATCH with XACT_ABORT, THROW 51000 and THROW (re-raise) -> an exception block that undoes every write and re-raises the same error. The outcome compares the error class each engine raised.",
       "Transaction types are looked up by name ('Stock Issue', 'Customer Invoice'). SQL Server compares under the database's case-insensitive collation and PostgreSQL case-sensitively; the generated names are the source's exact names, so case differences are not claimed.",
       "Scratch modelling: Sales.InvoiceLines.InvoiceLineID is an identity column (a sequence default in the source; the procedure only uses it to order inserts). StockItemTransactionID and CustomerTransactionID (sequence defaults, not referenced) are not modelled.",
-      "Step 4 is not run: the call changes the data it reads.",
-      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step).",
+      "Step 4 is n/a for objects that change data (ruling 2026-11-12): each call changes the data it reads, so repeated timed runs on the same data are not the same work."
     ]
   },
   "columnMappings": [
@@ -116,7 +116,7 @@
     {
       "step": 4,
       "label": "Runtime within 1.5× factor",
-      "status": "not-run"
+      "status": "n/a"
     },
     {
       "step": 5,
@@ -126,16 +126,16 @@
     {
       "step": 6,
       "label": "Acceptance on real data",
-      "status": "not-run"
+      "status": "n/a"
     }
   ],
   "evidence": {
     "pbtSeeds": [
-      281453508
+      1519383177
     ],
     "rowsCompared": 206,
     "samples": 200,
-    "samplesWithRows": 89,
+    "samplesWithRows": 78,
     "trapsCovered": [
       "NULL in every nullable column",
       "numeric rounding and scale (decimal edge values)",
@@ -152,7 +152,7 @@
       "customer transaction booked to the customer, not the bill-to customer",
       "missing address line 2 kept as line 1 (concat instead of ||)"
     ],
-    "subMicrosecondNormalised": 693,
+    "subMicrosecondNormalised": 714,
     "harnessVersion": "harness-generic-0.3.0"
   },
   "effort": {
@@ -164,5 +164,5 @@
     "p50Hours": 3,
     "p90Hours": 6
   },
-  "builtAt": "2026-11-12T18:03:35.156Z"
+  "builtAt": "2026-11-12T23:33:17.860Z"
 }

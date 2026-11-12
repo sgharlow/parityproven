@@ -45,12 +45,12 @@
     {
       "step": 6,
       "label": "Acceptance on real data",
-      "status": "not-run"
+      "status": "n/a"
     }
   ],
   "evidence": {
     "pbtSeeds": [
-      545961035
+      981850092
     ],
     "rowsCompared": 200,
     "samples": 200,
@@ -83,5 +83,5 @@
     "p50Hours": 1.5,
     "p90Hours": 4
   },
-  "builtAt": "2026-11-12T18:03:35.071Z"
+  "builtAt": "2026-11-12T23:33:17.846Z"
 }
