@@ -28,13 +28,13 @@
     "step4": "pass",
     "step5": "not-run",
     "step6": "not-run",
-    "runtimeRatio": 1.04,
+    "runtimeRatio": 1,
     "runtime": {
       "volume": 10,
       "timedRuns": 7,
-      "sqlServerMs": 18,
-      "postgresMs": 18.63,
-      "ratio": 1.04,
+      "sqlServerMs": 20,
+      "postgresMs": 19.93,
+      "ratio": 1,
       "threshold": 1.5,
       "passed": true,
       "belowResolution": false,
@@ -44,15 +44,15 @@
     "rowsCompared": 200,
     "trapsCovered": [],
     "pbtSeeds": [
-      963468011
+      1069226330
     ],
     "engineOutputCheck": {
       "step3": "fail",
-      "seed": 963468011,
-      "detail": "random sample: value differs in group 0 (key \"*\"), column \"result\": SQL Server s:0000000* vs PostgreSQL s:-2147483"
+      "seed": 1069226330,
+      "detail": "random sample: value differs in group 0 (key \"*\"), column \"result\": SQL Server s:0000000* vs PostgreSQL s:10000000"
     },
     "samples": 200,
-    "samplesWithRows": 169,
+    "samplesWithRows": 154,
     "subMicrosecondNormalised": 0,
     "mutantsDetected": [
       "auto: strict comparison made inclusive"

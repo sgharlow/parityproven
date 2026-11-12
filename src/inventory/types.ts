@@ -22,6 +22,8 @@ export interface TierCounts {
 export interface InventoryReport {
   database: string;
   generatedAt: string;
+  /** Dated changes to the tier rules, so a tier that differs from a committed prediction can be traced. */
+  tierRuleChanges?: string[];
   counts: {
     procedure: TierCounts;
     function:  TierCounts;

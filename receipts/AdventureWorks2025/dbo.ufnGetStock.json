@@ -60,7 +60,7 @@
   ],
   "evidence": {
     "pbtSeeds": [
-      1386843720
+      1032673288
     ],
     "rowsCompared": 200,
     "samples": 200,
@@ -69,13 +69,13 @@
     "mutantsDetected": [
       "auto: first AND becomes OR"
     ],
-    "failureDetail": "Step 4: PostgreSQL 135.94 ms vs SQL Server 72 ms = 1.89x, above the 1.5x limit. Results are equivalent (step 3 pass); see the notes for the cause.",
+    "failureDetail": "Step 4: PostgreSQL 119.37 ms vs SQL Server 62 ms = 1.93x, above the 1.5x limit. Results are equivalent (step 3 pass); see the notes for the cause.",
     "runtime": {
       "volume": 2000,
       "timedRuns": 7,
-      "sqlServerMs": 72,
-      "postgresMs": 135.94,
-      "ratio": 1.89,
+      "sqlServerMs": 62,
+      "postgresMs": 119.37,
+      "ratio": 1.93,
       "threshold": 1.5,
       "passed": false,
       "belowResolution": false,
@@ -94,5 +94,5 @@
     "p50Hours": 1.5,
     "p90Hours": 4
   },
-  "builtAt": "2026-11-11T04:03:31.171Z"
+  "builtAt": "2026-11-12T07:56:18.515Z"
 }

@@ -44,11 +44,11 @@
     "rowsCompared": 200,
     "trapsCovered": [],
     "pbtSeeds": [
-      398126013
+      699949717
     ],
     "engineOutputCheck": {
       "step3": "fail",
-      "seed": 398126013,
+      "seed": 699949717,
       "detail": "random sample: value differs in group 0 (key \"*\"), column \"result\": SQL Server t:2004-06-30T23:59:59.997000 vs PostgreSQL t:2004-06-30T23:59:59.998000"
     },
     "samples": 200,

@@ -1,0 +1,39 @@
+{
+  "origin": {
+    "repo": "https://github.com/microsoft/sql-server-samples",
+    "release": "wide-world-importers-v1.0",
+    "license": "MIT",
+    "assetUrl": "https://github.com/microsoft/sql-server-samples/releases/download/wide-world-importers-v1.0/WideWorldImporters-Full.bak",
+    "sha256": "e842bad6ce02f74f166947e559dab1b476edd7eaae3da2ab9e3f522f1dd87124"
+  },
+  "conversionType": "tsql-to-plpgsql",
+  "objectClass": "function",
+  "tier": "simple",
+  "code": {
+    "source": "\r\nCREATE FUNCTION [Application].DetermineCustomerAccess(@CityID int)\r\nRETURNS TABLE\r\nWITH SCHEMABINDING\r\nAS\r\nRETURN (SELECT 1 AS AccessResult\r\n        WHERE IS_ROLEMEMBER(N'db_owner') <> 0\r\n        OR IS_ROLEMEMBER((SELECT sp.SalesTerritory\r\n                          FROM [Application].Cities AS c\r\n                          INNER JOIN [Application].StateProvinces AS sp\r\n                          ON c.StateProvinceID = sp.StateProvinceID\r\n                          WHERE c.CityID = @CityID) + N' Sales') <> 0\r\n\t    OR (ORIGINAL_LOGIN() = N'Website'\r\n\t\t    AND EXISTS (SELECT 1\r\n\t\t                FROM [Application].Cities AS c\r\n\t\t\t\t        INNER JOIN [Application].StateProvinces AS sp\r\n\t\t\t\t        ON c.StateProvinceID = sp.StateProvinceID\r\n\t\t\t\t        WHERE c.CityID = @CityID\r\n\t\t\t\t        AND sp.SalesTerritory = SESSION_CONTEXT(N'SalesTerritory'))));",
+    "engineOutput": "-- Application.DetermineCustomerAccess was not converted.\n-- Not converted. The result depends on the caller's security context, not on table data: IS_ROLEMEMBER(N'db_owner'), IS_ROLEMEMBER(<SalesTerritory> + N' Sales'), ORIGINAL_LOGIN() = N'Website' and SESSION_CONTEXT(N'SalesTerritory'). PostgreSQL has counterparts (pg_has_role, session_user, current_setting), but proving equivalence needs the harness to run each sample under real logins and roles on both engines, which it does not do. Recorded as a failure, not hidden (decision 2026-11-11).\n",
+    "final": "-- Application.DetermineCustomerAccess was not converted.\n-- Not converted. The result depends on the caller's security context, not on table data: IS_ROLEMEMBER(N'db_owner'), IS_ROLEMEMBER(<SalesTerritory> + N' Sales'), ORIGINAL_LOGIN() = N'Website' and SESSION_CONTEXT(N'SalesTerritory'). PostgreSQL has counterparts (pg_has_role, session_user, current_setting), but proving equivalence needs the harness to run each sample under real logins and roles on both engines, which it does not do. Recorded as a failure, not hidden (decision 2026-11-11).\n",
+    "diff": "",
+    "engine": "not converted",
+    "notes": [
+      "No conversion was attempted, so no harness run exists for this object (steps 1-4 not-run)."
+    ]
+  },
+  "columnMappings": [],
+  "evidence": {
+    "step1": "not-run",
+    "step2": "not-run",
+    "step3": "not-run",
+    "step4": "not-run",
+    "step5": "not-run",
+    "step6": "not-run",
+    "failureDetail": "Not converted. The result depends on the caller's security context, not on table data: IS_ROLEMEMBER(N'db_owner'), IS_ROLEMEMBER(<SalesTerritory> + N' Sales'), ORIGINAL_LOGIN() = N'Website' and SESSION_CONTEXT(N'SalesTerritory'). PostgreSQL has counterparts (pg_has_role, session_user, current_setting), but proving equivalence needs the harness to run each sample under real logins and roles on both engines, which it does not do. Recorded as a failure, not hidden (decision 2026-11-11).",
+    "harnessVersion": "none (not converted)"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "Kiro",
+    "engineVersion": "not applicable (not converted)"
+  },
+  "status": "failed"
+}

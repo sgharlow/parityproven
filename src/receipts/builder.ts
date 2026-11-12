@@ -3,13 +3,22 @@ import { join } from "path";
 import type { PairRecord } from "../pairs/schema.js";
 import type { InventoryReport } from "../inventory/types.js";
 import type { PredictionFile } from "../predictions/schema.js";
-import type { ReceiptFile, ReceiptIndex, ReceiptIndexEntry } from "./schema.js";
+import type { ReceiptExclusion, ReceiptFile, ReceiptIndex, ReceiptIndexEntry } from "./schema.js";
 import { STEP_LABELS } from "./schema.js";
 
 export interface BuildInput {
   pairsDir: string;       // e.g. repo/pairs
   inventoryDir: string;   // e.g. repo/inventory
   predictionsDir: string; // e.g. repo/predictions
+  /** Out-of-scope objects, listed on the scorecard with their reason (src/conversions/dispositions.ts). */
+  exclusions?: BuildExclusion[];
+}
+
+export interface BuildExclusion {
+  database: string;
+  schemaName: string;
+  objectName: string;
+  reason: string;
 }
 
 export interface BuildOutput {
@@ -118,16 +127,30 @@ export function buildReceipts(input: BuildInput): BuildOutput {
     path: `${r.database}/${r.schemaName}.${r.objectName}.json`,
   }));
 
+  // Exclusions: tier and class come from the inventory, so they are never typed by hand
+  const excluded: ReceiptExclusion[] = (input.exclusions ?? []).map((x) => {
+    const invPath = join(input.inventoryDir, `${x.database}.json`);
+    const inv: InventoryReport | null = existsSync(invPath) ? (JSON.parse(readFileSync(invPath, "utf-8")) as InventoryReport) : null;
+    const item = inv?.objects.find((o) => o.schemaName === x.schemaName && o.objectName === x.objectName);
+    if (!item) throw new Error(`excluded object ${x.database}.${x.schemaName}.${x.objectName} is not in the inventory`);
+    if (receipts.some((r) => r.database === x.database && r.schemaName === x.schemaName && r.objectName === x.objectName)) {
+      throw new Error(`${x.schemaName}.${x.objectName} is both excluded and has a pair record`);
+    }
+    return { database: x.database, schemaName: x.schemaName, objectName: x.objectName, objectClass: item.objectClass, tier: item.tier, reason: x.reason };
+  });
+
   const summary = {
     total: receipts.length,
     verified: receipts.filter((r) => r.status === "verified").length,
     pending: receipts.filter((r) => r.status === "pending").length,
     failed: receipts.filter((r) => r.status === "failed").length,
+    excluded: excluded.length,
   };
 
   const index: ReceiptIndex = {
     builtAt: new Date().toISOString(),
     receipts: indexEntries,
+    excluded,
     summary,
   };
 

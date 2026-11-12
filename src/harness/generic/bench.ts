@@ -17,10 +17,10 @@
 
 import * as fc from "fast-check";
 import type { MssqlClient } from "../clients/mssql-client.js";
-import type { Connections } from "./run.js";
+import { queryScratch, type Connections } from "./run.js";
 import type { ColSpec, ObjectSpec, Row, TableSpec } from "./spec.js";
 import { pgTableName, tableKey } from "./spec.js";
-import { baseColArb, materialise, T0, type Dataset } from "./rows.js";
+import { baseColArb, distinctValue, materialise, T0, type Dataset } from "./rows.js";
 import { compareResults } from "./compare.js";
 
 export const RUNTIME_FACTOR = 1.5;
@@ -78,7 +78,7 @@ function volumeRows(t: TableSpec, n: number, cutoffs: { last: bigint; new: bigin
   const rnd = prng(seed ^ (t.name.length * 2654435761));
   const sampled: Record<string, unknown[]> = {};
   for (const c of t.columns) {
-    if (c.role === "pk" || c.role === "ref") continue;
+    if (c.role === "pk" || c.role === "ref" || c.role === "seq") continue;
     sampled[c.name] = fc.sample(baseColArb(c, cutoffs, 1), { numRuns: n, seed: seed + c.name.length });
   }
   // a table whose primary key is narrow cannot have more rows than distinct keys
@@ -89,8 +89,10 @@ function volumeRows(t: TableSpec, n: number, cutoffs: { last: bigint; new: bigin
     const row: Row = {};
     for (const c of t.columns) {
       if (c.role === "pk") row[c.name] = keyValue(c, i + 1);
+      else if (c.role === "seq") row[c.name] = (c.offset ?? 0) + i + 1;
       else if (c.role === "ref") row[c.name] = c.nullable && rnd() < 0.2 ? null : keyValue(c, 1 + Math.floor(rnd() * Math.min(n, keyCap(c))));
       else row[c.name] = c.nullable && rnd() < 0.2 ? null : sampled[c.name][i];
+      if (c.distinct) row[c.name] = distinctValue(row[c.name], i, c);
     }
     rows.push(row);
   }
@@ -148,12 +150,12 @@ export async function runBenchmark(
     const a = await scratch.query(opts.ssSql, params);
     const b = await conn.pg.query(opts.pgSql, params);
     resultRows = a.rows.length;
-    volumeMismatch = compareResults(a, b, spec.orderKey);
+    volumeMismatch = compareResults(a, b, spec.orderKey, [], spec.jsonColumns ?? []);
   } else {
-    const a = await scratch.query(ssTimed, []);
+    const a = await queryScratch(scratch, spec, ssTimed, []);
     const b = await conn.pg.query(pgTimed, []);
     resultRows = 100;   // calls made (see benchSs); the compared result is one aggregate row
-    volumeMismatch = compareResults(a, b, []);
+    volumeMismatch = compareResults(a, b, [], [], spec.jsonColumns ?? []);
   }
 
   const sqlServerMs = Math.max(median(ss), 1);   // SQL Server reports whole ms; 0 would make the ratio meaningless

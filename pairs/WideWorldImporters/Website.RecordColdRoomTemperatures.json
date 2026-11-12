@@ -1,0 +1,90 @@
+{
+  "origin": {
+    "repo": "https://github.com/microsoft/sql-server-samples",
+    "release": "wide-world-importers-v1.0",
+    "license": "MIT",
+    "assetUrl": "https://github.com/microsoft/sql-server-samples/releases/download/wide-world-importers-v1.0/WideWorldImporters-Full.bak",
+    "sha256": "e842bad6ce02f74f166947e559dab1b476edd7eaae3da2ab9e3f522f1dd87124"
+  },
+  "conversionType": "tsql-to-plpgsql",
+  "objectClass": "procedure",
+  "tier": "medium",
+  "code": {
+    "source": "\r\nCREATE PROCEDURE Website.RecordColdRoomTemperatures\r\n@SensorReadings Website.SensorDataList READONLY\r\nWITH NATIVE_COMPILATION, SCHEMABINDING, EXECUTE AS OWNER\r\nAS\r\nBEGIN ATOMIC WITH\r\n(\r\n\tTRANSACTION ISOLATION LEVEL = SNAPSHOT,\r\n\tLANGUAGE = N'English'\r\n)\r\n    BEGIN TRY\r\n\r\n\t\tDECLARE @NumberOfReadings int = (SELECT MAX(SensorDataListID) FROM @SensorReadings);\r\n\t\tDECLARE @Counter int = (SELECT MIN(SensorDataListID) FROM @SensorReadings);\r\n\r\n\t\tDECLARE @ColdRoomSensorNumber int;\r\n\t\tDECLARE @RecordedWhen datetime2(7);\r\n\t\tDECLARE @Temperature decimal(18,2);\r\n\r\n\t\t-- note that we cannot use a merge here because multiple readings might exist for each sensor\r\n\r\n\t\tWHILE @Counter <= @NumberOfReadings\r\n\t\tBEGIN\r\n\t\t\tSELECT @ColdRoomSensorNumber = ColdRoomSensorNumber,\r\n\t\t\t       @RecordedWhen = RecordedWhen,\r\n\t\t\t\t   @Temperature = Temperature\r\n\t\t\tFROM @SensorReadings\r\n\t\t\tWHERE SensorDataListID = @Counter;\r\n\r\n\t\t\tUPDATE Warehouse.ColdRoomTemperatures\r\n\t\t\t\tSET RecordedWhen = @RecordedWhen,\r\n\t\t\t\t    Temperature = @Temperature\r\n\t\t\tWHERE ColdRoomSensorNumber = @ColdRoomSensorNumber;\r\n\r\n\t\t\tIF @@ROWCOUNT = 0\r\n\t\t\tBEGIN\r\n\t\t\t\tINSERT Warehouse.ColdRoomTemperatures\r\n\t\t\t\t\t(ColdRoomSensorNumber, RecordedWhen, Temperature)\r\n\t\t\t\tVALUES (@ColdRoomSensorNumber, @RecordedWhen, @Temperature);\r\n\t\t\tEND;\r\n\r\n\t\t\tSET @Counter += 1;\r\n\t\tEND;\r\n\r\n    END TRY\r\n    BEGIN CATCH\r\n        THROW 51000, N'Unable to apply the sensor data', 2;\r\n\r\n        RETURN 1;\r\n    END CATCH;\r\nEND;",
+    "engineOutput": "-- PL/pgSQL conversion of Website.RecordColdRoomTemperatures (WideWorldImporters).\n-- Engine: Kiro. No separate first draft was kept for this object.\n--\n-- Differences from a literal translation:\n--  * NATIVE_COMPILATION, SCHEMABINDING, EXECUTE AS OWNER and BEGIN ATOMIC WITH (SNAPSHOT, LANGUAGE) have no PostgreSQL\n--    equivalent. ATOMIC's all-or-nothing behaviour comes from the exception block (a subtransaction): an error undoes\n--    every reading applied in this call.\n--  * The table-valued parameter type Website.SensorDataList becomes the composite type website.sensor_data_list and the\n--    parameter an array of it.\n--  * SELECT @a = ... WHERE ... leaves the variables unchanged when no row matches (PL/pgSQL SELECT INTO would set them\n--    to NULL), so the reading is fetched into a record and copied only when found.\n--  * THROW 51000 -> RAISE EXCEPTION (SQLSTATE P0001).\n\nCREATE SCHEMA IF NOT EXISTS website;\n\nDO $do$\nBEGIN\n    CREATE TYPE website.sensor_data_list AS (\n        \"SensorDataListID\"     integer,\n        \"ColdRoomSensorNumber\" integer,\n        \"RecordedWhen\"         timestamp,\n        \"Temperature\"          numeric(18,2)\n    );\nEXCEPTION WHEN duplicate_object THEN\n    NULL;\nEND\n$do$;\n\n-- Build the parameter from a JSON array of readings (how the harness, or any client without composite-array support,\n-- passes the readings; CALL arguments cannot contain subqueries).\nCREATE OR REPLACE FUNCTION website.sensor_data_list_from_json(readings jsonb)\nRETURNS website.sensor_data_list[]\nLANGUAGE sql\nIMMUTABLE\nAS $fn$\n    SELECT coalesce(array_agg(jsonb_populate_record(NULL::website.sensor_data_list, r) ORDER BY ord), '{}')\n    FROM jsonb_array_elements(readings) WITH ORDINALITY AS e(r, ord)\n$fn$;\n\nCREATE OR REPLACE PROCEDURE website.record_cold_room_temperatures(\n    sensor_readings website.sensor_data_list[]\n)\nLANGUAGE plpgsql\nAS $fn$\nDECLARE\n    number_of_readings      integer;\n    counter                 integer;\n    cold_room_sensor_number integer;\n    recorded_when           timestamp;\n    temperature             numeric(18,2);\n    reading                 record;\nBEGIN\n    BEGIN\n        SELECT max(r.\"SensorDataListID\"), min(r.\"SensorDataListID\")\n        INTO number_of_readings, counter\n        FROM unnest(sensor_readings) AS r;\n\n        -- note that we cannot use a merge here because multiple readings might exist for each sensor\n        WHILE counter <= number_of_readings LOOP\n            SELECT r.\"ColdRoomSensorNumber\", r.\"RecordedWhen\", r.\"Temperature\"\n            INTO reading\n            FROM unnest(sensor_readings) AS r\n            WHERE r.\"SensorDataListID\" = counter;\n            IF FOUND THEN\n                cold_room_sensor_number := reading.\"ColdRoomSensorNumber\";\n                recorded_when := reading.\"RecordedWhen\";\n                temperature := reading.\"Temperature\";\n            END IF;\n\n            UPDATE warehouse.cold_room_temperatures\n            SET \"RecordedWhen\" = recorded_when,\n                \"Temperature\" = temperature\n            WHERE \"ColdRoomSensorNumber\" = cold_room_sensor_number;\n\n            IF NOT FOUND THEN\n                INSERT INTO warehouse.cold_room_temperatures (\"ColdRoomSensorNumber\", \"RecordedWhen\", \"Temperature\")\n                VALUES (cold_room_sensor_number, recorded_when, temperature);\n            END IF;\n\n            counter := counter + 1;\n        END LOOP;\n    EXCEPTION WHEN OTHERS THEN\n        RAISE EXCEPTION 'Unable to apply the sensor data' USING ERRCODE = 'P0001';\n    END;\nEND;\n$fn$;\n",
+    "final": "-- PL/pgSQL conversion of Website.RecordColdRoomTemperatures (WideWorldImporters).\n-- Engine: Kiro. No separate first draft was kept for this object.\n--\n-- Differences from a literal translation:\n--  * NATIVE_COMPILATION, SCHEMABINDING, EXECUTE AS OWNER and BEGIN ATOMIC WITH (SNAPSHOT, LANGUAGE) have no PostgreSQL\n--    equivalent. ATOMIC's all-or-nothing behaviour comes from the exception block (a subtransaction): an error undoes\n--    every reading applied in this call.\n--  * The table-valued parameter type Website.SensorDataList becomes the composite type website.sensor_data_list and the\n--    parameter an array of it.\n--  * SELECT @a = ... WHERE ... leaves the variables unchanged when no row matches (PL/pgSQL SELECT INTO would set them\n--    to NULL), so the reading is fetched into a record and copied only when found.\n--  * THROW 51000 -> RAISE EXCEPTION (SQLSTATE P0001).\n\nCREATE SCHEMA IF NOT EXISTS website;\n\nDO $do$\nBEGIN\n    CREATE TYPE website.sensor_data_list AS (\n        \"SensorDataListID\"     integer,\n        \"ColdRoomSensorNumber\" integer,\n        \"RecordedWhen\"         timestamp,\n        \"Temperature\"          numeric(18,2)\n    );\nEXCEPTION WHEN duplicate_object THEN\n    NULL;\nEND\n$do$;\n\n-- Build the parameter from a JSON array of readings (how the harness, or any client without composite-array support,\n-- passes the readings; CALL arguments cannot contain subqueries).\nCREATE OR REPLACE FUNCTION website.sensor_data_list_from_json(readings jsonb)\nRETURNS website.sensor_data_list[]\nLANGUAGE sql\nIMMUTABLE\nAS $fn$\n    SELECT coalesce(array_agg(jsonb_populate_record(NULL::website.sensor_data_list, r) ORDER BY ord), '{}')\n    FROM jsonb_array_elements(readings) WITH ORDINALITY AS e(r, ord)\n$fn$;\n\nCREATE OR REPLACE PROCEDURE website.record_cold_room_temperatures(\n    sensor_readings website.sensor_data_list[]\n)\nLANGUAGE plpgsql\nAS $fn$\nDECLARE\n    number_of_readings      integer;\n    counter                 integer;\n    cold_room_sensor_number integer;\n    recorded_when           timestamp;\n    temperature             numeric(18,2);\n    reading                 record;\nBEGIN\n    BEGIN\n        SELECT max(r.\"SensorDataListID\"), min(r.\"SensorDataListID\")\n        INTO number_of_readings, counter\n        FROM unnest(sensor_readings) AS r;\n\n        -- note that we cannot use a merge here because multiple readings might exist for each sensor\n        WHILE counter <= number_of_readings LOOP\n            SELECT r.\"ColdRoomSensorNumber\", r.\"RecordedWhen\", r.\"Temperature\"\n            INTO reading\n            FROM unnest(sensor_readings) AS r\n            WHERE r.\"SensorDataListID\" = counter;\n            IF FOUND THEN\n                cold_room_sensor_number := reading.\"ColdRoomSensorNumber\";\n                recorded_when := reading.\"RecordedWhen\";\n                temperature := reading.\"Temperature\";\n            END IF;\n\n            UPDATE warehouse.cold_room_temperatures\n            SET \"RecordedWhen\" = recorded_when,\n                \"Temperature\" = temperature\n            WHERE \"ColdRoomSensorNumber\" = cold_room_sensor_number;\n\n            IF NOT FOUND THEN\n                INSERT INTO warehouse.cold_room_temperatures (\"ColdRoomSensorNumber\", \"RecordedWhen\", \"Temperature\")\n                VALUES (cold_room_sensor_number, recorded_when, temperature);\n            END IF;\n\n            counter := counter + 1;\n        END LOOP;\n    EXCEPTION WHEN OTHERS THEN\n        RAISE EXCEPTION 'Unable to apply the sensor data' USING ERRCODE = 'P0001';\n    END;\nEND;\n$fn$;\n",
+    "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
+    "engine": "kiro",
+    "notes": [
+      "WITH NATIVE_COMPILATION, SCHEMABINDING, EXECUTE AS OWNER and BEGIN ATOMIC (SNAPSHOT, LANGUAGE English) have no PostgreSQL equivalent. The ATOMIC block's all-or-nothing behaviour is reproduced by a PL/pgSQL exception block (a subtransaction); THROW 51000 becomes RAISE EXCEPTION (SQLSTATE P0001).",
+      "The table-valued parameter Website.SensorDataList becomes a composite type website.sensor_data_list and an array parameter. The harness passes the same generated readings to both engines.",
+      "SELECT @a = ... WHERE SensorDataListID = @Counter leaves the variables unchanged when no row matches; the conversion keeps the previous values in that case too (it cannot happen with identity-assigned IDs, which have no gaps).",
+      "Scratch modelling: the SQL Server call fills a table variable of Website.SensorDataList (memory-optimized, SensorDataListID IDENTITY as in the source) one INSERT per reading, so the readings are numbered 1..n; PostgreSQL receives the same readings with the same numbers. Warehouse.ColdRoomTemperatures is memory-optimized but not system-versioned and has no identity key; the procedure references neither.",
+      "Step 3 is the state form: whether each engine raised, and every row of Warehouse.ColdRoomTemperatures (compared as a multiset; the table has no key the procedure uses).",
+      "Step 4 is not run: the call changes the data it reads.",
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
+    ]
+  },
+  "columnMappings": [
+    {
+      "sqlServerType": "int NOT NULL",
+      "postgresType": "integer NOT NULL"
+    },
+    {
+      "sqlServerType": "int NULL",
+      "postgresType": "integer"
+    },
+    {
+      "sqlServerType": "datetime2(7) NULL",
+      "postgresType": "timestamp",
+      "notes": "datetime2(7) holds 100 ns ticks; PostgreSQL timestamp holds 1 µs. Harness inputs are normalised to µs and the count of normalised values is recorded as a finding."
+    },
+    {
+      "sqlServerType": "decimal(18,2) NULL",
+      "postgresType": "numeric(18,2)"
+    },
+    {
+      "sqlServerType": "datetime2(7) NOT NULL",
+      "postgresType": "timestamp NOT NULL",
+      "notes": "datetime2(7) holds 100 ns ticks; PostgreSQL timestamp holds 1 µs. Harness inputs are normalised to µs and the count of normalised values is recorded as a finding."
+    },
+    {
+      "sqlServerType": "decimal(10,2) NOT NULL",
+      "postgresType": "numeric(10,2) NOT NULL"
+    }
+  ],
+  "evidence": {
+    "step1": "pass",
+    "step2": "not-run",
+    "step3": "pass",
+    "step4": "not-run",
+    "step5": "not-run",
+    "step6": "not-run",
+    "rowsCompared": 205,
+    "trapsCovered": [
+      "NULL in every nullable column",
+      "numeric rounding and scale (decimal edge values)",
+      "datetime boundaries at the cutoffs (inputs normalised to µs)",
+      "state after the call (every row of the changed tables) and the error outcome"
+    ],
+    "pbtSeeds": [
+      1796010965
+    ],
+    "samples": 200,
+    "samplesWithRows": 69,
+    "subMicrosecondNormalised": 589,
+    "mutantsDetected": [
+      "insert even when the update found rows",
+      "loop bounds swapped (a call with several readings applies none)",
+      "an error keeps the readings applied before it",
+      "update changes the temperature only"
+    ],
+    "harnessVersion": "harness-generic-0.3.0"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "Kiro",
+    "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
+  },
+  "status": "pending"
+}

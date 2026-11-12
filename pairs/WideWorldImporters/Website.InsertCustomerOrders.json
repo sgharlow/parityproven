@@ -1,0 +1,137 @@
+{
+  "origin": {
+    "repo": "https://github.com/microsoft/sql-server-samples",
+    "release": "wide-world-importers-v1.0",
+    "license": "MIT",
+    "assetUrl": "https://github.com/microsoft/sql-server-samples/releases/download/wide-world-importers-v1.0/WideWorldImporters-Full.bak",
+    "sha256": "e842bad6ce02f74f166947e559dab1b476edd7eaae3da2ab9e3f522f1dd87124"
+  },
+  "conversionType": "tsql-to-plpgsql",
+  "objectClass": "procedure",
+  "tier": "medium",
+  "code": {
+    "source": "\r\nCREATE PROCEDURE Website.InsertCustomerOrders\r\n@Orders Website.OrderList READONLY,\r\n@OrderLines Website.OrderLineList READONLY,\r\n@OrdersCreatedByPersonID int,\r\n@SalespersonPersonID int\r\nWITH EXECUTE AS OWNER\r\nAS\r\nBEGIN\r\n    SET NOCOUNT ON;\r\n    SET XACT_ABORT ON;\r\n\r\n    DECLARE @OrdersToGenerate AS TABLE\r\n    (\r\n        OrderReference int PRIMARY KEY,   -- reference from the application\r\n        OrderID int\r\n    );\r\n\r\n    -- allocate the new order numbers\r\n\r\n    INSERT @OrdersToGenerate (OrderReference, OrderID)\r\n    SELECT OrderReference, NEXT VALUE FOR Sequences.OrderID\r\n    FROM @Orders;\r\n\r\n    BEGIN TRY\r\n\r\n        BEGIN TRAN;\r\n\r\n        INSERT Sales.Orders\r\n            (OrderID, CustomerID, SalespersonPersonID, PickedByPersonID, ContactPersonID, BackorderOrderID, OrderDate,\r\n             ExpectedDeliveryDate, CustomerPurchaseOrderNumber, IsUndersupplyBackordered, Comments, DeliveryInstructions, InternalComments,\r\n             PickingCompletedWhen, LastEditedBy, LastEditedWhen)\r\n        SELECT otg.OrderID, o.CustomerID, @SalespersonPersonID, NULL, o.ContactPersonID, NULL, SYSDATETIME(),\r\n               o.ExpectedDeliveryDate, o.CustomerPurchaseOrderNumber, o.IsUndersupplyBackordered, o.Comments, o.DeliveryInstructions, NULL,\r\n               NULL, @OrdersCreatedByPersonID, SYSDATETIME()\r\n        FROM @OrdersToGenerate AS otg\r\n        INNER JOIN @Orders AS o\r\n        ON otg.OrderReference = o.OrderReference;\r\n\r\n        INSERT Sales.OrderLines\r\n            (OrderID, StockItemID, [Description], PackageTypeID, Quantity, UnitPrice,\r\n             TaxRate, PickedQuantity, PickingCompletedWhen, LastEditedBy, LastEditedWhen)\r\n        SELECT otg.OrderID, ol.StockItemID, ol.[Description], si.UnitPackageID, ol.Quantity,\r\n               Website.CalculateCustomerPrice(o.CustomerID, ol.StockItemID, SYSDATETIME()),\r\n               si.TaxRate, 0, NULL, @OrdersCreatedByPersonID, SYSDATETIME()\r\n        FROM @OrdersToGenerate AS otg\r\n        INNER JOIN @OrderLines AS ol\r\n        ON otg.OrderReference = ol.OrderReference\r\n\t\tINNER JOIN @Orders AS o\r\n\t\tON ol.OrderReference = o.OrderReference\r\n        INNER JOIN Warehouse.StockItems AS si\r\n        ON ol.StockItemID = si.StockItemID;\r\n\r\n        COMMIT;\r\n\r\n    END TRY\r\n    BEGIN CATCH\r\n        IF XACT_STATE() <> 0 ROLLBACK;\r\n        PRINT N'Unable to create the customer orders.';\r\n        THROW;\r\n        RETURN -1;\r\n    END CATCH;\r\n\r\n    RETURN 0;\r\nEND;",
+    "engineOutput": "-- PL/pgSQL conversion of Website.InsertCustomerOrders (WideWorldImporters).\n-- Engine: Kiro. No separate first draft was kept for this object.\n-- WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted.\n--\n-- Differences from a literal translation:\n--  * The table-valued parameter types Website.OrderList / Website.OrderLineList become composite types and the\n--    parameters arrays of them. *_from_json builds them from a JSON array (CALL arguments cannot contain subqueries).\n--  * The @OrdersToGenerate table variable becomes two arrays filled by a statement of their own, so every order's ID\n--    is allocated before any insert, as in the source. (An earlier version allocated inside the INSERT statement; the\n--    property check found that PostgreSQL then stops calling nextval() at the first failing row, consuming fewer IDs\n--    than SQL Server.) As with NEXT VALUE FOR, the IDs stay consumed if the inserts fail.\n--  * SYSDATETIME() -> localtimestamp (and ::date where the column is a date).\n--  * TRY/CATCH + ROLLBACK + THROW (re-raise) -> an exception block that undoes the inserts and re-raises the same error.\n\nCREATE SCHEMA IF NOT EXISTS website;\n\nDO $do$\nBEGIN\n    CREATE TYPE website.order_list AS (\n        \"OrderReference\"              integer,\n        \"CustomerID\"                  integer,\n        \"ContactPersonID\"             integer,\n        \"ExpectedDeliveryDate\"        date,\n        \"CustomerPurchaseOrderNumber\" varchar(20),\n        \"IsUndersupplyBackordered\"    boolean,\n        \"Comments\"                    text,\n        \"DeliveryInstructions\"        text\n    );\nEXCEPTION WHEN duplicate_object THEN\n    NULL;\nEND\n$do$;\n\nDO $do$\nBEGIN\n    CREATE TYPE website.order_line_list AS (\n        \"OrderReference\" integer,\n        \"StockItemID\"    integer,\n        \"Description\"    varchar(100),\n        \"Quantity\"       integer\n    );\nEXCEPTION WHEN duplicate_object THEN\n    NULL;\nEND\n$do$;\n\nCREATE OR REPLACE FUNCTION website.order_list_from_json(rows jsonb)\nRETURNS website.order_list[]\nLANGUAGE sql\nIMMUTABLE\nAS $fn$\n    SELECT coalesce(array_agg(jsonb_populate_record(NULL::website.order_list, r) ORDER BY ord), '{}')\n    FROM jsonb_array_elements(rows) WITH ORDINALITY AS e(r, ord)\n$fn$;\n\nCREATE OR REPLACE FUNCTION website.order_line_list_from_json(rows jsonb)\nRETURNS website.order_line_list[]\nLANGUAGE sql\nIMMUTABLE\nAS $fn$\n    SELECT coalesce(array_agg(jsonb_populate_record(NULL::website.order_line_list, r) ORDER BY ord), '{}')\n    FROM jsonb_array_elements(rows) WITH ORDINALITY AS e(r, ord)\n$fn$;\n\nCREATE OR REPLACE PROCEDURE website.insert_customer_orders(\n    orders website.order_list[],\n    order_lines website.order_line_list[],\n    orders_created_by_person_id integer,\n    salesperson_person_id integer\n)\nLANGUAGE plpgsql\nAS $fn$\nDECLARE\n    order_references integer[];\n    order_ids        integer[];\nBEGIN\n    -- allocate the new order numbers first, in their own statement (as the source does): every order consumes a value\n    -- even if inserting the orders fails later\n    SELECT array_agg(a.order_reference ORDER BY a.order_reference), array_agg(a.order_id ORDER BY a.order_reference)\n    INTO order_references, order_ids\n    FROM (SELECT o.\"OrderReference\" AS order_reference, nextval('sequences.\"OrderID\"')::integer AS order_id\n          FROM unnest(orders) AS o) AS a;\n\n    BEGIN\n        WITH orders_to_generate AS (\n            SELECT g.order_reference, g.order_id\n            FROM unnest(order_references, order_ids) AS g(order_reference, order_id)\n        ),\n        inserted_orders AS (\n            INSERT INTO sales.orders\n                (\"OrderID\", \"CustomerID\", \"SalespersonPersonID\", \"PickedByPersonID\", \"ContactPersonID\", \"BackorderOrderID\", \"OrderDate\",\n                 \"ExpectedDeliveryDate\", \"CustomerPurchaseOrderNumber\", \"IsUndersupplyBackordered\", \"Comments\", \"DeliveryInstructions\", \"InternalComments\",\n                 \"PickingCompletedWhen\", \"LastEditedBy\", \"LastEditedWhen\")\n            SELECT otg.order_id, o.\"CustomerID\", salesperson_person_id, NULL, o.\"ContactPersonID\", NULL, localtimestamp::date,\n                   o.\"ExpectedDeliveryDate\", o.\"CustomerPurchaseOrderNumber\", o.\"IsUndersupplyBackordered\", o.\"Comments\", o.\"DeliveryInstructions\", NULL,\n                   NULL, orders_created_by_person_id, localtimestamp\n            FROM orders_to_generate AS otg\n            INNER JOIN unnest(orders) AS o\n            ON otg.order_reference = o.\"OrderReference\"\n            RETURNING 1\n        )\n        INSERT INTO sales.order_lines\n            (\"OrderID\", \"StockItemID\", \"Description\", \"PackageTypeID\", \"Quantity\", \"UnitPrice\",\n             \"TaxRate\", \"PickedQuantity\", \"PickingCompletedWhen\", \"LastEditedBy\", \"LastEditedWhen\")\n        SELECT otg.order_id, ol.\"StockItemID\", ol.\"Description\", si.\"UnitPackageID\", ol.\"Quantity\",\n               website.calculate_customer_price(o.\"CustomerID\", ol.\"StockItemID\", localtimestamp::date),\n               si.\"TaxRate\", 0, NULL, orders_created_by_person_id, localtimestamp\n        FROM orders_to_generate AS otg\n        INNER JOIN unnest(order_lines) AS ol\n        ON otg.order_reference = ol.\"OrderReference\"\n        INNER JOIN unnest(orders) AS o\n        ON ol.\"OrderReference\" = o.\"OrderReference\"\n        INNER JOIN warehouse.stock_items AS si\n        ON ol.\"StockItemID\" = si.\"StockItemID\";\n    EXCEPTION WHEN OTHERS THEN\n        RAISE NOTICE 'Unable to create the customer orders.';\n        RAISE;\n    END;\nEND;\n$fn$;\n",
+    "final": "-- PL/pgSQL conversion of Website.InsertCustomerOrders (WideWorldImporters).\n-- Engine: Kiro. No separate first draft was kept for this object.\n-- WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted.\n--\n-- Differences from a literal translation:\n--  * The table-valued parameter types Website.OrderList / Website.OrderLineList become composite types and the\n--    parameters arrays of them. *_from_json builds them from a JSON array (CALL arguments cannot contain subqueries).\n--  * The @OrdersToGenerate table variable becomes two arrays filled by a statement of their own, so every order's ID\n--    is allocated before any insert, as in the source. (An earlier version allocated inside the INSERT statement; the\n--    property check found that PostgreSQL then stops calling nextval() at the first failing row, consuming fewer IDs\n--    than SQL Server.) As with NEXT VALUE FOR, the IDs stay consumed if the inserts fail.\n--  * SYSDATETIME() -> localtimestamp (and ::date where the column is a date).\n--  * TRY/CATCH + ROLLBACK + THROW (re-raise) -> an exception block that undoes the inserts and re-raises the same error.\n\nCREATE SCHEMA IF NOT EXISTS website;\n\nDO $do$\nBEGIN\n    CREATE TYPE website.order_list AS (\n        \"OrderReference\"              integer,\n        \"CustomerID\"                  integer,\n        \"ContactPersonID\"             integer,\n        \"ExpectedDeliveryDate\"        date,\n        \"CustomerPurchaseOrderNumber\" varchar(20),\n        \"IsUndersupplyBackordered\"    boolean,\n        \"Comments\"                    text,\n        \"DeliveryInstructions\"        text\n    );\nEXCEPTION WHEN duplicate_object THEN\n    NULL;\nEND\n$do$;\n\nDO $do$\nBEGIN\n    CREATE TYPE website.order_line_list AS (\n        \"OrderReference\" integer,\n        \"StockItemID\"    integer,\n        \"Description\"    varchar(100),\n        \"Quantity\"       integer\n    );\nEXCEPTION WHEN duplicate_object THEN\n    NULL;\nEND\n$do$;\n\nCREATE OR REPLACE FUNCTION website.order_list_from_json(rows jsonb)\nRETURNS website.order_list[]\nLANGUAGE sql\nIMMUTABLE\nAS $fn$\n    SELECT coalesce(array_agg(jsonb_populate_record(NULL::website.order_list, r) ORDER BY ord), '{}')\n    FROM jsonb_array_elements(rows) WITH ORDINALITY AS e(r, ord)\n$fn$;\n\nCREATE OR REPLACE FUNCTION website.order_line_list_from_json(rows jsonb)\nRETURNS website.order_line_list[]\nLANGUAGE sql\nIMMUTABLE\nAS $fn$\n    SELECT coalesce(array_agg(jsonb_populate_record(NULL::website.order_line_list, r) ORDER BY ord), '{}')\n    FROM jsonb_array_elements(rows) WITH ORDINALITY AS e(r, ord)\n$fn$;\n\nCREATE OR REPLACE PROCEDURE website.insert_customer_orders(\n    orders website.order_list[],\n    order_lines website.order_line_list[],\n    orders_created_by_person_id integer,\n    salesperson_person_id integer\n)\nLANGUAGE plpgsql\nAS $fn$\nDECLARE\n    order_references integer[];\n    order_ids        integer[];\nBEGIN\n    -- allocate the new order numbers first, in their own statement (as the source does): every order consumes a value\n    -- even if inserting the orders fails later\n    SELECT array_agg(a.order_reference ORDER BY a.order_reference), array_agg(a.order_id ORDER BY a.order_reference)\n    INTO order_references, order_ids\n    FROM (SELECT o.\"OrderReference\" AS order_reference, nextval('sequences.\"OrderID\"')::integer AS order_id\n          FROM unnest(orders) AS o) AS a;\n\n    BEGIN\n        WITH orders_to_generate AS (\n            SELECT g.order_reference, g.order_id\n            FROM unnest(order_references, order_ids) AS g(order_reference, order_id)\n        ),\n        inserted_orders AS (\n            INSERT INTO sales.orders\n                (\"OrderID\", \"CustomerID\", \"SalespersonPersonID\", \"PickedByPersonID\", \"ContactPersonID\", \"BackorderOrderID\", \"OrderDate\",\n                 \"ExpectedDeliveryDate\", \"CustomerPurchaseOrderNumber\", \"IsUndersupplyBackordered\", \"Comments\", \"DeliveryInstructions\", \"InternalComments\",\n                 \"PickingCompletedWhen\", \"LastEditedBy\", \"LastEditedWhen\")\n            SELECT otg.order_id, o.\"CustomerID\", salesperson_person_id, NULL, o.\"ContactPersonID\", NULL, localtimestamp::date,\n                   o.\"ExpectedDeliveryDate\", o.\"CustomerPurchaseOrderNumber\", o.\"IsUndersupplyBackordered\", o.\"Comments\", o.\"DeliveryInstructions\", NULL,\n                   NULL, orders_created_by_person_id, localtimestamp\n            FROM orders_to_generate AS otg\n            INNER JOIN unnest(orders) AS o\n            ON otg.order_reference = o.\"OrderReference\"\n            RETURNING 1\n        )\n        INSERT INTO sales.order_lines\n            (\"OrderID\", \"StockItemID\", \"Description\", \"PackageTypeID\", \"Quantity\", \"UnitPrice\",\n             \"TaxRate\", \"PickedQuantity\", \"PickingCompletedWhen\", \"LastEditedBy\", \"LastEditedWhen\")\n        SELECT otg.order_id, ol.\"StockItemID\", ol.\"Description\", si.\"UnitPackageID\", ol.\"Quantity\",\n               website.calculate_customer_price(o.\"CustomerID\", ol.\"StockItemID\", localtimestamp::date),\n               si.\"TaxRate\", 0, NULL, orders_created_by_person_id, localtimestamp\n        FROM orders_to_generate AS otg\n        INNER JOIN unnest(order_lines) AS ol\n        ON otg.order_reference = ol.\"OrderReference\"\n        INNER JOIN unnest(orders) AS o\n        ON ol.\"OrderReference\" = o.\"OrderReference\"\n        INNER JOIN warehouse.stock_items AS si\n        ON ol.\"StockItemID\" = si.\"StockItemID\";\n    EXCEPTION WHEN OTHERS THEN\n        RAISE NOTICE 'Unable to create the customer orders.';\n        RAISE;\n    END;\nEND;\n$fn$;\n",
+    "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
+    "engine": "kiro",
+    "notes": [
+      "WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted.",
+      "Table-valued parameters Website.OrderList / Website.OrderLineList become composite types website.order_list / website.order_line_list and array parameters; the harness passes the same generated rows to both engines. In the source both types are memory-optimized; here they are disk-based (the procedure is interpreted T-SQL, so storage does not change its result).",
+      "NEXT VALUE FOR Sequences.OrderID -> nextval('sequences.\"OrderID\"'). As in SQL Server, values are consumed even when the transaction rolls back. The source assigns them to the rows of @Orders in an undefined order, so order IDs are compared as a set, and each line is matched to its order through the order's purchase-order number and customer.",
+      "SYSDATETIME() -> localtimestamp. Compared as 'today' / 'within the last 5 minutes' on each engine's own clock; the exact time is not claimed.",
+      "TRY/CATCH with XACT_ABORT, ROLLBACK and THROW (re-raise) -> an exception block that re-raises. The outcome compares the error class each engine raised (NOT NULL violation 515/23502, string truncation 8152 or 2628/22001, numeric overflow 8115/22003).",
+      "Depends on Website.CalculateCustomerPrice: SQL Server runs its original definition, PostgreSQL its verified conversion. Generated special deals are dated around the day of the run so that customer pricing applies.",
+      "Preconditions: OrderReference is unique within @Orders (it is the key of @OrdersToGenerate). Sales.Orders and Sales.OrderLines start empty.",
+      "Step 4 is not run: the call changes the data it reads.",
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
+    ]
+  },
+  "columnMappings": [
+    {
+      "sqlServerType": "int NOT NULL",
+      "postgresType": "integer NOT NULL"
+    },
+    {
+      "sqlServerType": "int NULL",
+      "postgresType": "integer"
+    },
+    {
+      "sqlServerType": "date NULL",
+      "postgresType": "date"
+    },
+    {
+      "sqlServerType": "nvarchar(20) NULL",
+      "postgresType": "varchar(20)"
+    },
+    {
+      "sqlServerType": "bit NULL",
+      "postgresType": "boolean",
+      "notes": "bit maps to boolean; the driver returns true/false on both sides."
+    },
+    {
+      "sqlServerType": "nvarchar(400) NULL",
+      "postgresType": "varchar(400)"
+    },
+    {
+      "sqlServerType": "nvarchar(100) NULL",
+      "postgresType": "varchar(100)"
+    },
+    {
+      "sqlServerType": "date NOT NULL",
+      "postgresType": "date NOT NULL"
+    },
+    {
+      "sqlServerType": "bit NOT NULL",
+      "postgresType": "boolean NOT NULL",
+      "notes": "bit maps to boolean; the driver returns true/false on both sides."
+    },
+    {
+      "sqlServerType": "datetime2(7) NULL",
+      "postgresType": "timestamp",
+      "notes": "datetime2(7) holds 100 ns ticks; PostgreSQL timestamp holds 1 µs. Harness inputs are normalised to µs and the count of normalised values is recorded as a finding."
+    },
+    {
+      "sqlServerType": "datetime2(7) NOT NULL",
+      "postgresType": "timestamp NOT NULL",
+      "notes": "datetime2(7) holds 100 ns ticks; PostgreSQL timestamp holds 1 µs. Harness inputs are normalised to µs and the count of normalised values is recorded as a finding."
+    },
+    {
+      "sqlServerType": "nvarchar(100) NOT NULL",
+      "postgresType": "varchar(100) NOT NULL"
+    },
+    {
+      "sqlServerType": "decimal(18,2) NULL",
+      "postgresType": "numeric(18,2)"
+    },
+    {
+      "sqlServerType": "decimal(18,3) NOT NULL",
+      "postgresType": "numeric(18,3) NOT NULL"
+    },
+    {
+      "sqlServerType": "decimal(18,2) NOT NULL",
+      "postgresType": "numeric(18,2) NOT NULL"
+    },
+    {
+      "sqlServerType": "decimal(18,3) NULL",
+      "postgresType": "numeric(18,3)"
+    }
+  ],
+  "evidence": {
+    "step1": "pass",
+    "step2": "not-run",
+    "step3": "pass",
+    "step4": "not-run",
+    "step5": "not-run",
+    "step6": "not-run",
+    "rowsCompared": 209,
+    "trapsCovered": [
+      "NULL in every nullable column",
+      "numeric rounding and scale (decimal edge values)",
+      "datetime boundaries at the cutoffs (inputs normalised to µs)",
+      "empty string and trailing spaces",
+      "state after the call (every row of the changed tables) and the error outcome"
+    ],
+    "pbtSeeds": [
+      61
+    ],
+    "samples": 200,
+    "samplesWithRows": 180,
+    "subMicrosecondNormalised": 0,
+    "mutantsDetected": [
+      "lines priced at the list price (no customer pricing)",
+      "priced on the expected delivery date",
+      "picked quantity set to the ordered quantity",
+      "lines for unknown stock items kept",
+      "salesperson taken from the created-by argument",
+      "order date set to the expected delivery date"
+    ],
+    "harnessVersion": "harness-generic-0.3.0"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "Kiro",
+    "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
+  },
+  "status": "pending"
+}

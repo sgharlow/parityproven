@@ -56,6 +56,7 @@ async function initScorecard() {
       <div class="stat stat-pending"> <div class="stat-val">${summary.pending}</div> <div class="stat-lbl">Pending</div></div>
       <div class="stat stat-failed">  <div class="stat-val">${summary.failed}</div>  <div class="stat-lbl">Failed</div></div>
       <div class="stat">              <div class="stat-val">${summary.total}</div>   <div class="stat-lbl">Total</div></div>
+      ${summary.excluded ? `<div class="stat"><div class="stat-val">${summary.excluded}</div><div class="stat-lbl">Out of scope</div></div>` : ''}
     </div>`;
 
   const rows = index.receipts.map(r => {
@@ -69,12 +70,29 @@ async function initScorecard() {
     </tr>`;
   }).join('');
 
+  const excluded = index.excluded || [];
+  const excludedHtml = excluded.length
+    ? `<h2 style="margin-top:2rem">Not converted: out of scope (${excluded.length})</h2>
+       <p style="color:var(--c-muted);font-size:0.875rem">These objects are in the inventory but were not converted. They are not counted as verified, pending or failed above. Each has its reason.</p>
+       <table>
+         <thead><tr><th>Object</th><th>Database</th><th>Type</th><th>Tier</th><th>Why not converted</th></tr></thead>
+         <tbody>${excluded.map(x => `<tr>
+           <td>${esc(x.schemaName)}.${esc(x.objectName)}</td>
+           <td>${esc(x.database)}</td>
+           <td><span class="chip">${esc(x.objectClass)}</span></td>
+           <td><span class="chip">${esc(x.tier)}</span></td>
+           <td style="font-size:0.85rem">${esc(x.reason)}</td>
+         </tr>`).join('')}</tbody>
+       </table>`
+    : '';
+
   root.innerHTML = `
     ${statsHtml}
     <table>
       <thead><tr><th>Object</th><th>Database</th><th>Type</th><th>Tier</th><th>Status</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
+    ${excludedHtml}
     <p style="color:var(--c-muted);font-size:0.8rem;margin-top:1rem">Built ${new Date(index.builtAt).toLocaleString()}</p>`;
 }
 
@@ -105,6 +123,7 @@ async function initReceipt() {
 
   document.title = `${obj} — ParityProven`;
 
+  const notConverted = receipt.code.engine === 'not converted';
   const failureNote = receipt.evidence.failureDetail
     ? `<br><strong>Why it failed:</strong> ${esc(receipt.evidence.failureDetail)}` : '';
   const notVerifiedBanner = receipt.status !== 'verified'
@@ -148,7 +167,7 @@ async function initReceipt() {
        </ul>
        <p style="color:var(--c-muted);font-size:0.85rem;margin-bottom:0.25rem">Re-run from the public repo:</p>
        <div class="cmd">npm run convert -- --object ${esc(receipt.schemaName)}.${esc(receipt.objectName)} --seed ${ev.pbtSeeds[0]}</div>`
-    : `<p style="color:var(--c-muted)">No PBT run recorded yet.</p>`;
+    : `<p style="color:var(--c-muted)">${notConverted ? 'Not converted, so there is no harness run for this object.' : 'No PBT run recorded yet.'}</p>`;
 
   const loadFindings = receipt.evidence.loadTimeFindings?.length
     ? `<h3>Load-time findings</h3>

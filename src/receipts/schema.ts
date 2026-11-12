@@ -56,10 +56,21 @@ export interface ReceiptIndexEntry {
   path: string;
 }
 
+/** An inventory object that is out of scope: not converted, not a pair record, shown with its reason. */
+export interface ReceiptExclusion {
+  database: string;
+  schemaName: string;
+  objectName: string;
+  objectClass: ObjectClass;
+  tier: Tier;
+  reason: string;
+}
+
 export interface ReceiptIndex {
   builtAt: string;
   receipts: ReceiptIndexEntry[];
-  summary: { total: number; verified: number; pending: number; failed: number };
+  excluded?: ReceiptExclusion[];
+  summary: { total: number; verified: number; pending: number; failed: number; excluded?: number };
 }
 
 export const STEP_LABELS: Record<number, string> = {

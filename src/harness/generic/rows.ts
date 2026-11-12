@@ -72,6 +72,7 @@ function decimalArb(p: number, s: number): fc.Arbitrary<string> {
 }
 
 export function baseColArb(col: ColSpec, c: Cutoffs | null, k: number): fc.Arbitrary<unknown> {
+  if (col.arbitrary) return col.arbitrary;
   const t = col.type;
   switch (t.kind) {
     case "int":
@@ -127,6 +128,14 @@ export function baseColArb(col: ColSpec, c: Cutoffs | null, k: number): fc.Arbit
       if (col.role === "ref" && t.n >= 2) {
         return fc.oneof({ arbitrary: fc.integer({ min: 1, max: k }).map((n) => `K${n}`), weight: 12 }, { arbitrary: fc.constant(`K${k + 1}`), weight: 1 });
       }
+      if (col.strings?.length) {
+        // a spec vocabulary (names, search terms) dominates, so that text searches actually hit
+        return fc.oneof(
+          { arbitrary: fc.constantFrom(...col.strings), weight: 6 },
+          { arbitrary: fc.constantFrom("", " ", "a", "A", "a ", " a", "Café", "x'y"), weight: 1 },
+          { arbitrary: fc.string({ maxLength: Math.min(t.n, 8) }), weight: 1 }
+        );
+      }
       return fc.oneof(
         fc.constantFrom("", " ", "a", "A", "a ", " a", "Café", "x'y"),
         fc.string({ maxLength: Math.min(t.n, 8) })
@@ -136,7 +145,13 @@ export function baseColArb(col: ColSpec, c: Cutoffs | null, k: number): fc.Arbit
     case "datetime2":
       return datetimeArb(c);
     case "bit":
+      if (col.trueFraction !== undefined) {
+        const t100 = Math.round(col.trueFraction * 100);
+        return fc.integer({ min: 1, max: 100 }).map((n) => n <= t100);
+      }
       return fc.boolean();
+    case "varbinary":
+      return fc.uint8Array({ minLength: 0, maxLength: 32 }).map((a) => Buffer.from(a));
     case "geography":
       // WKT point (longitude latitude), 4 decimals; includes the poles, antimeridian and zero
       return fc
@@ -148,28 +163,44 @@ export function baseColArb(col: ColSpec, c: Cutoffs | null, k: number): fc.Arbit
   }
 }
 
+/** Append the row's number as the last character so no two values in a `distinct` column are equal under any collation. */
+export function distinctValue(v: unknown, rowIndex: number, col: ColSpec): unknown {
+  if (typeof v !== "string") return v;
+  const n = col.type.kind === "nvarchar" || col.type.kind === "char" ? col.type.n : 1000;
+  // fixed width, so (value + suffix) is unique per row for fewer than 10,000 rows
+  return v.slice(0, n - 4) + String(rowIndex + 1).padStart(4, "0");
+}
+
 function tableArb(t: TableSpec, c: Cutoffs | null, k: number): fc.Arbitrary<Row[]> {
   const shape: Record<string, fc.Arbitrary<unknown>> = {};
   for (const col of t.columns) {
-    if (col.role === "pk") continue;
+    if (col.role === "pk" || col.role === "seq") continue;
     const base = baseColArb(col, c, k);
     // nullable End* columns are open validity periods: NULL is the common case (and what views filter on)
-    const nullFreq = /^end/i.test(col.name) ? 1 : 4;   // fc.option: 1 => NULL ~50%, 4 => NULL ~20%
+    // fc.option: freq f => NULL about 1/(f+1) (1 => ~50%, 4 => ~20%)
+    const nullFreq = col.nullFraction !== undefined
+      ? Math.max(1, Math.round(1 / col.nullFraction - 1))
+      : /^end/i.test(col.name) ? 1 : 4;
     shape[col.name] = col.nullable ? fc.option(base, { nil: null, freq: nullFreq }) : base;
   }
   const pks = t.columns.filter((x) => x.role === "pk");
   // About k rows so every key in 1..k usually has a partner; empty (~5%) and larger tables still occur.
   const rec = fc.record(shape);
-  const rowsArb = fc.oneof(
+  const rowsArb = t.rows ? fc.array(rec, { minLength: t.rows[0], maxLength: t.rows[1] }) : fc.oneof(
     { arbitrary: fc.array(rec, { minLength: k, maxLength: k }), weight: 12 },
     { arbitrary: fc.array(rec, { minLength: k, maxLength: k + 2 }), weight: 6 },
     { arbitrary: fc.constant([] as Array<Record<string, unknown>>), weight: 1 }
   );
+  const seqs = t.columns.filter((x) => x.role === "seq");
+  const distinct = t.columns.filter((x) => x.distinct);
   return rowsArb.map((rows) =>
     rows.map((r, i) => {
       const row: Row = {};
       for (const pk of pks) row[pk.name] = pk.type.kind === "nvarchar" || pk.type.kind === "char" ? `K${i + 1}` : i + 1;
-      return { ...row, ...r };
+      for (const s of seqs) row[s.name] = (s.offset ?? 0) + i + 1;
+      const out = { ...row, ...r };
+      for (const d of distinct) out[d.name] = distinctValue(out[d.name], i, d);
+      return out;
     })
   );
 }

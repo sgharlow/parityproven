@@ -51,11 +51,13 @@ export class PgClient implements DatabaseClient {
     const parameterisedSql =
       params.length > 0 ? sqlText.replace(/\?/g, () => `$${idx++}`) : sqlText;
 
-    const result = await client.query({
+    const raw = await client.query({
       text: parameterisedSql,
       values: params as pg.QueryConfigValues<unknown[]>,
       rowMode: "array",
     });
+    // A script with several statements (no parameters) returns one result per statement; the last one is the answer.
+    const result = (Array.isArray(raw) ? raw[raw.length - 1] : raw) as pg.QueryResult;
 
     const columns: ColumnMeta[] = result.fields.map((f) => ({
       name: f.name,

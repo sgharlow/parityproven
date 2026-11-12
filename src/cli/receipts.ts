@@ -7,6 +7,7 @@ import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from "fs";
 import { buildReceipts } from "../receipts/builder.js";
+import { DISPOSITIONS } from "../conversions/dispositions.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, "..", "..");
@@ -24,6 +25,9 @@ async function main(): Promise<void> {
     pairsDir:       resolve(REPO_ROOT, "pairs"),
     inventoryDir:   resolve(REPO_ROOT, "inventory"),
     predictionsDir: resolve(REPO_ROOT, "predictions"),
+    exclusions: DISPOSITIONS.filter((d) => d.kind === "excluded").map((d) => ({
+      database: d.database, schemaName: d.schema, objectName: d.name, reason: d.reason,
+    })),
   });
 
   // Write receipt files
@@ -40,7 +44,7 @@ async function main(): Promise<void> {
 
   const { summary } = output.index;
   console.log(
-    `Built ${summary.total} receipt(s) — ${summary.verified} verified, ${summary.pending} pending, ${summary.failed} failed`
+    `Built ${summary.total} receipt(s) — ${summary.verified} verified, ${summary.pending} pending, ${summary.failed} failed; ${summary.excluded ?? 0} excluded`
   );
   console.log(`Index: receipts/index.json`);
 }

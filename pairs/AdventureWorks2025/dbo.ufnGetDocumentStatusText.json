@@ -31,8 +31,8 @@
     "runtime": {
       "volume": 10,
       "timedRuns": 7,
-      "sqlServerMs": 20,
-      "postgresMs": 4.46,
+      "sqlServerMs": 18,
+      "postgresMs": 3.99,
       "ratio": 0.22,
       "threshold": 1.5,
       "passed": true,
@@ -43,7 +43,7 @@
     "rowsCompared": 200,
     "trapsCovered": [],
     "pbtSeeds": [
-      616903286
+      2114667615
     ],
     "samples": 200,
     "samplesWithRows": 200,

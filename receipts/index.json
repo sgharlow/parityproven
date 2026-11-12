@@ -1,5 +1,5 @@
 {
-  "builtAt": "2026-11-11T04:03:31.179Z",
+  "builtAt": "2026-11-12T07:56:18.644Z",
   "receipts": [
     {
       "database": "AdventureWorks2025",
@@ -183,6 +183,15 @@
     },
     {
       "database": "WideWorldImporters",
+      "schemaName": "Application",
+      "objectName": "DetermineCustomerAccess",
+      "objectClass": "function",
+      "tier": "simple",
+      "status": "failed",
+      "path": "WideWorldImporters/Application.DetermineCustomerAccess.json"
+    },
+    {
+      "database": "WideWorldImporters",
       "schemaName": "Integration",
       "objectName": "GetMovementUpdates",
       "objectClass": "procedure",
@@ -237,12 +246,39 @@
     },
     {
       "database": "WideWorldImporters",
+      "schemaName": "Sequences",
+      "objectName": "ReseedSequenceBeyondTableValues",
+      "objectClass": "procedure",
+      "tier": "complex",
+      "status": "pending",
+      "path": "WideWorldImporters/Sequences.ReseedSequenceBeyondTableValues.json"
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Website",
+      "objectName": "ActivateWebsiteLogon",
+      "objectClass": "procedure",
+      "tier": "simple",
+      "status": "pending",
+      "path": "WideWorldImporters/Website.ActivateWebsiteLogon.json"
+    },
+    {
+      "database": "WideWorldImporters",
       "schemaName": "Website",
       "objectName": "CalculateCustomerPrice",
       "objectClass": "function",
       "tier": "simple",
       "status": "pending",
       "path": "WideWorldImporters/Website.CalculateCustomerPrice.json"
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Website",
+      "objectName": "ChangePassword",
+      "objectClass": "procedure",
+      "tier": "simple",
+      "status": "pending",
+      "path": "WideWorldImporters/Website.ChangePassword.json"
     },
     {
       "database": "WideWorldImporters",
@@ -256,6 +292,87 @@
     {
       "database": "WideWorldImporters",
       "schemaName": "Website",
+      "objectName": "InsertCustomerOrders",
+      "objectClass": "procedure",
+      "tier": "medium",
+      "status": "pending",
+      "path": "WideWorldImporters/Website.InsertCustomerOrders.json"
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Website",
+      "objectName": "InvoiceCustomerOrders",
+      "objectClass": "procedure",
+      "tier": "medium",
+      "status": "pending",
+      "path": "WideWorldImporters/Website.InvoiceCustomerOrders.json"
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Website",
+      "objectName": "RecordColdRoomTemperatures",
+      "objectClass": "procedure",
+      "tier": "medium",
+      "status": "pending",
+      "path": "WideWorldImporters/Website.RecordColdRoomTemperatures.json"
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Website",
+      "objectName": "RecordVehicleTemperature",
+      "objectClass": "procedure",
+      "tier": "medium",
+      "status": "pending",
+      "path": "WideWorldImporters/Website.RecordVehicleTemperature.json"
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Website",
+      "objectName": "SearchForCustomers",
+      "objectClass": "procedure",
+      "tier": "simple",
+      "status": "failed",
+      "path": "WideWorldImporters/Website.SearchForCustomers.json"
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Website",
+      "objectName": "SearchForPeople",
+      "objectClass": "procedure",
+      "tier": "simple",
+      "status": "pending",
+      "path": "WideWorldImporters/Website.SearchForPeople.json"
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Website",
+      "objectName": "SearchForStockItems",
+      "objectClass": "procedure",
+      "tier": "simple",
+      "status": "pending",
+      "path": "WideWorldImporters/Website.SearchForStockItems.json"
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Website",
+      "objectName": "SearchForStockItemsByTags",
+      "objectClass": "procedure",
+      "tier": "simple",
+      "status": "pending",
+      "path": "WideWorldImporters/Website.SearchForStockItemsByTags.json"
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Website",
+      "objectName": "SearchForSuppliers",
+      "objectClass": "procedure",
+      "tier": "simple",
+      "status": "failed",
+      "path": "WideWorldImporters/Website.SearchForSuppliers.json"
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Website",
       "objectName": "Suppliers",
       "objectClass": "view",
       "tier": "simple",
@@ -263,10 +380,149 @@
       "path": "WideWorldImporters/Website.Suppliers.json"
     }
   ],
+  "excluded": [
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Application",
+      "objectName": "AddRoleMemberIfNonexistent",
+      "objectClass": "procedure",
+      "tier": "complex",
+      "reason": "Database-administration script, not application logic: adds a database user to a role with dynamic SQL."
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Application",
+      "objectName": "CreateRoleIfNonexistent",
+      "objectClass": "procedure",
+      "tier": "complex",
+      "reason": "Database-administration script, not application logic: creates a database role with dynamic SQL."
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Application",
+      "objectName": "Configuration_ApplyAuditing",
+      "objectClass": "procedure",
+      "tier": "complex",
+      "reason": "Database-administration script, not application logic: creates SQL Server Audit objects. PostgreSQL core has no built-in audit equivalent."
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Application",
+      "objectName": "Configuration_RemoveAuditing",
+      "objectClass": "procedure",
+      "tier": "complex",
+      "reason": "Database-administration script, not application logic: removes the SQL Server Audit objects created by Configuration_ApplyAuditing."
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Application",
+      "objectName": "Configuration_ApplyColumnstoreIndexing",
+      "objectClass": "procedure",
+      "tier": "complex",
+      "reason": "Database-administration script, not application logic: creates columnstore indexes. PostgreSQL core has no columnstore index."
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Application",
+      "objectName": "Configuration_ApplyFullTextIndexing",
+      "objectClass": "procedure",
+      "tier": "complex",
+      "reason": "Database-administration script, not application logic: creates full-text catalogs and indexes. PostgreSQL full-text search (tsvector) is a different design, not a translation of this script."
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Application",
+      "objectName": "Configuration_ApplyPartitioning",
+      "objectClass": "procedure",
+      "tier": "complex",
+      "reason": "Database-administration script, not application logic: creates partition functions and schemes and rebuilds tables on them. PostgreSQL declarative partitioning is a different DDL model."
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Application",
+      "objectName": "Configuration_ApplyRowLevelSecurity",
+      "objectClass": "procedure",
+      "tier": "complex",
+      "reason": "Database-administration script, not application logic: creates security policies over Application.DetermineCustomerAccess (recorded as failed)."
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Application",
+      "objectName": "Configuration_RemoveRowLevelSecurity",
+      "objectClass": "procedure",
+      "tier": "complex",
+      "reason": "Database-administration script, not application logic: drops the security policies created by Configuration_ApplyRowLevelSecurity."
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Application",
+      "objectName": "Configuration_EnableInMemory",
+      "objectClass": "procedure",
+      "tier": "complex",
+      "reason": "Database-administration script, not application logic: adds a memory-optimized filegroup and recreates tables and table types as memory-optimized. PostgreSQL has no equivalent."
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Application",
+      "objectName": "Configuration_ConfigureForEnterpriseEdition",
+      "objectClass": "procedure",
+      "tier": "simple",
+      "reason": "Database-administration script, not application logic: runs Configuration_ApplyColumnstoreIndexing, _ApplyFullTextIndexing, _EnableInMemory and _ApplyPartitioning (all excluded)."
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "DataLoadSimulation",
+      "objectName": "Configuration_ApplyDataLoadSimulationProcedures",
+      "objectClass": "procedure",
+      "tier": "complex",
+      "reason": "Part of the WideWorldImporters data-load simulation (tooling that generates the sample's history), not application logic: creates the simulation procedures."
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "DataLoadSimulation",
+      "objectName": "Configuration_RemoveDataLoadSimulationProcedures",
+      "objectClass": "procedure",
+      "tier": "simple",
+      "reason": "Part of the WideWorldImporters data-load simulation (tooling that generates the sample's history), not application logic: drops the simulation procedures."
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "DataLoadSimulation",
+      "objectName": "PopulateDataToCurrentDate",
+      "objectClass": "procedure",
+      "tier": "simple",
+      "reason": "Part of the WideWorldImporters data-load simulation (tooling that generates the sample's history), not application logic: installs the simulation, runs it up to yesterday and removes it again."
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "DataLoadSimulation",
+      "objectName": "DeactivateTemporalTablesBeforeDataLoad",
+      "objectClass": "procedure",
+      "tier": "complex",
+      "reason": "Part of the WideWorldImporters data-load simulation (tooling that generates the sample's history), not application logic: turns system versioning off before a load."
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "DataLoadSimulation",
+      "objectName": "ReactivateTemporalTablesAfterDataLoad",
+      "objectClass": "procedure",
+      "tier": "simple",
+      "reason": "Part of the WideWorldImporters data-load simulation (tooling that generates the sample's history), not application logic: turns system versioning back on after a load."
+    },
+    {
+      "database": "WideWorldImporters",
+      "schemaName": "Sequences",
+      "objectName": "ReseedAllSequences",
+      "objectClass": "procedure",
+      "tier": "simple",
+      "reason": "A fixed list of calls to Sequences.ReseedSequenceBeyondTableValues, one per sequence in the sample schema. The logic is in that procedure, which is converted and verified separately."
+    }
+  ],
   "summary": {
-    "total": 29,
+    "total": 42,
     "verified": 0,
-    "pending": 25,
-    "failed": 4
+    "pending": 35,
+    "failed": 7,
+    "excluded": 17
   }
 }

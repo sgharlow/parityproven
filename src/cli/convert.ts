@@ -19,7 +19,7 @@ import { MssqlClient } from "../harness/clients/mssql-client.js";
 import { PgClient } from "../harness/clients/pg-client.js";
 import { ensureAdventureWorksRestored, ensureWwiRestored } from "../harness/restore.js";
 import {
-  deployPgFunction, dropPgObject, fetchSourceDefinition, prepareSqlServer, preparePostgres, readSql, runProperty,
+  deployPgFunction, dropPgObject, fetchSourceCollation, fetchSourceCompatibilityLevel, fetchSourceDefinition, prepareSqlServer, preparePostgres, readSql, runProperty,
   ssCall, pgCall, type Connections, type RunOutcome,
 } from "../harness/generic/run.js";
 import { clearAll, runBenchmark, type BenchResult } from "../harness/generic/bench.js";
@@ -54,6 +54,7 @@ function traps(spec: ObjectSpec): string[] {
   if (cols.some((c) => c.type.kind === "decimal")) out.push("numeric rounding and scale (decimal edge values)");
   if (cols.some((c) => c.type.kind === "datetime2")) out.push("datetime boundaries at the cutoffs (inputs normalised to µs)");
   if (cols.some((c) => c.type.kind === "nvarchar")) out.push("empty string and trailing spaces");
+  if (spec.stateCheck) out.push("state after the call (every row of the changed tables) and the error outcome");
   if (spec.orderKey.length) out.push("ORDER BY key (ties compared as multisets)");
   return out;
 }
@@ -64,7 +65,8 @@ function mutantSql(spec: ObjectSpec, finalSql: string, from: string, to: string)
   if (!code.includes(from)) throw new Error(`mutant text not found in ${spec.name}: ${JSON.stringify(from)}`);
   const esc = spec.pgFunction.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   // rename the object (first whole-name occurrence) so the mutant never replaces the real conversion
-  return code.replace(from, to).replace(new RegExp(`${esc}(?![\\w])`), `${spec.pgFunction}_mutant`);
+  // function replacements: a "$" in the mutant text (regular expressions) must not be read as a replacement pattern
+  return code.replace(from, () => to).replace(new RegExp(`${esc}(?![\\w])`), () => `${spec.pgFunction}_mutant`);
 }
 
 async function convertOne(conn: Connections, spec: ObjectSpec, seed: number, runs: number): Promise<boolean> {
@@ -80,14 +82,31 @@ async function convertOne(conn: Connections, spec: ObjectSpec, seed: number, run
   // the original T-SQL comes from the restored sample database this object belongs to
   const source = new MssqlClient({ server: "localhost", port: 1433, user: "sa", password: conn.saPassword, database: spec.database });
   let definition: string;
+  let collation: string;
+  let compat: number;
+  const dependencyDefinitions: string[] = [];
   try {
+    for (const dep of spec.dependencies ?? []) {
+      const [schema, name] = dep.split(".");
+      dependencyDefinitions.push(await fetchSourceDefinition(source, { schema, name }));
+    }
     definition = await fetchSourceDefinition(source, spec);
+    collation = await fetchSourceCollation(source);
+    compat = await fetchSourceCompatibilityLevel(source);
   } finally {
     await source.close();
   }
-  const scratch = await prepareSqlServer(conn, spec, definition);
+  console.log(`scratch database: collation ${collation}, compatibility level ${compat} (the source database's)`);
+  const scratch = await prepareSqlServer(conn, spec, definition, collation, compat, dependencyDefinitions);
   try {
     await preparePostgres(conn, spec);
+    // dependencies: their verified conversions go first (each one is proved by its own pair record)
+    for (const dep of spec.dependencies ?? []) {
+      const depSpec = specByName(dep);
+      if (!depSpec) throw new Error(`${label} depends on ${dep}, which has no spec`);
+      await deployPgFunction(conn, depSpec, readSql(resolve(dir, `${dep}.sql`)));
+      console.log(`dependency deployed: ${dep} (conversions/${spec.database}/${dep}.sql; SQL Server: original definition)`);
+    }
 
     // 2. engine first draft
     let draftCheck: PairRecord["evidence"]["engineOutputCheck"];
@@ -155,6 +174,16 @@ async function convertOne(conn: Connections, spec: ObjectSpec, seed: number, run
 
     // 5. step 4: runtime on a synthetic volume (also compares the full results at volume)
     await deployPgFunction(conn, spec, finalSql);
+    if (spec.stateCheck) {
+      // A data-changing call is not repeatable on the same data (the first call changes what the next one sees), so the
+      // median-of-runs measurement does not apply. Step 4 stays not-run; it is not claimed.
+      console.log("runtime: not measured (object changes data; step 4 not-run)");
+      writePair({
+        spec, label, definition, draftSql, finalSql, f, detected, draftCheck, seed,
+        status: "pending", step3: "pass",
+      });
+      return true;
+    }
     const runtime = await runBenchmark(conn, scratch, spec, {
       fn: spec.pgFunction, seed, volume: spec.benchVolume ?? VOLUME, ssSql: ssCall(spec), pgSql: pgCall(spec, spec.pgFunction),
     });

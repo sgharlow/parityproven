@@ -20,7 +20,7 @@
 import type { Tier } from "../pairs/schema.js";
 
 const COMPLEX_PATTERNS: RegExp[] = [
-  /\bEXEC\s*\(/i,                          // EXEC(@sql) dynamic execution
+  /\bEXEC(?:UTE)?\s*\(/i,                  // EXEC(@sql) / EXECUTE (@sql) dynamic execution (EXECUTE form added 2026-11-11)
   /\bsp_executesql\b/i,                    // sp_executesql
   /\bCURSOR\b/i,                           // cursor declaration
   /\b(EXTERNAL|UNSAFE)\s+ASSEMBLY\b/i,     // CLR assembly
@@ -32,7 +32,7 @@ const COMPLEX_PATTERNS: RegExp[] = [
 
 const MEDIUM_PATTERNS: RegExp[] = [
   /(?:^|[^'"@\w])#[\w]+/,                  // temp table (#t or ##t) — not preceded by word/quote chars
-  /\bDECLARE\s+@\w+\s+TABLE\b/i,          // table variable
+  /\bDECLARE\s+@\w+\s+(?:AS\s+)?TABLE\b/i, // table variable (DECLARE @t AS TABLE form added 2026-11-11)
   /\bMERGE\b/i,                            // MERGE statement
   /\bTRY\b[\s\S]*?\bCATCH\b/i,            // TRY...CATCH block
   /\bOVER\s*\(/i,                          // window function

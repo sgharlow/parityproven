@@ -49,13 +49,13 @@
     "step4": "fail",
     "step5": "not-run",
     "step6": "not-run",
-    "runtimeRatio": 2.11,
+    "runtimeRatio": 1.77,
     "runtime": {
       "volume": 2000,
       "timedRuns": 7,
-      "sqlServerMs": 69,
-      "postgresMs": 145.34,
-      "ratio": 2.11,
+      "sqlServerMs": 84,
+      "postgresMs": 148.65,
+      "ratio": 1.77,
       "threshold": 1.5,
       "passed": false,
       "belowResolution": false,
@@ -67,22 +67,22 @@
       "NULL in every nullable column"
     ],
     "pbtSeeds": [
-      978994767
+      1046941480
     ],
     "engineOutputCheck": {
       "step3": "fail",
-      "seed": 978994767,
-      "detail": "random sample: value differs in group 0 (key \"*\"), column \"result\": SQL Server n:0.0001 vs PostgreSQL n:0.00006"
+      "seed": 1046941480,
+      "detail": "random sample: value differs in group 0 (key \"*\"), column \"result\": SQL Server n:0.145 vs PostgreSQL n:0.14496"
     },
     "samples": 200,
-    "samplesWithRows": 131,
+    "samplesWithRows": 118,
     "subMicrosecondNormalised": 0,
     "mutantsDetected": [
       "auto: join condition uses a different key",
       "auto: first numeric literal changed"
     ],
-    "harnessVersion": "harness-generic-0.3.0",
-    "failureDetail": "Step 4: PostgreSQL 145.34 ms vs SQL Server 69 ms = 2.11x, above the 1.5x limit. Results are equivalent (step 3 pass); see the notes for the cause."
+    "failureDetail": "Step 4: PostgreSQL 148.65 ms vs SQL Server 84 ms = 1.77x, above the 1.5x limit. Results are equivalent (step 3 pass); see the notes for the cause.",
+    "harnessVersion": "harness-generic-0.3.0"
   },
   "effort": {
     "humanMinutes": 0,

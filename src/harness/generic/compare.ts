@@ -15,11 +15,21 @@ import { microsToIso } from "./rows.js";
 
 type DtDate = Date & { nanosecondsDelta?: number };
 
-function canonicalCell(value: unknown, declaredType: string): string {
+function canonicalCell(value: unknown, declaredType: string, isJson = false): string {
   if (value === null || value === undefined) return "∅";
+  if (isJson && typeof value === "string") {
+    // Compared as a parsed value: whitespace and escaping are normalised; key order, array order, nulls and strings are kept.
+    if (value === "") return "j:(empty string)";
+    try {
+      return `j:${JSON.stringify(JSON.parse(value))}`;
+    } catch {
+      return `invalid-json:${value}`;
+    }
+  }
   if (typeof value === "boolean") return `b:${value ? 1 : 0}`;
   if (typeof value === "number") return `n:${Object.is(value, -0) ? 0 : value}`;
   if (typeof value === "bigint") return `n:${value}`;
+  if (Buffer.isBuffer(value)) return `x:${value.toString("hex")}`;
   // the SQL Server driver returns bigint as a string to avoid precision loss; values here stay within 2^53
   if (typeof value === "string" && declaredType === "bigint" && /^-?\d+$/.test(value)) return `n:${Number(value)}`;
   if (value instanceof Date) {
@@ -42,8 +52,18 @@ function canonicalCell(value: unknown, declaredType: string): string {
   return `?:${String(value)}`;
 }
 
-function canonicalRows(rs: RowSet): string[][] {
-  return rs.rows.map((row) => row.map((v, i) => canonicalCell(v, rs.columns[i]?.declaredType ?? "")));
+/** One table's contents as a canonical string: rows in the order given, or sorted (a multiset) when `unordered`. */
+export function canonicalTable(rs: RowSet, unordered = false): string {
+  const names = rs.columns.map((c) => c.name).join(",");
+  const rows = canonicalRows(rs, []).map((r) => `(${r.join(", ")})`);
+  if (unordered) rows.sort();
+  return `[${names}] ${rows.length ? rows.join(" ") : "(no rows)"}`;
+}
+
+function canonicalRows(rs: RowSet, jsonColumns: string[]): string[][] {
+  return rs.rows.map((row) =>
+    row.map((v, i) => canonicalCell(v, rs.columns[i]?.declaredType ?? "", jsonColumns.includes(rs.columns[i]?.name ?? "")))
+  );
 }
 
 function rawLess(a: unknown, b: unknown): number {
@@ -71,7 +91,9 @@ function withoutColumns(rs: RowSet, names: string[]): RowSet {
   return { columns: keep.map((i) => rs.columns[i]), rows: rs.rows.map((r) => keep.map((i) => r[i])) };
 }
 
-export function compareResults(ssIn: RowSet, pgIn: RowSet, orderKey: string[], excludeColumns: string[] = []): string | null {
+export function compareResults(
+  ssIn: RowSet, pgIn: RowSet, orderKey: string[], excludeColumns: string[] = [], jsonColumns: string[] = []
+): string | null {
   const ss = withoutColumns(ssIn, excludeColumns);
   const pg = withoutColumns(pgIn, excludeColumns);
   // column names, exact
@@ -92,8 +114,8 @@ export function compareResults(ssIn: RowSet, pgIn: RowSet, orderKey: string[], e
     if (v) return v;
   }
 
-  const a = canonicalRows(ss);
-  const b = canonicalRows(pg);
+  const a = canonicalRows(ss, jsonColumns);
+  const b = canonicalRows(pg, jsonColumns);
   const keyOf = (row: string[]): string => keyIdx.map((i) => row[i]).join("\u0001");
   const rowKey = (row: string[]): string => row.join("\u0001");
 

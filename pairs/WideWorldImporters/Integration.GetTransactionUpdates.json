@@ -59,20 +59,20 @@
     "step4": "pass",
     "step5": "not-run",
     "step6": "not-run",
-    "runtimeRatio": 0.36,
+    "runtimeRatio": 0.33,
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
-      "sqlServerMs": 22,
-      "postgresMs": 7.91,
-      "ratio": 0.36,
+      "sqlServerMs": 16,
+      "postgresMs": 5.36,
+      "ratio": 0.33,
       "threshold": 1.5,
       "passed": true,
       "belowResolution": false,
-      "resultRows": 6070,
+      "resultRows": 6184,
       "volumeMismatch": null
     },
-    "rowsCompared": 341,
+    "rowsCompared": 351,
     "trapsCovered": [
       "NULL in every nullable column",
       "numeric rounding and scale (decimal edge values)",
@@ -80,11 +80,11 @@
       "empty string and trailing spaces"
     ],
     "pbtSeeds": [
-      797043095
+      1693145585
     ],
     "samples": 200,
-    "samplesWithRows": 145,
-    "subMicrosecondNormalised": 912,
+    "samplesWithRows": 137,
+    "subMicrosecondNormalised": 957,
     "mutantsDetected": [
       "customer id taken from transaction only",
       "LEFT OUTER JOIN to invoices becomes INNER JOIN"

@@ -9,9 +9,27 @@
 - [x] Retire the single-object harness (verify/property/defect-check/generators/compare, init-script functions)
 - [x] Receipts show first-draft result, coverage, traps, mutants and the datetime finding
 - [x] Scalar function Website.CalculateCustomerPrice (PL/pgSQL with variables, aggregates, BETWEEN, NULL handling); harness extended with call arguments and scalar results
-- [x] Views Website.Customers and Website.Suppliers: recorded as FAILED, not hidden. Both expose a SQL Server `geography` column with no PostgreSQL equivalent without PostGIS (not in the pinned image). All other columns match on ~96% of generated samples. DECISION NEEDED: add PostGIS to the pinned image, or accept the gap.
-- [ ] Application.DetermineCustomerAccess: depends on IS_ROLEMEMBER, ORIGINAL_LOGIN() and SESSION_CONTEXT (database security context, not data). Needs a decision on how roles and session context map to PostgreSQL before it can be converted honestly.
-- [ ] Website.Search* procedures (FOR JSON), Website.ActivateWebsiteLogon / ChangePassword
-- [ ] State-changing procedures (Application.Configuration_*, DataLoadSimulation.*, Sequences.ReseedAllSequences): need a different check, comparing table state after the same call on both engines
-- [ ] Medium procedures (13) and AdventureWorks2025 objects
-- [ ] Steps 2, 4, 5 and 6 of the verification standard for any object
+- [x] Views Website.Customers and Website.Suppliers. PostGIS added to the pinned image by the project owner (2026-11-09, `2f52387`); geography compared as WKT; both pass.
+- [x] Step 4 (runtime within 1.5x on synthetic volume, server-side timing) for result-set objects (`1e6133d`)
+- [x] AdventureWorks2025: 10 scalar functions and 10 views (`6898796`, `7c272da`)
+- [x] Scratch database created with the source database's collation (WWI `Latin1_General_100_CI_AS`, not the server default)
+- [x] Website.Search* (5 procedures, FOR JSON AUTO + ROOT): harness joins FOR JSON chunks and compares JSON as parsed values; T-SQL LIKE translated (`tsql_compat.like_to_regex`); CI_AS order via a tailored ICU collation; hand-derived LIKE fixed cases.
+  - SearchForStockItems, SearchForStockItemsByTags, SearchForPeople: steps 1, 3, 4 pass.
+  - SearchForCustomers, SearchForSuppliers: steps 1, 3 pass; **step 4 fails** (about 5-8x on 5,000 rows) and both are recorded as failed with the profiled cause in the notes.
+- [x] Website.ActivateWebsiteLogon, Website.ChangePassword: state form of step 3 (`stateCheck`: outcome + every row of Application.People); HASHBYTES SHA2_256 over UTF-16LE (`tsql_compat.utf16le`). Steps 1, 3 pass; step 4 not-run (data-changing call).
+- [x] Decision 1B (2026-11-11): Application.DetermineCustomerAccess recorded as **failed, not converted** (security context: IS_ROLEMEMBER, ORIGINAL_LOGIN, SESSION_CONTEXT). `src/conversions/dispositions.ts` + `npm run dispositions` write the pair record.
+- [x] Decision 2B (2026-11-11): 17 database-administration / data-load-simulation procedures **excluded** with a reason each (`dispositions.ts`); the scorecard lists them under "Not converted: out of scope". (The earlier count of 17 admin procedures was 18; the 18th is the one converted below.)
+- [x] Sequences.ReseedSequenceBeyondTableValues converted as the dynamic-SQL proof point: state form with a sequence observation query and per-sample sequence setup; steps 1, 3 pass, 4/4 planted defects caught.
+- [x] Inventory scorer: dynamic SQL now also matches `EXECUTE (@sql)`, table variables also match `DECLARE @t AS TABLE`. 12 WWI procedures moved to complex (all excluded admin procedures except ReseedSequenceBeyondTableValues). Recorded in `inventory/*.json` `tierRuleChanges`; v1 predictions not edited.
+- [x] Scratch database also takes the source database's compatibility level (WWI 130).
+- [ ] Decision 3A (2026-11-11): the four data-changing medium procedures
+  - [x] Website.RecordVehicleTemperature: OPENJSON/ISJSON/T-SQL conversion semantics measured on SQL Server and reproduced in `tsql_compat` helpers; steps 1, 3 pass on two seeds; 6 planted defects caught.
+  - [x] Website.RecordColdRoomTemperatures: natively compiled; memory-optimized filegroup, type (with IDENTITY) and table in the scratch database; TVP filled in T-SQL; steps 1, 3 pass; 4 planted defects caught.
+  - [x] Website.InsertCustomerOrders: two TVPs, sequence, SYSDATETIME masked per engine clock, Website.CalculateCustomerPrice as a dependency; error classes compared; steps 1, 3 pass on three seeds; 6 planted defects caught. The full-suite run found a real difference in the first conversion (order IDs allocated inside the INSERT statement, so PostgreSQL consumed fewer sequence values when an insert failed); fixed, and the counterexample kept as a fixed case.
+  - [x] Website.InvoiceCustomerOrders: TVP, sequence, temp table, six tables written, exact ReturnedDeliveryData text (style-126 time cut to 20 characters); undefined invoice-ID-to-order mapping not claimed; steps 1, 3 pass on two seeds; 7 planted defects caught.
+  - Full suite after 1B/2B/3A (2026-11-12): 41 objects run one at a time; 40 passed first time, the 41st (InsertCustomerOrders) is the fix above. 42 receipts: 0 verified, 35 pending, 7 failed; 17 excluded.
+- [ ] Decision 4 (steps 2, 5, 6): reassess now that 1-3 are complete. No object can reach "verified" without steps 2 and 5.
+- [ ] Not in the 1B/2B/3A scope, still open: the 7 Integration.Get*Updates procedures with cursors over FOR SYSTEM_TIME AS OF and Website.VehicleTemperatures (DECOMPRESS), all predicted failures; remaining AdventureWorks2025 objects.
+- [ ] Remaining AdventureWorks2025 objects (views that reference other views or XML columns; see `catalog/AdventureWorks2025/`)
+- [ ] Integration.Get*Updates with cursors over FOR SYSTEM_TIME AS OF (7) and Website.VehicleTemperatures (DECOMPRESS): predicted failures; temporal-table emulation is out of scope
+- [ ] Step 2 (tSQLt / pgTAP), step 5 (second human review), step 6 (n/a for public samples): see decision 4

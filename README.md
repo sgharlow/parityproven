@@ -68,6 +68,10 @@ An object becomes **verified** only when steps 1–4 pass and step 5 (a second r
 - `datetime2(7)` holds 100 ns ticks and PostgreSQL `timestamp` holds 1 µs. Generated datetime values (and cutoffs) are normalised to microseconds on both engines. The number of values that changed is recorded in each pair record as a finding; the harness does not claim equivalence for sub-microsecond inputs.
 - Tie order inside an `ORDER BY` key is compared as a multiset when the tie-breaker is not an output column.
 - `WITH EXECUTE AS OWNER` has no PostgreSQL equivalent and is omitted; each pair record notes it.
+- The scratch database uses the source database's collation. T-SQL `LIKE` is translated to a case-insensitive regular expression and CI_AS ordering to a tailored ICU collation; both are checked for the text the harness generates (ASCII plus a few accented characters), not for every collation rule.
+- Objects that change data (`stateCheck`) are compared on outcome (including the error class raised) and table state; step 4 is not run for them. Values written with `SYSDATETIME()` are compared as "the call's time" on each engine's own clock, not to the microsecond.
+- The scratch database also takes the source database's compatibility level (WideWorldImporters: 130), which changes several T-SQL behaviours (JSON functions among them).
+- Objects that are not converted are listed with their reasons in `src/conversions/dispositions.ts`: one is recorded as a failure (`npm run dispositions` writes its pair record) and the rest are shown on the scorecard as out of scope.
 
 ---
 

@@ -1,0 +1,89 @@
+{
+  "origin": {
+    "repo": "https://github.com/microsoft/sql-server-samples",
+    "release": "wide-world-importers-v1.0",
+    "license": "MIT",
+    "assetUrl": "https://github.com/microsoft/sql-server-samples/releases/download/wide-world-importers-v1.0/WideWorldImporters-Full.bak",
+    "sha256": "e842bad6ce02f74f166947e559dab1b476edd7eaae3da2ab9e3f522f1dd87124"
+  },
+  "conversionType": "tsql-to-plpgsql",
+  "objectClass": "procedure",
+  "tier": "simple",
+  "code": {
+    "source": "\r\nCREATE PROCEDURE Website.ActivateWebsiteLogon\r\n@PersonID int,\r\n@LogonName nvarchar(50),\r\n@InitialPassword nvarchar(40)\r\nWITH EXECUTE AS OWNER\r\nAS\r\nBEGIN\r\n    SET NOCOUNT ON;\r\n    SET XACT_ABORT ON;\r\n\r\n    UPDATE [Application].People\r\n    SET IsPermittedToLogon = 1,\r\n        LogonName = @LogonName,\r\n        HashedPassword = HASHBYTES(N'SHA2_256', @InitialPassword + FullName),\r\n        UserPreferences = (SELECT UserPreferences FROM [Application].People WHERE PersonID = 1) -- Person 1 has User Preferences template\r\n    WHERE PersonID = @PersonID\r\n    AND PersonID <> 1\r\n    AND IsPermittedToLogon = 0;\r\n\r\n    IF @@ROWCOUNT = 0\r\n    BEGIN\r\n        PRINT N'The PersonID must be valid, must not be person 1, and must not already be enabled';\r\n        THROW 51000, N'Invalid PersonID', 1;\r\n        RETURN -1;\r\n    END;\r\nEND;\r\n",
+    "engineOutput": "-- PL/pgSQL conversion of Website.ActivateWebsiteLogon (WideWorldImporters).\n-- Engine: Kiro. No separate first draft was kept for this object.\n-- WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted.\n--\n-- Differences from a literal translation:\n--  * The T-SQL procedure becomes a PostgreSQL PROCEDURE (CALL), since it returns nothing.\n--  * HASHBYTES(N'SHA2_256', <nvarchar>) hashes the UTF-16LE bytes of the string. convert_to() cannot produce UTF-16,\n--    so tsql_compat.utf16le() builds the bytes; sha256() is built in.\n--  * @@ROWCOUNT = 0 -> NOT FOUND after the UPDATE; THROW 51000 -> RAISE EXCEPTION (SQLSTATE P0001). The PRINT before\n--    THROW becomes RAISE NOTICE (informational, as PRINT is).\n--  * The UPDATE's correlated subquery reads person 1 from the same table, as in the source.\n\nCREATE SCHEMA IF NOT EXISTS tsql_compat;\n\n-- UTF-16LE bytes of a string, as SQL Server stores nvarchar. Characters above U+FFFF become surrogate pairs.\nCREATE OR REPLACE FUNCTION tsql_compat.utf16le(value text)\nRETURNS bytea\nLANGUAGE sql\nIMMUTABLE\nSTRICT\nAS $fn$\n    SELECT COALESCE(string_agg(\n               CASE WHEN s.cp < 65536 THEN\n                        set_byte(set_byte('\\x0000'::bytea, 0, s.cp & 255), 1, s.cp >> 8)\n                    ELSE\n                        set_byte(set_byte(set_byte(set_byte('\\x00000000'::bytea,\n                            0, (55296 + ((s.cp - 65536) >> 10)) & 255),\n                            1, (55296 + ((s.cp - 65536) >> 10)) >> 8),\n                            2, (56320 + ((s.cp - 65536) & 1023)) & 255),\n                            3, (56320 + ((s.cp - 65536) & 1023)) >> 8)\n               END, ''::bytea ORDER BY s.ord), ''::bytea)\n    FROM (\n        SELECT ascii(t.ch) AS cp, t.ord\n        FROM regexp_split_to_table(value, '') WITH ORDINALITY AS t(ch, ord)\n        WHERE t.ch <> ''\n    ) AS s\n$fn$;\n\nCREATE OR REPLACE PROCEDURE website.activate_website_logon(\n    person_id integer,\n    logon_name text,\n    initial_password text\n)\nLANGUAGE plpgsql\nAS $fn$\nBEGIN\n    UPDATE application.people AS p\n    SET \"IsPermittedToLogon\" = true,\n        \"LogonName\" = logon_name,\n        \"HashedPassword\" = sha256(tsql_compat.utf16le(initial_password || p.\"FullName\")),\n        \"UserPreferences\" = (SELECT t.\"UserPreferences\" FROM application.people AS t WHERE t.\"PersonID\" = 1) -- Person 1 has User Preferences template\n    WHERE p.\"PersonID\" = person_id\n      AND p.\"PersonID\" <> 1\n      AND p.\"IsPermittedToLogon\" = false;\n    IF NOT FOUND THEN\n        RAISE NOTICE 'The PersonID must be valid, must not be person 1, and must not already be enabled';\n        RAISE EXCEPTION 'Invalid PersonID' USING ERRCODE = 'P0001';\n    END IF;\nEND;\n$fn$;\n",
+    "final": "-- PL/pgSQL conversion of Website.ActivateWebsiteLogon (WideWorldImporters).\n-- Engine: Kiro. No separate first draft was kept for this object.\n-- WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted.\n--\n-- Differences from a literal translation:\n--  * The T-SQL procedure becomes a PostgreSQL PROCEDURE (CALL), since it returns nothing.\n--  * HASHBYTES(N'SHA2_256', <nvarchar>) hashes the UTF-16LE bytes of the string. convert_to() cannot produce UTF-16,\n--    so tsql_compat.utf16le() builds the bytes; sha256() is built in.\n--  * @@ROWCOUNT = 0 -> NOT FOUND after the UPDATE; THROW 51000 -> RAISE EXCEPTION (SQLSTATE P0001). The PRINT before\n--    THROW becomes RAISE NOTICE (informational, as PRINT is).\n--  * The UPDATE's correlated subquery reads person 1 from the same table, as in the source.\n\nCREATE SCHEMA IF NOT EXISTS tsql_compat;\n\n-- UTF-16LE bytes of a string, as SQL Server stores nvarchar. Characters above U+FFFF become surrogate pairs.\nCREATE OR REPLACE FUNCTION tsql_compat.utf16le(value text)\nRETURNS bytea\nLANGUAGE sql\nIMMUTABLE\nSTRICT\nAS $fn$\n    SELECT COALESCE(string_agg(\n               CASE WHEN s.cp < 65536 THEN\n                        set_byte(set_byte('\\x0000'::bytea, 0, s.cp & 255), 1, s.cp >> 8)\n                    ELSE\n                        set_byte(set_byte(set_byte(set_byte('\\x00000000'::bytea,\n                            0, (55296 + ((s.cp - 65536) >> 10)) & 255),\n                            1, (55296 + ((s.cp - 65536) >> 10)) >> 8),\n                            2, (56320 + ((s.cp - 65536) & 1023)) & 255),\n                            3, (56320 + ((s.cp - 65536) & 1023)) >> 8)\n               END, ''::bytea ORDER BY s.ord), ''::bytea)\n    FROM (\n        SELECT ascii(t.ch) AS cp, t.ord\n        FROM regexp_split_to_table(value, '') WITH ORDINALITY AS t(ch, ord)\n        WHERE t.ch <> ''\n    ) AS s\n$fn$;\n\nCREATE OR REPLACE PROCEDURE website.activate_website_logon(\n    person_id integer,\n    logon_name text,\n    initial_password text\n)\nLANGUAGE plpgsql\nAS $fn$\nBEGIN\n    UPDATE application.people AS p\n    SET \"IsPermittedToLogon\" = true,\n        \"LogonName\" = logon_name,\n        \"HashedPassword\" = sha256(tsql_compat.utf16le(initial_password || p.\"FullName\")),\n        \"UserPreferences\" = (SELECT t.\"UserPreferences\" FROM application.people AS t WHERE t.\"PersonID\" = 1) -- Person 1 has User Preferences template\n    WHERE p.\"PersonID\" = person_id\n      AND p.\"PersonID\" <> 1\n      AND p.\"IsPermittedToLogon\" = false;\n    IF NOT FOUND THEN\n        RAISE NOTICE 'The PersonID must be valid, must not be person 1, and must not already be enabled';\n        RAISE EXCEPTION 'Invalid PersonID' USING ERRCODE = 'P0001';\n    END IF;\nEND;\n$fn$;\n",
+    "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
+    "engine": "kiro",
+    "notes": [
+      "WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted.",
+      "Converted to a PostgreSQL PROCEDURE. THROW 51000 becomes RAISE EXCEPTION (SQLSTATE P0001); the harness compares whether each engine raised, not the message text. The PRINT lines before THROW are informational messages and are not compared.",
+      "HASHBYTES('SHA2_256', nvarchar) hashes UTF-16LE bytes. PostgreSQL has no UTF-16 client encoding, so tsql_compat.utf16le() builds those bytes; sha256() hashes them. Verified for the generated text, which includes non-ASCII (é); characters outside the Basic Multilingual Plane are encoded as surrogate pairs but are not generated.",
+      "Step 3 is the state form: the outcome and every row of Application.People are compared after the same call on both engines.",
+      "Step 4 is not run: the call changes the data it reads, so repeated timed runs on the same data are not the same work.",
+      "Shared helper tsql_compat.utf16le is created by the conversion file.",
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
+    ]
+  },
+  "columnMappings": [
+    {
+      "sqlServerType": "int NOT NULL",
+      "postgresType": "integer NOT NULL"
+    },
+    {
+      "sqlServerType": "nvarchar(50) NOT NULL",
+      "postgresType": "varchar(50) NOT NULL"
+    },
+    {
+      "sqlServerType": "bit NOT NULL",
+      "postgresType": "boolean NOT NULL",
+      "notes": "bit maps to boolean; the driver returns true/false on both sides."
+    },
+    {
+      "sqlServerType": "nvarchar(50) NULL",
+      "postgresType": "varchar(50)"
+    },
+    {
+      "sqlServerType": "varbinary(max) NULL",
+      "postgresType": "bytea"
+    },
+    {
+      "sqlServerType": "nvarchar(400) NULL",
+      "postgresType": "varchar(400)"
+    }
+  ],
+  "evidence": {
+    "step1": "pass",
+    "step2": "not-run",
+    "step3": "pass",
+    "step4": "not-run",
+    "step5": "not-run",
+    "step6": "not-run",
+    "rowsCompared": 206,
+    "trapsCovered": [
+      "NULL in every nullable column",
+      "empty string and trailing spaces",
+      "state after the call (every row of the changed tables) and the error outcome"
+    ],
+    "pbtSeeds": [
+      1052032555
+    ],
+    "samples": 200,
+    "samplesWithRows": 82,
+    "subMicrosecondNormalised": 0,
+    "mutantsDetected": [
+      "person 1 (the template) can be activated",
+      "already-enabled people are re-activated",
+      "password hashed as UTF-8 instead of UTF-16LE",
+      "preferences copied from the person being activated",
+      "no error when nothing was updated"
+    ],
+    "harnessVersion": "harness-generic-0.3.0"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "Kiro",
+    "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
+  },
+  "status": "pending"
+}

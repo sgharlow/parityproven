@@ -84,11 +84,11 @@
   ],
   "evidence": {
     "pbtSeeds": [
-      1573978543
+      1717840176
     ],
-    "rowsCompared": 364,
+    "rowsCompared": 351,
     "samples": 200,
-    "samplesWithRows": 189,
+    "samplesWithRows": 188,
     "trapsCovered": [
       "NULL in every nullable column",
       "empty string and trailing spaces"
@@ -100,9 +100,9 @@
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
-      "sqlServerMs": 701,
-      "postgresMs": 11.09,
-      "ratio": 0.02,
+      "sqlServerMs": 479,
+      "postgresMs": 17.03,
+      "ratio": 0.04,
       "threshold": 1.5,
       "passed": true,
       "belowResolution": false,
@@ -111,7 +111,7 @@
     },
     "engineOutputCheck": {
       "step3": "fail",
-      "seed": 1573978543,
+      "seed": 1717840176,
       "detail": "column \"DeliveryLocation\" does not exist"
     },
     "subMicrosecondNormalised": 0,
@@ -126,5 +126,5 @@
     "p50Hours": 0.75,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-11T04:03:31.179Z"
+  "builtAt": "2026-11-12T07:56:18.611Z"
 }

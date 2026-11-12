@@ -51,7 +51,7 @@
   ],
   "evidence": {
     "pbtSeeds": [
-      398126013
+      699949717
     ],
     "rowsCompared": 200,
     "samples": 200,
@@ -74,7 +74,7 @@
     },
     "engineOutputCheck": {
       "step3": "fail",
-      "seed": 398126013,
+      "seed": 699949717,
       "detail": "random sample: value differs in group 0 (key \"*\"), column \"result\": SQL Server t:2004-06-30T23:59:59.997000 vs PostgreSQL t:2004-06-30T23:59:59.998000"
     },
     "subMicrosecondNormalised": 0,
@@ -89,5 +89,5 @@
     "p50Hours": 1.5,
     "p90Hours": 4
   },
-  "builtAt": "2026-11-11T04:03:31.169Z"
+  "builtAt": "2026-11-12T07:56:18.495Z"
 }

@@ -1,0 +1,106 @@
+{
+  "database": "WideWorldImporters",
+  "schemaName": "Sequences",
+  "objectName": "ReseedSequenceBeyondTableValues",
+  "objectClass": "procedure",
+  "tier": "complex",
+  "status": "pending",
+  "code": {
+    "source": " \r\nCREATE PROCEDURE Sequences.ReseedSequenceBeyondTableValues\r\n@SequenceName sysname,\r\n@SchemaName sysname,\r\n@TableName sysname,\r\n@ColumnName sysname\r\nAS BEGIN\r\n    -- Ensures that the next sequence value is above the maximum value of the supplied table column\r\n    SET NOCOUNT ON;\r\n \r\n    DECLARE @SQL nvarchar(max);\r\n    DECLARE @CurrentTableMaximumValue bigint;\r\n    DECLARE @NewSequenceValue bigint;\r\n    DECLARE @CurrentSequenceMaximumValue bigint\r\n        = (SELECT CAST(current_value AS bigint) FROM sys.sequences\r\n                                                WHERE name = @SequenceName\r\n                                                AND SCHEMA_NAME(schema_id) = N'Sequences');\r\n    CREATE TABLE #CurrentValue\r\n    (\r\n        CurrentValue bigint\r\n    )\r\n \r\n    SET @SQL = N'INSERT #CurrentValue (CurrentValue) SELECT COALESCE(MAX(' + QUOTENAME(@ColumnName) + N'), 0) FROM ' + QUOTENAME(@SchemaName) + N'.' + QUOTENAME(@TableName) + N';';\r\n    EXECUTE (@SQL);\r\n    SET @CurrentTableMaximumValue = (SELECT CurrentValue FROM #CurrentValue);\r\n    DROP TABLE #CurrentValue;\r\n \r\n    IF @CurrentTableMaximumValue >= @CurrentSequenceMaximumValue\r\n    BEGIN\r\n        SET @NewSequenceValue = @CurrentTableMaximumValue + 1;\r\n        SET @SQL = N'ALTER SEQUENCE Sequences.' + QUOTENAME(@SequenceName) + N' RESTART WITH ' + CAST(@NewSequenceValue AS nvarchar(20)) + N';';\r\n        EXECUTE (@SQL);\r\n    END;\r\nEND;\r\n",
+    "engineOutput": "-- PL/pgSQL conversion of Sequences.ReseedSequenceBeyondTableValues (WideWorldImporters).\n-- Engine: Kiro first draft (see pair record).\n\nCREATE SCHEMA IF NOT EXISTS sequences;\n\nCREATE OR REPLACE PROCEDURE sequences.reseed_sequence_beyond_table_values(\n    sequence_name text,\n    schema_name text,\n    table_name text,\n    column_name text\n)\nLANGUAGE plpgsql\nAS $fn$\nDECLARE\n    current_table_maximum_value bigint;\n    new_sequence_value bigint;\n    current_sequence_maximum_value bigint;\nBEGIN\n    SELECT s.last_value INTO current_sequence_maximum_value\n    FROM pg_sequences AS s\n    WHERE s.sequencename = sequence_name\n      AND s.schemaname = 'sequences';\n\n    EXECUTE format('SELECT COALESCE(MAX(%I), 0) FROM %I.%I', column_name, schema_name, table_name)\n        INTO current_table_maximum_value;\n\n    IF current_table_maximum_value >= current_sequence_maximum_value THEN\n        new_sequence_value := current_table_maximum_value + 1;\n        EXECUTE format('ALTER SEQUENCE sequences.%I RESTART WITH %s', sequence_name, new_sequence_value);\n    END IF;\nEND;\n$fn$;\n",
+    "final": "-- PL/pgSQL conversion of Sequences.ReseedSequenceBeyondTableValues (WideWorldImporters).\n-- Engine: Kiro; the first draft is kept in Sequences.ReseedSequenceBeyondTableValues.draft.sql and its result is in the pair record.\n--\n-- Differences from a literal translation:\n--  * Dynamic SQL: EXECUTE (@SQL) with QUOTENAME -> EXECUTE format() with %I; the #CurrentValue temp table that carries\n--    MAX() out of the dynamic statement -> EXECUTE ... INTO.\n--  * sys.sequences.current_value -> the sequence's own last_value column. pg_sequences.last_value is not the same: it is\n--    NULL before first use and after RESTART, where SQL Server reports the start / restart value.\n--  * Names arrive in SQL Server form (Sales, StockItems, StockItemID). This project's PostgreSQL naming is schema in\n--    lower case, table in snake_case, column and sequence names quoted as declared, so the table name is mapped.\n\nCREATE SCHEMA IF NOT EXISTS sequences;\n\nCREATE OR REPLACE PROCEDURE sequences.reseed_sequence_beyond_table_values(\n    sequence_name text,\n    schema_name text,\n    table_name text,\n    column_name text\n)\nLANGUAGE plpgsql\nAS $fn$\nDECLARE\n    current_table_maximum_value bigint;\n    new_sequence_value bigint;\n    current_sequence_maximum_value bigint;\nBEGIN\n    -- Ensures that the next sequence value is above the maximum value of the supplied table column\n    IF EXISTS (SELECT 1 FROM pg_sequences AS s WHERE s.schemaname = 'sequences' AND s.sequencename = sequence_name) THEN\n        EXECUTE format('SELECT last_value FROM sequences.%I', sequence_name)\n            INTO current_sequence_maximum_value;\n    END IF;\n\n    EXECUTE format('SELECT COALESCE(MAX(%I), 0) FROM %I.%I',\n                   column_name,\n                   lower(schema_name),\n                   lower(regexp_replace(table_name, '([a-z0-9])([A-Z])', '\\1_\\2', 'g')))\n        INTO current_table_maximum_value;\n\n    IF current_table_maximum_value >= current_sequence_maximum_value THEN\n        new_sequence_value := current_table_maximum_value + 1;\n        EXECUTE format('ALTER SEQUENCE sequences.%I RESTART WITH %s', sequence_name, new_sequence_value);\n    END IF;\nEND;\n$fn$;\n",
+    "diff": "--- engineOutput\n+++ final\n@@ engineOutput line 2 / final line 2 @@\n+-- Engine: Kiro; the first draft is kept in Sequences.ReseedSequenceBeyondTableValues.draft.sql and its result is in the pair record.\n+--\n+-- Differences from a literal translation:\n+--  * Dynamic SQL: EXECUTE (@SQL) with QUOTENAME -> EXECUTE format() with %I; the #CurrentValue temp table that carries\n+--    MAX() out of the dynamic statement -> EXECUTE ... INTO.\n+--  * sys.sequences.current_value -> the sequence's own last_value column. pg_sequences.last_value is not the same: it is\n+--    NULL before first use and after RESTART, where SQL Server reports the start / restart value.\n+--  * Names arrive in SQL Server form (Sales, StockItems, StockItemID). This project's PostgreSQL naming is schema in\n+--    lower case, table in snake_case, column and sequence names quoted as declared, so the table name is mapped.\n--- Engine: Kiro first draft (see pair record).\n@@ engineOutput line 19 / final line 27 @@\n+    -- Ensures that the next sequence value is above the maximum value of the supplied table column\n+    IF EXISTS (SELECT 1 FROM pg_sequences AS s WHERE s.schemaname = 'sequences' AND s.sequencename = sequence_name) THEN\n+        EXECUTE format('SELECT last_value FROM sequences.%I', sequence_name)\n+            INTO current_sequence_maximum_value;\n+    END IF;\n-    SELECT s.last_value INTO current_sequence_maximum_value\n-    FROM pg_sequences AS s\n-    WHERE s.sequencename = sequence_name\n-      AND s.schemaname = 'sequences';\n@@ engineOutput line 24 / final line 33 @@\n+    EXECUTE format('SELECT COALESCE(MAX(%I), 0) FROM %I.%I',\n+                   column_name,\n+                   lower(schema_name),\n+                   lower(regexp_replace(table_name, '([a-z0-9])([A-Z])', '\\1_\\2', 'g')))\n-    EXECUTE format('SELECT COALESCE(MAX(%I), 0) FROM %I.%I', column_name, schema_name, table_name)",
+    "engine": "kiro",
+    "notes": [
+      "Dynamic SQL: EXECUTE (@SQL) with QUOTENAME becomes PL/pgSQL EXECUTE format() with %I. The #CurrentValue temp table that carries MAX() out of the dynamic statement becomes EXECUTE ... INTO.",
+      "Identifier mapping follows this project's PostgreSQL naming: schema lower case, table snake_case, column and sequence names quoted as in SQL Server. The source resolves names case-insensitively (CI collation); the PostgreSQL version needs the names in their declared case. Only correctly cased names are generated, so case-insensitive name resolution is not claimed.",
+      "sys.sequences.current_value maps to the sequence relation's last_value (measured: start value before first use, last value issued after use, restart value after RESTART WITH).",
+      "Step 3 is the state form: the next value each sequence issues after the call is compared. Sequences are recreated per sample at generated start values, with 0-3 values consumed first.",
+      "Step 4 is not run: the call changes the state it reads.",
+      "Harness-only table Harness.SequenceStart carries the generated sequence start values; the object does not read it.",
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
+    ]
+  },
+  "columnMappings": [
+    {
+      "sqlServerType": "int NOT NULL",
+      "postgresType": "integer NOT NULL"
+    },
+    {
+      "sqlServerType": "int NULL",
+      "postgresType": "integer"
+    },
+    {
+      "sqlServerType": "nvarchar(128) NOT NULL",
+      "postgresType": "varchar(128) NOT NULL"
+    }
+  ],
+  "verificationSteps": [
+    {
+      "step": 1,
+      "label": "Compiles and deploys on PostgreSQL",
+      "status": "pass"
+    },
+    {
+      "step": 2,
+      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "status": "not-run"
+    },
+    {
+      "step": 3,
+      "label": "Result sets match on generated data",
+      "status": "pass"
+    },
+    {
+      "step": 4,
+      "label": "Runtime within 1.5× factor",
+      "status": "not-run"
+    },
+    {
+      "step": 5,
+      "label": "Second human review",
+      "status": "not-run"
+    },
+    {
+      "step": 6,
+      "label": "Acceptance on real data",
+      "status": "not-run"
+    }
+  ],
+  "evidence": {
+    "pbtSeeds": [
+      1294119244
+    ],
+    "rowsCompared": 207,
+    "samples": 200,
+    "samplesWithRows": 129,
+    "trapsCovered": [
+      "NULL in every nullable column",
+      "empty string and trailing spaces",
+      "state after the call (every row of the changed tables) and the error outcome"
+    ],
+    "mutantsDetected": [
+      "reads pg_sequences.last_value (NULL after a restart or before first use)",
+      "strictly greater instead of >=",
+      "restarts at the maximum instead of maximum + 1",
+      "empty table maximum NULL instead of 0"
+    ],
+    "engineOutputCheck": {
+      "step3": "fail",
+      "seed": 1294119244,
+      "detail": "relation \"Sales.Orders\" does not exist"
+    },
+    "subMicrosecondNormalised": 0,
+    "harnessVersion": "harness-generic-0.3.0"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "Kiro",
+    "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
+  },
+  "predictionCell": {
+    "p50Hours": 9,
+    "p90Hours": 20
+  },
+  "builtAt": "2026-11-12T07:56:18.569Z"
+}

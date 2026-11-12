@@ -73,11 +73,11 @@
   ],
   "evidence": {
     "pbtSeeds": [
-      2030759755
+      2133897108
     ],
-    "rowsCompared": 129,
+    "rowsCompared": 134,
     "samples": 200,
-    "samplesWithRows": 89,
+    "samplesWithRows": 90,
     "trapsCovered": [
       "datetime boundaries at the cutoffs (inputs normalised to µs)",
       "empty string and trailing spaces",
@@ -90,16 +90,16 @@
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
-      "sqlServerMs": 21,
-      "postgresMs": 6.49,
-      "ratio": 0.31,
+      "sqlServerMs": 36,
+      "postgresMs": 12.11,
+      "ratio": 0.34,
       "threshold": 1.5,
       "passed": true,
       "belowResolution": false,
-      "resultRows": 3500,
+      "resultRows": 3483,
       "volumeMismatch": null
     },
-    "subMicrosecondNormalised": 940,
+    "subMicrosecondNormalised": 969,
     "harnessVersion": "harness-generic-0.3.0"
   },
   "effort": {
@@ -111,5 +111,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-11T04:03:31.178Z"
+  "builtAt": "2026-11-12T07:56:18.549Z"
 }

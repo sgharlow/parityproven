@@ -1,0 +1,65 @@
+{
+  "database": "WideWorldImporters",
+  "schemaName": "Application",
+  "objectName": "DetermineCustomerAccess",
+  "objectClass": "function",
+  "tier": "simple",
+  "status": "failed",
+  "code": {
+    "source": "\r\nCREATE FUNCTION [Application].DetermineCustomerAccess(@CityID int)\r\nRETURNS TABLE\r\nWITH SCHEMABINDING\r\nAS\r\nRETURN (SELECT 1 AS AccessResult\r\n        WHERE IS_ROLEMEMBER(N'db_owner') <> 0\r\n        OR IS_ROLEMEMBER((SELECT sp.SalesTerritory\r\n                          FROM [Application].Cities AS c\r\n                          INNER JOIN [Application].StateProvinces AS sp\r\n                          ON c.StateProvinceID = sp.StateProvinceID\r\n                          WHERE c.CityID = @CityID) + N' Sales') <> 0\r\n\t    OR (ORIGINAL_LOGIN() = N'Website'\r\n\t\t    AND EXISTS (SELECT 1\r\n\t\t                FROM [Application].Cities AS c\r\n\t\t\t\t        INNER JOIN [Application].StateProvinces AS sp\r\n\t\t\t\t        ON c.StateProvinceID = sp.StateProvinceID\r\n\t\t\t\t        WHERE c.CityID = @CityID\r\n\t\t\t\t        AND sp.SalesTerritory = SESSION_CONTEXT(N'SalesTerritory'))));",
+    "engineOutput": "-- Application.DetermineCustomerAccess was not converted.\n-- Not converted. The result depends on the caller's security context, not on table data: IS_ROLEMEMBER(N'db_owner'), IS_ROLEMEMBER(<SalesTerritory> + N' Sales'), ORIGINAL_LOGIN() = N'Website' and SESSION_CONTEXT(N'SalesTerritory'). PostgreSQL has counterparts (pg_has_role, session_user, current_setting), but proving equivalence needs the harness to run each sample under real logins and roles on both engines, which it does not do. Recorded as a failure, not hidden (decision 2026-11-11).\n",
+    "final": "-- Application.DetermineCustomerAccess was not converted.\n-- Not converted. The result depends on the caller's security context, not on table data: IS_ROLEMEMBER(N'db_owner'), IS_ROLEMEMBER(<SalesTerritory> + N' Sales'), ORIGINAL_LOGIN() = N'Website' and SESSION_CONTEXT(N'SalesTerritory'). PostgreSQL has counterparts (pg_has_role, session_user, current_setting), but proving equivalence needs the harness to run each sample under real logins and roles on both engines, which it does not do. Recorded as a failure, not hidden (decision 2026-11-11).\n",
+    "diff": "",
+    "engine": "not converted",
+    "notes": [
+      "No conversion was attempted, so no harness run exists for this object (steps 1-4 not-run)."
+    ]
+  },
+  "columnMappings": [],
+  "verificationSteps": [
+    {
+      "step": 1,
+      "label": "Compiles and deploys on PostgreSQL",
+      "status": "not-run"
+    },
+    {
+      "step": 2,
+      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "status": "not-run"
+    },
+    {
+      "step": 3,
+      "label": "Result sets match on generated data",
+      "status": "not-run"
+    },
+    {
+      "step": 4,
+      "label": "Runtime within 1.5× factor",
+      "status": "not-run"
+    },
+    {
+      "step": 5,
+      "label": "Second human review",
+      "status": "not-run"
+    },
+    {
+      "step": 6,
+      "label": "Acceptance on real data",
+      "status": "not-run"
+    }
+  ],
+  "evidence": {
+    "failureDetail": "Not converted. The result depends on the caller's security context, not on table data: IS_ROLEMEMBER(N'db_owner'), IS_ROLEMEMBER(<SalesTerritory> + N' Sales'), ORIGINAL_LOGIN() = N'Website' and SESSION_CONTEXT(N'SalesTerritory'). PostgreSQL has counterparts (pg_has_role, session_user, current_setting), but proving equivalence needs the harness to run each sample under real logins and roles on both engines, which it does not do. Recorded as a failure, not hidden (decision 2026-11-11).",
+    "harnessVersion": "none (not converted)"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "Kiro",
+    "engineVersion": "not applicable (not converted)"
+  },
+  "predictionCell": {
+    "p50Hours": 1,
+    "p90Hours": 3
+  },
+  "builtAt": "2026-11-12T07:56:18.542Z"
+}

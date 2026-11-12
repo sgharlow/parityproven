@@ -3,6 +3,14 @@ import type { ObjectClass } from "../pairs/schema.js";
 
 const CLASSES: ObjectClass[] = ["procedure", "function", "view", "trigger"];
 
+export const TIER_RULE_CHANGES: string[] = [
+  "2026-11-11: dynamic SQL now also matches EXECUTE (@sql) (was EXEC( only), and table variables also match DECLARE @t AS TABLE. " +
+    "In WideWorldImporters this moved 12 procedures to complex (all database-administration or sequence procedures: " +
+    "Application.Configuration_* except ConfigureForEnterpriseEdition, AddRoleMemberIfNonexistent, CreateRoleIfNonexistent, " +
+    "DataLoadSimulation.DeactivateTemporalTablesBeforeDataLoad, Sequences.ReseedSequenceBeyondTableValues). AdventureWorks2025 is unchanged. " +
+    "The v1 predictions (committed 2026-11-08) were made against the earlier tiers and are not edited.",
+];
+
 export function buildReport(items: InventoryItem[], database: string): InventoryReport {
   // Build per-class tier counts
   const counts = {} as InventoryReport["counts"];
@@ -20,6 +28,7 @@ export function buildReport(items: InventoryItem[], database: string): Inventory
   return {
     database,
     generatedAt: new Date().toISOString(),
+    tierRuleChanges: TIER_RULE_CHANGES,
     counts,
     objects: items,
   };

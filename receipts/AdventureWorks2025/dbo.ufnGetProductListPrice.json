@@ -72,11 +72,11 @@
   ],
   "evidence": {
     "pbtSeeds": [
-      1797539367
+      118173091
     ],
     "rowsCompared": 200,
     "samples": 200,
-    "samplesWithRows": 123,
+    "samplesWithRows": 131,
     "trapsCovered": [
       "NULL in every nullable column"
     ],
@@ -84,13 +84,13 @@
       "auto: join condition uses a different key",
       "auto: first AND becomes OR"
     ],
-    "failureDetail": "Step 4: PostgreSQL 138.44 ms vs SQL Server 67 ms = 2.07x, above the 1.5x limit. Results are equivalent (step 3 pass); see the notes for the cause.",
+    "failureDetail": "Step 4: PostgreSQL 156.17 ms vs SQL Server 85 ms = 1.84x, above the 1.5x limit. Results are equivalent (step 3 pass); see the notes for the cause.",
     "runtime": {
       "volume": 2000,
       "timedRuns": 7,
-      "sqlServerMs": 67,
-      "postgresMs": 138.44,
-      "ratio": 2.07,
+      "sqlServerMs": 85,
+      "postgresMs": 156.17,
+      "ratio": 1.84,
       "threshold": 1.5,
       "passed": false,
       "belowResolution": false,
@@ -109,5 +109,5 @@
     "p50Hours": 1.5,
     "p90Hours": 4
   },
-  "builtAt": "2026-11-11T04:03:31.171Z"
+  "builtAt": "2026-11-12T07:56:18.508Z"
 }

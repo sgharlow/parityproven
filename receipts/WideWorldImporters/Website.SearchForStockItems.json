@@ -1,0 +1,112 @@
+{
+  "database": "WideWorldImporters",
+  "schemaName": "Website",
+  "objectName": "SearchForStockItems",
+  "objectClass": "procedure",
+  "tier": "simple",
+  "status": "pending",
+  "code": {
+    "source": "\r\nCREATE PROCEDURE Website.SearchForStockItems\r\n@SearchText nvarchar(1000),\r\n@MaximumRowsToReturn int\r\nWITH EXECUTE AS OWNER\r\nAS\r\nBEGIN\r\n    SELECT TOP(@MaximumRowsToReturn)\r\n           si.StockItemID,\r\n           si.StockItemName\r\n    FROM Warehouse.StockItems AS si\r\n    WHERE si.SearchDetails LIKE N'%' + @SearchText + N'%'\r\n    ORDER BY si.StockItemName\r\n    FOR JSON AUTO, ROOT(N'StockItems');\r\nEND;\r\n",
+    "engineOutput": "-- PL/pgSQL conversion of Website.SearchForStockItems (WideWorldImporters).\n-- Engine: Kiro first draft (see pair record).\n-- WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted.\n\nCREATE OR REPLACE FUNCTION website.search_for_stock_items(\n    search_text text,\n    maximum_rows_to_return integer\n)\nRETURNS text\nLANGUAGE sql\nSTABLE\nAS $fn$\n    SELECT json_build_object('StockItems', COALESCE(json_agg(r.item ORDER BY r.rn), '[]'::json))::text\n    FROM (\n        SELECT json_build_object('StockItemID', si.\"StockItemID\", 'StockItemName', si.\"StockItemName\") AS item,\n               row_number() OVER (ORDER BY si.\"StockItemName\") AS rn\n        FROM warehouse.stock_items AS si\n        WHERE si.\"SearchDetails\" ILIKE '%' || search_text || '%'\n        ORDER BY si.\"StockItemName\"\n        LIMIT maximum_rows_to_return\n    ) AS r\n$fn$;\n",
+    "final": "-- PL/pgSQL conversion of Website.SearchForStockItems (WideWorldImporters).\n-- Engine: Kiro; the first draft is kept in Website.SearchForStockItems.draft.sql and its result is in the pair record.\n-- WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted.\n--\n-- Differences from a literal translation, each found by the property check or the volume run:\n--  * T-SQL LIKE is not PostgreSQL LIKE: '[..]' is a character class, backslash is an ordinary character, matching is\n--    case-insensitive under the CI_AS collation. tsql_compat.like_to_regex translates a T-SQL pattern to a regular expression.\n--  * ORDER BY follows the source's case-insensitive, accent-sensitive Windows collation (see the collation below).\n--  * FOR JSON omits NULL-valued keys (json_strip_nulls does the same) and, with ROOT, returns an empty string when no\n--    row qualifies (not {\"StockItems\":[]}); reproduced.\n\nCREATE SCHEMA IF NOT EXISTS tsql_compat;\n\n-- ICU, case-insensitive and accent-sensitive (level 2), with the order of ASCII punctuation and space tailored to the\n-- Windows collation Latin1_General_100_CI_AS. That order was measured on SQL Server 2025\n-- (ORDER BY ... COLLATE Latin1_General_100_CI_AS over chr(32)..chr(126)); digits and letters already agree with ICU.\n-- Deterministic: values that differ only in case are ordered by bytes (SQL Server leaves that order undefined).\nCREATE COLLATION IF NOT EXISTS tsql_compat.latin1_general_100_ci_as (\n    provider = icu, locale = 'und-u-ks-level2', deterministic = true,\n    rules = $r$& ' ' < '!' < '\"' < '#' < '$' < '%' < '&' < '(' < ')' < '*' < ',' < '.' < '/' < ':' < ';' < '?' < '@' < '[' < '\\' < ']' < '^' < '_' < '`' < '{' < '|' < '}' < '~' < '+' < '<' < '=' < '>'$r$\n);\n\n-- Sort keys strip hyphens and apostrophes: that Windows collation sorts \"by word\", so they carry no weight (SQL_*\n-- collations sort by string and would not do this). Written inline, not as a function: PostgreSQL sorts a key that\n-- goes through an inlined SQL function much more slowly.\n\n-- Translate a T-SQL LIKE pattern into an anchored PostgreSQL regular expression (use with ~*, case-insensitive).\n--   %  any string        _  any one character\n--   [abc] [a-c] [^abc]   character class; an unterminated '[' takes the rest of the pattern as the class;\n--                        an empty class matches nothing; a reversed range (c-a) matches nothing; '^' negates only first\n--   every other character, including backslash, matches itself\nCREATE OR REPLACE FUNCTION tsql_compat.like_to_regex(pattern text)\nRETURNS text\nLANGUAGE plpgsql\nIMMUTABLE\nAS $fn$\nDECLARE\n    result text := '';\n    i      integer := 1;\n    n      integer;\n    c      text;\n    j      integer;\n    body   text;\n    negate boolean;\n    items  text;\n    k      integer;\n    lo     text;\n    hi     text;\n    ends_wild boolean := false;\nBEGIN\n    IF pattern IS NULL THEN\n        RETURN NULL;\n    END IF;\n    n := char_length(pattern);\n    WHILE i <= n LOOP\n        c := substr(pattern, i, 1);\n        ends_wild := false;\n        IF c = '%' THEN\n            result := result || '.*';\n            ends_wild := true;\n        ELSIF c = '_' THEN\n            result := result || '.';\n        ELSIF c = '[' THEN\n            j := position(']' in substr(pattern, i + 1));\n            IF j = 0 THEN\n                body := substr(pattern, i + 1);\n                i := n;\n            ELSE\n                body := substr(pattern, i + 1, j - 1);\n                i := i + j;\n            END IF;\n            negate := left(body, 1) = '^';\n            IF negate THEN\n                body := substr(body, 2);\n            END IF;\n            items := '';\n            k := 1;\n            WHILE k <= char_length(body) LOOP\n                lo := substr(body, k, 1);\n                IF substr(body, k + 1, 1) = '-' AND k + 2 <= char_length(body) THEN\n                    hi := substr(body, k + 2, 1);\n                    IF ascii(lo) <= ascii(hi) THEN\n                        items := items || CASE WHEN position(lo in '\\]^[-') > 0 THEN '\\' ELSE '' END || lo\n                                       || '-'\n                                       || CASE WHEN position(hi in '\\]^[-') > 0 THEN '\\' ELSE '' END || hi;\n                    END IF;\n                    k := k + 3;\n                ELSE\n                    items := items || CASE WHEN position(lo in '\\]^[-') > 0 THEN '\\' ELSE '' END || lo;\n                    k := k + 1;\n                END IF;\n            END LOOP;\n            IF items = '' THEN\n                result := result || CASE WHEN negate THEN '.' ELSE '(?!)' END;\n            ELSE\n                result := result || '[' || CASE WHEN negate THEN '^' ELSE '' END || items || ']';\n            END IF;\n        ELSIF position(c in '\\.^$|?*+()[]{}') > 0 THEN\n            result := result || '\\' || c;\n        ELSE\n            result := result || c;\n        END IF;\n        i := i + 1;\n    END LOOP;\n    -- A leading or trailing % needs no '.*' in a search: leaving the regular expression unanchored there is the same\n    -- test, and much cheaper for the regex engine on long strings.\n    IF left(pattern, 1) = '%' THEN\n        result := substr(result, 3);\n    END IF;\n    IF ends_wild AND result <> '' THEN\n        result := left(result, char_length(result) - 2);\n    END IF;\n    RETURN CASE WHEN left(pattern, 1) = '%' THEN '' ELSE '^' END\n        || '(?:' || result || ')'\n        || CASE WHEN ends_wild THEN '' ELSE '$' END;\nEND;\n$fn$;\n\nCREATE OR REPLACE FUNCTION website.search_for_stock_items(\n    search_text text,\n    maximum_rows_to_return integer\n)\nRETURNS text\nLANGUAGE sql\nSTABLE\nAS $fn$\n    -- The inner query only finds and orders the rows; the JSON is built afterwards, for the rows that are returned.\n    SELECT CASE WHEN count(*) = 0 THEN ''\n                ELSE json_strip_nulls(json_build_object('StockItems', json_agg(\n                         json_build_object('StockItemID', r.\"StockItemID\", 'StockItemName', r.\"StockItemName\")\n                         ORDER BY r.sort_key COLLATE tsql_compat.latin1_general_100_ci_as)))::text\n           END\n    FROM (\n        SELECT si.\"StockItemID\", si.\"StockItemName\",\n               replace(replace(si.\"StockItemName\", '-', ''), '''', '') AS sort_key\n        FROM warehouse.stock_items AS si\n        WHERE si.\"SearchDetails\" ~* tsql_compat.like_to_regex('%' || search_text || '%')\n        ORDER BY replace(replace(si.\"StockItemName\", '-', ''), '''', '') COLLATE tsql_compat.latin1_general_100_ci_as\n        LIMIT maximum_rows_to_return\n    ) AS r\n$fn$;",
+    "diff": "--- engineOutput\n+++ final\n@@ engineOutput line 2 / final line 2 @@\n+-- Engine: Kiro; the first draft is kept in Website.SearchForStockItems.draft.sql and its result is in the pair record.\n--- Engine: Kiro first draft (see pair record).\n@@ engineOutput line 4 / final line 4 @@\n+--\n+-- Differences from a literal translation, each found by the property check or the volume run:\n+--  * T-SQL LIKE is not PostgreSQL LIKE: '[..]' is a character class, backslash is an ordinary character, matching is\n+--    case-insensitive under the CI_AS collation. tsql_compat.like_to_regex translates a T-SQL pattern to a regular expression.\n+--  * ORDER BY follows the source's case-insensitive, accent-sensitive Windows collation (see the collation below).\n+--  * FOR JSON omits NULL-valued keys (json_strip_nulls does the same) and, with ROOT, returns an empty string when no\n+--    row qualifies (not {\"StockItems\":[]}); reproduced.\n@@ engineOutput line 5 / final line 12 @@\n+CREATE SCHEMA IF NOT EXISTS tsql_compat;\n+\n+-- ICU, case-insensitive and accent-sensitive (level 2), with the order of ASCII punctuation and space tailored to the\n+-- Windows collation Latin1_General_100_CI_AS. That order was measured on SQL Server 2025\n+-- (ORDER BY ... COLLATE Latin1_General_100_CI_AS over chr(32)..chr(126)); digits and letters already agree with ICU.\n+-- Deterministic: values that differ only in case are ordered by bytes (SQL Server leaves that order undefined).\n+CREATE COLLATION IF NOT EXISTS tsql_compat.latin1_general_100_ci_as (\n+    provider = icu, locale = 'und-u-ks-level2', deterministic = true,\n+    rules = $r$& ' ' < '!' < '\"' < '#' < '$' < '%' < '&' < '(' < ')' < '*' < ',' < '.' < '/' < ':' < ';' < '?' < '@' < '[' < '\\' < ']' < '^' < '_' < '`' < '{' < '|' < '}' < '~' < '+' < '<' < '=' < '>'$r$\n+);\n+\n+-- Sort keys strip hyphens and apostrophes: that Windows collation sorts \"by word\", so they carry no weight (SQL_*\n+-- collations sort by string and would not do this). Written inline, not as a function: PostgreSQL sorts a key that\n+-- goes through an inlined SQL function much more slowly.\n+\n+-- Translate a T-SQL LIKE pattern into an anchored PostgreSQL regular expression (use with ~*, case-insensitive).\n+--   %  any string        _  any one character\n+--   [abc] [a-c] [^abc]   character class; an unterminated '[' takes the rest of the pattern as the class;\n+--                        an empty class matches nothing; a reversed range (c-a) matches nothing; '^' negates only first\n+--   every other character, including backslash, matches itself\n+CREATE OR REPLACE FUNCTION tsql_compat.like_to_regex(pattern text)\n+RETURNS text\n+LANGUAGE plpgsql\n+IMMUTABLE\n+AS $fn$\n+DECLARE\n+    result text := '';\n+    i      integer := 1;\n+    n      integer;\n+    c      text;\n+    j      integer;\n+    body   text;\n+    negate boolean;\n+    items  text;\n+    k      integer;\n+    lo     text;\n+    hi     text;\n+    ends_wild boolean := false;\n+BEGIN\n+    IF pattern IS NULL THEN\n+        RETURN NULL;\n+    END IF;\n+    n := char_length(pattern);\n+    WHILE i <= n LOOP\n+        c := substr(pattern, i, 1);\n+        ends_wild := false;\n+        IF c = '%' THEN\n+            result := result || '.*';\n+            ends_wild := true;\n+        ELSIF c = '_' THEN\n+            result := result || '.';\n+        ELSIF c = '[' THEN\n+            j := position(']' in substr(pattern, i + 1));\n+            IF j = 0 THEN\n+                body := substr(pattern, i + 1);\n+                i := n;\n+            ELSE\n+                body := substr(pattern, i + 1, j - 1);\n+                i := i + j;\n+            END IF;\n+            negate := left(body, 1) = '^';\n+            IF negate THEN\n+                body := substr(body, 2);\n+            END IF;\n+            items := '';\n+            k := 1;\n+            WHILE k <= char_length(body) LOOP\n+                lo := substr(body, k, 1);\n+                IF substr(body, k + 1, 1) = '-' AND k + 2 <= char_length(body) THEN\n+                    hi := substr(body, k + 2, 1);\n+                    IF ascii(lo) <= ascii(hi) THEN\n+                        items := items || CASE WHEN position(lo in '\\]^[-') > 0 THEN '\\' ELSE '' END || lo\n+                                       || '-'\n+                                       || CASE WHEN position(hi in '\\]^[-') > 0 THEN '\\' ELSE '' END || hi;\n+                    END IF;\n+                    k := k + 3;\n+                ELSE\n+                    items := items || CASE WHEN position(lo in '\\]^[-') > 0 THEN '\\' ELSE '' END || lo;\n+                    k := k + 1;\n+                END IF;\n+            END LOOP;\n+            IF items = '' THEN\n+                result := result || CASE WHEN negate THEN '.' ELSE '(?!)' END;\n+            ELSE\n+                result := result || '[' || CASE WHEN negate THEN '^' ELSE '' END || items || ']';\n+            END IF;\n+        ELSIF position(c in '\\.^$|?*+()[]{}') > 0 THEN\n+            result := result || '\\' || c;\n+        ELSE\n+            result := result || c;\n+        END IF;\n+        i := i + 1;\n+    END LOOP;\n+    -- A leading or trailing % needs no '.*' in a search: leaving the regular expression unanchored there is the same\n+    -- test, and much cheaper for the regex engine on long strings.\n+    IF left(pattern, 1) = '%' THEN\n+        result := substr(result, 3);\n+    END IF;\n+    IF ends_wild AND result <> '' THEN\n+        result := left(result, char_length(result) - 2);\n+    END IF;\n+    RETURN CASE WHEN left(pattern, 1) = '%' THEN '' ELSE '^' END\n+        || '(?:' || result || ')'\n+        || CASE WHEN ends_wild THEN '' ELSE '$' END;\n+END;\n+$fn$;\n+\n@@ engineOutput line 13 / final line 127 @@\n+    -- The inner query only finds and orders the rows; the JSON is built afterwards, for the rows that are returned.\n+    SELECT CASE WHEN count(*) = 0 THEN ''\n+                ELSE json_strip_nulls(json_build_object('StockItems', json_agg(\n+                         json_build_object('StockItemID', r.\"StockItemID\", 'StockItemName', r.\"StockItemName\")\n+                         ORDER BY r.sort_key COLLATE tsql_compat.latin1_general_100_ci_as)))::text\n+           END\n-    SELECT json_build_object('StockItems', COALESCE(json_agg(r.item ORDER BY r.rn), '[]'::json))::text\n@@ engineOutput line 15 / final line 134 @@\n+        SELECT si.\"StockItemID\", si.\"StockItemName\",\n+               replace(replace(si.\"StockItemName\", '-', ''), '''', '') AS sort_key\n-        SELECT json_build_object('StockItemID', si.\"StockItemID\", 'StockItemName', si.\"StockItemName\") AS item,\n-               row_number() OVER (ORDER BY si.\"StockItemName\") AS rn\n@@ engineOutput line 18 / final line 137 @@\n+        WHERE si.\"SearchDetails\" ~* tsql_compat.like_to_regex('%' || search_text || '%')\n+        ORDER BY replace(replace(si.\"StockItemName\", '-', ''), '''', '') COLLATE tsql_compat.latin1_general_100_ci_as\n-        WHERE si.\"SearchDetails\" ILIKE '%' || search_text || '%'\n-        ORDER BY si.\"StockItemName\"\n@@ engineOutput line 23 / final line 142 @@\n-",
+    "engine": "kiro",
+    "notes": [
+      "WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted (where the source declares it).",
+      "LIKE is translated by tsql_compat.like_to_regex into a case-insensitive regular expression: PostgreSQL LIKE has no [..] classes and treats backslash as an escape, SQL Server LIKE has no escape character. Patterns that the harness generates are checked; collation-specific equivalences outside them (for example ß = ss) are not claimed.",
+      "ORDER BY uses a tailored ICU collation (tsql_compat.latin1_general_100_ci_as: level 2, case-insensitive and accent-sensitive, ASCII punctuation order measured on SQL Server) plus removal of hyphens and apostrophes (Windows word sort), to follow the source's Latin1_General_100_CI_AS ordering. Verified for ASCII text; sort keys are generated distinct, so the order of ties is not claimed.",
+      "The JSON documents are compared as parsed values (key order, array order, nulls and strings are compared; whitespace is not).",
+      "@MaximumRowsToReturn is generated as 0..5; negative or NULL values (an error on SQL Server, not on PostgreSQL) are outside the property.",
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
+    ]
+  },
+  "columnMappings": [
+    {
+      "sqlServerType": "int NOT NULL",
+      "postgresType": "integer NOT NULL"
+    },
+    {
+      "sqlServerType": "nvarchar(100) NOT NULL",
+      "postgresType": "varchar(100) NOT NULL"
+    }
+  ],
+  "verificationSteps": [
+    {
+      "step": 1,
+      "label": "Compiles and deploys on PostgreSQL",
+      "status": "pass"
+    },
+    {
+      "step": 2,
+      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "status": "not-run"
+    },
+    {
+      "step": 3,
+      "label": "Result sets match on generated data",
+      "status": "pass"
+    },
+    {
+      "step": 4,
+      "label": "Runtime within 1.5× factor",
+      "status": "pass"
+    },
+    {
+      "step": 5,
+      "label": "Second human review",
+      "status": "not-run"
+    },
+    {
+      "step": 6,
+      "label": "Acceptance on real data",
+      "status": "not-run"
+    }
+  ],
+  "evidence": {
+    "pbtSeeds": [
+      1401388628
+    ],
+    "rowsCompared": 206,
+    "samples": 200,
+    "samplesWithRows": 200,
+    "trapsCovered": [
+      "empty string and trailing spaces"
+    ],
+    "mutantsDetected": [
+      "match is case-sensitive",
+      "'[..]' treated as literal characters",
+      "'_' matches a letter only",
+      "one row too many returned",
+      "results in descending order"
+    ],
+    "runtime": {
+      "volume": 5000,
+      "timedRuns": 7,
+      "sqlServerMs": 3,
+      "postgresMs": 3.27,
+      "ratio": 1.09,
+      "threshold": 1.5,
+      "passed": true,
+      "belowResolution": true,
+      "resultRows": 100,
+      "volumeMismatch": null
+    },
+    "engineOutputCheck": {
+      "step3": "fail",
+      "seed": 1401388628,
+      "detail": "fixed case \"SearchDetails: LIKE \"[a-c]\"\": value differs in group 0 (key \"*\"), column \"result\": SQL Server j:{\"StockItems\":[{\"StockItemID\":1,\"StockItemName\":\"Item0001\"},{\"StockItemID\":4,\"StockItemName\":\"Item0004\"},{\"StockItemID\":5,\"StockItemName\":\"Item0005\"}]} vs PostgreSQL j:{\"StockItems\":[{\"StockItemID\":5,\"StockItemName\":\"Item0005\"}]}"
+    },
+    "subMicrosecondNormalised": 0,
+    "harnessVersion": "harness-generic-0.3.0"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "Kiro",
+    "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
+  },
+  "predictionCell": {
+    "p50Hours": 1,
+    "p90Hours": 2
+  },
+  "builtAt": "2026-11-12T07:56:18.603Z"
+}
