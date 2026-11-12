@@ -13,6 +13,7 @@ import { VEHICLE_SPECS } from "./specs-vehicle.js";
 import { COLDROOM_SPECS } from "./specs-coldroom.js";
 import { ORDER_SPECS } from "./specs-orders.js";
 import { INVOICE_SPECS } from "./specs-invoices.js";
+import { AW2_SPECS } from "./specs-aw2.js";
 
 const int = { kind: "int" } as const;
 const date = { kind: "date" } as const;
@@ -284,7 +285,7 @@ SPECS.push(
   }
 );
 
-SPECS.push(...SEARCH_SPECS, ...LOGON_SPECS, ...SEQUENCE_SPECS, ...VEHICLE_SPECS, ...COLDROOM_SPECS, ...ORDER_SPECS, ...INVOICE_SPECS, ...AW_SPECS, ...AW_VIEWS);
+SPECS.push(...SEARCH_SPECS, ...LOGON_SPECS, ...SEQUENCE_SPECS, ...VEHICLE_SPECS, ...COLDROOM_SPECS, ...ORDER_SPECS, ...INVOICE_SPECS, ...AW_SPECS, ...AW_VIEWS, ...AW2_SPECS);
 
 export const specByName = (qualified: string): ObjectSpec | undefined =>
   SPECS.find((s) => `${s.schema}.${s.name}` === qualified);

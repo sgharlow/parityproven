@@ -63,9 +63,9 @@
   ],
   "evidence": {
     "pbtSeeds": [
-      386191630
+      1769329729
     ],
-    "rowsCompared": 371,
+    "rowsCompared": 377,
     "samples": 200,
     "samplesWithRows": 190,
     "trapsCovered": [
@@ -80,9 +80,9 @@
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
-      "sqlServerMs": 4,
-      "postgresMs": 1.57,
-      "ratio": 0.39,
+      "sqlServerMs": 3,
+      "postgresMs": 1.6,
+      "ratio": 0.53,
       "threshold": 1.5,
       "passed": true,
       "belowResolution": true,
@@ -101,5 +101,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-12T07:56:18.553Z"
+  "builtAt": "2026-11-12T18:03:35.133Z"
 }

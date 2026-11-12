@@ -73,11 +73,11 @@
       "state after the call (every row of the changed tables) and the error outcome"
     ],
     "pbtSeeds": [
-      216423709
+      1445796697
     ],
     "samples": 200,
-    "samplesWithRows": 96,
-    "subMicrosecondNormalised": 78,
+    "samplesWithRows": 106,
+    "subMicrosecondNormalised": 82,
     "mutantsDetected": [
       "parameter not truncated to nvarchar(1000)",
       "ISJSON accepts JSON scalars",

@@ -82,11 +82,11 @@
   ],
   "evidence": {
     "pbtSeeds": [
-      1693145585
+      666688898
     ],
-    "rowsCompared": 351,
+    "rowsCompared": 337,
     "samples": 200,
-    "samplesWithRows": 137,
+    "samplesWithRows": 143,
     "trapsCovered": [
       "NULL in every nullable column",
       "numeric rounding and scale (decimal edge values)",
@@ -101,15 +101,15 @@
       "volume": 5000,
       "timedRuns": 7,
       "sqlServerMs": 16,
-      "postgresMs": 5.36,
-      "ratio": 0.33,
+      "postgresMs": 7.77,
+      "ratio": 0.49,
       "threshold": 1.5,
       "passed": true,
       "belowResolution": false,
-      "resultRows": 6184,
+      "resultRows": 6064,
       "volumeMismatch": null
     },
-    "subMicrosecondNormalised": 957,
+    "subMicrosecondNormalised": 924,
     "harnessVersion": "harness-generic-0.3.0"
   },
   "effort": {
@@ -121,5 +121,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-12T07:56:18.555Z"
+  "builtAt": "2026-11-12T18:03:35.135Z"
 }

@@ -1,0 +1,8 @@
+[
+  { "name": "vacuity threshold off by one (<=)", "from": "if (samples > 0 && samplesWithRows / samples < MIN_NON_EMPTY_FRACTION) {", "to": "if (samples > 0 && samplesWithRows / samples <= MIN_NON_EMPTY_FRACTION) {" },
+  { "name": "vacuity guard disabled", "from": "if (samples > 0 && samplesWithRows / samples < MIN_NON_EMPTY_FRACTION) {", "to": "if (false) {" },
+  { "name": "identity values sent from the client", "from": "const cols = t.columns.filter((c) => !c.identity);", "to": "const cols = t.columns;" },
+  { "name": "PostgreSQL identity not renumbered", "from": "c.identity ? i + 1 : (r[c.name] ?? null)", "to": "(r[c.name] ?? null)" },
+  { "name": "TVP inserted at the end of the arguments", "from": "pgParams.splice(t.tvp!.argIndex, 0, JSON.stringify(json));", "to": "pgParams.push(JSON.stringify(json));" },
+  { "name": "placeholder count not checked", "from": "if (holes !== base.length + tvps.length) throw", "to": "if (false) throw" }
+]

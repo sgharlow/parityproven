@@ -27,7 +27,7 @@ function scalarBench(o: {
 
 /** Why scalar functions called once per row miss step 4. Measured, not assumed: see sys.sql_modules.is_inlineable. */
 const UDF_INLINING =
-  "Step 4 finding: SQL Server 2025 inlines this scalar function into the calling query (sys.sql_modules.is_inlineable = 1, Froid). PostgreSQL runs the function once per call, so per-row calls cost about 2x more at 20,000 calls. Equivalence is unaffected; a caller that needs the speed would inline the expression or use a set-based join.";
+  "Step 4 finding: SQL Server 2025 inlines this scalar function into the calling query (sys.sql_modules.is_inlineable = 1, Froid). PostgreSQL runs the function once per call, so per-row calls cost about 2x more at 20,000 calls. Equivalence is unaffected; a caller that needs the speed would inline the expression or use a set-based join. A PL/pgSQL version (dbo.ufnGetStock, 2026-11-12) measured slower than the LANGUAGE sql one (160 ms vs 123 ms at 20,000 calls), so the SQL version is kept.";
 
 const MONEY_SUM = { ssAgg: "SUM(CAST({call} AS decimal(38,4)))", pgAgg: "sum({call})" };
 const MAX_AGG = { ssAgg: "MAX({call})", pgAgg: "max({call})" };

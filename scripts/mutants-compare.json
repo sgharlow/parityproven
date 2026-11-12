@@ -1,0 +1,18 @@
+[
+  { "name": "column-name check dropped", "from": "if (ssNames.length !== pgNames.length || ssNames.some((n, i) => n !== pgNames[i])) {", "to": "if (false) {" },
+  { "name": "row-count check dropped", "from": "if (ss.rows.length !== pg.rows.length) {", "to": "if (false) {" },
+  { "name": "order check dropped", "from": "const v = orderViolation(ss, keyIdx, \"SQL Server\") ?? orderViolation(pg, keyIdx, \"PostgreSQL\");", "to": "const v = null;" },
+  { "name": "PostgreSQL order not checked", "from": "?? orderViolation(pg, keyIdx, \"PostgreSQL\")", "to": "" },
+  { "name": "tie groups compared in order (not as a multiset)", "from": "const x = [...ga[i].rows].sort();\n    const y = [...gb[i].rows].sort();", "to": "const x = [...ga[i].rows];\n    const y = [...gb[i].rows];" },
+  { "name": "orderValue ignores dates (back to D1)", "from": "  if (value instanceof Date) {\n    const delta = (value as DtDate).nanosecondsDelta ?? 0;\n    return BigInt(value.getTime()) * 1000n + BigInt(Math.round(delta * 1_000_000));\n  }\n  if (typeof value === \"string\") {\n    if (/^(bigint", "to": "  if (typeof value === \"string\") {\n    if (/^(bigint" },
+  { "name": "orderValue keeps bigint strings as strings (back to D2)", "from": "&& /^-?\\d+$/.test(value)) return BigInt(value);", "to": "&& /^-?\\d+$/.test(value)) return value;" },
+  { "name": "-0 not normalised", "from": "return `n:${Object.is(value, -0) ? 0 : value}`;", "to": "return `n:${Object.is(value, -0) ? '-0' : value}`;" },
+  { "name": "NULL treated as empty string", "from": "if (value === null || value === undefined) return \"∅\";", "to": "if (value === null || value === undefined) return \"s:\";" },
+  { "name": "trailing spaces trimmed", "from": "return `s:${value}`;", "to": "return `s:${value.trimEnd()}`;" },
+  { "name": "sub-millisecond ticks ignored", "from": "const micros = BigInt(value.getTime()) * 1000n + BigInt(Math.round(delta * 1_000_000));\n    return `t:", "to": "const micros = BigInt(value.getTime()) * 1000n;\n    return `t:" },
+  { "name": "WKT spacing not normalised", "from": "if (pt) return `g:POINT(${Number(pt[1])} ${Number(pt[2])})`;", "to": "if (pt) return `g:${value}`;" },
+  { "name": "JSON compared as text", "from": "return `j:${JSON.stringify(JSON.parse(value))}`;", "to": "return `j:${value}`;" },
+  { "name": "excludeColumns ignored", "from": "const ss = withoutColumns(ssIn, excludeColumns);\n  const pg = withoutColumns(pgIn, excludeColumns);", "to": "const ss = ssIn;\n  const pg = pgIn;" },
+  { "name": "canonicalTable never sorts", "from": "if (unordered) rows.sort();", "to": "" },
+  { "name": "byte buffers not compared by content", "from": "if (Buffer.isBuffer(value)) return `x:${value.toString(\"hex\")}`;", "to": "if (Buffer.isBuffer(value)) return `x:${value.length}`;" }
+]

@@ -27,13 +27,13 @@
     "step4": "pass",
     "step5": "not-run",
     "step6": "not-run",
-    "runtimeRatio": 0.2,
+    "runtimeRatio": 0.19,
     "runtime": {
       "volume": 10,
       "timedRuns": 7,
-      "sqlServerMs": 21,
-      "postgresMs": 4.29,
-      "ratio": 0.2,
+      "sqlServerMs": 24,
+      "postgresMs": 4.52,
+      "ratio": 0.19,
       "threshold": 1.5,
       "passed": true,
       "belowResolution": false,
@@ -43,7 +43,7 @@
     "rowsCompared": 200,
     "trapsCovered": [],
     "pbtSeeds": [
-      309863216
+      1603231383
     ],
     "samples": 200,
     "samplesWithRows": 200,

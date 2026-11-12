@@ -1,0 +1,16 @@
+[
+  { "name": "microsToIso truncates toward zero (pre-1970 bug)", "from": "const seconds = (micros - frac) / 1_000_000n;", "to": "const seconds = micros / 1_000_000n;" },
+  { "name": "normalisation rounds instead of truncating", "from": "const micros = ticks / 10n;", "to": "const micros = (ticks + 5n) / 10n;" },
+  { "name": "lost ticks never counted", "from": "return { iso: microsToIso(micros), lost: ticks % 10n !== 0n };", "to": "return { iso: microsToIso(micros), lost: false };" },
+  { "name": "cutoffs not normalised", "from": "const cutoffs = d.cutoffs ? { last: conv(d.cutoffs.last), new: conv(d.cutoffs.new) } : null;", "to": "const cutoffs = d.cutoffs ? { last: String(d.cutoffs.last), new: String(d.cutoffs.new) } : null;" },
+  { "name": "decimal not clamped to its precision", "from": "const clamped = Math.max(-maxUnscaled, Math.min(maxUnscaled, n));", "to": "const clamped = n * 1000;" },
+  { "name": "char values not cut to length", "from": "fc.string({ maxLength: t.n })).map((s) => s.slice(0, t.n));", "to": "fc.string({ maxLength: t.n + 3 }));" },
+  { "name": "tinyint range widened", "from": "t.kind === \"tinyint\" ? [0, 255]", "to": "t.kind === \"tinyint\" ? [-5, 300]" },
+  { "name": "explicit range ignored", "from": "const [lo, hi] = col.range ?? natural;", "to": "const [lo, hi] = natural;" },
+  { "name": "distinct suffix dropped", "from": "return v.slice(0, n - 4) + String(rowIndex + 1).padStart(4, \"0\");", "to": "return v.slice(0, n);" },
+  { "name": "seq offset ignored", "from": "for (const s of seqs) row[s.name] = (s.offset ?? 0) + i + 1;", "to": "for (const s of seqs) row[s.name] = i + 1;" },
+  { "name": "nullFraction ignored", "from": "const nullFreq = col.nullFraction !== undefined", "to": "const nullFreq = false" },
+  { "name": "row-count override ignored", "from": "const rowsArb = t.rows ? fc.array(rec, { minLength: t.rows[0], maxLength: t.rows[1] }) : fc.oneof(", "to": "const rowsArb = fc.oneof(" },
+  { "name": "vocabulary ignored", "from": "if (col.strings?.length) {", "to": "if (false) {" },
+  { "name": "trueFraction biased again", "from": "fc.noBias(fc.integer({ min: 1, max: 100 }))", "to": "fc.integer({ min: 1, max: 100 })" }
+]

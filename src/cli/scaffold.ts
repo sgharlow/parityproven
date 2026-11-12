@@ -14,6 +14,7 @@ import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { MssqlClient } from "../harness/clients/mssql-client.js";
+import { mssqlEndpoint } from "../harness/endpoints.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..", "..");
@@ -36,7 +37,7 @@ async function main(): Promise<void> {
   const database = arg("--database");
   if (!database) throw new Error("--database required");
   const sa = process.env["MSSQL_SA_PASSWORD"]!;
-  const c = new MssqlClient({ server: "localhost", port: 1433, user: "sa", password: sa, database });
+  const c = new MssqlClient({ ...mssqlEndpoint(), user: "sa", password: sa, database });
   const outDir = resolve(ROOT, ".tmp", "scaffold", database);          // definitions: for reading only
   const catalogDir = resolve(ROOT, "catalog", database);                // catalog facts: committed, reproducible
   mkdirSync(outDir, { recursive: true });

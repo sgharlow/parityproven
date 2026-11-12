@@ -17,6 +17,7 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs";
 
 import { MssqlClient } from "../harness/clients/mssql-client.js";
 import { PgClient } from "../harness/clients/pg-client.js";
+import { mssqlEndpoint, pgEndpoint } from "../harness/endpoints.js";
 import { ensureAdventureWorksRestored, ensureWwiRestored } from "../harness/restore.js";
 import {
   deployPgFunction, dropPgObject, fetchSourceCollation, fetchSourceCompatibilityLevel, fetchSourceDefinition, prepareSqlServer, preparePostgres, readSql, runProperty,
@@ -80,7 +81,7 @@ async function convertOne(conn: Connections, spec: ObjectSpec, seed: number, run
   const draftSql = existsSync(draftPath) ? readSql(draftPath) : null;
 
   // the original T-SQL comes from the restored sample database this object belongs to
-  const source = new MssqlClient({ server: "localhost", port: 1433, user: "sa", password: conn.saPassword, database: spec.database });
+  const source = new MssqlClient({ ...mssqlEndpoint(), user: "sa", password: conn.saPassword, database: spec.database });
   let definition: string;
   let collation: string;
   let compat: number;
@@ -312,8 +313,8 @@ async function main(): Promise<void> {
 
   const conn: Connections = {
     saPassword: sa,
-    mssqlMaster: new MssqlClient({ server: "localhost", port: 1433, user: "sa", password: sa, database: "master" }),
-    pg: new PgClient({ host: "localhost", port: 5432, user: "postgres", password: pgPw, database: "parityproven" }),
+    mssqlMaster: new MssqlClient({ ...mssqlEndpoint(), user: "sa", password: sa, database: "master" }),
+    pg: new PgClient({ ...pgEndpoint(), user: "postgres", password: pgPw, database: "parityproven" }),
   };
 
   // --file conversions/<db>/<Schema>.<Name>[.draft].sql  (used by the save hook)

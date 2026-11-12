@@ -52,29 +52,29 @@
     "step4": "pass",
     "step5": "not-run",
     "step6": "not-run",
-    "runtimeRatio": 0.55,
+    "runtimeRatio": 0.47,
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
-      "sqlServerMs": 43,
-      "postgresMs": 23.76,
-      "ratio": 0.55,
+      "sqlServerMs": 39,
+      "postgresMs": 18.33,
+      "ratio": 0.47,
       "threshold": 1.5,
       "passed": true,
       "belowResolution": false,
-      "resultRows": 6842,
+      "resultRows": 6835,
       "volumeMismatch": null
     },
-    "rowsCompared": 320,
+    "rowsCompared": 303,
     "trapsCovered": [
       "NULL in every nullable column",
       "empty string and trailing spaces"
     ],
     "pbtSeeds": [
-      753945845
+      824380524
     ],
     "samples": 200,
-    "samplesWithRows": 151,
+    "samplesWithRows": 154,
     "subMicrosecondNormalised": 0,
     "mutantsDetected": [
       "auto: LEFT JOIN becomes INNER JOIN",

@@ -46,20 +46,20 @@
     "step4": "pass",
     "step5": "not-run",
     "step6": "not-run",
-    "runtimeRatio": 0.36,
+    "runtimeRatio": 0.32,
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
-      "sqlServerMs": 8,
-      "postgresMs": 2.85,
-      "ratio": 0.36,
+      "sqlServerMs": 7,
+      "postgresMs": 2.27,
+      "ratio": 0.32,
       "threshold": 1.5,
       "passed": true,
       "belowResolution": false,
-      "resultRows": 3080,
+      "resultRows": 3119,
       "volumeMismatch": null
     },
-    "rowsCompared": 173,
+    "rowsCompared": 178,
     "trapsCovered": [
       "NULL in every nullable column",
       "numeric rounding and scale (decimal edge values)",
@@ -67,16 +67,16 @@
       "ORDER BY key (ties compared as multisets)"
     ],
     "pbtSeeds": [
-      659718585
+      362396954
     ],
     "engineOutputCheck": {
       "step3": "fail",
-      "seed": 659718585,
+      "seed": 362396954,
       "detail": "fixed case \"fractional Quantity (decimal -> int cast)\": value differs in group 0 (key \"n:1\"), column \"Quantity\": SQL Server n:2 vs PostgreSQL n:3"
     },
     "samples": 200,
     "samplesWithRows": 115,
-    "subMicrosecondNormalised": 973,
+    "subMicrosecondNormalised": 963,
     "mutantsDetected": [
       "Quantity rounds instead of truncating",
       "upper cutoff exclusive"

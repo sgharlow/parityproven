@@ -117,11 +117,11 @@
       "state after the call (every row of the changed tables) and the error outcome"
     ],
     "pbtSeeds": [
-      339711364
+      281453508
     ],
     "samples": 200,
-    "samplesWithRows": 80,
-    "subMicrosecondNormalised": 690,
+    "samplesWithRows": 89,
+    "subMicrosecondNormalised": 693,
     "mutantsDetected": [
       "unpicked orders are invoiced",
       "chiller and dry item counts swapped",

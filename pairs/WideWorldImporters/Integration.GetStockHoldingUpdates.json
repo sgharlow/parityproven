@@ -40,27 +40,27 @@
     "step4": "pass",
     "step5": "not-run",
     "step6": "not-run",
-    "runtimeRatio": 0.39,
+    "runtimeRatio": 0.53,
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
-      "sqlServerMs": 4,
-      "postgresMs": 1.57,
-      "ratio": 0.39,
+      "sqlServerMs": 3,
+      "postgresMs": 1.6,
+      "ratio": 0.53,
       "threshold": 1.5,
       "passed": true,
       "belowResolution": true,
       "resultRows": 5000,
       "volumeMismatch": null
     },
-    "rowsCompared": 371,
+    "rowsCompared": 377,
     "trapsCovered": [
       "numeric rounding and scale (decimal edge values)",
       "empty string and trailing spaces",
       "ORDER BY key (ties compared as multisets)"
     ],
     "pbtSeeds": [
-      386191630
+      1769329729
     ],
     "samples": 200,
     "samplesWithRows": 190,

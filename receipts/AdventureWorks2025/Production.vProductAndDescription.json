@@ -71,11 +71,11 @@
   ],
   "evidence": {
     "pbtSeeds": [
-      444549336
+      1944343000
     ],
-    "rowsCompared": 212,
+    "rowsCompared": 278,
     "samples": 200,
-    "samplesWithRows": 125,
+    "samplesWithRows": 128,
     "trapsCovered": [
       "NULL in every nullable column",
       "empty string and trailing spaces"
@@ -87,13 +87,13 @@
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
-      "sqlServerMs": 20,
-      "postgresMs": 7.06,
-      "ratio": 0.35,
+      "sqlServerMs": 17,
+      "postgresMs": 9.21,
+      "ratio": 0.54,
       "threshold": 1.5,
       "passed": true,
       "belowResolution": false,
-      "resultRows": 4066,
+      "resultRows": 3975,
       "volumeMismatch": null
     },
     "subMicrosecondNormalised": 0,
@@ -108,5 +108,5 @@
     "p50Hours": 0.75,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-12T07:56:18.524Z"
+  "builtAt": "2026-11-12T18:03:35.108Z"
 }

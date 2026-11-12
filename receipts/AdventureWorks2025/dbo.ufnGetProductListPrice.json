@@ -13,7 +13,7 @@
     "engine": "kiro",
     "notes": [
       "At most one price period per product (precondition): with overlapping periods the T-SQL `SELECT @x = ...` keeps the last row read, which is undefined.",
-      "Step 4 finding: SQL Server 2025 inlines this scalar function into the calling query (sys.sql_modules.is_inlineable = 1, Froid). PostgreSQL runs the function once per call, so per-row calls cost about 2x more at 20,000 calls. Equivalence is unaffected; a caller that needs the speed would inline the expression or use a set-based join.",
+      "Step 4 finding: SQL Server 2025 inlines this scalar function into the calling query (sys.sql_modules.is_inlineable = 1, Froid). PostgreSQL runs the function once per call, so per-row calls cost about 2x more at 20,000 calls. Equivalence is unaffected; a caller that needs the speed would inline the expression or use a set-based join. A PL/pgSQL version (dbo.ufnGetStock, 2026-11-12) measured slower than the LANGUAGE sql one (160 ms vs 123 ms at 20,000 calls), so the SQL version is kept.",
       "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
     ]
   },
@@ -72,11 +72,11 @@
   ],
   "evidence": {
     "pbtSeeds": [
-      118173091
+      1663967597
     ],
     "rowsCompared": 200,
     "samples": 200,
-    "samplesWithRows": 131,
+    "samplesWithRows": 129,
     "trapsCovered": [
       "NULL in every nullable column"
     ],
@@ -84,13 +84,13 @@
       "auto: join condition uses a different key",
       "auto: first AND becomes OR"
     ],
-    "failureDetail": "Step 4: PostgreSQL 156.17 ms vs SQL Server 85 ms = 1.84x, above the 1.5x limit. Results are equivalent (step 3 pass); see the notes for the cause.",
+    "failureDetail": "Step 4: PostgreSQL 166.83 ms vs SQL Server 76 ms = 2.2x, above the 1.5x limit. Results are equivalent (step 3 pass); see the notes for the cause.",
     "runtime": {
       "volume": 2000,
       "timedRuns": 7,
-      "sqlServerMs": 85,
-      "postgresMs": 156.17,
-      "ratio": 1.84,
+      "sqlServerMs": 76,
+      "postgresMs": 166.83,
+      "ratio": 2.2,
       "threshold": 1.5,
       "passed": false,
       "belowResolution": false,
@@ -109,5 +109,5 @@
     "p50Hours": 1.5,
     "p90Hours": 4
   },
-  "builtAt": "2026-11-12T07:56:18.508Z"
+  "builtAt": "2026-11-12T18:03:35.079Z"
 }

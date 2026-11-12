@@ -1,0 +1,135 @@
+{
+  "database": "AdventureWorks2025",
+  "schemaName": "dbo",
+  "objectName": "uspGetBillOfMaterials",
+  "objectClass": "procedure",
+  "tier": "simple",
+  "status": "pending",
+  "code": {
+    "source": "\r\nCREATE PROCEDURE [dbo].[uspGetBillOfMaterials]\r\n    @StartProductID [int],\r\n    @CheckDate [datetime]\r\nAS\r\nBEGIN\r\n    SET NOCOUNT ON;\r\n\r\n    -- Use recursive query to generate a multi-level Bill of Material (i.e. all level 1\r\n    -- components of a level 0 assembly, all level 2 components of a level 1 assembly)\r\n    -- The CheckDate eliminates any components that are no longer used in the product on this date.\r\n    WITH [BOM_cte]([ProductAssemblyID], [ComponentID], [ComponentDesc], [PerAssemblyQty], [StandardCost], [ListPrice], [BOMLevel], [RecursionLevel]) -- CTE name and columns\r\n    AS (\r\n        SELECT b.[ProductAssemblyID], b.[ComponentID], p.[Name], b.[PerAssemblyQty], p.[StandardCost], p.[ListPrice], b.[BOMLevel], 0 -- Get the initial list of components for the bike assembly\r\n        FROM [Production].[BillOfMaterials] b\r\n            INNER JOIN [Production].[Product] p\r\n            ON b.[ComponentID] = p.[ProductID]\r\n        WHERE b.[ProductAssemblyID] = @StartProductID\r\n            AND @CheckDate >= b.[StartDate]\r\n            AND @CheckDate <= ISNULL(b.[EndDate], @CheckDate)\r\n        UNION ALL\r\n        SELECT b.[ProductAssemblyID], b.[ComponentID], p.[Name], b.[PerAssemblyQty], p.[StandardCost], p.[ListPrice], b.[BOMLevel], [RecursionLevel] + 1 -- Join recursive member to anchor\r\n        FROM [BOM_cte] cte\r\n            INNER JOIN [Production].[BillOfMaterials] b\r\n            ON b.[ProductAssemblyID] = cte.[ComponentID]\r\n            INNER JOIN [Production].[Product] p\r\n            ON b.[ComponentID] = p.[ProductID]\r\n        WHERE @CheckDate >= b.[StartDate]\r\n            AND @CheckDate <= ISNULL(b.[EndDate], @CheckDate)\r\n        )\r\n    -- Outer select from the CTE\r\n    SELECT b.[ProductAssemblyID], b.[ComponentID], b.[ComponentDesc], SUM(b.[PerAssemblyQty]) AS [TotalQuantity] , b.[StandardCost], b.[ListPrice], b.[BOMLevel], b.[RecursionLevel]\r\n    FROM [BOM_cte] b\r\n    GROUP BY b.[ComponentID], b.[ComponentDesc], b.[ProductAssemblyID], b.[BOMLevel], b.[RecursionLevel], b.[StandardCost], b.[ListPrice]\r\n    ORDER BY b.[BOMLevel], b.[ProductAssemblyID], b.[ComponentID]\r\n    OPTION (MAXRECURSION 25)\r\nEND;\r\n",
+    "engineOutput": "-- PL/pgSQL conversion of dbo.uspGetBillOfMaterials (AdventureWorks2025).\n-- Engine: Kiro. No separate first draft was kept for this object.\n--\n-- Differences from a literal translation:\n--  * The procedure returns one result set, so it becomes a set-returning function (SELECT * FROM ...).\n--  * OPTION (MAXRECURSION 25): SQL Server stops with error 530 when the recursive CTE would produce a row at recursion\n--    level 26. PostgreSQL has no such option (a cycle would recurse forever), so the walk is bounded at level 26 and the\n--    function raises (SQLSTATE 54001) if that level is reached, before returning any rows.\n--  * ISNULL(b.EndDate, @CheckDate) -> COALESCE.\n\nCREATE SCHEMA IF NOT EXISTS dbo;\n\n-- The recursive walk, bounded one level past the limit so that exceeding it is detectable.\nCREATE OR REPLACE FUNCTION dbo.usp_get_bill_of_materials_walk(start_product_id integer, check_date timestamp)\nRETURNS TABLE (product_assembly_id integer, component_id integer, component_desc varchar(50), per_assembly_qty numeric(8,2),\n               standard_cost numeric(19,4), list_price numeric(19,4), bom_level smallint, recursion_level integer)\nLANGUAGE sql\nSTABLE\nAS $fn$\n    WITH RECURSIVE bom_cte (product_assembly_id, component_id, component_desc, per_assembly_qty, standard_cost, list_price, bom_level, recursion_level) AS (\n        -- Get the initial list of components for the bike assembly\n        SELECT b.\"ProductAssemblyID\", b.\"ComponentID\", p.\"Name\", b.\"PerAssemblyQty\", p.\"StandardCost\", p.\"ListPrice\", b.\"BOMLevel\", 0\n        FROM production.bill_of_materials AS b\n            INNER JOIN production.product AS p\n            ON b.\"ComponentID\" = p.\"ProductID\"\n        WHERE b.\"ProductAssemblyID\" = start_product_id\n            AND check_date >= b.\"StartDate\"\n            AND check_date <= COALESCE(b.\"EndDate\", check_date)\n        UNION ALL\n        -- Join recursive member to anchor\n        SELECT b.\"ProductAssemblyID\", b.\"ComponentID\", p.\"Name\", b.\"PerAssemblyQty\", p.\"StandardCost\", p.\"ListPrice\", b.\"BOMLevel\", cte.recursion_level + 1\n        FROM bom_cte AS cte\n            INNER JOIN production.bill_of_materials AS b\n            ON b.\"ProductAssemblyID\" = cte.component_id\n            INNER JOIN production.product AS p\n            ON b.\"ComponentID\" = p.\"ProductID\"\n        WHERE check_date >= b.\"StartDate\"\n            AND check_date <= COALESCE(b.\"EndDate\", check_date)\n            AND cte.recursion_level < 26\n    )\n    SELECT * FROM bom_cte\n$fn$;\n\nCREATE OR REPLACE FUNCTION dbo.usp_get_bill_of_materials(start_product_id integer, check_date timestamp)\nRETURNS TABLE (\"ProductAssemblyID\" integer, \"ComponentID\" integer, \"ComponentDesc\" varchar(50), \"TotalQuantity\" numeric,\n               \"StandardCost\" numeric(19,4), \"ListPrice\" numeric(19,4), \"BOMLevel\" smallint, \"RecursionLevel\" integer)\nLANGUAGE plpgsql\nSTABLE\nAS $fn$\nBEGIN\n    IF EXISTS (SELECT 1 FROM dbo.usp_get_bill_of_materials_walk(start_product_id, check_date) AS r WHERE r.recursion_level > 25) THEN\n        RAISE EXCEPTION 'The statement terminated. The maximum recursion 25 has been exhausted before statement completion.'\n            USING ERRCODE = '54001';\n    END IF;\n    -- Outer select from the CTE\n    RETURN QUERY\n    SELECT r.product_assembly_id, r.component_id, r.component_desc, SUM(r.per_assembly_qty), r.standard_cost, r.list_price, r.bom_level, r.recursion_level\n    FROM dbo.usp_get_bill_of_materials_walk(start_product_id, check_date) AS r\n    GROUP BY r.component_id, r.component_desc, r.product_assembly_id, r.bom_level, r.recursion_level, r.standard_cost, r.list_price\n    ORDER BY r.bom_level, r.product_assembly_id, r.component_id;\nEND;\n$fn$;\n",
+    "final": "-- PL/pgSQL conversion of dbo.uspGetBillOfMaterials (AdventureWorks2025).\n-- Engine: Kiro. No separate first draft was kept for this object.\n--\n-- Differences from a literal translation:\n--  * The procedure returns one result set, so it becomes a set-returning function (SELECT * FROM ...).\n--  * OPTION (MAXRECURSION 25): SQL Server stops with error 530 when the recursive CTE would produce a row at recursion\n--    level 26. PostgreSQL has no such option (a cycle would recurse forever), so the walk is bounded at level 26 and the\n--    function raises (SQLSTATE 54001) if that level is reached, before returning any rows.\n--  * ISNULL(b.EndDate, @CheckDate) -> COALESCE.\n\nCREATE SCHEMA IF NOT EXISTS dbo;\n\n-- The recursive walk, bounded one level past the limit so that exceeding it is detectable.\nCREATE OR REPLACE FUNCTION dbo.usp_get_bill_of_materials_walk(start_product_id integer, check_date timestamp)\nRETURNS TABLE (product_assembly_id integer, component_id integer, component_desc varchar(50), per_assembly_qty numeric(8,2),\n               standard_cost numeric(19,4), list_price numeric(19,4), bom_level smallint, recursion_level integer)\nLANGUAGE sql\nSTABLE\nAS $fn$\n    WITH RECURSIVE bom_cte (product_assembly_id, component_id, component_desc, per_assembly_qty, standard_cost, list_price, bom_level, recursion_level) AS (\n        -- Get the initial list of components for the bike assembly\n        SELECT b.\"ProductAssemblyID\", b.\"ComponentID\", p.\"Name\", b.\"PerAssemblyQty\", p.\"StandardCost\", p.\"ListPrice\", b.\"BOMLevel\", 0\n        FROM production.bill_of_materials AS b\n            INNER JOIN production.product AS p\n            ON b.\"ComponentID\" = p.\"ProductID\"\n        WHERE b.\"ProductAssemblyID\" = start_product_id\n            AND check_date >= b.\"StartDate\"\n            AND check_date <= COALESCE(b.\"EndDate\", check_date)\n        UNION ALL\n        -- Join recursive member to anchor\n        SELECT b.\"ProductAssemblyID\", b.\"ComponentID\", p.\"Name\", b.\"PerAssemblyQty\", p.\"StandardCost\", p.\"ListPrice\", b.\"BOMLevel\", cte.recursion_level + 1\n        FROM bom_cte AS cte\n            INNER JOIN production.bill_of_materials AS b\n            ON b.\"ProductAssemblyID\" = cte.component_id\n            INNER JOIN production.product AS p\n            ON b.\"ComponentID\" = p.\"ProductID\"\n        WHERE check_date >= b.\"StartDate\"\n            AND check_date <= COALESCE(b.\"EndDate\", check_date)\n            AND cte.recursion_level < 26\n    )\n    SELECT * FROM bom_cte\n$fn$;\n\nCREATE OR REPLACE FUNCTION dbo.usp_get_bill_of_materials(start_product_id integer, check_date timestamp)\nRETURNS TABLE (\"ProductAssemblyID\" integer, \"ComponentID\" integer, \"ComponentDesc\" varchar(50), \"TotalQuantity\" numeric,\n               \"StandardCost\" numeric(19,4), \"ListPrice\" numeric(19,4), \"BOMLevel\" smallint, \"RecursionLevel\" integer)\nLANGUAGE plpgsql\nSTABLE\nAS $fn$\nBEGIN\n    IF EXISTS (SELECT 1 FROM dbo.usp_get_bill_of_materials_walk(start_product_id, check_date) AS r WHERE r.recursion_level > 25) THEN\n        RAISE EXCEPTION 'The statement terminated. The maximum recursion 25 has been exhausted before statement completion.'\n            USING ERRCODE = '54001';\n    END IF;\n    -- Outer select from the CTE\n    RETURN QUERY\n    SELECT r.product_assembly_id, r.component_id, r.component_desc, SUM(r.per_assembly_qty), r.standard_cost, r.list_price, r.bom_level, r.recursion_level\n    FROM dbo.usp_get_bill_of_materials_walk(start_product_id, check_date) AS r\n    GROUP BY r.component_id, r.component_desc, r.product_assembly_id, r.bom_level, r.recursion_level, r.standard_cost, r.list_price\n    ORDER BY r.bom_level, r.product_assembly_id, r.component_id;\nEND;\n$fn$;\n",
+    "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
+    "engine": "kiro",
+    "notes": [
+      "The procedure becomes a set-returning function (SELECT * FROM ...).",
+      "OPTION (MAXRECURSION 25): SQL Server stops with error 530 when the recursive CTE would produce a row at recursion level 26. PostgreSQL has no such option, and a cycle would recurse forever. The conversion bounds the recursion at level 26 and raises (SQLSTATE 54001) if that level is reached, before returning anything. Both outcomes are compared: the same error, or the same rows.",
+      "Random data is acyclic (component > assembly), as real bills of materials are; cycles and the 25/26 boundary are covered by fixed cases.",
+      "Step 4 runs on 25 rows per table (larger acyclic volumes would exceed the recursion limit), so the timing is indicative only.",
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
+    ]
+  },
+  "columnMappings": [
+    {
+      "sqlServerType": "int NULL",
+      "postgresType": "integer"
+    },
+    {
+      "sqlServerType": "int NOT NULL",
+      "postgresType": "integer NOT NULL"
+    },
+    {
+      "sqlServerType": "datetime NOT NULL",
+      "postgresType": "timestamp(3) NOT NULL",
+      "notes": "datetime rounds to .000/.003/.007 s on SQL Server; timestamp(3) does not. Only SQL Server-representable values are generated, and results are compared at microsecond resolution."
+    },
+    {
+      "sqlServerType": "datetime NULL",
+      "postgresType": "timestamp(3)",
+      "notes": "datetime rounds to .000/.003/.007 s on SQL Server; timestamp(3) does not. Only SQL Server-representable values are generated, and results are compared at microsecond resolution."
+    },
+    {
+      "sqlServerType": "smallint NOT NULL",
+      "postgresType": "smallint NOT NULL"
+    },
+    {
+      "sqlServerType": "decimal(8,2) NOT NULL",
+      "postgresType": "numeric(8,2) NOT NULL"
+    },
+    {
+      "sqlServerType": "nvarchar(50) NOT NULL",
+      "postgresType": "varchar(50) NOT NULL"
+    },
+    {
+      "sqlServerType": "money NOT NULL",
+      "postgresType": "numeric(19,4) NOT NULL",
+      "notes": "money -> numeric(19,4), not PostgreSQL's locale-dependent money type. Money arithmetic rounds to 4 places on SQL Server."
+    }
+  ],
+  "verificationSteps": [
+    {
+      "step": 1,
+      "label": "Compiles and deploys on PostgreSQL",
+      "status": "pass"
+    },
+    {
+      "step": 2,
+      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "status": "not-run"
+    },
+    {
+      "step": 3,
+      "label": "Result sets match on generated data",
+      "status": "pass"
+    },
+    {
+      "step": 4,
+      "label": "Runtime within 1.5× factor",
+      "status": "pass"
+    },
+    {
+      "step": 5,
+      "label": "Second human review",
+      "status": "not-run"
+    },
+    {
+      "step": 6,
+      "label": "Acceptance on real data",
+      "status": "not-run"
+    }
+  ],
+  "evidence": {
+    "pbtSeeds": [
+      1823757751
+    ],
+    "rowsCompared": 186,
+    "samples": 200,
+    "samplesWithRows": 117,
+    "trapsCovered": [
+      "NULL in every nullable column",
+      "numeric rounding and scale (decimal edge values)",
+      "empty string and trailing spaces",
+      "ORDER BY key (ties compared as multisets)"
+    ],
+    "mutantsDetected": [
+      "no recursion limit check (rows returned up to the depth guard)",
+      "limit one level too low",
+      "open-ended components excluded (ISNULL(EndDate, @CheckDate) dropped)",
+      "quantities not summed"
+    ],
+    "runtime": {
+      "volume": 25,
+      "timedRuns": 7,
+      "sqlServerMs": 1,
+      "postgresMs": 0.98,
+      "ratio": 0.98,
+      "threshold": 1.5,
+      "passed": true,
+      "belowResolution": true,
+      "resultRows": 100,
+      "volumeMismatch": null
+    },
+    "subMicrosecondNormalised": 0,
+    "harnessVersion": "harness-generic-0.3.0"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "Kiro",
+    "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
+  },
+  "predictionCell": {
+    "p50Hours": 1,
+    "p90Hours": 2
+  },
+  "builtAt": "2026-11-12T18:03:35.093Z"
+}

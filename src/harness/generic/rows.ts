@@ -147,11 +147,18 @@ export function baseColArb(col: ColSpec, c: Cutoffs | null, k: number): fc.Arbit
     case "bit":
       if (col.trueFraction !== undefined) {
         const t100 = Math.round(col.trueFraction * 100);
-        return fc.integer({ min: 1, max: 100 }).map((n) => n <= t100);
+        // noBias: fast-check otherwise favours small integers, which would skew the fraction
+        return fc.noBias(fc.integer({ min: 1, max: 100 })).map((n) => n <= t100);
       }
       return fc.boolean();
     case "varbinary":
       return fc.uint8Array({ minLength: 0, maxLength: 32 }).map((a) => Buffer.from(a));
+    case "xml":
+      // documents written the way SQL Server serialises xml (measured: an empty element comes back as <x/>, no space),
+      // so storage does not change the text
+      return fc.constantFrom(
+        "<a>1</a>", "<Info><Note>x</Note></Info>", "<x y=\"1\"/>", "<r><i>Café</i><i/></r>", "<e>&lt;&amp;&gt;</e>", "<root/>"
+      );
     case "geography":
       // WKT point (longitude latitude), 4 decimals; includes the poles, antimeridian and zero
       return fc
@@ -223,9 +230,10 @@ export function datasetArb(spec: ObjectSpec): fc.Arbitrary<Dataset> {
 
 /** Format µs-since-epoch as 'YYYY-MM-DDTHH:MM:SS.ffffff'. */
 export function microsToIso(micros: bigint): string {
-  const ms = Number(micros / 1000n);
-  const frac = Number(((micros % 1_000_000n) + 1_000_000n) % 1_000_000n);
-  return `${new Date(ms).toISOString().slice(0, 19)}.${String(frac).padStart(6, "0")}`;
+  // floor to the whole second (BigInt division truncates toward zero, which is wrong before 1970)
+  const frac = ((micros % 1_000_000n) + 1_000_000n) % 1_000_000n;
+  const seconds = (micros - frac) / 1_000_000n;
+  return `${new Date(Number(seconds) * 1000).toISOString().slice(0, 19)}.${String(frac).padStart(6, "0")}`;
 }
 
 /** Normalise 100 ns ticks to µs. Returns the ISO string and whether precision was lost. */

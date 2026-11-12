@@ -1,0 +1,106 @@
+{
+  "database": "AdventureWorks2025",
+  "schemaName": "dbo",
+  "objectName": "ufnGetContactInformation",
+  "objectClass": "function",
+  "tier": "simple",
+  "status": "pending",
+  "code": {
+    "source": "\r\nCREATE FUNCTION [dbo].[ufnGetContactInformation](@PersonID int)\r\nRETURNS @retContactInformation TABLE\r\n(\r\n    -- Columns returned by the function\r\n    [PersonID] int NOT NULL,\r\n    [FirstName] [nvarchar](50) NULL,\r\n    [LastName] [nvarchar](50) NULL,\r\n\t[JobTitle] [nvarchar](50) NULL,\r\n    [BusinessEntityType] [nvarchar](50) NULL\r\n)\r\nAS\r\n-- Returns the first name, last name, job title and business entity type for the specified contact.\r\n-- Since a contact can serve multiple roles, more than one row may be returned.\r\nBEGIN\r\n\tIF @PersonID IS NOT NULL\r\n\t\tBEGIN\r\n\t\tIF EXISTS(SELECT * FROM [HumanResources].[Employee] e\r\n\t\t\t\t\tWHERE e.[BusinessEntityID] = @PersonID)\r\n\t\t\tINSERT INTO @retContactInformation\r\n\t\t\t\tSELECT @PersonID, p.FirstName, p.LastName, e.[JobTitle], 'Employee'\r\n\t\t\t\tFROM [HumanResources].[Employee] AS e\r\n\t\t\t\t\tINNER JOIN [Person].[Person] p\r\n\t\t\t\t\tON p.[BusinessEntityID] = e.[BusinessEntityID]\r\n\t\t\t\tWHERE e.[BusinessEntityID] = @PersonID;\r\n\r\n\t\tIF EXISTS(SELECT * FROM [Purchasing].[Vendor] AS v\r\n\t\t\t\t\tINNER JOIN [Person].[BusinessEntityContact] bec\r\n\t\t\t\t\tON bec.[BusinessEntityID] = v.[BusinessEntityID]\r\n\t\t\t\t\tWHERE bec.[PersonID] = @PersonID)\r\n\t\t\tINSERT INTO @retContactInformation\r\n\t\t\t\tSELECT @PersonID, p.FirstName, p.LastName, ct.[Name], 'Vendor Contact'\r\n\t\t\t\tFROM [Purchasing].[Vendor] AS v\r\n\t\t\t\t\tINNER JOIN [Person].[BusinessEntityContact] bec\r\n\t\t\t\t\tON bec.[BusinessEntityID] = v.[BusinessEntityID]\r\n\t\t\t\t\tINNER JOIN [Person].ContactType ct\r\n\t\t\t\t\tON ct.[ContactTypeID] = bec.[ContactTypeID]\r\n\t\t\t\t\tINNER JOIN [Person].[Person] p\r\n\t\t\t\t\tON p.[BusinessEntityID] = bec.[PersonID]\r\n\t\t\t\tWHERE bec.[PersonID] = @PersonID;\r\n\t\t\r\n\t\tIF EXISTS(SELECT * FROM [Sales].[Store] AS s\r\n\t\t\t\t\tINNER JOIN [Person].[BusinessEntityContact] bec\r\n\t\t\t\t\tON bec.[BusinessEntityID] = s.[BusinessEntityID]\r\n\t\t\t\t\tWHERE bec.[PersonID] = @PersonID)\r\n\t\t\tINSERT INTO @retContactInformation\r\n\t\t\t\tSELECT @PersonID, p.FirstName, p.LastName, ct.[Name], 'Store Contact'\r\n\t\t\t\tFROM [Sales].[Store] AS s\r\n\t\t\t\t\tINNER JOIN [Person].[BusinessEntityContact] bec\r\n\t\t\t\t\tON bec.[BusinessEntityID] = s.[BusinessEntityID]\r\n\t\t\t\t\tINNER JOIN [Person].ContactType ct\r\n\t\t\t\t\tON ct.[ContactTypeID] = bec.[ContactTypeID]\r\n\t\t\t\t\tINNER JOIN [Person].[Person] p\r\n\t\t\t\t\tON p.[BusinessEntityID] = bec.[PersonID]\r\n\t\t\t\tWHERE bec.[PersonID] = @PersonID;\r\n\r\n\t\tIF EXISTS(SELECT * FROM [Person].[Person] AS p\r\n\t\t\t\t\tINNER JOIN [Sales].[Customer] AS c\r\n\t\t\t\t\tON c.[PersonID] = p.[BusinessEntityID]\r\n\t\t\t\t\tWHERE p.[BusinessEntityID] = @PersonID AND c.[StoreID] IS NULL)\r\n\t\t\tINSERT INTO @retContactInformation\r\n\t\t\t\tSELECT @PersonID, p.FirstName, p.LastName, NULL, 'Consumer'\r\n\t\t\t\tFROM [Person].[Person] AS p\r\n\t\t\t\t\tINNER JOIN [Sales].[Customer] AS c\r\n\t\t\t\t\tON c.[PersonID] = p.[BusinessEntityID]\r\n\t\t\t\t\tWHERE p.[BusinessEntityID] = @PersonID AND c.[StoreID] IS NULL;\r\n\t\tEND\r\n\r\n\tRETURN;\r\nEND;\r\n",
+    "engineOutput": "-- PL/pgSQL conversion of the multi-statement table-valued function dbo.ufnGetContactInformation (AdventureWorks2025).\n-- Engine: Kiro. No separate first draft was kept for this object.\n--\n-- Differences from a literal translation:\n--  * The @retContactInformation table variable it fills becomes RETURN QUERY steps; the function returns them in the\n--    same sequence (employee, vendor contact, store contact, consumer). The source does not define an order for the rows.\n\nCREATE SCHEMA IF NOT EXISTS dbo;\n\nCREATE OR REPLACE FUNCTION dbo.ufn_get_contact_information(person_id integer)\nRETURNS TABLE (\"PersonID\" integer, \"FirstName\" varchar(50), \"LastName\" varchar(50), \"JobTitle\" varchar(50), \"BusinessEntityType\" varchar(50))\nLANGUAGE plpgsql\nSTABLE\nAS $fn$\nBEGIN\n    -- Returns the first name, last name, job title and business entity type for the specified contact.\n    -- Since a contact can serve multiple roles, more than one row may be returned.\n    IF person_id IS NOT NULL THEN\n        IF EXISTS (SELECT 1 FROM humanresources.employee AS e\n                   WHERE e.\"BusinessEntityID\" = person_id) THEN\n            RETURN QUERY\n            SELECT person_id, p.\"FirstName\", p.\"LastName\", e.\"JobTitle\", 'Employee'::varchar(50)\n            FROM humanresources.employee AS e\n                INNER JOIN person.person AS p\n                ON p.\"BusinessEntityID\" = e.\"BusinessEntityID\"\n            WHERE e.\"BusinessEntityID\" = person_id;\n        END IF;\n\n        IF EXISTS (SELECT 1 FROM purchasing.vendor AS v\n                       INNER JOIN person.business_entity_contact AS bec\n                       ON bec.\"BusinessEntityID\" = v.\"BusinessEntityID\"\n                   WHERE bec.\"PersonID\" = person_id) THEN\n            RETURN QUERY\n            SELECT person_id, p.\"FirstName\", p.\"LastName\", ct.\"Name\", 'Vendor Contact'::varchar(50)\n            FROM purchasing.vendor AS v\n                INNER JOIN person.business_entity_contact AS bec\n                ON bec.\"BusinessEntityID\" = v.\"BusinessEntityID\"\n                INNER JOIN person.contact_type AS ct\n                ON ct.\"ContactTypeID\" = bec.\"ContactTypeID\"\n                INNER JOIN person.person AS p\n                ON p.\"BusinessEntityID\" = bec.\"PersonID\"\n            WHERE bec.\"PersonID\" = person_id;\n        END IF;\n\n        IF EXISTS (SELECT 1 FROM sales.store AS s\n                       INNER JOIN person.business_entity_contact AS bec\n                       ON bec.\"BusinessEntityID\" = s.\"BusinessEntityID\"\n                   WHERE bec.\"PersonID\" = person_id) THEN\n            RETURN QUERY\n            SELECT person_id, p.\"FirstName\", p.\"LastName\", ct.\"Name\", 'Store Contact'::varchar(50)\n            FROM sales.store AS s\n                INNER JOIN person.business_entity_contact AS bec\n                ON bec.\"BusinessEntityID\" = s.\"BusinessEntityID\"\n                INNER JOIN person.contact_type AS ct\n                ON ct.\"ContactTypeID\" = bec.\"ContactTypeID\"\n                INNER JOIN person.person AS p\n                ON p.\"BusinessEntityID\" = bec.\"PersonID\"\n            WHERE bec.\"PersonID\" = person_id;\n        END IF;\n\n        IF EXISTS (SELECT 1 FROM person.person AS p\n                       INNER JOIN sales.customer AS c\n                       ON c.\"PersonID\" = p.\"BusinessEntityID\"\n                   WHERE p.\"BusinessEntityID\" = person_id AND c.\"StoreID\" IS NULL) THEN\n            RETURN QUERY\n            SELECT person_id, p.\"FirstName\", p.\"LastName\", NULL::varchar(50), 'Consumer'::varchar(50)\n            FROM person.person AS p\n                INNER JOIN sales.customer AS c\n                ON c.\"PersonID\" = p.\"BusinessEntityID\"\n            WHERE p.\"BusinessEntityID\" = person_id AND c.\"StoreID\" IS NULL;\n        END IF;\n    END IF;\n    RETURN;\nEND;\n$fn$;\n",
+    "final": "-- PL/pgSQL conversion of the multi-statement table-valued function dbo.ufnGetContactInformation (AdventureWorks2025).\n-- Engine: Kiro. No separate first draft was kept for this object.\n--\n-- Differences from a literal translation:\n--  * The @retContactInformation table variable it fills becomes RETURN QUERY steps; the function returns them in the\n--    same sequence (employee, vendor contact, store contact, consumer). The source does not define an order for the rows.\n\nCREATE SCHEMA IF NOT EXISTS dbo;\n\nCREATE OR REPLACE FUNCTION dbo.ufn_get_contact_information(person_id integer)\nRETURNS TABLE (\"PersonID\" integer, \"FirstName\" varchar(50), \"LastName\" varchar(50), \"JobTitle\" varchar(50), \"BusinessEntityType\" varchar(50))\nLANGUAGE plpgsql\nSTABLE\nAS $fn$\nBEGIN\n    -- Returns the first name, last name, job title and business entity type for the specified contact.\n    -- Since a contact can serve multiple roles, more than one row may be returned.\n    IF person_id IS NOT NULL THEN\n        IF EXISTS (SELECT 1 FROM humanresources.employee AS e\n                   WHERE e.\"BusinessEntityID\" = person_id) THEN\n            RETURN QUERY\n            SELECT person_id, p.\"FirstName\", p.\"LastName\", e.\"JobTitle\", 'Employee'::varchar(50)\n            FROM humanresources.employee AS e\n                INNER JOIN person.person AS p\n                ON p.\"BusinessEntityID\" = e.\"BusinessEntityID\"\n            WHERE e.\"BusinessEntityID\" = person_id;\n        END IF;\n\n        IF EXISTS (SELECT 1 FROM purchasing.vendor AS v\n                       INNER JOIN person.business_entity_contact AS bec\n                       ON bec.\"BusinessEntityID\" = v.\"BusinessEntityID\"\n                   WHERE bec.\"PersonID\" = person_id) THEN\n            RETURN QUERY\n            SELECT person_id, p.\"FirstName\", p.\"LastName\", ct.\"Name\", 'Vendor Contact'::varchar(50)\n            FROM purchasing.vendor AS v\n                INNER JOIN person.business_entity_contact AS bec\n                ON bec.\"BusinessEntityID\" = v.\"BusinessEntityID\"\n                INNER JOIN person.contact_type AS ct\n                ON ct.\"ContactTypeID\" = bec.\"ContactTypeID\"\n                INNER JOIN person.person AS p\n                ON p.\"BusinessEntityID\" = bec.\"PersonID\"\n            WHERE bec.\"PersonID\" = person_id;\n        END IF;\n\n        IF EXISTS (SELECT 1 FROM sales.store AS s\n                       INNER JOIN person.business_entity_contact AS bec\n                       ON bec.\"BusinessEntityID\" = s.\"BusinessEntityID\"\n                   WHERE bec.\"PersonID\" = person_id) THEN\n            RETURN QUERY\n            SELECT person_id, p.\"FirstName\", p.\"LastName\", ct.\"Name\", 'Store Contact'::varchar(50)\n            FROM sales.store AS s\n                INNER JOIN person.business_entity_contact AS bec\n                ON bec.\"BusinessEntityID\" = s.\"BusinessEntityID\"\n                INNER JOIN person.contact_type AS ct\n                ON ct.\"ContactTypeID\" = bec.\"ContactTypeID\"\n                INNER JOIN person.person AS p\n                ON p.\"BusinessEntityID\" = bec.\"PersonID\"\n            WHERE bec.\"PersonID\" = person_id;\n        END IF;\n\n        IF EXISTS (SELECT 1 FROM person.person AS p\n                       INNER JOIN sales.customer AS c\n                       ON c.\"PersonID\" = p.\"BusinessEntityID\"\n                   WHERE p.\"BusinessEntityID\" = person_id AND c.\"StoreID\" IS NULL) THEN\n            RETURN QUERY\n            SELECT person_id, p.\"FirstName\", p.\"LastName\", NULL::varchar(50), 'Consumer'::varchar(50)\n            FROM person.person AS p\n                INNER JOIN sales.customer AS c\n                ON c.\"PersonID\" = p.\"BusinessEntityID\"\n            WHERE p.\"BusinessEntityID\" = person_id AND c.\"StoreID\" IS NULL;\n        END IF;\n    END IF;\n    RETURN;\nEND;\n$fn$;\n",
+    "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
+    "engine": "kiro",
+    "notes": [
+      "Multi-statement table-valued function: the table variable it fills becomes RETURN QUERY steps in a PL/pgSQL set-returning function. The rows a person gets (one per role) are compared as a multiset; the source does not define their order.",
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
+    ]
+  },
+  "columnMappings": [
+    {
+      "sqlServerType": "int NOT NULL",
+      "postgresType": "integer NOT NULL"
+    },
+    {
+      "sqlServerType": "nvarchar(50) NOT NULL",
+      "postgresType": "varchar(50) NOT NULL"
+    },
+    {
+      "sqlServerType": "int NULL",
+      "postgresType": "integer"
+    }
+  ],
+  "verificationSteps": [
+    {
+      "step": 1,
+      "label": "Compiles and deploys on PostgreSQL",
+      "status": "pass"
+    },
+    {
+      "step": 2,
+      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "status": "not-run"
+    },
+    {
+      "step": 3,
+      "label": "Result sets match on generated data",
+      "status": "pass"
+    },
+    {
+      "step": 4,
+      "label": "Runtime within 1.5× factor",
+      "status": "pass"
+    },
+    {
+      "step": 5,
+      "label": "Second human review",
+      "status": "not-run"
+    },
+    {
+      "step": 6,
+      "label": "Acceptance on real data",
+      "status": "not-run"
+    }
+  ],
+  "evidence": {
+    "pbtSeeds": [
+      2134702245
+    ],
+    "rowsCompared": 387,
+    "samples": 200,
+    "samplesWithRows": 132,
+    "trapsCovered": [
+      "NULL in every nullable column",
+      "empty string and trailing spaces"
+    ],
+    "mutantsDetected": [
+      "consumer rows include store customers",
+      "vendor contacts labelled as store contacts",
+      "employee rows without the person join (JobTitle from the wrong row)"
+    ],
+    "runtime": {
+      "volume": 2000,
+      "timedRuns": 7,
+      "sqlServerMs": 311,
+      "postgresMs": 116.77,
+      "ratio": 0.38,
+      "threshold": 1.5,
+      "passed": true,
+      "belowResolution": false,
+      "resultRows": 100,
+      "volumeMismatch": null
+    },
+    "subMicrosecondNormalised": 0,
+    "harnessVersion": "harness-generic-0.3.0"
+  },
+  "effort": {
+    "humanMinutes": 0,
+    "engineName": "Kiro",
+    "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
+  },
+  "predictionCell": {
+    "p50Hours": 1.5,
+    "p90Hours": 4
+  },
+  "builtAt": "2026-11-12T18:03:35.073Z"
+}

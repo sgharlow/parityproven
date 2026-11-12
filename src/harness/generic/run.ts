@@ -11,6 +11,7 @@ import * as fc from "fast-check";
 import { readFileSync } from "fs";
 import { MssqlClient } from "../clients/mssql-client.js";
 import { PgClient } from "../clients/pg-client.js";
+import { mssqlEndpoint } from "../endpoints.js";
 import type { RowSet } from "../types.js";
 import type { ObjectSpec, Row, TableSpec } from "./spec.js";
 import { postgresDdl, pgTableName, sqlServerDdl, tableKey } from "./spec.js";
@@ -85,7 +86,7 @@ export async function prepareSqlServer(
       `ALTER DATABASE ${SCRATCH_DB} ADD FILE (NAME = '${SCRATCH_DB}_mod', FILENAME = '/var/opt/mssql/data/${SCRATCH_DB}_mod') TO FILEGROUP ${SCRATCH_DB}_mod`, []
     );
   }
-  const scratch = new MssqlClient({ server: "localhost", port: 1433, user: "sa", password: conn.saPassword, database: SCRATCH_DB });
+  const scratch = new MssqlClient({ ...mssqlEndpoint(), user: "sa", password: conn.saPassword, database: SCRATCH_DB });
   const schemas = new Set<string>([spec.schema, ...spec.tables.map((t) => t.schema)]);
   schemas.delete("dbo");   // exists in every new database
   for (const s of schemas) await scratch.query(`CREATE SCHEMA [${s}]`, []);
@@ -279,6 +280,23 @@ async function runForState(
   return { ss: { columns, rows: [ssRow] }, pg: { columns, rows: [pgRow] } };
 }
 
+/** Column name of the one-row result that stands for a declared error (never counted as coverage). */
+export const RAISED_COLUMN = "__raised";
+
+async function raisedAs(spec: ObjectSpec, engine: "sqlServer" | "postgres", run: () => Promise<RowSet>): Promise<RowSet> {
+  try {
+    return await run();
+  } catch (e) {
+    const err = e as { number?: number; code?: string; originalError?: { info?: { number?: number } } };
+    const key = engine === "sqlServer" ? (err.number ?? err.originalError?.info?.number) : err.code;
+    const cls = spec.resultErrorClasses?.find((c) =>
+      engine === "sqlServer" ? c.sqlServer.includes(key as number) : c.postgres.includes(key as string)
+    );
+    if (!cls) throw e;
+    return { columns: [{ name: RAISED_COLUMN, declaredType: "text" }], rows: [[cls.label]] };
+  }
+}
+
 async function loadAndRun(
   conn: Connections,
   scratch: MssqlClient,
@@ -313,6 +331,12 @@ async function loadAndRun(
     const base = data.args && data.args.length ? data.args : data.cutoffs ? [data.cutoffs.last, data.cutoffs.new] : [];
     const { ssSql, ssParams, pgParams } = withTableValuedArgs(spec, data, base);
     if (spec.stateCheck) return await runForState(conn, scratch, spec, fn, ssSql, ssParams, pgParams);
+    if (spec.resultErrorClasses) {
+      // a declared error is an outcome: both engines must raise the same class, or both return the same rows
+      const ss = await raisedAs(spec, "sqlServer", () => queryScratch(scratch, spec, ssSql, ssParams));
+      const pg = await raisedAs(spec, "postgres", () => conn.pg.query(pgCall(spec, fn), pgParams));
+      return { ss, pg };
+    }
     const ss = await queryScratch(scratch, spec, ssSql, ssParams);
     const pg = await conn.pg.query(pgCall(spec, fn), pgParams);
     return { ss, pg };
@@ -341,13 +365,15 @@ export async function runProperty(
       // state form: a sample counts when the object actually completed (changed data), not when it raised
       const hit = spec.stateCheck
         ? ss.rows[0]?.[0] === "completed" && (spec.informativeData ? spec.informativeData(data) : true)
-        : informative(ss);
+        : ss.columns[0]?.name !== RAISED_COLUMN && informative(ss);
       if (hit) outcome.samplesWithRows++;
     }
     if (!outcome.outputColumns) {
       outcome.outputColumns = ss.columns.map((c, i) => ({ sqlServer: c.declaredType, postgres: pg.columns[i]?.declaredType ?? "?" }));
     }
-    const diff = compareResults(ss, pg, spec.orderKey, opts.excludeColumns ?? [], spec.jsonColumns ?? []);
+    // a raised outcome is one row without the order-key columns: compare it (and a mismatch against rows) without order
+    const raised = ss.columns[0]?.name === RAISED_COLUMN || pg.columns[0]?.name === RAISED_COLUMN;
+    const diff = compareResults(ss, pg, raised ? [] : spec.orderKey, opts.excludeColumns ?? [], spec.jsonColumns ?? []);
     if (diff) throw new Error(`${label}: ${diff}\n  input: ${JSON.stringify(data, (_k, v) => (typeof v === "bigint" ? v.toString() : v))}`);
   };
 
@@ -379,11 +405,15 @@ export async function runProperty(
     return { ...outcome, passed: false, failure: `${err}\n  (shrunk in ${result.numShrinks} step(s))` };
   }
   // A property that almost never returns rows proves nothing. Require real coverage.
-  if (outcome.samples > 0 && outcome.samplesWithRows / outcome.samples < MIN_NON_EMPTY_FRACTION) {
-    return {
-      ...outcome, passed: false,
-      failure: `vacuous: only ${outcome.samplesWithRows}/${outcome.samples} samples returned any rows (need >= ${MIN_NON_EMPTY_FRACTION * 100}%)`,
-    };
-  }
+  const vacuous = vacuityFailure(outcome.samples, outcome.samplesWithRows);
+  if (vacuous) return { ...outcome, passed: false, failure: vacuous };
   return outcome;
+}
+
+/** The vacuity guard: null when coverage is enough, else the failure text (which starts with "vacuous"). */
+export function vacuityFailure(samples: number, samplesWithRows: number): string | null {
+  if (samples > 0 && samplesWithRows / samples < MIN_NON_EMPTY_FRACTION) {
+    return `vacuous: only ${samplesWithRows}/${samples} samples returned any rows (need >= ${MIN_NON_EMPTY_FRACTION * 100}%)`;
+  }
+  return null;
 }

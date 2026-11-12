@@ -11,6 +11,7 @@ import { readFileSync, existsSync } from "fs";
 import { mkdir, writeFile } from "fs/promises";
 
 import { MssqlClient } from "../harness/clients/mssql-client.js";
+import { mssqlEndpoint } from "../harness/endpoints.js";
 import { runInventoryQuery } from "../inventory/query.js";
 import { buildReport, formatSummaryTable } from "../inventory/report.js";
 import { EXPECTED_COUNTS } from "../inventory/expected-counts.js";
@@ -57,8 +58,7 @@ async function main(): Promise<void> {
   }
 
   const client = new MssqlClient({
-    server: process.env["MSSQL_HOST"] ?? "localhost",
-    port: Number(process.env["MSSQL_PORT"] ?? 1433),
+    ...mssqlEndpoint(),
     user: "sa",
     password: saPassword,
     database,

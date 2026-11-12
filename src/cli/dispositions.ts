@@ -29,7 +29,9 @@ function originFor(database: string): Exclude<PairRecord["origin"], "synthetic">
 
 let written = 0;
 for (const d of DISPOSITIONS.filter((x) => x.kind === "failed")) {
-  const inv = JSON.parse(readFileSync(resolve(ROOT, "inventory", `${d.database}.json`), "utf-8")) as InventoryReport;
+  const invPath = resolve(ROOT, "inventory", `${d.database}.json`);
+  if (!existsSync(invPath)) throw new Error(`inventory/${d.database}.json is missing: run  npm run inventory -- --database ${d.database}`);
+  const inv = JSON.parse(readFileSync(invPath, "utf-8")) as InventoryReport;
   const item = inv.objects.find((o) => o.schemaName === d.schema && o.objectName === d.name);
   if (!item) throw new Error(`${d.schema}.${d.name} is not in inventory/${d.database}.json`);
   const label = `${d.schema}.${d.name}`;

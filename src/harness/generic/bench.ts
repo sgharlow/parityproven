@@ -111,6 +111,7 @@ export async function runBenchmark(
   const dataset: Dataset = { cutoffs, args: [], tables: {} };
   for (const t of spec.tables) dataset.tables[tableKey(t)] = volumeRows(t, opts.volume, cutoffs, opts.seed);
   const data = materialise(spec, dataset);
+  spec.prepare?.(data);   // the volume data meets the same preconditions as the property's data
 
   for (const t of spec.tables) {
     const rows = data.tables[tableKey(t)];

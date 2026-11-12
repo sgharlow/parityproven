@@ -72,20 +72,20 @@
     "step4": "pass",
     "step5": "not-run",
     "step6": "not-run",
-    "runtimeRatio": 0.54,
+    "runtimeRatio": 0.62,
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
-      "sqlServerMs": 43,
-      "postgresMs": 23.22,
-      "ratio": 0.54,
+      "sqlServerMs": 41,
+      "postgresMs": 25.59,
+      "ratio": 0.62,
       "threshold": 1.5,
       "passed": true,
       "belowResolution": false,
-      "resultRows": 3511,
+      "resultRows": 3515,
       "volumeMismatch": null
     },
-    "rowsCompared": 81,
+    "rowsCompared": 118,
     "trapsCovered": [
       "NULL in every nullable column",
       "numeric rounding and scale (decimal edge values)",
@@ -94,11 +94,11 @@
       "ORDER BY key (ties compared as multisets)"
     ],
     "pbtSeeds": [
-      1798560127
+      97645892
     ],
     "samples": 200,
-    "samplesWithRows": 60,
-    "subMicrosecondNormalised": 1132,
+    "samplesWithRows": 82,
+    "subMicrosecondNormalised": 1175,
     "mutantsDetected": [
       "chiller test inverted",
       "bill-to join dropped to customer"

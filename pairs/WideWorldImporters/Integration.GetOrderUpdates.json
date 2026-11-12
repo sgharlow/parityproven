@@ -66,20 +66,20 @@
     "step4": "pass",
     "step5": "not-run",
     "step6": "not-run",
-    "runtimeRatio": 0.58,
+    "runtimeRatio": 0.38,
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
-      "sqlServerMs": 32,
-      "postgresMs": 18.63,
-      "ratio": 0.58,
+      "sqlServerMs": 41,
+      "postgresMs": 15.76,
+      "ratio": 0.38,
       "threshold": 1.5,
       "passed": true,
       "belowResolution": false,
-      "resultRows": 3485,
+      "resultRows": 3506,
       "volumeMismatch": null
     },
-    "rowsCompared": 150,
+    "rowsCompared": 130,
     "trapsCovered": [
       "NULL in every nullable column",
       "numeric rounding and scale (decimal edge values)",
@@ -88,11 +88,11 @@
       "ORDER BY key (ties compared as multisets)"
     ],
     "pbtSeeds": [
-      133781402
+      1696677720
     ],
     "samples": 200,
-    "samplesWithRows": 101,
-    "subMicrosecondNormalised": 1177,
+    "samplesWithRows": 90,
+    "subMicrosecondNormalised": 1132,
     "mutantsDetected": [
       "tax amount truncates instead of rounding at 2dp",
       "lower cutoff inclusive"

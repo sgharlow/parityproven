@@ -12,7 +12,7 @@
     "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
     "engine": "kiro",
     "notes": [
-      "Step 4 finding: SQL Server 2025 inlines this scalar function into the calling query (sys.sql_modules.is_inlineable = 1, Froid). PostgreSQL runs the function once per call, so per-row calls cost about 2x more at 20,000 calls. Equivalence is unaffected; a caller that needs the speed would inline the expression or use a set-based join.",
+      "Step 4 finding: SQL Server 2025 inlines this scalar function into the calling query (sys.sql_modules.is_inlineable = 1, Froid). PostgreSQL runs the function once per call, so per-row calls cost about 2x more at 20,000 calls. Equivalence is unaffected; a caller that needs the speed would inline the expression or use a set-based join. A PL/pgSQL version (dbo.ufnGetStock, 2026-11-12) measured slower than the LANGUAGE sql one (160 ms vs 123 ms at 20,000 calls), so the SQL version is kept.",
       "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
     ]
   },
@@ -60,7 +60,7 @@
   ],
   "evidence": {
     "pbtSeeds": [
-      1032673288
+      1959128505
     ],
     "rowsCompared": 200,
     "samples": 200,
@@ -69,13 +69,13 @@
     "mutantsDetected": [
       "auto: first AND becomes OR"
     ],
-    "failureDetail": "Step 4: PostgreSQL 119.37 ms vs SQL Server 62 ms = 1.93x, above the 1.5x limit. Results are equivalent (step 3 pass); see the notes for the cause.",
+    "failureDetail": "Step 4: PostgreSQL 123.32 ms vs SQL Server 62 ms = 1.99x, above the 1.5x limit. Results are equivalent (step 3 pass); see the notes for the cause.",
     "runtime": {
       "volume": 2000,
       "timedRuns": 7,
       "sqlServerMs": 62,
-      "postgresMs": 119.37,
-      "ratio": 1.93,
+      "postgresMs": 123.32,
+      "ratio": 1.99,
       "threshold": 1.5,
       "passed": false,
       "belowResolution": false,
@@ -94,5 +94,5 @@
     "p50Hours": 1.5,
     "p90Hours": 4
   },
-  "builtAt": "2026-11-12T07:56:18.515Z"
+  "builtAt": "2026-11-12T18:03:35.087Z"
 }

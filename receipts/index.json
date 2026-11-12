@@ -1,5 +1,5 @@
 {
-  "builtAt": "2026-11-12T07:56:18.644Z",
+  "builtAt": "2026-11-12T18:03:35.215Z",
   "receipts": [
     {
       "database": "AdventureWorks2025",
@@ -18,6 +18,15 @@
       "tier": "simple",
       "status": "pending",
       "path": "AdventureWorks2025/dbo.ufnGetAccountingStartDate.json"
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "dbo",
+      "objectName": "ufnGetContactInformation",
+      "objectClass": "function",
+      "tier": "simple",
+      "status": "pending",
+      "path": "AdventureWorks2025/dbo.ufnGetContactInformation.json"
     },
     {
       "database": "AdventureWorks2025",
@@ -93,6 +102,33 @@
     },
     {
       "database": "AdventureWorks2025",
+      "schemaName": "dbo",
+      "objectName": "uspGetBillOfMaterials",
+      "objectClass": "procedure",
+      "tier": "simple",
+      "status": "pending",
+      "path": "AdventureWorks2025/dbo.uspGetBillOfMaterials.json"
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "dbo",
+      "objectName": "uspGetWhereUsedProductID",
+      "objectClass": "procedure",
+      "tier": "simple",
+      "status": "pending",
+      "path": "AdventureWorks2025/dbo.uspGetWhereUsedProductID.json"
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "HumanResources",
+      "objectName": "vEmployee",
+      "objectClass": "view",
+      "tier": "simple",
+      "status": "pending",
+      "path": "AdventureWorks2025/HumanResources.vEmployee.json"
+    },
+    {
+      "database": "AdventureWorks2025",
       "schemaName": "HumanResources",
       "objectName": "vEmployeeDepartment",
       "objectClass": "view",
@@ -144,6 +180,15 @@
       "tier": "simple",
       "status": "pending",
       "path": "AdventureWorks2025/Purchasing.vVendorWithContacts.json"
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "Sales",
+      "objectName": "vIndividualCustomer",
+      "objectClass": "view",
+      "tier": "simple",
+      "status": "pending",
+      "path": "AdventureWorks2025/Sales.vIndividualCustomer.json"
     },
     {
       "database": "AdventureWorks2025",
@@ -519,9 +564,9 @@
     }
   ],
   "summary": {
-    "total": 42,
+    "total": 47,
     "verified": 0,
-    "pending": 35,
+    "pending": 40,
     "failed": 7,
     "excluded": 17
   }

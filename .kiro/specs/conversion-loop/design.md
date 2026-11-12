@@ -56,4 +56,8 @@ src/conversions/specs-sequences.ts, specs-vehicle.ts, specs-coldroom.ts, specs-o
 - **Dependencies.** `ObjectSpec.dependencies`: SQL Server deploys the dependency's original definition; PostgreSQL deploys its verified conversion file.
 - **Generation controls.** `ColSpec.arbitrary` (purpose-built generator, e.g. structured JSON documents), `nullFraction`, `identity`.
 - **Mutant text** is applied with function replacements, so `$` in a regular expression is not read as a replacement pattern.
+- **Result-set error classes (`resultErrorClasses`, 2026-11-12).** For result-set objects that can legitimately fail (e.g. `OPTION (MAXRECURSION n)` on cyclic data), a declared error becomes a one-row outcome (`__raised`); both engines must raise the same class or return the same rows. Raised samples never count toward coverage.
+- **Order check on typed values (2026-11-12).** Order keys are compared as typed values: dates/timestamps as microseconds, integer strings from the SQL Server driver as numbers. Text order keys are compared by code unit (collation order is not claimed by the order check).
+- **`xml` column type (2026-11-12)**, compared as text; generated documents are in SQL Server's serialised form (an empty element is `<x/>`, measured).
+- **Unit tests (2026-11-12)** cover compare/rows/spec and the vacuity and TVP functions in run; `scripts/mutate-check.ps1` proves each suite fails when a defect is planted in its source.
 - **Equivalent mutants are not planted.** A mutant that cannot change any observable result under the object's preconditions (e.g. dropping an nvarchar(40) truncation in front of an nvarchar(20) column) is removed and the reason noted in the spec.

@@ -37,6 +37,7 @@ export function mapType(sqlType: string): ColType {
   if ((m = t.match(/^(?:nvarchar|varchar)\((\d+|max)\)$/))) return { kind: "nvarchar", n: m[1] === "max" ? 200 : Number(m[1]) };
   if ((m = t.match(/^(?:nchar|char)\((\d+)\)$/))) return { kind: "char", n: Number(m[1]) };
   if (t === "geography") return { kind: "geography" };
+  if (t === "xml") return { kind: "xml" };
   throw new Error(`unsupported column type "${sqlType}"`);
 }
 
@@ -44,7 +45,9 @@ export interface CatalogOptions {
   /** Force a column role: { "Production.ProductListPriceHistory.ProductID": "pk" } */
   roles?: Record<string, "pk" | "ref" | "value">;
   /** Replace a column's generation bounds: { "Schema.Table.Column": { range: [0, 255] } } */
-  columns?: Record<string, Partial<Pick<ColSpec, "range" | "special" | "nullable">>>;
+  columns?: Record<string, Partial<Pick<ColSpec, "range" | "special" | "nullable" | "nullFraction">>>;
+  /** Row count [min, max] for every table (default: about the key-universe size, occasionally empty). */
+  rows?: [number, number];
 }
 
 export function tablesFromCatalog(database: string, qualified: string, opts: CatalogOptions = {}): TableSpec[] {
@@ -70,9 +73,9 @@ export function tablesFromCatalog(database: string, qualified: string, opts: Cat
       // pk/ref only make sense for keys we can enumerate: integers and short text codes
       if (role && !(type.kind === "int" || type.kind === "smallint" || type.kind === "tinyint" || type.kind === "bigint" || type.kind === "nvarchar" || type.kind === "char")) role = undefined;
       const extra = opts.columns?.[key] ?? {};
-      return { name: c.name, type, nullable: extra.nullable ?? c.nullable, role, range: extra.range, special: extra.special };
+      return { name: c.name, type, nullable: extra.nullable ?? c.nullable, role, range: extra.range, special: extra.special, nullFraction: extra.nullFraction };
     });
-    return { schema: t.schema, name: t.name, columns };
+    return { schema: t.schema, name: t.name, columns, ...(opts.rows ? { rows: opts.rows } : {}) };
   });
 }
 

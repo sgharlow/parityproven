@@ -27,14 +27,23 @@ cp docker/.env.example .env
 ## Run it
 
 ```sh
-docker compose -f docker/compose.yml --env-file .env up --detach
-npm install
+docker compose -f docker/compose.yml --env-file .env up --detach --wait
+npm ci
 npm run build
 
 npm run convert -- --object Integration.GetOrderUpdates   # one object
 npm run verify                                            # every object (same as: convert --all)
+pwsh scripts/run-all.ps1                                  # every object, one process each, time-limited
 npm run convert -- --object Integration.GetOrderUpdates --seed 933137090   # replay a run
+
+# receipts: the inventories are generated from the restored databases, not committed
+npm run inventory -- --database WideWorldImporters
+npm run inventory -- --database AdventureWorks2025
+npm run dispositions          # pair records for objects recorded as not converted
+npm run receipts:build
 ```
+
+To run a second stack beside an existing one, set `MSSQL_PORT`, `PG_PORT` and `COMPOSE_PROJECT_NAME` in its `.env` (see `docker/.env.example`). Checked 2026-11-12 from a fresh clone on ports 14330/54320: all 41 objects gave the same step results as the committed pair records.
 
 For each object, `convert`:
 

@@ -130,8 +130,11 @@ export function buildReceipts(input: BuildInput): BuildOutput {
   // Exclusions: tier and class come from the inventory, so they are never typed by hand
   const excluded: ReceiptExclusion[] = (input.exclusions ?? []).map((x) => {
     const invPath = join(input.inventoryDir, `${x.database}.json`);
-    const inv: InventoryReport | null = existsSync(invPath) ? (JSON.parse(readFileSync(invPath, "utf-8")) as InventoryReport) : null;
-    const item = inv?.objects.find((o) => o.schemaName === x.schemaName && o.objectName === x.objectName);
+    if (!existsSync(invPath)) {
+      throw new Error(`inventory/${x.database}.json is missing (inventories are generated, not committed): run  npm run inventory -- --database ${x.database}`);
+    }
+    const inv = JSON.parse(readFileSync(invPath, "utf-8")) as InventoryReport;
+    const item = inv.objects.find((o) => o.schemaName === x.schemaName && o.objectName === x.objectName);
     if (!item) throw new Error(`excluded object ${x.database}.${x.schemaName}.${x.objectName} is not in the inventory`);
     if (receipts.some((r) => r.database === x.database && r.schemaName === x.schemaName && r.objectName === x.objectName)) {
       throw new Error(`${x.schemaName}.${x.objectName} is both excluded and has a pair record`);

@@ -26,7 +26,9 @@ export type ColType =
   /** SQL Server geography (points, SRID 4326) <-> PostGIS geography. Compared as well-known text. */
   | { kind: "geography" }
   /** SQL Server varbinary(max) <-> bytea. Compared byte for byte. */
-  | { kind: "varbinary" };
+  | { kind: "varbinary" }
+  /** SQL Server xml (untyped in the scratch database) <-> PostgreSQL xml. Compared as text. */
+  | { kind: "xml" };
 
 export interface ColSpec {
   name: string;
@@ -165,6 +167,11 @@ export interface ObjectSpec {
   forJsonChunks?: boolean;
   /** The object changes data: compare outcome and table state instead of a result set. Step 4 is not run. */
   stateCheck?: StateCheck;
+  /**
+   * Result-set objects that can legitimately fail (e.g. OPTION (MAXRECURSION n) on cyclic data): a declared error is an
+   * outcome, and both engines must raise the same class or both return the same rows. Any other error fails the run.
+   */
+  resultErrorClasses?: Array<{ label: string; sqlServer: number[]; postgres: string[] }>;
   /** The scratch database gets a MEMORY_OPTIMIZED_DATA filegroup (memory-optimized tables, types, native compilation). */
   memoryOptimizedFilegroup?: boolean;
   /**
@@ -219,6 +226,7 @@ export function sqlServerType(t: ColType): string {
     case "bit": return "bit";
     case "geography": return "geography";
     case "varbinary": return "varbinary(max)";
+    case "xml": return "xml";
   }
 }
 
@@ -238,6 +246,7 @@ export function postgresType(t: ColType): string {
     case "bit": return "boolean";
     case "geography": return "geography";   // PostGIS (SRID 4326)
     case "varbinary": return "bytea";
+    case "xml": return "xml";
   }
 }
 
@@ -280,6 +289,7 @@ export function mappingsFor(spec: ObjectSpec): Array<{ sqlServerType: string; po
       if (c.type.kind === "tinyint") m.notes = "PostgreSQL has no tinyint; smallint holds it, so out-of-range values (>255, <0) are not rejected the way SQL Server rejects them.";
       if (c.type.kind === "money") m.notes = "money -> numeric(19,4), not PostgreSQL's locale-dependent money type. Money arithmetic rounds to 4 places on SQL Server.";
       if (c.type.kind === "datetime") m.notes = "datetime rounds to .000/.003/.007 s on SQL Server; timestamp(3) does not. Only SQL Server-representable values are generated, and results are compared at microsecond resolution.";
+      if (c.type.kind === "xml") m.notes = "xml maps to xml. SQL Server stores xml in its own serialised form; the generated documents are already in that form, so values are compared as text. Typed xml (XML schema collections) is not modelled.";
       if (c.type.kind === "geography") m.notes = "SQL Server geography maps to PostGIS geography (SRID 4326). Only point values are generated and compared, as well-known text.";
       seen.set(ss, m);
     }

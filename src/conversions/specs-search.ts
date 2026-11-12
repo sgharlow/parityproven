@@ -78,6 +78,7 @@ const LIKE_CASES: Array<[string, string[]]> = [
   ["café", ["CAFÉ x", "cafe", "un café"]],         // case-insensitive, accent-sensitive
   ["[^a]", ["a", "A", "b", ""]],                   // negated class
   ["a\\b", ["a\\b", "ab"]],                        // backslash is an ordinary character (T-SQL LIKE has no default escape)
+  ["[a]_", ["a1", "A-", "a", "ab c"]],             // a class and '_' together (the translated path, where a pattern has '[')
 ];
 const pad4 = (n: number): string => String(n).padStart(4, "0");
 const likeCases = (label: string, build: (values: string[]) => Record<string, Row[]>): FixedCase[] =>
@@ -117,7 +118,7 @@ const peopleCases = (): FixedCase[] =>
 
 /** Why the runtime step is missed by the two search procedures that match across the contact's names (measured, not guessed). */
 const RUNTIME_NOTE_CONTACT = [
-  "Step 4 is missed on the 5,000-row synthetic volume (PostgreSQL about 40 ms, SQL Server about 7 ms). Profiled on a 5,000-row copy: the case-insensitive regular expression over the concatenated name and contact names takes about 6 ms of the join, the planner then expects almost no rows and probes the cities table about 5,000 times (about 8 ms), and the ICU sort of the matching rows takes the rest. Building the JSON only for the returned rows (applied) and disabling nested loops (no gain) were tried; replacing the regular expression with ILIKE was measured at about a third faster but cannot express T-SQL '[..]' classes. Results are equivalent (step 3 passes); this is a performance finding, not a correctness one.",
+  "Step 4 is missed on the 5,000-row synthetic volume. Measured 2026-11-12: about 31-34 ms -> 18 ms after using ILIKE (no escape character) for patterns without '[' classes, -> 12-15 ms after enable_nestloop = off for the function (the planner expects the name search to keep almost no rows and looks up each city by index). SQL Server: 5-6 ms, so about 2.5x remains. What remains is the case-insensitive match over every concatenated name plus the sort; going under 1.5x would need an index on the searched text (e.g. pg_trgm), a schema change outside the conversion. Results are equivalent (step 3 passes); this is a performance finding, not a correctness one.",
 ];
 const NOTES = [
   "WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted (where the source declares it).",
@@ -175,6 +176,7 @@ export const SEARCH_SPECS: ObjectSpec[] = [
       ...COMMON_MUTANTS,
       DESCENDING,
       { name: "contact LEFT JOIN becomes INNER JOIN", from: "LEFT OUTER JOIN application.people", to: "INNER JOIN application.people" },
+      { name: "ILIKE path is case-sensitive (LIKE)", from: "ILIKE '%' || search_text || '%' ESCAPE ''", to: "LIKE '%' || search_text || '%' ESCAPE ''" },
       {
         name: "|| instead of concat (NULL contact hides the customer)",
         from: `concat(c."CustomerName", ' ', p."FullName", ' ', p."PreferredName")`,
@@ -202,6 +204,7 @@ export const SEARCH_SPECS: ObjectSpec[] = [
       ...COMMON_MUTANTS,
       DESCENDING,
       { name: "contact LEFT JOIN becomes INNER JOIN", from: "LEFT OUTER JOIN application.people", to: "INNER JOIN application.people" },
+      { name: "ILIKE path is case-sensitive (LIKE)", from: "ILIKE '%' || search_text || '%' ESCAPE ''", to: "LIKE '%' || search_text || '%' ESCAPE ''" },
       {
         name: "|| instead of concat (NULL contact hides the supplier)",
         from: `concat(s."SupplierName", ' ', p."FullName", ' ', p."PreferredName")`,

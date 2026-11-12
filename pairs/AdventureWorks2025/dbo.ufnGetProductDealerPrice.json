@@ -17,7 +17,7 @@
     "engine": "kiro",
     "notes": [
       "At most one price period per product (precondition): with overlapping periods the T-SQL `SELECT @x = ...` keeps the last row read, which is undefined.",
-      "Step 4 finding: SQL Server 2025 inlines this scalar function into the calling query (sys.sql_modules.is_inlineable = 1, Froid). PostgreSQL runs the function once per call, so per-row calls cost about 2x more at 20,000 calls. Equivalence is unaffected; a caller that needs the speed would inline the expression or use a set-based join.",
+      "Step 4 finding: SQL Server 2025 inlines this scalar function into the calling query (sys.sql_modules.is_inlineable = 1, Froid). PostgreSQL runs the function once per call, so per-row calls cost about 2x more at 20,000 calls. Equivalence is unaffected; a caller that needs the speed would inline the expression or use a set-based join. A PL/pgSQL version (dbo.ufnGetStock, 2026-11-12) measured slower than the LANGUAGE sql one (160 ms vs 123 ms at 20,000 calls), so the SQL version is kept.",
       "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
     ]
   },
@@ -49,13 +49,13 @@
     "step4": "fail",
     "step5": "not-run",
     "step6": "not-run",
-    "runtimeRatio": 1.77,
+    "runtimeRatio": 1.93,
     "runtime": {
       "volume": 2000,
       "timedRuns": 7,
-      "sqlServerMs": 84,
-      "postgresMs": 148.65,
-      "ratio": 1.77,
+      "sqlServerMs": 79,
+      "postgresMs": 152.66,
+      "ratio": 1.93,
       "threshold": 1.5,
       "passed": false,
       "belowResolution": false,
@@ -67,21 +67,21 @@
       "NULL in every nullable column"
     ],
     "pbtSeeds": [
-      1046941480
+      664345637
     ],
     "engineOutputCheck": {
       "step3": "fail",
-      "seed": 1046941480,
-      "detail": "random sample: value differs in group 0 (key \"*\"), column \"result\": SQL Server n:0.145 vs PostgreSQL n:0.14496"
+      "seed": 664345637,
+      "detail": "random sample: value differs in group 0 (key \"*\"), column \"result\": SQL Server n:0.0001 vs PostgreSQL n:0.00006"
     },
     "samples": 200,
-    "samplesWithRows": 118,
+    "samplesWithRows": 117,
     "subMicrosecondNormalised": 0,
     "mutantsDetected": [
       "auto: join condition uses a different key",
       "auto: first numeric literal changed"
     ],
-    "failureDetail": "Step 4: PostgreSQL 148.65 ms vs SQL Server 84 ms = 1.77x, above the 1.5x limit. Results are equivalent (step 3 pass); see the notes for the cause.",
+    "failureDetail": "Step 4: PostgreSQL 152.66 ms vs SQL Server 79 ms = 1.93x, above the 1.5x limit. Results are equivalent (step 3 pass); see the notes for the cause.",
     "harnessVersion": "harness-generic-0.3.0"
   },
   "effort": {

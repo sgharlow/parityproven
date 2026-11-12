@@ -1,0 +1,90 @@
+{
+  "object": "dbo.uspGetBillOfMaterials",
+  "type": "P",
+  "tables": [
+    {
+      "schema": "Production",
+      "name": "BillOfMaterials",
+      "objectType": "U",
+      "columns": [
+        {
+          "name": "ProductAssemblyID",
+          "sqlType": "int",
+          "nullable": true,
+          "isPk": false,
+          "isFk": true
+        },
+        {
+          "name": "ComponentID",
+          "sqlType": "int",
+          "nullable": false,
+          "isPk": false,
+          "isFk": true
+        },
+        {
+          "name": "StartDate",
+          "sqlType": "datetime",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        },
+        {
+          "name": "EndDate",
+          "sqlType": "datetime",
+          "nullable": true,
+          "isPk": false,
+          "isFk": false
+        },
+        {
+          "name": "BOMLevel",
+          "sqlType": "smallint",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        },
+        {
+          "name": "PerAssemblyQty",
+          "sqlType": "decimal(8,2)",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        }
+      ]
+    },
+    {
+      "schema": "Production",
+      "name": "Product",
+      "objectType": "U",
+      "columns": [
+        {
+          "name": "ProductID",
+          "sqlType": "int",
+          "nullable": false,
+          "isPk": true,
+          "isFk": false
+        },
+        {
+          "name": "Name",
+          "sqlType": "nvarchar(50)",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        },
+        {
+          "name": "StandardCost",
+          "sqlType": "money",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        },
+        {
+          "name": "ListPrice",
+          "sqlType": "money",
+          "nullable": false,
+          "isPk": false,
+          "isFk": false
+        }
+      ]
+    }
+  ]
+}

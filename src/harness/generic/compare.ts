@@ -66,17 +66,48 @@ function canonicalRows(rs: RowSet, jsonColumns: string[]): string[][] {
   );
 }
 
-function rawLess(a: unknown, b: unknown): number {
-  if (a === b) return 0;
-  if (a === null || a === undefined) return -1;
-  if (b === null || b === undefined) return 1;
-  return (a as number | string) < (b as number | string) ? -1 : 1;
+/**
+ * A value as the order check sees it: dates and timestamps as microseconds since the epoch, integers returned as
+ * strings by the SQL Server driver (bigint) as numbers, booleans as 0/1. Other strings stay strings (compared by code
+ * unit; text order keys under a database collation are not claimed by the order check).
+ */
+function orderValue(value: unknown, declaredType: string): number | bigint | string | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "boolean") return value ? 1 : 0;
+  if (typeof value === "number" || typeof value === "bigint") return value;
+  if (value instanceof Date) {
+    const delta = (value as DtDate).nanosecondsDelta ?? 0;
+    return BigInt(value.getTime()) * 1000n + BigInt(Math.round(delta * 1_000_000));
+  }
+  if (typeof value === "string") {
+    if (/^(bigint|int8|int|int4|smallint|int2|tinyint)$/.test(declaredType) && /^-?\d+$/.test(value)) return BigInt(value);
+    if (declaredType === "timestamp" || declaredType === "date") {
+      const m = value.replace(" ", "T").match(/^(\d{4}-\d{2}-\d{2})(?:T(\d{2}:\d{2}:\d{2})(?:\.(\d+))?)?$/);
+      if (m) {
+        const ms = Date.parse(`${m[1]}T${m[2] ?? "00:00:00"}Z`);
+        return BigInt(ms) * 1000n + BigInt(Number((m[3] ?? "").padEnd(6, "0").slice(0, 6)));
+      }
+    }
+  }
+  return String(value);
+}
+
+/** -1 / 0 / 1. NULL sorts first; numbers (and bigints) numerically; strings by code unit; mixed kinds by kind. */
+function compareOrderValues(a: number | bigint | string | null, b: number | bigint | string | null): number {
+  if (a === null && b === null) return 0;
+  if (a === null) return -1;
+  if (b === null) return 1;
+  const numeric = (x: unknown) => typeof x === "number" || typeof x === "bigint";
+  if (numeric(a) && numeric(b)) return a < b ? -1 : a > b ? 1 : 0;
+  if (typeof a === "string" && typeof b === "string") return a < b ? -1 : a > b ? 1 : 0;
+  return numeric(a) ? -1 : 1;
 }
 
 function orderViolation(rs: RowSet, keyIdx: number[], label: string): string | null {
   for (let i = 1; i < rs.rows.length; i++) {
     for (const k of keyIdx) {
-      const c = rawLess(rs.rows[i - 1][k], rs.rows[i][k]);
+      const t = rs.columns[k]?.declaredType ?? "";
+      const c = compareOrderValues(orderValue(rs.rows[i - 1][k], t), orderValue(rs.rows[i][k], t));
       if (c < 0) break;           // strictly increasing on this key column → fine
       if (c > 0) return `${label} rows ${i - 1}/${i} are out of order on "${rs.columns[k].name}"`;
     }

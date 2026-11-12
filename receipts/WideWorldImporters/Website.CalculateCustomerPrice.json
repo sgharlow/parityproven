@@ -77,11 +77,11 @@
   ],
   "evidence": {
     "pbtSeeds": [
-      1653230143
+      1951926405
     ],
     "rowsCompared": 203,
     "samples": 200,
-    "samplesWithRows": 184,
+    "samplesWithRows": 180,
     "trapsCovered": [
       "NULL in every nullable column",
       "numeric rounding and scale (decimal edge values)"
@@ -94,8 +94,8 @@
     "runtime": {
       "volume": 1000,
       "timedRuns": 7,
-      "sqlServerMs": 241,
-      "postgresMs": 15.04,
+      "sqlServerMs": 234,
+      "postgresMs": 14.93,
       "ratio": 0.06,
       "threshold": 1.5,
       "passed": true,
@@ -115,5 +115,5 @@
     "p50Hours": 1,
     "p90Hours": 3
   },
-  "builtAt": "2026-11-12T07:56:18.575Z"
+  "builtAt": "2026-11-12T18:03:35.146Z"
 }

@@ -41,29 +41,29 @@
     "step4": "pass",
     "step5": "not-run",
     "step6": "not-run",
-    "runtimeRatio": 1.09,
+    "runtimeRatio": 0.66,
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
-      "sqlServerMs": 3,
-      "postgresMs": 3.27,
-      "ratio": 1.09,
+      "sqlServerMs": 5,
+      "postgresMs": 3.32,
+      "ratio": 0.66,
       "threshold": 1.5,
       "passed": true,
-      "belowResolution": true,
+      "belowResolution": false,
       "resultRows": 100,
       "volumeMismatch": null
     },
-    "rowsCompared": 206,
+    "rowsCompared": 207,
     "trapsCovered": [
       "empty string and trailing spaces"
     ],
     "pbtSeeds": [
-      1401388628
+      1584206028
     ],
     "engineOutputCheck": {
       "step3": "fail",
-      "seed": 1401388628,
+      "seed": 1584206028,
       "detail": "fixed case \"SearchDetails: LIKE \"[a-c]\"\": value differs in group 0 (key \"*\"), column \"result\": SQL Server j:{\"StockItems\":[{\"StockItemID\":1,\"StockItemName\":\"Item0001\"},{\"StockItemID\":4,\"StockItemName\":\"Item0004\"},{\"StockItemID\":5,\"StockItemName\":\"Item0005\"}]} vs PostgreSQL j:{\"StockItems\":[{\"StockItemID\":5,\"StockItemName\":\"Item0005\"}]}"
     },
     "samples": 200,
