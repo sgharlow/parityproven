@@ -15,6 +15,11 @@ export interface BuildInput {
   exclusions?: BuildExclusion[];
   /** In-scope objects with no conversion attempt, listed with what they would need (src/conversions/dispositions.ts). */
   notAttempted?: BuildExclusion[];
+  /**
+   * First commit of each object's pair record or conversion file, keyed "<database>/<schema>.<object>"
+   * (read from git history by the CLI). Objects first committed before their database's predictions are disclosed.
+   */
+  firstCommits?: Record<string, { at: string; commit: string }>;
 }
 
 export interface BuildExclusion {
@@ -181,6 +186,24 @@ export function buildReceipts(input: BuildInput): BuildOutput {
     if (listed.has(key)) throw new Error(`${key} is marked not-attempted but has a pair record or an exclusion`);
   }
 
+  // Objects converted before the predictions were committed: the predictions were not blind for them, so say so.
+  const predictionNotes: string[] = [];
+  for (const database of inventoryDatabases(input)) {
+    const p = join(input.predictionsDir, `${database}-v1.json`);
+    if (!existsSync(p) || !input.firstCommits) continue;
+    const predictedAt = Date.parse((JSON.parse(readFileSync(p, "utf-8")) as PredictionFile).committedAt);
+    const early = Object.entries(input.firstCommits)
+      .filter(([key, c]) => key.startsWith(`${database}/`) && Date.parse(c.at) < predictedAt)
+      .sort(([, a], [, b]) => a.at.localeCompare(b.at));
+    if (early.length === 0) continue;
+    const list = early.map(([key, c]) => `${key.slice(database.length + 1)} (first committed ${c.at} in ${c.commit})`).join("; ");
+    predictionNotes.push(
+      `${database}: ${early.length} object${early.length === 1 ? " was" : "s were"} converted before the v1 predictions were committed ` +
+      `(${new Date(predictedAt).toISOString()}): ${list}. The prediction was not made blind for ${early.length === 1 ? "this object" : "these objects"}. ` +
+      "The predictions are not edited."
+    );
+  }
+
   const summary = {
     total: receipts.length,
     verified: receipts.filter((r) => r.status === "verified").length,
@@ -197,6 +220,7 @@ export function buildReceipts(input: BuildInput): BuildOutput {
     excluded,
     notAttempted,
     tierNotes,
+    predictionNotes,
     // the committed v1 predictions, so the questionnaire's rates and the site's counts are never typed by hand
     predictions: Object.fromEntries(
       inventoryDatabases(input).flatMap((database) => {

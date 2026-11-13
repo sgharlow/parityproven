@@ -56,3 +56,35 @@ describe("buildReceipts", () => {
     }
   });
 });
+
+describe("predictionNotes", () => {
+  const base = {
+    pairsDir: resolve(REPO_ROOT, "pairs"),
+    inventoryDir: resolve(REPO_ROOT, "inventory"),
+    predictionsDir: resolve(REPO_ROOT, "predictions"),
+  };
+
+  it("discloses an object first committed before its database's predictions, and only that one", () => {
+    const output = buildReceipts({
+      ...base,
+      firstCommits: {
+        "WideWorldImporters/Integration.GetMovementUpdates": { at: "2026-11-07T06:16:59.000Z", commit: "c2bb74f" },
+        "WideWorldImporters/Website.ChangePassword": { at: "2026-11-10T00:00:00.000Z", commit: "later01" },
+        "AdventureWorks2025/Sales.vSalesPerson": { at: "2026-11-11T00:00:00.000Z", commit: "later02" },
+      },
+    });
+    const notes = output.index.predictionNotes ?? [];
+    expect(notes).toHaveLength(1);
+    expect(notes[0]).toContain("WideWorldImporters: 1 object was converted before the v1 predictions were committed");
+    expect(notes[0]).toContain("Integration.GetMovementUpdates (first committed 2026-11-07T06:16:59.000Z in c2bb74f)");
+    expect(notes[0]).not.toContain("ChangePassword");
+  });
+
+  it("writes no note when every object came after the predictions", () => {
+    const output = buildReceipts({
+      ...base,
+      firstCommits: { "WideWorldImporters/Website.ChangePassword": { at: "2026-11-10T00:00:00.000Z", commit: "later01" } },
+    });
+    expect(output.index.predictionNotes).toEqual([]);
+  });
+});

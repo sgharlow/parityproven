@@ -1,5 +1,5 @@
 {
-  "builtAt": "2026-11-13T04:43:28.992Z",
+  "builtAt": "2026-11-13T23:05:21.894Z",
   "receipts": [
     {
       "database": "AdventureWorks2025",
@@ -847,6 +847,9 @@
   ],
   "tierNotes": [
     "WideWorldImporters: the tier rules changed after the v1 predictions were committed; 12 of 47 objects now sit in a different tier. Each receipt shows its current tier, and is scored against the prediction cell it was predicted in. The predictions are not edited. Change: 2026-11-11: dynamic SQL now also matches EXECUTE (@sql) (was EXEC( only), and table variables also match DECLARE @t AS TABLE. In WideWorldImporters this moved 12 procedures to complex (all database-administration or sequence procedures: Application.Configuration_* except ConfigureForEnterpriseEdition, AddRoleMemberIfNonexistent, CreateRoleIfNonexistent, DataLoadSimulation.DeactivateTemporalTablesBeforeDataLoad, Sequences.ReseedSequenceBeyondTableValues). AdventureWorks2025 is unchanged. The v1 predictions (committed 2026-11-08) were made against the earlier tiers and are not edited."
+  ],
+  "predictionNotes": [
+    "WideWorldImporters: 1 object was converted before the v1 predictions were committed (2026-11-08T03:31:14.477Z): Integration.GetMovementUpdates (first committed 2026-11-07T06:16:59.000Z in c2bb74f). The prediction was not made blind for this object. The predictions are not edited."
   ],
   "predictions": {
     "AdventureWorks2025": {

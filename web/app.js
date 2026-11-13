@@ -61,8 +61,9 @@ async function initScorecard() {
       ${summary.inventory ? `<div class="stat"><div class="stat-val">${summary.inventory}</div><div class="stat-lbl">Inventoried</div></div>` : ''}
     </div>`;
 
-  const tierNotesHtml = (index.tierNotes || []).length
-    ? `<div class="card" style="font-size:0.85rem;color:var(--c-muted)">${index.tierNotes.map(n => `<p style="margin:0.25rem 0">${esc(n)}</p>`).join('')}</div>`
+  const scoreNotes = [...(index.predictionNotes || []), ...(index.tierNotes || [])];
+  const tierNotesHtml = scoreNotes.length
+    ? `<div class="card" style="font-size:0.85rem;color:var(--c-muted)">${scoreNotes.map(n => `<p style="margin:0.25rem 0">${esc(n)}</p>`).join('')}</div>`
     : '';
 
   const rows = index.receipts.map(r => {

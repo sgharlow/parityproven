@@ -81,6 +81,8 @@ export interface ReceiptIndex {
   notAttempted?: ReceiptExclusion[];
   /** Measured notes on tier rules that changed after the predictions. */
   tierNotes?: string[];
+  /** Objects whose conversion was committed before their database's predictions (computed from git history). */
+  predictionNotes?: string[];
   /** The committed v1 prediction cells per database (read by the questionnaire). */
   predictions?: Record<string, { committedAt: string; cells: Array<{ objectClass: ObjectClass; tier: Tier; count: number; p50Hours: number; p90Hours: number }> }>;
   /** Inventoried objects per database. */
