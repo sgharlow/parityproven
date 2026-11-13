@@ -4,6 +4,7 @@
   "objectName": "GetMovementUpdates",
   "objectClass": "procedure",
   "tier": "simple",
+  "predictionTier": "simple",
   "status": "pending",
   "code": {
     "source": "\r\nCREATE PROCEDURE Integration.GetMovementUpdates\r\n@LastCutoff datetime2(7),\r\n@NewCutoff datetime2(7)\r\nWITH EXECUTE AS OWNER\r\nAS\r\nBEGIN\r\n    SET NOCOUNT ON;\r\n    SET XACT_ABORT ON;\r\n\r\n    SELECT CAST(sit.TransactionOccurredWhen AS date) AS [Date Key],\r\n           sit.StockItemTransactionID AS [WWI Stock Item Transaction ID],\r\n           sit.InvoiceID AS [WWI Invoice ID],\r\n           sit.PurchaseOrderID AS [WWI Purchase Order ID],\r\n           CAST(sit.Quantity AS int) AS Quantity,\r\n           sit.StockItemID AS [WWI Stock Item ID],\r\n           sit.CustomerID AS [WWI Customer ID],\r\n           sit.SupplierID AS [WWI Supplier ID],\r\n           sit.TransactionTypeID AS [WWI Transaction Type ID],\r\n           sit.TransactionOccurredWhen AS [Transaction Occurred When]\r\n    FROM Warehouse.StockItemTransactions AS sit\r\n    WHERE sit.LastEditedWhen > @LastCutoff\r\n    AND sit.LastEditedWhen <= @NewCutoff\r\n    ORDER BY sit.StockItemTransactionID;\r\n\r\n    RETURN 0;\r\nEND;\r\n",
@@ -43,7 +44,7 @@
     },
     {
       "step": 2,
-      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "label": "Agreed tests pass (tSQLt on SQL Server, plain-SQL assertions on PostgreSQL)",
       "status": "pass"
     },
     {
@@ -119,5 +120,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-13T00:09:12.808Z"
+  "builtAt": "2026-11-13T04:43:28.948Z"
 }

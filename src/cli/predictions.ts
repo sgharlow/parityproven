@@ -14,6 +14,8 @@ import type { InventoryReport } from "../inventory/types.js";
 import type { PairRecord } from "../pairs/schema.js";
 import { validatePredictions } from "../predictions/validate.js";
 import { scorePredictions, formatScoreTable } from "../predictions/score.js";
+import { classifyTierAtPrediction } from "../inventory/tier.js";
+import { DISPOSITIONS } from "../conversions/dispositions.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, "..", "..");
@@ -64,7 +66,16 @@ async function main(): Promise<void> {
     const inventoryPath = resolve(REPO_ROOT, "inventory", `${database}.json`);
     const report = loadJson<InventoryReport>(inventoryPath, "inventory report");
 
-    const result = validatePredictions(pred, report);
+    // the v1 predictions are checked against the tier rules they were made with (tier.ts classifyTierAtPrediction)
+    const atPrediction = report.objects.map((o) => ({ ...o, tier: classifyTierAtPrediction(o.definition) }));
+    const counts = JSON.parse(JSON.stringify(report.counts)) as InventoryReport["counts"];
+    for (const cls of Object.keys(counts) as Array<keyof typeof counts>) {
+      const c = counts[cls];
+      if (typeof c !== "object") continue;
+      c.simple = c.medium = c.complex = 0;
+      for (const o of atPrediction.filter((x) => x.objectClass === cls)) c[o.tier]++;
+    }
+    const result = validatePredictions(pred, { ...report, objects: atPrediction, counts });
 
     if (result.warnings.length > 0) {
       for (const w of result.warnings) console.warn(`WARNING: ${w}`);
@@ -93,7 +104,10 @@ async function main(): Promise<void> {
       }
     }
 
-    const result = scorePredictions(pred, pairs, names);
+    const excluded = new Map(
+      DISPOSITIONS.filter((d) => d.database === database && d.kind === "excluded").map((d) => [`${d.schema}.${d.name}`, d.reason] as const)
+    );
+    const result = scorePredictions(pred, pairs, names, excluded);
     console.log(formatScoreTable(result));
     process.exit(0);
   }

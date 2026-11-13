@@ -4,6 +4,7 @@
   "objectName": "VehicleTemperatures",
   "objectClass": "view",
   "tier": "simple",
+  "predictionTier": "simple",
   "status": "failed",
   "code": {
     "source": "\r\nCREATE VIEW Website.VehicleTemperatures\r\nAS\r\nSELECT vt.VehicleTemperatureID,\r\n       vt.VehicleRegistration,\r\n       vt.ChillerSensorNumber,\r\n       vt.RecordedWhen,\r\n       vt.Temperature,\r\n       CASE WHEN vt.IsCompressed <> 0\r\n            THEN CAST(DECOMPRESS(vt.CompressedSensorData) AS nvarchar(1000))\r\n            ELSE vt.FullSensorData\r\n       END AS FullSensorData\r\nFROM Warehouse.VehicleTemperatures AS vt;\r\n",
@@ -24,7 +25,7 @@
     },
     {
       "step": 2,
-      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "label": "Agreed tests pass (tSQLt on SQL Server, plain-SQL assertions on PostgreSQL)",
       "status": "not-run"
     },
     {
@@ -61,5 +62,5 @@
     "p50Hours": 0.75,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-13T00:09:12.836Z"
+  "builtAt": "2026-11-13T04:43:28.952Z"
 }

@@ -57,7 +57,13 @@ async function initScorecard() {
       <div class="stat stat-failed">  <div class="stat-val">${summary.failed}</div>  <div class="stat-lbl">Failed</div></div>
       <div class="stat">              <div class="stat-val">${summary.total}</div>   <div class="stat-lbl">Total</div></div>
       ${summary.excluded ? `<div class="stat"><div class="stat-val">${summary.excluded}</div><div class="stat-lbl">Out of scope</div></div>` : ''}
+      ${summary.notAttempted ? `<div class="stat"><div class="stat-val">${summary.notAttempted}</div><div class="stat-lbl">Not attempted</div></div>` : ''}
+      ${summary.inventory ? `<div class="stat"><div class="stat-val">${summary.inventory}</div><div class="stat-lbl">Inventoried</div></div>` : ''}
     </div>`;
+
+  const tierNotesHtml = (index.tierNotes || []).length
+    ? `<div class="card" style="font-size:0.85rem;color:var(--c-muted)">${index.tierNotes.map(n => `<p style="margin:0.25rem 0">${esc(n)}</p>`).join('')}</div>`
+    : '';
 
   const rows = index.receipts.map(r => {
     const link = `receipt.html?db=${encodeURIComponent(r.database)}&obj=${encodeURIComponent(r.schemaName + '.' + r.objectName)}`;
@@ -86,13 +92,31 @@ async function initScorecard() {
        </table>`
     : '';
 
+  const notAttempted = index.notAttempted || [];
+  const notAttemptedHtml = notAttempted.length
+    ? `<h2 style="margin-top:2rem">Not converted: not attempted (${notAttempted.length})</h2>
+       <p style="color:var(--c-muted);font-size:0.875rem">These objects are in scope and in the inventory, but no conversion was attempted. They are not counted as verified, pending or failed above. Each says what it would need.</p>
+       <table>
+         <thead><tr><th>Object</th><th>Database</th><th>Type</th><th>Tier</th><th>What it needs</th></tr></thead>
+         <tbody>${notAttempted.map(x => `<tr>
+           <td>${esc(x.schemaName)}.${esc(x.objectName)}</td>
+           <td>${esc(x.database)}</td>
+           <td><span class="chip">${esc(x.objectClass)}</span></td>
+           <td><span class="chip">${esc(x.tier)}</span></td>
+           <td style="font-size:0.85rem">${esc(x.reason)}</td>
+         </tr>`).join('')}</tbody>
+       </table>`
+    : '';
+
   root.innerHTML = `
     ${statsHtml}
+    ${tierNotesHtml}
     <table>
       <thead><tr><th>Object</th><th>Database</th><th>Type</th><th>Tier</th><th>Status</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
     ${excludedHtml}
+    ${notAttemptedHtml}
     <p style="color:var(--c-muted);font-size:0.8rem;margin-top:1rem">Built ${new Date(index.builtAt).toLocaleString()}</p>`;
 }
 
@@ -184,9 +208,11 @@ async function initReceipt() {
        <ul>${receipt.evidence.loadTimeFindings.map(f => `<li style="font-size:0.85rem;color:var(--c-muted)">${esc(f)}</li>`).join('')}</ul>`
     : '';
 
+  const predTierNote = receipt.predictionTier && receipt.predictionTier !== receipt.tier
+    ? ` <span style="color:var(--c-muted);font-size:0.85rem">(predicted as ${esc(receipt.predictionTier)}, before the tier rules changed)</span>` : '';
   const predHtml = receipt.predictionCell
-    ? `<span>P50: <strong>${receipt.predictionCell.p50Hours}h</strong> &nbsp; P90: <strong>${receipt.predictionCell.p90Hours}h</strong></span>`
-    : `<span style="color:var(--c-muted)">Predictions not yet committed</span>`;
+    ? `<span>P50: <strong>${receipt.predictionCell.p50Hours}h</strong> &nbsp; P90: <strong>${receipt.predictionCell.p90Hours}h</strong>${predTierNote}</span>`
+    : `<span style="color:var(--c-muted)">no prediction for this type and tier</span>`;
 
   const notesHtml = receipt.code.notes?.length
     ? `<h3>Conversion notes</h3><ul>${receipt.code.notes.map(n => `<li style="font-size:0.85rem">${esc(n)}</li>`).join('')}</ul>`

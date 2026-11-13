@@ -4,6 +4,7 @@
   "objectName": "vProductAndDescription",
   "objectClass": "view",
   "tier": "simple",
+  "predictionTier": "simple",
   "status": "pending",
   "code": {
     "source": "\r\nCREATE VIEW [Production].[vProductAndDescription]\r\nWITH SCHEMABINDING\r\nAS\r\n-- View (indexed or standard) to display products and product descriptions by language.\r\nSELECT\r\n    p.[ProductID]\r\n    ,p.[Name]\r\n    ,pm.[Name] AS [ProductModel]\r\n    ,pmx.[CultureID]\r\n    ,pd.[Description]\r\nFROM [Production].[Product] p\r\n    INNER JOIN [Production].[ProductModel] pm\r\n    ON p.[ProductModelID] = pm.[ProductModelID]\r\n    INNER JOIN [Production].[ProductModelProductDescriptionCulture] pmx\r\n    ON pm.[ProductModelID] = pmx.[ProductModelID]\r\n    INNER JOIN [Production].[ProductDescription] pd\r\n    ON pmx.[ProductDescriptionID] = pd.[ProductDescriptionID];\r\n",
@@ -45,7 +46,7 @@
     },
     {
       "step": 2,
-      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "label": "Agreed tests pass (tSQLt on SQL Server, plain-SQL assertions on PostgreSQL)",
       "status": "not-run"
     },
     {
@@ -108,5 +109,5 @@
     "p50Hours": 0.75,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-13T00:09:12.803Z"
+  "builtAt": "2026-11-13T04:43:28.942Z"
 }

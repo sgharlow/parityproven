@@ -40,11 +40,27 @@ const MEDIUM_PATTERNS: RegExp[] = [
 ];
 
 export function classifyTier(definition: string): Tier {
-  for (const pattern of COMPLEX_PATTERNS) {
+  return classifyWith(definition, COMPLEX_PATTERNS, MEDIUM_PATTERNS);
+}
+
+function classifyWith(definition: string, complex: RegExp[], medium: RegExp[]): Tier {
+  for (const pattern of complex) {
     if (pattern.test(definition)) return "complex";
   }
-  for (const pattern of MEDIUM_PATTERNS) {
+  for (const pattern of medium) {
     if (pattern.test(definition)) return "medium";
   }
   return "simple";
+}
+
+/**
+ * The tier rules the v1 predictions were made against (predictions committed 2026-11-08, before the 2026-11-11 change).
+ * Scoring compares each object with the prediction cell it was predicted in, so it uses these rules; the receipts show
+ * the current tier too. Frozen: never edit.
+ */
+const COMPLEX_PATTERNS_V1: RegExp[] = [/\bEXEC\s*\(/i, ...COMPLEX_PATTERNS.slice(1)];
+const MEDIUM_PATTERNS_V1: RegExp[] = [MEDIUM_PATTERNS[0], /\bDECLARE\s+@\w+\s+TABLE\b/i, ...MEDIUM_PATTERNS.slice(2)];
+
+export function classifyTierAtPrediction(definition: string): Tier {
+  return classifyWith(definition, COMPLEX_PATTERNS_V1, MEDIUM_PATTERNS_V1);
 }

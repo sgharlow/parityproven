@@ -4,6 +4,7 @@
   "objectName": "Suppliers",
   "objectClass": "view",
   "tier": "simple",
+  "predictionTier": "simple",
   "status": "pending",
   "code": {
     "source": "\r\nCREATE VIEW Website.Suppliers\r\nAS\r\nSELECT s.SupplierID,\r\n       s.SupplierName,\r\n       sc.SupplierCategoryName,\r\n       pp.FullName AS PrimaryContact,\r\n       ap.FullName AS AlternateContact,\r\n       s.PhoneNumber,\r\n       s.FaxNumber,\r\n       s.WebsiteURL,\r\n       dm.DeliveryMethodName AS DeliveryMethod,\r\n       c.CityName AS CityName,\r\n       s.DeliveryLocation AS DeliveryLocation,\r\n       s.SupplierReference\r\nFROM Purchasing.Suppliers AS s\r\nLEFT OUTER JOIN Purchasing.SupplierCategories AS sc\r\nON s.SupplierCategoryID = sc.SupplierCategoryID\r\nLEFT OUTER JOIN [Application].People AS pp\r\nON s.PrimaryContactPersonID = pp.PersonID\r\nLEFT OUTER JOIN [Application].People AS ap\r\nON s.AlternateContactPersonID = ap.PersonID\r\nLEFT OUTER JOIN [Application].DeliveryMethods AS dm\r\nON s.DeliveryMethodID = dm.DeliveryMethodID\r\nLEFT OUTER JOIN [Application].Cities AS c\r\nON s.DeliveryCityID = c.CityID\r\n",
@@ -58,7 +59,7 @@
     },
     {
       "step": 2,
-      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "label": "Agreed tests pass (tSQLt on SQL Server, plain-SQL assertions on PostgreSQL)",
       "status": "not-run"
     },
     {
@@ -126,5 +127,5 @@
     "p50Hours": 0.75,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-13T00:09:12.835Z"
+  "builtAt": "2026-11-13T04:43:28.952Z"
 }

@@ -4,6 +4,7 @@
   "objectName": "ufnGetStock",
   "objectClass": "function",
   "tier": "simple",
+  "predictionTier": "simple",
   "status": "failed",
   "code": {
     "source": "\r\nCREATE FUNCTION [dbo].[ufnGetStock](@ProductID [int])\r\nRETURNS [int]\r\nAS\r\n-- Returns the stock level for the product. This function is used internally only\r\nBEGIN\r\n    DECLARE @ret int;\r\n   \r\n    SELECT @ret = SUM(p.[Quantity])\r\n    FROM [Production].[ProductInventory] p\r\n    WHERE p.[ProductID] = @ProductID\r\n        AND p.[LocationID] = '6'; -- Only look at inventory in the misc storage\r\n   \r\n    IF (@ret IS NULL)\r\n        SET @ret = 0\r\n   \r\n    RETURN @ret\r\nEND;\r\n",
@@ -34,7 +35,7 @@
     },
     {
       "step": 2,
-      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "label": "Agreed tests pass (tSQLt on SQL Server, plain-SQL assertions on PostgreSQL)",
       "status": "not-run"
     },
     {
@@ -94,5 +95,5 @@
     "p50Hours": 1.5,
     "p90Hours": 4
   },
-  "builtAt": "2026-11-13T00:09:12.801Z"
+  "builtAt": "2026-11-13T04:43:28.940Z"
 }

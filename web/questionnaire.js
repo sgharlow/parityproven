@@ -1,24 +1,42 @@
 /**
  * ParityProven questionnaire scan — runs entirely in the browser.
- * No data is sent to or stored on any server.
+ * No data you enter is sent to or stored on any server; the page only reads /receipts/index.json from this site.
  *
- * Rates are derived from the real WideWorldImporters inventory (the only database
- * for which measured data exists). The P50/P90 fields come from predictions once
- * Steve fills them in; until then, sensible defaults are shown with a clear label.
- *
- * NOTE: These rates are judgment-only placeholders. Replace the values in RATES
- * with the actual P50/P90 from predictions/WideWorldImporters-v1.json once committed.
+ * Rates come from the committed v1 predictions (predictions/<db>-v1.json, copied into receipts/index.json by
+ * npm run receipts:build). No rate is typed into this file. Where both sample databases have a prediction for the same
+ * type and tier, the rate is the mean of the two, weighted by object count. Types and tiers with no committed
+ * prediction are left out of the estimate and named under the result.
  */
 
-// Tier rates: P50 and P90 hours per object, by objectClass × tier.
-// Update these once predictions are committed.
-const RATES = {
-  procedure: { simple: { p50: 1.0, p90: 2.0 }, medium: { p50: 2.0, p90: 4.0 }, complex: { p50: 6.0, p90: 12.0 } },
-  function:  { simple: { p50: 0.5, p90: 1.5 }, medium: { p50: 1.5, p90: 3.0 }, complex: { p50: 4.0, p90: 8.0 } },
-  view:      { simple: { p50: 0.5, p90: 1.0 }, medium: { p50: 1.0, p90: 2.0 }, complex: { p50: 3.0, p90: 6.0 } },
-  trigger:   { simple: { p50: 1.0, p90: 2.0 }, medium: { p50: 2.0, p90: 4.0 }, complex: { p50: 5.0, p90: 10.0 } },
-};
+let RATES = null;        // { procedure: { simple: { p50, p90, basis } , ... }, ... }
+let RATE_SOURCE = '';
 
+async function loadRates() {
+  const res = await fetch('/receipts/index.json');
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const index = await res.json();
+  const acc = {};
+  const sources = [];
+  for (const [db, p] of Object.entries(index.predictions || {})) {
+    sources.push(`${db} (committed ${String(p.committedAt).slice(0, 10)})`);
+    for (const c of p.cells) {
+      const k = acc[c.objectClass] ??= {};
+      const cell = k[c.tier] ??= { n: 0, p50: 0, p90: 0 };
+      cell.n += c.count; cell.p50 += c.count * c.p50Hours; cell.p90 += c.count * c.p90Hours;
+    }
+  }
+  RATES = {};
+  for (const [cls, tiers] of Object.entries(acc)) {
+    RATES[cls] = {};
+    for (const [tier, c] of Object.entries(tiers)) {
+      if (c.n > 0) RATES[cls][tier] = { p50: c.p50 / c.n, p90: c.p90 / c.n };
+    }
+  }
+  const total = Object.values(index.inventory || {}).reduce((a, b) => a + b, 0);
+  RATE_SOURCE = `Rates are the committed predictions for ${sources.join(' and ')}, ${total} inventoried objects in all.`;
+  const el = document.getElementById('rate-source');
+  if (el) el.textContent = RATE_SOURCE;
+}
 function getVal(id) {
   return parseFloat(document.getElementById(id)?.value ?? '0') || 0;
 }
@@ -28,6 +46,7 @@ function computeEstimate() {
   let totalP50 = 0;
   let totalP90 = 0;
   let totalObjects = 0;
+  const unpriced = [];
 
   for (const t of types) {
     const count = getVal(`count-${t}`);
@@ -41,11 +60,20 @@ function computeEstimate() {
     const nMedium  = count * pctMedium  / 100;
     const nSimple  = count * pctSimple  / 100;
 
-    const r = RATES[t];
-    totalP50 += nSimple * r.simple.p50 + nMedium * r.medium.p50 + nComplex * r.complex.p50;
-    totalP90 += nSimple * r.simple.p90 + nMedium * r.medium.p90 + nComplex * r.complex.p90;
-    totalObjects += count;
+    if (!RATES) return;
+    for (const [tier, n] of [['simple', nSimple], ['medium', nMedium], ['complex', nComplex]]) {
+      if (n <= 0) continue;
+      const r = RATES[t]?.[tier];
+      if (!r) { unpriced.push(`${Math.round(n)} ${tier} ${t}${Math.round(n) === 1 ? '' : 's'}`); continue; }
+      totalP50 += n * r.p50;
+      totalP90 += n * r.p90;
+      totalObjects += n;
+    }
   }
+  const gap = document.getElementById('est-unpriced');
+  if (gap) gap.textContent = unpriced.length
+    ? `Not in the estimate (no committed prediction for these): ${unpriced.join(', ')}.`
+    : '';
 
   const resultBox = document.getElementById('result');
   if (!resultBox) return;
@@ -67,6 +95,10 @@ function computeEstimate() {
 
 // Wire up all inputs
 document.addEventListener('DOMContentLoaded', () => {
+  loadRates().then(computeEstimate).catch((e) => {
+    const el = document.getElementById('rate-source');
+    if (el) el.textContent = `Could not load the committed predictions (${e.message}), so no estimate can be shown.`;
+  });
   document.querySelectorAll('input').forEach(el => {
     el.addEventListener('input', computeEstimate);
   });

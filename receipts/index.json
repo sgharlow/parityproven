@@ -1,5 +1,5 @@
 {
-  "builtAt": "2026-11-13T00:09:12.869Z",
+  "builtAt": "2026-11-13T04:43:28.992Z",
   "receipts": [
     {
       "database": "AdventureWorks2025",
@@ -635,11 +635,319 @@
       "reason": "A fixed list of calls to Sequences.ReseedSequenceBeyondTableValues, one per sequence in the sample schema. The logic is in that procedure, which is converted and verified separately."
     }
   ],
+  "notAttempted": [
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "dbo",
+      "objectName": "uspGetEmployeeManagers",
+      "objectClass": "procedure",
+      "tier": "simple",
+      "reason": "Not attempted. Walks the hierarchyid OrganizationNode column (GetAncestor, GetLevel); needs a hierarchyid mapping decision (for example ltree or a path string) first."
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "dbo",
+      "objectName": "uspGetManagerEmployees",
+      "objectClass": "procedure",
+      "tier": "simple",
+      "reason": "Not attempted. Walks the hierarchyid OrganizationNode column (GetAncestor, GetLevel); needs a hierarchyid mapping decision (for example ltree or a path string) first."
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "dbo",
+      "objectName": "uspLogError",
+      "objectClass": "procedure",
+      "tier": "medium",
+      "reason": "Not attempted. Error-handling procedure: reads ERROR_NUMBER(), ERROR_MESSAGE() and related functions inside a CATCH block and writes dbo.ErrorLog; needs a harness mode that raises errors on both engines first."
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "dbo",
+      "objectName": "uspPrintError",
+      "objectClass": "procedure",
+      "tier": "medium",
+      "reason": "Not attempted. Prints ERROR_* function values inside a CATCH block; output is a message, not rows or table state, so the harness has nothing to compare yet."
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "dbo",
+      "objectName": "uspSearchCandidateResumes",
+      "objectClass": "procedure",
+      "tier": "simple",
+      "reason": "Not attempted. Uses full-text search predicates; the scratch database has no full-text index, and PostgreSQL text search ranks differently, so this is a likely recorded failure."
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "HumanResources",
+      "objectName": "uspUpdateEmployeeHireInfo",
+      "objectClass": "procedure",
+      "tier": "medium",
+      "reason": "Not attempted. Changes data inside TRY/CATCH with an explicit transaction and calls dbo.uspLogError (not attempted)."
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "HumanResources",
+      "objectName": "uspUpdateEmployeeLogin",
+      "objectClass": "procedure",
+      "tier": "medium",
+      "reason": "Not attempted. Updates a hierarchyid column inside TRY/CATCH and calls dbo.uspLogError (not attempted); needs the hierarchyid mapping and the error-handling procedures first."
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "HumanResources",
+      "objectName": "uspUpdateEmployeePersonalInfo",
+      "objectClass": "procedure",
+      "tier": "medium",
+      "reason": "Not attempted. Changes data inside TRY/CATCH and calls dbo.uspLogError (not attempted)."
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "HumanResources",
+      "objectName": "dEmployee",
+      "objectClass": "trigger",
+      "tier": "simple",
+      "reason": "Not attempted. Trigger (in scope by ruling R11): needs a trigger mode in the harness (the same generated INSERT, UPDATE or DELETE on both engines, then every table it writes compared). Most of these triggers also call dbo.uspLogError, which is not attempted."
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "Person",
+      "objectName": "iuPerson",
+      "objectClass": "trigger",
+      "tier": "simple",
+      "reason": "Not attempted. Trigger (in scope by ruling R11): needs a trigger mode in the harness (the same generated INSERT, UPDATE or DELETE on both engines, then every table it writes compared). Most of these triggers also call dbo.uspLogError, which is not attempted."
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "Production",
+      "objectName": "iWorkOrder",
+      "objectClass": "trigger",
+      "tier": "medium",
+      "reason": "Not attempted. Trigger (in scope by ruling R11): needs a trigger mode in the harness (the same generated INSERT, UPDATE or DELETE on both engines, then every table it writes compared). Most of these triggers also call dbo.uspLogError, which is not attempted."
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "Production",
+      "objectName": "uWorkOrder",
+      "objectClass": "trigger",
+      "tier": "medium",
+      "reason": "Not attempted. Trigger (in scope by ruling R11): needs a trigger mode in the harness (the same generated INSERT, UPDATE or DELETE on both engines, then every table it writes compared). Most of these triggers also call dbo.uspLogError, which is not attempted."
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "Purchasing",
+      "objectName": "dVendor",
+      "objectClass": "trigger",
+      "tier": "medium",
+      "reason": "Not attempted. Trigger (in scope by ruling R11): needs a trigger mode in the harness (the same generated INSERT, UPDATE or DELETE on both engines, then every table it writes compared). Most of these triggers also call dbo.uspLogError, which is not attempted."
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "Purchasing",
+      "objectName": "iPurchaseOrderDetail",
+      "objectClass": "trigger",
+      "tier": "medium",
+      "reason": "Not attempted. Trigger (in scope by ruling R11): needs a trigger mode in the harness (the same generated INSERT, UPDATE or DELETE on both engines, then every table it writes compared). Most of these triggers also call dbo.uspLogError, which is not attempted."
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "Purchasing",
+      "objectName": "uPurchaseOrderDetail",
+      "objectClass": "trigger",
+      "tier": "medium",
+      "reason": "Not attempted. Trigger (in scope by ruling R11): needs a trigger mode in the harness (the same generated INSERT, UPDATE or DELETE on both engines, then every table it writes compared). Most of these triggers also call dbo.uspLogError, which is not attempted."
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "Purchasing",
+      "objectName": "uPurchaseOrderHeader",
+      "objectClass": "trigger",
+      "tier": "medium",
+      "reason": "Not attempted. Trigger (in scope by ruling R11): needs a trigger mode in the harness (the same generated INSERT, UPDATE or DELETE on both engines, then every table it writes compared). Most of these triggers also call dbo.uspLogError, which is not attempted."
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "Sales",
+      "objectName": "iduSalesOrderDetail",
+      "objectClass": "trigger",
+      "tier": "medium",
+      "reason": "Not attempted. Trigger (in scope by ruling R11): needs a trigger mode in the harness (the same generated INSERT, UPDATE or DELETE on both engines, then every table it writes compared). Most of these triggers also call dbo.uspLogError, which is not attempted."
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "Sales",
+      "objectName": "uSalesOrderHeader",
+      "objectClass": "trigger",
+      "tier": "medium",
+      "reason": "Not attempted. Trigger (in scope by ruling R11): needs a trigger mode in the harness (the same generated INSERT, UPDATE or DELETE on both engines, then every table it writes compared). Most of these triggers also call dbo.uspLogError, which is not attempted."
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "HumanResources",
+      "objectName": "vJobCandidate",
+      "objectClass": "view",
+      "tier": "simple",
+      "reason": "Not attempted. Reads xml columns with XQuery methods (.value, .nodes); needs XML document generators in the harness and an XPath/xmltable conversion."
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "HumanResources",
+      "objectName": "vJobCandidateEducation",
+      "objectClass": "view",
+      "tier": "simple",
+      "reason": "Not attempted. Reads xml columns with XQuery methods (.value, .nodes); needs XML document generators in the harness and an XPath/xmltable conversion."
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "HumanResources",
+      "objectName": "vJobCandidateEmployment",
+      "objectClass": "view",
+      "tier": "simple",
+      "reason": "Not attempted. Reads xml columns with XQuery methods (.value, .nodes); needs XML document generators in the harness and an XPath/xmltable conversion."
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "Person",
+      "objectName": "vAdditionalContactInfo",
+      "objectClass": "view",
+      "tier": "simple",
+      "reason": "Not attempted. Reads xml columns with XQuery methods (.value, .nodes); needs XML document generators in the harness and an XPath/xmltable conversion."
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "Production",
+      "objectName": "vProductModelCatalogDescription",
+      "objectClass": "view",
+      "tier": "simple",
+      "reason": "Not attempted. Reads xml columns with XQuery methods (.value, .nodes); needs XML document generators in the harness and an XPath/xmltable conversion."
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "Production",
+      "objectName": "vProductModelInstructions",
+      "objectClass": "view",
+      "tier": "simple",
+      "reason": "Not attempted. Reads xml columns with XQuery methods (.value, .nodes); needs XML document generators in the harness and an XPath/xmltable conversion."
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "Sales",
+      "objectName": "vPersonDemographics",
+      "objectClass": "view",
+      "tier": "simple",
+      "reason": "Not attempted. Reads xml columns with XQuery methods (.value, .nodes); needs XML document generators in the harness and an XPath/xmltable conversion."
+    },
+    {
+      "database": "AdventureWorks2025",
+      "schemaName": "Sales",
+      "objectName": "vStoreWithDemographics",
+      "objectClass": "view",
+      "tier": "simple",
+      "reason": "Not attempted. Reads xml columns with XQuery methods (.value, .nodes); needs XML document generators in the harness and an XPath/xmltable conversion."
+    }
+  ],
+  "tierNotes": [
+    "WideWorldImporters: the tier rules changed after the v1 predictions were committed; 12 of 47 objects now sit in a different tier. Each receipt shows its current tier, and is scored against the prediction cell it was predicted in. The predictions are not edited. Change: 2026-11-11: dynamic SQL now also matches EXECUTE (@sql) (was EXEC( only), and table variables also match DECLARE @t AS TABLE. In WideWorldImporters this moved 12 procedures to complex (all database-administration or sequence procedures: Application.Configuration_* except ConfigureForEnterpriseEdition, AddRoleMemberIfNonexistent, CreateRoleIfNonexistent, DataLoadSimulation.DeactivateTemporalTablesBeforeDataLoad, Sequences.ReseedSequenceBeyondTableValues). AdventureWorks2025 is unchanged. The v1 predictions (committed 2026-11-08) were made against the earlier tiers and are not edited."
+  ],
+  "predictions": {
+    "AdventureWorks2025": {
+      "committedAt": "2026-11-08T03:31:14.477Z",
+      "cells": [
+        {
+          "objectClass": "procedure",
+          "tier": "simple",
+          "count": 5,
+          "p50Hours": 1,
+          "p90Hours": 2
+        },
+        {
+          "objectClass": "procedure",
+          "tier": "medium",
+          "count": 5,
+          "p50Hours": 3,
+          "p90Hours": 8
+        },
+        {
+          "objectClass": "function",
+          "tier": "simple",
+          "count": 11,
+          "p50Hours": 1.5,
+          "p90Hours": 4
+        },
+        {
+          "objectClass": "view",
+          "tier": "simple",
+          "count": 20,
+          "p50Hours": 0.75,
+          "p90Hours": 2
+        },
+        {
+          "objectClass": "trigger",
+          "tier": "simple",
+          "count": 2,
+          "p50Hours": 1.5,
+          "p90Hours": 4
+        },
+        {
+          "objectClass": "trigger",
+          "tier": "medium",
+          "count": 8,
+          "p50Hours": 4.5,
+          "p90Hours": 9
+        }
+      ]
+    },
+    "WideWorldImporters": {
+      "committedAt": "2026-11-08T03:31:14.477Z",
+      "cells": [
+        {
+          "objectClass": "procedure",
+          "tier": "simple",
+          "count": 21,
+          "p50Hours": 1,
+          "p90Hours": 2
+        },
+        {
+          "objectClass": "procedure",
+          "tier": "medium",
+          "count": 13,
+          "p50Hours": 3,
+          "p90Hours": 6
+        },
+        {
+          "objectClass": "procedure",
+          "tier": "complex",
+          "count": 8,
+          "p50Hours": 9,
+          "p90Hours": 20
+        },
+        {
+          "objectClass": "function",
+          "tier": "simple",
+          "count": 2,
+          "p50Hours": 1,
+          "p90Hours": 3
+        },
+        {
+          "objectClass": "view",
+          "tier": "simple",
+          "count": 3,
+          "p50Hours": 0.75,
+          "p90Hours": 2
+        }
+      ]
+    }
+  },
+  "inventory": {
+    "AdventureWorks2025": 51,
+    "WideWorldImporters": 47
+  },
   "summary": {
     "total": 55,
     "verified": 0,
     "pending": 40,
     "failed": 15,
-    "excluded": 17
+    "excluded": 17,
+    "notAttempted": 26,
+    "inventory": 98
   }
 }

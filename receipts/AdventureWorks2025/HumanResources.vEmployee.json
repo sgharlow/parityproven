@@ -4,6 +4,7 @@
   "objectName": "vEmployee",
   "objectClass": "view",
   "tier": "simple",
+  "predictionTier": "simple",
   "status": "pending",
   "code": {
     "source": "\r\nCREATE VIEW [HumanResources].[vEmployee]\r\nAS\r\nSELECT\r\n    e.[BusinessEntityID]\r\n    ,p.[Title]\r\n    ,p.[FirstName]\r\n    ,p.[MiddleName]\r\n    ,p.[LastName]\r\n    ,p.[Suffix]\r\n    ,e.[JobTitle] \r\n    ,pp.[PhoneNumber]\r\n    ,pnt.[Name] AS [PhoneNumberType]\r\n    ,ea.[EmailAddress]\r\n    ,p.[EmailPromotion]\r\n    ,a.[AddressLine1]\r\n    ,a.[AddressLine2]\r\n    ,a.[City]\r\n    ,sp.[Name] AS [StateProvinceName]\r\n    ,a.[PostalCode]\r\n    ,cr.[Name] AS [CountryRegionName]\r\n    ,p.[AdditionalContactInfo]\r\nFROM [HumanResources].[Employee] e\r\n\tINNER JOIN [Person].[Person] p\r\n\tON p.[BusinessEntityID] = e.[BusinessEntityID]\r\n    INNER JOIN [Person].[BusinessEntityAddress] bea\r\n    ON bea.[BusinessEntityID] = e.[BusinessEntityID]\r\n    INNER JOIN [Person].[Address] a\r\n    ON a.[AddressID] = bea.[AddressID]\r\n    INNER JOIN [Person].[StateProvince] sp\r\n    ON sp.[StateProvinceID] = a.[StateProvinceID]\r\n    INNER JOIN [Person].[CountryRegion] cr\r\n    ON cr.[CountryRegionCode] = sp.[CountryRegionCode]\r\n    LEFT OUTER JOIN [Person].[PersonPhone] pp\r\n    ON pp.BusinessEntityID = p.[BusinessEntityID]\r\n    LEFT OUTER JOIN [Person].[PhoneNumberType] pnt\r\n    ON pp.[PhoneNumberTypeID] = pnt.[PhoneNumberTypeID]\r\n    LEFT OUTER JOIN [Person].[EmailAddress] ea\r\n    ON p.[BusinessEntityID] = ea.[BusinessEntityID];\r\n",
@@ -75,7 +76,7 @@
     },
     {
       "step": 2,
-      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "label": "Agreed tests pass (tSQLt on SQL Server, plain-SQL assertions on PostgreSQL)",
       "status": "not-run"
     },
     {
@@ -138,5 +139,5 @@
     "p50Hours": 0.75,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-13T00:09:12.802Z"
+  "builtAt": "2026-11-13T04:43:28.941Z"
 }

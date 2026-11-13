@@ -1,5 +1,6 @@
 import type { PredictionFile } from "./schema.js";
 import type { PairRecord, ObjectClass, Tier } from "../pairs/schema.js";
+import { classifyTierAtPrediction } from "../inventory/tier.js";
 
 export interface CellScore {
   objectClass: ObjectClass;
@@ -20,6 +21,8 @@ export interface FailurePredictionScore {
   confirmed: boolean | null;  // null = not yet run (or recorded as not converted)
   /** Recorded as not converted: the prediction is neither confirmed nor refuted. */
   notAttempted?: boolean;
+  /** Ruled out of scope after the prediction (src/conversions/dispositions.ts): not tested either way. */
+  excludedReason?: string;
 }
 
 export interface ScoreResult {
@@ -34,13 +37,16 @@ export function scorePredictions(
   pred: PredictionFile,
   pairs: PairRecord[],
   /** "Schema.Object" for each pair, same order (from the pair file names). */
-  names?: string[]
+  names?: string[],
+  /** "Schema.Object" -> reason, for objects ruled out of scope. */
+  excluded: Map<string, string> = new Map()
 ): ScoreResult {
   type CellKey = string;
   const pairsByCell = new Map<CellKey, PairRecord[]>();
 
   for (const pair of pairs) {
-    const key = `${pair.objectClass}/${pair.tier}`;
+    // each object is scored in the cell it was predicted in: tier rules as of the v1 predictions (see tier.ts)
+    const key = `${pair.objectClass}/${classifyTierAtPrediction(pair.code.source)}`;
     const existing = pairsByCell.get(key) ?? [];
     existing.push(pair);
     pairsByCell.set(key, existing);
@@ -86,6 +92,8 @@ export function scorePredictions(
   };
 
   const failurePredictions: FailurePredictionScore[] = pred.expectedFailures.map((ef) => {
+    const excludedReason = excluded.get(`${ef.schema}.${ef.object}`);
+    if (excludedReason) return { schema: ef.schema, object: ef.object, reason: ef.reason, confirmed: null, excludedReason };
     const matchingPair = findPair(ef.schema, ef.object);
     // a record of an object that was never converted does not test the prediction either way
     const attempted = matchingPair && matchingPair.code.engine !== "not converted";
@@ -118,7 +126,7 @@ export function formatScoreTable(result: ScoreResult): string {
   const dataRows = result.cells.map((c) => {
     const actual = c.actualAvgMinutes !== null
       ? `${(c.actualAvgMinutes / 60).toFixed(1)}h`
-      : "—";
+      : "no data yet";
     return [
       `${c.objectClass}/${c.tier}`,
       c.p50Hours.toFixed(1),
@@ -134,11 +142,12 @@ export function formatScoreTable(result: ScoreResult): string {
   const predicted = result.failurePredictions.length;
   const confirmed = result.failurePredictions.filter((f) => f.confirmed === true).length;
   const notAttempted = result.failurePredictions.filter((f) => f.notAttempted).length;
-  const notRun    = result.failurePredictions.filter((f) => f.confirmed === null && !f.notAttempted).length;
+  const excludedCount = result.failurePredictions.filter((f) => f.excludedReason).length;
+  const notRun    = result.failurePredictions.filter((f) => f.confirmed === null && !f.notAttempted && !f.excludedReason).length;
   const passedInstead = result.failurePredictions.filter((f) => f.confirmed === false).length;
   const surprises = result.unpredictedFailures ?? [];
   const failureLine =
-    `Expected failures: ${predicted} predicted, ${confirmed} confirmed, ${passedInstead} did not fail, ${notAttempted} recorded as not converted (not tested), ${notRun} not-yet-run` +
+    `Expected failures: ${predicted} predicted, ${confirmed} confirmed, ${passedInstead} did not fail, ${notAttempted} recorded as not converted (not tested), ${excludedCount} ruled out of scope (not tested), ${notRun} not-yet-run` +
     `\nUnpredicted failures: ${surprises.length}${surprises.length ? "\n" + surprises.map((s) => `  - ${s.object}: ${s.detail}`).join("\n") : ""}`;
 
   return [header, HR, headerRow, HR, ...dataRows, HR, failureLine].join("\n");

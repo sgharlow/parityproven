@@ -4,6 +4,7 @@
   "objectName": "RecordVehicleTemperature",
   "objectClass": "procedure",
   "tier": "medium",
+  "predictionTier": "medium",
   "status": "pending",
   "code": {
     "source": "\r\nCREATE PROCEDURE Website.RecordVehicleTemperature\r\n@FullSensorDataArray nvarchar(1000)\r\nWITH EXECUTE AS OWNER\r\nAS\r\nBEGIN\r\n    SET XACT_ABORT ON;\r\n\r\n    DECLARE @CrLf nchar(2) = nchar(13) + nchar(10);\r\n    DECLARE @HelpMessage nvarchar(max) = N'JSON sensor data is invalid. An example of what is required is as follows:' + @CrLf + @CrLf\r\n              + N'{\"Recordings\":' + @CrLf\r\n              + N'    [' + @CrLf\r\n              + N'        {\"type\":\"Feature\", \"geometry\": {\"type\":\"Point\", \"coordinates\":[-89.7600464,50.4742420] }, \"properties\":{\"rego\":\"WWI-321-A\",\"sensor\":1,\"when\":\"2016-01-01T07:00:00\",\"temp\":3.96}},' + @CrLf\r\n              + N'        {\"type\":\"Feature\", \"geometry\": {\"type\":\"Point\", \"coordinates\":[-89.7600464,50.4742420] }, \"properties\":{\"rego\":\"WWI-321-A\",\"sensor\":2,\"when\":\"2016-01-01T07:00:00\",\"temp\":3.98}}' + @CrLf\r\n              + N'    ]' + @CrLf\r\n              + N'}';\r\n\r\n    IF ISJSON(@FullSensorDataArray) = 0\r\n    BEGIN\r\n        PRINT @HelpMessage;\r\n        THROW 51000, N'FullSensorDataArray must be valid JSON data', 1;\r\n        RETURN 1;\r\n    END;\r\n\r\n    BEGIN TRY\r\n\r\n        BEGIN TRAN;\r\n\r\n        INSERT Warehouse.VehicleTemperatures\r\n            (VehicleRegistration, ChillerSensorNumber, RecordedWhen, Temperature,\r\n\t\t\t FullSensorData, IsCompressed, CompressedSensorData)\r\n\t\tSELECT VehicleRegistration, ChillerSensorNumber, RecordedWhen, Temperature,\r\n\t\t       FullSensorData, 0, NULL\r\n\t\tFROM OPENJSON(@FullSensorDataArray, N'$.Recordings')\r\n        WITH ( VehicleRegistration nvarchar(40) N'$.properties.rego',\r\n               ChillerSensorNumber int N'$.properties.sensor',\r\n        \t   RecordedWhen datetime2(7) N'$.properties.when',\r\n        \t   Temperature decimal(18,2) N'$.properties.temp',\r\n        \t   FullSensorData nvarchar(max) N'$' AS JSON);\r\n\r\n        IF @@ROWCOUNT = 0\r\n        BEGIN\r\n            PRINT N'Warning: No valid sensor data found';\r\n            PRINT @HelpMessage;\r\n        END;\r\n\r\n        COMMIT;\r\n\r\n    END TRY\r\n    BEGIN CATCH\r\n        PRINT @HelpMessage;\r\n\r\n        THROW 51000, N'Valid JSON was supplied but does not match the temperature recordings array structure', 2;\r\n\r\n        IF XACT_STATE() <> 0 ROLLBACK TRAN;\r\n\r\n        RETURN 1;\r\n    END CATCH;\r\nEND;\r\n",
@@ -61,7 +62,7 @@
     },
     {
       "step": 2,
-      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "label": "Agreed tests pass (tSQLt on SQL Server, plain-SQL assertions on PostgreSQL)",
       "status": "pass"
     },
     {
@@ -147,5 +148,5 @@
     "p50Hours": 3,
     "p90Hours": 6
   },
-  "builtAt": "2026-11-13T00:09:12.834Z"
+  "builtAt": "2026-11-13T04:43:28.951Z"
 }

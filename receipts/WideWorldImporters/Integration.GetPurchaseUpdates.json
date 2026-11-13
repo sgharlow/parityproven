@@ -4,6 +4,7 @@
   "objectName": "GetPurchaseUpdates",
   "objectClass": "procedure",
   "tier": "simple",
+  "predictionTier": "simple",
   "status": "pending",
   "code": {
     "source": "\r\nCREATE PROCEDURE Integration.GetPurchaseUpdates\r\n@LastCutoff datetime2(7),\r\n@NewCutoff datetime2(7)\r\nWITH EXECUTE AS OWNER\r\nAS\r\nBEGIN\r\n    SET NOCOUNT ON;\r\n    SET XACT_ABORT ON;\r\n\r\n\r\n    SELECT CAST(po.OrderDate AS date) AS [Date Key],\r\n           po.PurchaseOrderID AS [WWI Purchase Order ID],\r\n           pol.OrderedOuters AS [Ordered Outers],\r\n           pol.OrderedOuters * si.QuantityPerOuter AS [Ordered Quantity],\r\n           pol.ReceivedOuters AS [Received Outers],\r\n           pt.PackageTypeName AS Package,\r\n           pol.IsOrderLineFinalized AS [Is Order Finalized],\r\n           po.SupplierID AS [WWI Supplier ID],\r\n           pol.StockItemID AS [WWI Stock Item ID],\r\n           CASE WHEN pol.LastEditedWhen > po.LastEditedWhen THEN pol.LastEditedWhen ELSE po.LastEditedWhen END AS [Last Modified When]\r\n    FROM Purchasing.PurchaseOrders AS po\r\n    INNER JOIN Purchasing.PurchaseOrderLines AS pol\r\n    ON po.PurchaseOrderID = pol.PurchaseOrderID\r\n    INNER JOIN Warehouse.StockItems AS si\r\n    ON pol.StockItemID = si.StockItemID\r\n    INNER JOIN Warehouse.PackageTypes AS pt\r\n    ON pol.PackageTypeID = pt.PackageTypeID\r\n    WHERE CASE WHEN pol.LastEditedWhen > po.LastEditedWhen THEN pol.LastEditedWhen ELSE po.LastEditedWhen END > @LastCutoff\r\n    AND CASE WHEN pol.LastEditedWhen > po.LastEditedWhen THEN pol.LastEditedWhen ELSE po.LastEditedWhen END <= @NewCutoff\r\n    ORDER BY po.PurchaseOrderID;\r\n\r\n    RETURN 0;\r\nEND;\r\n",
@@ -47,7 +48,7 @@
     },
     {
       "step": 2,
-      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "label": "Agreed tests pass (tSQLt on SQL Server, plain-SQL assertions on PostgreSQL)",
       "status": "not-run"
     },
     {
@@ -111,5 +112,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-13T00:09:12.811Z"
+  "builtAt": "2026-11-13T04:43:28.948Z"
 }

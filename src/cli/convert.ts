@@ -30,6 +30,7 @@ import { lineDiff } from "../pairs/diff.js";
 import { autoMutants } from "../conversions/automutants.js";
 import type { PairRecord } from "../pairs/schema.js";
 import { computeStatus, STEP4_NA_REASON } from "../pairs/status.js";
+import { hookFilePath } from "./hook-input.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..", "..");
@@ -331,8 +332,10 @@ async function main(): Promise<void> {
   };
 
   // --file conversions/<db>/<Schema>.<Name>[.draft].sql  (used by the save hook)
-  const fromFile = arg("--file")
-    ? (arg("--file") as string).replace(/\\/g, "/").split("/").pop()!.replace(/\.draft\.sql$|\.sql$/, "")
+  // --file from the save hook: the saved file arrives on stdin when the hook passes no usable path (hook-input.ts)
+  const fileArg = process.argv.includes("--file") ? hookFilePath(arg("--file"), /conversions\/.*\.sql$/) : undefined;
+  const fromFile = fileArg
+    ? fileArg.replace(/\\/g, "/").split("/").pop()!.replace(/\.draft\.sql$|\.sql$/, "")
     : undefined;
   const specs = process.argv.includes("--all")
     ? SPECS

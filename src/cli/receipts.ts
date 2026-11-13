@@ -28,7 +28,12 @@ async function main(): Promise<void> {
     exclusions: DISPOSITIONS.filter((d) => d.kind === "excluded").map((d) => ({
       database: d.database, schemaName: d.schema, objectName: d.name, reason: d.reason,
     })),
+    notAttempted: DISPOSITIONS.filter((d) => d.kind === "not-attempted").map((d) => ({
+      database: d.database, schemaName: d.schema, objectName: d.name, reason: d.reason,
+    })),
   });
+  const unexplained = (output.index.notAttempted ?? []).filter((x) => x.reason.startsWith("Not attempted; no reason recorded"));
+  for (const x of unexplained) console.warn(`WARNING: ${x.database} ${x.schemaName}.${x.objectName} has no record and no disposition; shown as not attempted`);
 
   // Write receipt files
   for (const receipt of output.receipts) {
@@ -44,7 +49,7 @@ async function main(): Promise<void> {
 
   const { summary } = output.index;
   console.log(
-    `Built ${summary.total} receipt(s) — ${summary.verified} verified, ${summary.pending} pending, ${summary.failed} failed; ${summary.excluded ?? 0} excluded`
+    `Built ${summary.total} receipt(s) — ${summary.verified} verified, ${summary.pending} pending, ${summary.failed} failed; ${summary.excluded ?? 0} excluded; ${summary.notAttempted ?? 0} not attempted; ${summary.inventory ?? 0} inventoried`
   );
   console.log(`Index: receipts/index.json`);
 }

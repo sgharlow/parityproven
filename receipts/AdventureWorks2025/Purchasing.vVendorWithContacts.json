@@ -4,6 +4,7 @@
   "objectName": "vVendorWithContacts",
   "objectClass": "view",
   "tier": "simple",
+  "predictionTier": "simple",
   "status": "pending",
   "code": {
     "source": "\r\nCREATE VIEW [Purchasing].[vVendorWithContacts] AS\r\nSELECT\r\n    v.[BusinessEntityID]\r\n    ,v.[Name]\r\n    ,ct.[Name] AS [ContactType]\r\n    ,p.[Title]\r\n    ,p.[FirstName]\r\n    ,p.[MiddleName]\r\n    ,p.[LastName]\r\n    ,p.[Suffix]\r\n    ,pp.[PhoneNumber]\r\n\t,pnt.[Name] AS [PhoneNumberType]\r\n    ,ea.[EmailAddress]\r\n    ,p.[EmailPromotion]\r\nFROM [Purchasing].[Vendor] v\r\n    INNER JOIN [Person].[BusinessEntityContact] bec\r\n    ON bec.[BusinessEntityID] = v.[BusinessEntityID]\r\n\tINNER JOIN [Person].ContactType ct\r\n\tON ct.[ContactTypeID] = bec.[ContactTypeID]\r\n\tINNER JOIN [Person].[Person] p\r\n\tON p.[BusinessEntityID] = bec.[PersonID]\r\n\tLEFT OUTER JOIN [Person].[EmailAddress] ea\r\n\tON ea.[BusinessEntityID] = p.[BusinessEntityID]\r\n\tLEFT OUTER JOIN [Person].[PersonPhone] pp\r\n\tON pp.[BusinessEntityID] = p.[BusinessEntityID]\r\n\tLEFT OUTER JOIN [Person].[PhoneNumberType] pnt\r\n\tON pnt.[PhoneNumberTypeID] = pp.[PhoneNumberTypeID];\r\n",
@@ -49,7 +50,7 @@
     },
     {
       "step": 2,
-      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "label": "Agreed tests pass (tSQLt on SQL Server, plain-SQL assertions on PostgreSQL)",
       "status": "not-run"
     },
     {
@@ -112,5 +113,5 @@
     "p50Hours": 0.75,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-13T00:09:12.803Z"
+  "builtAt": "2026-11-13T04:43:28.943Z"
 }

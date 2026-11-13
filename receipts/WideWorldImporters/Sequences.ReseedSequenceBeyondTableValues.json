@@ -4,6 +4,7 @@
   "objectName": "ReseedSequenceBeyondTableValues",
   "objectClass": "procedure",
   "tier": "complex",
+  "predictionTier": "medium",
   "status": "pending",
   "code": {
     "source": " \r\nCREATE PROCEDURE Sequences.ReseedSequenceBeyondTableValues\r\n@SequenceName sysname,\r\n@SchemaName sysname,\r\n@TableName sysname,\r\n@ColumnName sysname\r\nAS BEGIN\r\n    -- Ensures that the next sequence value is above the maximum value of the supplied table column\r\n    SET NOCOUNT ON;\r\n \r\n    DECLARE @SQL nvarchar(max);\r\n    DECLARE @CurrentTableMaximumValue bigint;\r\n    DECLARE @NewSequenceValue bigint;\r\n    DECLARE @CurrentSequenceMaximumValue bigint\r\n        = (SELECT CAST(current_value AS bigint) FROM sys.sequences\r\n                                                WHERE name = @SequenceName\r\n                                                AND SCHEMA_NAME(schema_id) = N'Sequences');\r\n    CREATE TABLE #CurrentValue\r\n    (\r\n        CurrentValue bigint\r\n    )\r\n \r\n    SET @SQL = N'INSERT #CurrentValue (CurrentValue) SELECT COALESCE(MAX(' + QUOTENAME(@ColumnName) + N'), 0) FROM ' + QUOTENAME(@SchemaName) + N'.' + QUOTENAME(@TableName) + N';';\r\n    EXECUTE (@SQL);\r\n    SET @CurrentTableMaximumValue = (SELECT CurrentValue FROM #CurrentValue);\r\n    DROP TABLE #CurrentValue;\r\n \r\n    IF @CurrentTableMaximumValue >= @CurrentSequenceMaximumValue\r\n    BEGIN\r\n        SET @NewSequenceValue = @CurrentTableMaximumValue + 1;\r\n        SET @SQL = N'ALTER SEQUENCE Sequences.' + QUOTENAME(@SequenceName) + N' RESTART WITH ' + CAST(@NewSequenceValue AS nvarchar(20)) + N';';\r\n        EXECUTE (@SQL);\r\n    END;\r\nEND;\r\n",
@@ -43,7 +44,7 @@
     },
     {
       "step": 2,
-      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "label": "Agreed tests pass (tSQLt on SQL Server, plain-SQL assertions on PostgreSQL)",
       "status": "not-run"
     },
     {
@@ -99,8 +100,8 @@
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
   "predictionCell": {
-    "p50Hours": 9,
-    "p90Hours": 20
+    "p50Hours": 3,
+    "p90Hours": 6
   },
-  "builtAt": "2026-11-13T00:09:12.811Z"
+  "builtAt": "2026-11-13T04:43:28.949Z"
 }

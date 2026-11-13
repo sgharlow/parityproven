@@ -4,6 +4,7 @@
   "objectName": "RecordColdRoomTemperatures",
   "objectClass": "procedure",
   "tier": "medium",
+  "predictionTier": "medium",
   "status": "pending",
   "code": {
     "source": "\r\nCREATE PROCEDURE Website.RecordColdRoomTemperatures\r\n@SensorReadings Website.SensorDataList READONLY\r\nWITH NATIVE_COMPILATION, SCHEMABINDING, EXECUTE AS OWNER\r\nAS\r\nBEGIN ATOMIC WITH\r\n(\r\n\tTRANSACTION ISOLATION LEVEL = SNAPSHOT,\r\n\tLANGUAGE = N'English'\r\n)\r\n    BEGIN TRY\r\n\r\n\t\tDECLARE @NumberOfReadings int = (SELECT MAX(SensorDataListID) FROM @SensorReadings);\r\n\t\tDECLARE @Counter int = (SELECT MIN(SensorDataListID) FROM @SensorReadings);\r\n\r\n\t\tDECLARE @ColdRoomSensorNumber int;\r\n\t\tDECLARE @RecordedWhen datetime2(7);\r\n\t\tDECLARE @Temperature decimal(18,2);\r\n\r\n\t\t-- note that we cannot use a merge here because multiple readings might exist for each sensor\r\n\r\n\t\tWHILE @Counter <= @NumberOfReadings\r\n\t\tBEGIN\r\n\t\t\tSELECT @ColdRoomSensorNumber = ColdRoomSensorNumber,\r\n\t\t\t       @RecordedWhen = RecordedWhen,\r\n\t\t\t\t   @Temperature = Temperature\r\n\t\t\tFROM @SensorReadings\r\n\t\t\tWHERE SensorDataListID = @Counter;\r\n\r\n\t\t\tUPDATE Warehouse.ColdRoomTemperatures\r\n\t\t\t\tSET RecordedWhen = @RecordedWhen,\r\n\t\t\t\t    Temperature = @Temperature\r\n\t\t\tWHERE ColdRoomSensorNumber = @ColdRoomSensorNumber;\r\n\r\n\t\t\tIF @@ROWCOUNT = 0\r\n\t\t\tBEGIN\r\n\t\t\t\tINSERT Warehouse.ColdRoomTemperatures\r\n\t\t\t\t\t(ColdRoomSensorNumber, RecordedWhen, Temperature)\r\n\t\t\t\tVALUES (@ColdRoomSensorNumber, @RecordedWhen, @Temperature);\r\n\t\t\tEND;\r\n\r\n\t\t\tSET @Counter += 1;\r\n\t\tEND;\r\n\r\n    END TRY\r\n    BEGIN CATCH\r\n        THROW 51000, N'Unable to apply the sensor data', 2;\r\n\r\n        RETURN 1;\r\n    END CATCH;\r\nEND;",
@@ -57,7 +58,7 @@
     },
     {
       "step": 2,
-      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "label": "Agreed tests pass (tSQLt on SQL Server, plain-SQL assertions on PostgreSQL)",
       "status": "not-run"
     },
     {
@@ -112,5 +113,5 @@
     "p50Hours": 3,
     "p90Hours": 6
   },
-  "builtAt": "2026-11-13T00:09:12.819Z"
+  "builtAt": "2026-11-13T04:43:28.951Z"
 }

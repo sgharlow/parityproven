@@ -4,6 +4,7 @@
   "objectName": "ActivateWebsiteLogon",
   "objectClass": "procedure",
   "tier": "simple",
+  "predictionTier": "simple",
   "status": "pending",
   "code": {
     "source": "\r\nCREATE PROCEDURE Website.ActivateWebsiteLogon\r\n@PersonID int,\r\n@LogonName nvarchar(50),\r\n@InitialPassword nvarchar(40)\r\nWITH EXECUTE AS OWNER\r\nAS\r\nBEGIN\r\n    SET NOCOUNT ON;\r\n    SET XACT_ABORT ON;\r\n\r\n    UPDATE [Application].People\r\n    SET IsPermittedToLogon = 1,\r\n        LogonName = @LogonName,\r\n        HashedPassword = HASHBYTES(N'SHA2_256', @InitialPassword + FullName),\r\n        UserPreferences = (SELECT UserPreferences FROM [Application].People WHERE PersonID = 1) -- Person 1 has User Preferences template\r\n    WHERE PersonID = @PersonID\r\n    AND PersonID <> 1\r\n    AND IsPermittedToLogon = 0;\r\n\r\n    IF @@ROWCOUNT = 0\r\n    BEGIN\r\n        PRINT N'The PersonID must be valid, must not be person 1, and must not already be enabled';\r\n        THROW 51000, N'Invalid PersonID', 1;\r\n        RETURN -1;\r\n    END;\r\nEND;\r\n",
@@ -56,7 +57,7 @@
     },
     {
       "step": 2,
-      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "label": "Agreed tests pass (tSQLt on SQL Server, plain-SQL assertions on PostgreSQL)",
       "status": "pass"
     },
     {
@@ -127,5 +128,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-13T00:09:12.815Z"
+  "builtAt": "2026-11-13T04:43:28.950Z"
 }

@@ -4,6 +4,7 @@
   "objectName": "GetTransactionUpdates",
   "objectClass": "procedure",
   "tier": "simple",
+  "predictionTier": "simple",
   "status": "pending",
   "code": {
     "source": "\r\nCREATE PROCEDURE Integration.GetTransactionUpdates\r\n@LastCutoff datetime2(7),\r\n@NewCutoff datetime2(7)\r\nWITH EXECUTE AS OWNER\r\nAS\r\nBEGIN\r\n    SET NOCOUNT ON;\r\n    SET XACT_ABORT ON;\r\n\r\n    SELECT CAST(ct.TransactionDate AS date) AS [Date Key],\r\n           ct.CustomerTransactionID AS [WWI Customer Transaction ID],\r\n           CAST(NULL AS int) AS [WWI Supplier Transaction ID],\r\n           ct.InvoiceID AS [WWI Invoice ID],\r\n           CAST(NULL AS int) AS [WWI Purchase Order ID],\r\n           CAST(NULL AS nvarchar(20)) AS [Supplier Invoice Number],\r\n           ct.AmountExcludingTax AS [Total Excluding Tax],\r\n           ct.TaxAmount AS [Tax Amount],\r\n           ct.TransactionAmount AS [Total Including Tax],\r\n           ct.OutstandingBalance AS [Outstanding Balance],\r\n           ct.IsFinalized AS [Is Finalized],\r\n           COALESCE(i.CustomerID, ct.CustomerID) AS [WWI Customer ID],\r\n           ct.CustomerID AS [WWI Bill To Customer ID],\r\n           CAST(NULL AS int) AS [WWI Supplier ID],\r\n           ct.TransactionTypeID AS [WWI Transaction Type ID],\r\n           ct.PaymentMethodID AS [WWI Payment Method ID],\r\n           ct.LastEditedWhen AS [Last Modified When]\r\n    FROM Sales.CustomerTransactions AS ct\r\n    LEFT OUTER JOIN Sales.Invoices AS i\r\n    ON ct.InvoiceID = i.InvoiceID\r\n    WHERE ct.LastEditedWhen > @LastCutoff\r\n    AND ct.LastEditedWhen <= @NewCutoff\r\n\r\n    UNION ALL\r\n\r\n    SELECT CAST(st.TransactionDate AS date) AS [Date Key],\r\n           CAST(NULL AS int) AS [WWI Customer Transaction ID],\r\n           st.SupplierTransactionID AS [WWI Supplier Transaction ID],\r\n           CAST(NULL AS int) AS [WWI Invoice ID],\r\n           st.PurchaseOrderID AS [WWI Purchase Order ID],\r\n           st.SupplierInvoiceNumber AS [Supplier Invoice Number],\r\n           st.AmountExcludingTax AS [Total Excluding Tax],\r\n           st.TaxAmount AS [Tax Amount],\r\n           st.TransactionAmount AS [Total Including Tax],\r\n           st.OutstandingBalance AS [Outstanding Balance],\r\n           st.IsFinalized AS [Is Finalized],\r\n           CAST(NULL AS int) AS [WWI Customer ID],\r\n           CAST(NULL AS int) AS [WWI Bill To Customer ID],\r\n           st.SupplierID AS [WWI Supplier ID],\r\n           st.TransactionTypeID AS [WWI Transaction Type ID],\r\n           st.PaymentMethodID AS [WWI Payment Method ID],\r\n           st.LastEditedWhen AS [Last Modified When]\r\n    FROM Purchasing.SupplierTransactions AS st\r\n    WHERE st.LastEditedWhen > @LastCutoff\r\n    AND st.LastEditedWhen <= @NewCutoff;\r\n\r\n    RETURN 0;\r\nEND;\r\n",
@@ -56,7 +57,7 @@
     },
     {
       "step": 2,
-      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "label": "Agreed tests pass (tSQLt on SQL Server, plain-SQL assertions on PostgreSQL)",
       "status": "not-run"
     },
     {
@@ -121,5 +122,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-13T00:09:12.811Z"
+  "builtAt": "2026-11-13T04:43:28.949Z"
 }

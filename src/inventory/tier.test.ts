@@ -1,5 +1,23 @@
 import { describe, it, expect } from "vitest";
-import { classifyTier } from "./tier.js";
+import { classifyTier, classifyTierAtPrediction } from "./tier.js";
+
+describe("classifyTierAtPrediction (rules frozen at the v1 predictions)", () => {
+  it("EXECUTE (@sql) was not dynamic SQL then, and is now", () => {
+    const d = "CREATE PROCEDURE p AS EXECUTE (@sql);";
+    expect(classifyTierAtPrediction(d)).toBe("simple");
+    expect(classifyTier(d)).toBe("complex");
+  });
+  it("DECLARE @t AS TABLE was not a table variable then, and is now", () => {
+    const d = "CREATE PROCEDURE p AS DECLARE @t AS TABLE (a int);";
+    expect(classifyTierAtPrediction(d)).toBe("simple");
+    expect(classifyTier(d)).toBe("medium");
+  });
+  it("agrees with the current rules elsewhere", () => {
+    for (const d of ["EXEC(@s)", "DECLARE c CURSOR FOR SELECT 1", "DECLARE @t TABLE (a int)", "SELECT 1", "MERGE t USING s ON 1=1"]) {
+      expect(classifyTierAtPrediction(d)).toBe(classifyTier(d));
+    }
+  });
+});
 
 describe("classifyTier — complex patterns", () => {
   it("EXEC( → complex", () => {

@@ -17,8 +17,9 @@
 
     <h1>Migration Receipts</h1>
     <p style="color:var(--c-muted);margin-bottom:1.5rem">
-      T-SQL to PL/pgSQL conversions, proved by property-based equivalence testing.
-      Every receipt is reproducible from the public repo.
+      T-SQL to PL/pgSQL conversions, each checked by property-based equivalence tests against the original on SQL Server.
+      An object is shown as verified only when it passes the listed test cases and a second human review.
+      Every receipt gives the command that re-runs its check from the repo.
     </p>
 
     <div id="scorecard">
@@ -30,6 +31,13 @@
       </noscript>
       <p style="color:var(--c-muted)">Loading receipts…</p>
     </div>
+
+    <!-- DRAFT for Steve to edit (ruling R7, 2026-11-04) -->
+    <p class="disclosure" style="color:var(--c-muted);font-size:0.8rem;margin-top:2rem;border-top:1px solid var(--c-border);padding-top:1rem">
+      Disclosure: ParityProven is an entry in the Kiroween 2026 hackathon, sponsored by Amazon Web Services. Kiro credits from the
+      hackathon, and any prize, are accepted personally and once, before the ParityProven business exists, and are not tied to any
+      recommendation made here.
+    </p>
   </div>
 
   <script src="/web/app.js"></script>

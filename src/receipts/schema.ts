@@ -13,6 +13,8 @@ export interface ReceiptFile {
   objectName: string;
   objectClass: ObjectClass;
   tier: Tier;
+  /** The tier under the rules the v1 predictions were made with; the prediction cell is matched on this. */
+  predictionTier?: Tier;
   status: "pending" | "failed" | "verified";
   code: {
     source: string;
@@ -75,12 +77,20 @@ export interface ReceiptIndex {
   builtAt: string;
   receipts: ReceiptIndexEntry[];
   excluded?: ReceiptExclusion[];
-  summary: { total: number; verified: number; pending: number; failed: number; excluded?: number };
+  /** In-scope inventory objects with no conversion attempt (and the reason). With receipts and excluded, covers the inventory. */
+  notAttempted?: ReceiptExclusion[];
+  /** Measured notes on tier rules that changed after the predictions. */
+  tierNotes?: string[];
+  /** The committed v1 prediction cells per database (read by the questionnaire). */
+  predictions?: Record<string, { committedAt: string; cells: Array<{ objectClass: ObjectClass; tier: Tier; count: number; p50Hours: number; p90Hours: number }> }>;
+  /** Inventoried objects per database. */
+  inventory?: Record<string, number>;
+  summary: { total: number; verified: number; pending: number; failed: number; excluded?: number; notAttempted?: number; inventory?: number };
 }
 
 export const STEP_LABELS: Record<number, string> = {
   1: "Compiles and deploys on PostgreSQL",
-  2: "Agreed tests pass (tSQLt / pgTAP)",
+  2: "Agreed tests pass (tSQLt on SQL Server, plain-SQL assertions on PostgreSQL)",
   3: "Result sets match on generated data",
   4: "Runtime within 1.5× factor",
   5: "Second human review",

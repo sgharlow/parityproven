@@ -4,6 +4,7 @@
   "objectName": "GetOrderUpdates",
   "objectClass": "procedure",
   "tier": "simple",
+  "predictionTier": "simple",
   "status": "pending",
   "code": {
     "source": "\r\nCREATE PROCEDURE Integration.GetOrderUpdates\r\n@LastCutoff datetime2(7),\r\n@NewCutoff datetime2(7)\r\nWITH EXECUTE AS OWNER\r\nAS\r\nBEGIN\r\n    SET NOCOUNT ON;\r\n    SET XACT_ABORT ON;\r\n\r\n\r\n    SELECT CAST(o.OrderDate AS date) AS [Order Date Key],\r\n           CAST(ol.PickingCompletedWhen AS date) AS [Picked Date Key],\r\n           o.OrderID AS [WWI Order ID],\r\n           o.BackorderOrderID AS [WWI Backorder ID],\r\n           ol.[Description],\r\n           pt.PackageTypeName AS Package,\r\n           ol.Quantity AS Quantity,\r\n           ol.UnitPrice AS [Unit Price],\r\n           ol.TaxRate AS [Tax Rate],\r\n           ROUND(ol.Quantity * ol.UnitPrice, 2) AS [Total Excluding Tax],\r\n           ROUND(ol.Quantity * ol.UnitPrice * ol.TaxRate / 100.0, 2) AS [Tax Amount],\r\n           ROUND(ol.Quantity * ol.UnitPrice, 2) + ROUND(ol.Quantity * ol.UnitPrice * ol.TaxRate / 100.0, 2) AS [Total Including Tax],\r\n           c.DeliveryCityID AS [WWI City ID],\r\n           c.CustomerID AS [WWI Customer ID],\r\n           ol.StockItemID AS [WWI Stock Item ID],\r\n           o.SalespersonPersonID AS [WWI Salesperson ID],\r\n           o.PickedByPersonID AS [WWI Picker ID],\r\n           CASE WHEN ol.LastEditedWhen > o.LastEditedWhen THEN ol.LastEditedWhen ELSE o.LastEditedWhen END AS [Last Modified When]\r\n    FROM Sales.Orders AS o\r\n    INNER JOIN Sales.OrderLines AS ol\r\n    ON o.OrderID = ol.OrderID\r\n    INNER JOIN Warehouse.PackageTypes AS pt\r\n    ON ol.PackageTypeID = pt.PackageTypeID\r\n    INNER JOIN Sales.Customers AS c\r\n    ON c.CustomerID = o.CustomerID\r\n    WHERE CASE WHEN ol.LastEditedWhen > o.LastEditedWhen THEN ol.LastEditedWhen ELSE o.LastEditedWhen END > @LastCutoff\r\n    AND CASE WHEN ol.LastEditedWhen > o.LastEditedWhen THEN ol.LastEditedWhen ELSE o.LastEditedWhen END <= @NewCutoff\r\n    ORDER BY o.OrderID;\r\n\r\n    RETURN 0;\r\nEND;\r\n",
@@ -63,7 +64,7 @@
     },
     {
       "step": 2,
-      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "label": "Agreed tests pass (tSQLt on SQL Server, plain-SQL assertions on PostgreSQL)",
       "status": "pass"
     },
     {
@@ -135,5 +136,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-13T00:09:12.810Z"
+  "builtAt": "2026-11-13T04:43:28.948Z"
 }

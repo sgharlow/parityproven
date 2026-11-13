@@ -4,6 +4,7 @@
   "objectName": "SearchForCustomers",
   "objectClass": "procedure",
   "tier": "simple",
+  "predictionTier": "simple",
   "status": "failed",
   "code": {
     "source": "\r\nCREATE PROCEDURE Website.SearchForCustomers\r\n@SearchText nvarchar(1000),\r\n@MaximumRowsToReturn int\r\nWITH EXECUTE AS OWNER\r\nAS\r\nBEGIN\r\n    SELECT TOP(@MaximumRowsToReturn)\r\n           c.CustomerID,\r\n           c.CustomerName,\r\n           ct.CityName,\r\n           c.PhoneNumber,\r\n           c.FaxNumber,\r\n           p.FullName AS PrimaryContactFullName,\r\n           p.PreferredName AS PrimaryContactPreferredName\r\n    FROM Sales.Customers AS c\r\n    INNER JOIN [Application].Cities AS ct\r\n    ON c.DeliveryCityID = ct.CityID\r\n    LEFT OUTER JOIN [Application].People AS p\r\n    ON c.PrimaryContactPersonID = p.PersonID\r\n    WHERE CONCAT(c.CustomerName, N' ', p.FullName, N' ', p.PreferredName) LIKE N'%' + @SearchText + N'%'\r\n    ORDER BY c.CustomerName\r\n    FOR JSON AUTO, ROOT(N'Customers');\r\nEND;\r\n",
@@ -47,7 +48,7 @@
     },
     {
       "step": 2,
-      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "label": "Agreed tests pass (tSQLt on SQL Server, plain-SQL assertions on PostgreSQL)",
       "status": "not-run"
     },
     {
@@ -116,5 +117,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-13T00:09:12.834Z"
+  "builtAt": "2026-11-13T04:43:28.952Z"
 }

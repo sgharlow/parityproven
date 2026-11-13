@@ -7,6 +7,7 @@
  */
 
 import { readFileSync, existsSync } from "fs";
+import { hookFilePath } from "./hook-input.js";
 import type { PairRecord, StepStatus } from "../pairs/schema.js";
 import { computeStatus, missingForVerified } from "../pairs/status.js";
 
@@ -94,7 +95,8 @@ function validatePairRecord(record: unknown): string[] {
 }
 
 function main(): void {
-  const filePath = process.argv[2];
+  // from a Kiro hook, the saved file arrives on stdin (see hook-input.ts)
+  const filePath = hookFilePath(process.argv[2], /pairs\/.*\.json$/);
 
   if (!filePath) {
     console.error("Usage: validate-pair <path-to-pair.json>");

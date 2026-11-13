@@ -4,6 +4,7 @@
   "objectName": "ufnGetPurchaseOrderStatusText",
   "objectClass": "function",
   "tier": "simple",
+  "predictionTier": "simple",
   "status": "pending",
   "code": {
     "source": "\r\nCREATE FUNCTION [dbo].[ufnGetPurchaseOrderStatusText](@Status [tinyint])\r\nRETURNS [nvarchar](15)\r\nAS\r\n-- Returns the sales order status text representation for the status value.\r\nBEGIN\r\n    DECLARE @ret [nvarchar](15);\r\n\r\n    SET @ret =\r\n        CASE @Status\r\n            WHEN 1 THEN 'Pending'\r\n            WHEN 2 THEN 'Approved'\r\n            WHEN 3 THEN 'Rejected'\r\n            WHEN 4 THEN 'Complete'\r\n            ELSE '** Invalid **'\r\n        END;\r\n   \r\n    RETURN @ret\r\nEND;\r\n",
@@ -24,7 +25,7 @@
     },
     {
       "step": 2,
-      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "label": "Agreed tests pass (tSQLt on SQL Server, plain-SQL assertions on PostgreSQL)",
       "status": "not-run"
     },
     {
@@ -83,5 +84,5 @@
     "p50Hours": 1.5,
     "p90Hours": 4
   },
-  "builtAt": "2026-11-13T00:09:12.801Z"
+  "builtAt": "2026-11-13T04:43:28.939Z"
 }

@@ -4,6 +4,7 @@
   "objectName": "InsertCustomerOrders",
   "objectClass": "procedure",
   "tier": "medium",
+  "predictionTier": "medium",
   "status": "pending",
   "code": {
     "source": "\r\nCREATE PROCEDURE Website.InsertCustomerOrders\r\n@Orders Website.OrderList READONLY,\r\n@OrderLines Website.OrderLineList READONLY,\r\n@OrdersCreatedByPersonID int,\r\n@SalespersonPersonID int\r\nWITH EXECUTE AS OWNER\r\nAS\r\nBEGIN\r\n    SET NOCOUNT ON;\r\n    SET XACT_ABORT ON;\r\n\r\n    DECLARE @OrdersToGenerate AS TABLE\r\n    (\r\n        OrderReference int PRIMARY KEY,   -- reference from the application\r\n        OrderID int\r\n    );\r\n\r\n    -- allocate the new order numbers\r\n\r\n    INSERT @OrdersToGenerate (OrderReference, OrderID)\r\n    SELECT OrderReference, NEXT VALUE FOR Sequences.OrderID\r\n    FROM @Orders;\r\n\r\n    BEGIN TRY\r\n\r\n        BEGIN TRAN;\r\n\r\n        INSERT Sales.Orders\r\n            (OrderID, CustomerID, SalespersonPersonID, PickedByPersonID, ContactPersonID, BackorderOrderID, OrderDate,\r\n             ExpectedDeliveryDate, CustomerPurchaseOrderNumber, IsUndersupplyBackordered, Comments, DeliveryInstructions, InternalComments,\r\n             PickingCompletedWhen, LastEditedBy, LastEditedWhen)\r\n        SELECT otg.OrderID, o.CustomerID, @SalespersonPersonID, NULL, o.ContactPersonID, NULL, SYSDATETIME(),\r\n               o.ExpectedDeliveryDate, o.CustomerPurchaseOrderNumber, o.IsUndersupplyBackordered, o.Comments, o.DeliveryInstructions, NULL,\r\n               NULL, @OrdersCreatedByPersonID, SYSDATETIME()\r\n        FROM @OrdersToGenerate AS otg\r\n        INNER JOIN @Orders AS o\r\n        ON otg.OrderReference = o.OrderReference;\r\n\r\n        INSERT Sales.OrderLines\r\n            (OrderID, StockItemID, [Description], PackageTypeID, Quantity, UnitPrice,\r\n             TaxRate, PickedQuantity, PickingCompletedWhen, LastEditedBy, LastEditedWhen)\r\n        SELECT otg.OrderID, ol.StockItemID, ol.[Description], si.UnitPackageID, ol.Quantity,\r\n               Website.CalculateCustomerPrice(o.CustomerID, ol.StockItemID, SYSDATETIME()),\r\n               si.TaxRate, 0, NULL, @OrdersCreatedByPersonID, SYSDATETIME()\r\n        FROM @OrdersToGenerate AS otg\r\n        INNER JOIN @OrderLines AS ol\r\n        ON otg.OrderReference = ol.OrderReference\r\n\t\tINNER JOIN @Orders AS o\r\n\t\tON ol.OrderReference = o.OrderReference\r\n        INNER JOIN Warehouse.StockItems AS si\r\n        ON ol.StockItemID = si.StockItemID;\r\n\r\n        COMMIT;\r\n\r\n    END TRY\r\n    BEGIN CATCH\r\n        IF XACT_STATE() <> 0 ROLLBACK;\r\n        PRINT N'Unable to create the customer orders.';\r\n        THROW;\r\n        RETURN -1;\r\n    END CATCH;\r\n\r\n    RETURN 0;\r\nEND;",
@@ -101,7 +102,7 @@
     },
     {
       "step": 2,
-      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "label": "Agreed tests pass (tSQLt on SQL Server, plain-SQL assertions on PostgreSQL)",
       "status": "not-run"
     },
     {
@@ -159,5 +160,5 @@
     "p50Hours": 3,
     "p90Hours": 6
   },
-  "builtAt": "2026-11-13T00:09:12.819Z"
+  "builtAt": "2026-11-13T04:43:28.950Z"
 }

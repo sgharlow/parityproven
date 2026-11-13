@@ -4,6 +4,7 @@
   "objectName": "SearchForPeople",
   "objectClass": "procedure",
   "tier": "simple",
+  "predictionTier": "simple",
   "status": "pending",
   "code": {
     "source": "\r\nCREATE PROCEDURE Website.SearchForPeople\r\n@SearchText nvarchar(1000),\r\n@MaximumRowsToReturn int\r\nAS\r\nBEGIN\r\n    SELECT TOP(@MaximumRowsToReturn)\r\n           p.PersonID,\r\n           p.FullName,\r\n           p.PreferredName,\r\n           CASE WHEN p.IsSalesperson <> 0 THEN N'Salesperson'\r\n                WHEN p.IsEmployee <> 0 THEN N'Employee'\r\n                WHEN c.CustomerID IS NOT NULL THEN N'Customer'\r\n                WHEN sp.SupplierID IS NOT NULL THEN N'Supplier'\r\n                WHEN sa.SupplierID IS NOT NULL THEN N'Supplier'\r\n           END AS Relationship,\r\n           COALESCE(c.CustomerName, sp.SupplierName, sa.SupplierName, N'WWI') AS Company\r\n    FROM [Application].People AS p\r\n    LEFT OUTER JOIN Sales.Customers AS c\r\n    ON c.PrimaryContactPersonID = p.PersonID\r\n    LEFT OUTER JOIN Purchasing.Suppliers AS sp\r\n    ON sp.PrimaryContactPersonID = p.PersonID\r\n    LEFT OUTER JOIN Purchasing.Suppliers AS sa\r\n    ON sa.AlternateContactPersonID = p.PersonID\r\n    WHERE p.SearchName LIKE N'%' + @SearchText + N'%'\r\n    ORDER BY p.FullName\r\n    FOR JSON AUTO, ROOT(N'People');\r\nEND;\r\n",
@@ -52,7 +53,7 @@
     },
     {
       "step": 2,
-      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "label": "Agreed tests pass (tSQLt on SQL Server, plain-SQL assertions on PostgreSQL)",
       "status": "not-run"
     },
     {
@@ -119,5 +120,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-13T00:09:12.835Z"
+  "builtAt": "2026-11-13T04:43:28.952Z"
 }

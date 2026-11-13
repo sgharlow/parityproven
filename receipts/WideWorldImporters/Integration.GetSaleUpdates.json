@@ -4,6 +4,7 @@
   "objectName": "GetSaleUpdates",
   "objectClass": "procedure",
   "tier": "simple",
+  "predictionTier": "simple",
   "status": "pending",
   "code": {
     "source": "\r\nCREATE PROCEDURE Integration.GetSaleUpdates\r\n@LastCutoff datetime2(7),\r\n@NewCutoff datetime2(7)\r\nWITH EXECUTE AS OWNER\r\nAS\r\nBEGIN\r\n    SET NOCOUNT ON;\r\n    SET XACT_ABORT ON;\r\n\r\n    SELECT CAST(i.InvoiceDate AS date) AS [Invoice Date Key],\r\n           CAST(i.ConfirmedDeliveryTime AS date) AS [Delivery Date Key],\r\n           i.InvoiceID AS [WWI Invoice ID],\r\n           il.[Description],\r\n           pt.PackageTypeName AS Package,\r\n           il.Quantity,\r\n           il.UnitPrice AS [Unit Price],\r\n           il.TaxRate AS [Tax Rate],\r\n           il.ExtendedPrice - il.TaxAmount AS [Total Excluding Tax],\r\n           il.TaxAmount AS [Tax Amount],\r\n           il.LineProfit AS Profit,\r\n           il.ExtendedPrice AS [Total Including Tax],\r\n           CASE WHEN si.IsChillerStock = 0 THEN il.Quantity ELSE 0 END AS [Total Dry Items],\r\n           CASE WHEN si.IsChillerStock <> 0 THEN il.Quantity ELSE 0 END AS [Total Chiller Items],\r\n           c.DeliveryCityID AS [WWI City ID],\r\n           i.CustomerID AS [WWI Customer ID],\r\n           i.BillToCustomerID AS [WWI Bill To Customer ID],\r\n           il.StockItemID AS [WWI Stock Item ID],\r\n           i.SalespersonPersonID AS [WWI Saleperson ID],\r\n           CASE WHEN il.LastEditedWhen > i.LastEditedWhen THEN il.LastEditedWhen ELSE i.LastEditedWhen END AS [Last Modified When]\r\n    FROM Sales.Invoices AS i\r\n    INNER JOIN Sales.InvoiceLines AS il\r\n    ON i.InvoiceID = il.InvoiceID\r\n    INNER JOIN Warehouse.StockItems AS si\r\n    ON il.StockItemID = si.StockItemID\r\n    INNER JOIN Warehouse.PackageTypes AS pt\r\n    ON il.PackageTypeID = pt.PackageTypeID\r\n    INNER JOIN Sales.Customers AS c\r\n    ON i.CustomerID = c.CustomerID\r\n    INNER JOIN Sales.Customers AS bt\r\n    ON i.BillToCustomerID = bt.CustomerID\r\n    WHERE CASE WHEN il.LastEditedWhen > i.LastEditedWhen THEN il.LastEditedWhen ELSE i.LastEditedWhen END > @LastCutoff\r\n    AND CASE WHEN il.LastEditedWhen > i.LastEditedWhen THEN il.LastEditedWhen ELSE i.LastEditedWhen END <= @NewCutoff\r\n    ORDER BY i.InvoiceID, il.InvoiceLineID;\r\n\r\n    RETURN 0;\r\nEND;\r\n",
@@ -69,7 +70,7 @@
     },
     {
       "step": 2,
-      "label": "Agreed tests pass (tSQLt / pgTAP)",
+      "label": "Agreed tests pass (tSQLt on SQL Server, plain-SQL assertions on PostgreSQL)",
       "status": "not-run"
     },
     {
@@ -135,5 +136,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-13T00:09:12.811Z"
+  "builtAt": "2026-11-13T04:43:28.949Z"
 }

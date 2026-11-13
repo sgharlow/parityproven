@@ -4,17 +4,20 @@
  *  failed   : in scope, not converted. Written as a pair record with status "failed" (npm run dispositions), so it is
  *             counted and shown like any other miss.
  *  excluded : out of scope. Not a pair record; listed on the scorecard with its reason and still counted in the inventory total.
+ *  not-attempted : in scope, but no conversion was attempted before work on the database stopped (decision G2, 2026-11-12).
+ *             Not a pair record; listed on the scorecard with what it would need (decision M2A), so no inventoried object is missing.
  */
 
 export interface Disposition {
   database: string;
   schema: string;
   name: string;
-  kind: "failed" | "excluded";
+  kind: "failed" | "excluded" | "not-attempted";
   reason: string;
 }
 
 const WWI = "WideWorldImporters";
+const AW = "AdventureWorks2025";
 const ADMIN = "Database-administration script, not application logic:";
 const SIM = "Part of the WideWorldImporters data-load simulation (tooling that generates the sample's history), not application logic:";
 
@@ -79,4 +82,34 @@ export const DISPOSITIONS: Disposition[] = [
     database: WWI, schema: "Sequences", name: "ReseedAllSequences", kind: "excluded",
     reason: "A fixed list of calls to Sequences.ReseedSequenceBeyondTableValues, one per sequence in the sample schema. The logic is in that procedure, which is converted and verified separately.",
   },
+  // AdventureWorks2025: in scope, not attempted (work on the database stopped 2026-11-12, decision G2). Triaged 2026-11-12;
+  // the features named are those found in each definition.
+  ...([
+    ["HumanResources", "vJobCandidate"], ["HumanResources", "vJobCandidateEducation"], ["HumanResources", "vJobCandidateEmployment"],
+    ["Person", "vAdditionalContactInfo"], ["Production", "vProductModelCatalogDescription"], ["Production", "vProductModelInstructions"],
+    ["Sales", "vPersonDemographics"], ["Sales", "vStoreWithDemographics"],
+  ] as const).map(([schema, name]): Disposition => ({
+    database: AW, schema, name, kind: "not-attempted",
+    reason: "Not attempted. Reads xml columns with XQuery methods (.value, .nodes); needs XML document generators in the harness and an XPath/xmltable conversion.",
+  })),
+  ...([
+    ["dbo", "uspGetEmployeeManagers"], ["dbo", "uspGetManagerEmployees"],
+  ] as const).map(([schema, name]): Disposition => ({
+    database: AW, schema, name, kind: "not-attempted",
+    reason: "Not attempted. Walks the hierarchyid OrganizationNode column (GetAncestor, GetLevel); needs a hierarchyid mapping decision (for example ltree or a path string) first.",
+  })),
+  { database: AW, schema: "HumanResources", name: "uspUpdateEmployeeLogin", kind: "not-attempted", reason: "Not attempted. Updates a hierarchyid column inside TRY/CATCH and calls dbo.uspLogError (not attempted); needs the hierarchyid mapping and the error-handling procedures first." },
+  { database: AW, schema: "HumanResources", name: "uspUpdateEmployeeHireInfo", kind: "not-attempted", reason: "Not attempted. Changes data inside TRY/CATCH with an explicit transaction and calls dbo.uspLogError (not attempted)." },
+  { database: AW, schema: "HumanResources", name: "uspUpdateEmployeePersonalInfo", kind: "not-attempted", reason: "Not attempted. Changes data inside TRY/CATCH and calls dbo.uspLogError (not attempted)." },
+  { database: AW, schema: "dbo", name: "uspLogError", kind: "not-attempted", reason: "Not attempted. Error-handling procedure: reads ERROR_NUMBER(), ERROR_MESSAGE() and related functions inside a CATCH block and writes dbo.ErrorLog; needs a harness mode that raises errors on both engines first." },
+  { database: AW, schema: "dbo", name: "uspPrintError", kind: "not-attempted", reason: "Not attempted. Prints ERROR_* function values inside a CATCH block; output is a message, not rows or table state, so the harness has nothing to compare yet." },
+  { database: AW, schema: "dbo", name: "uspSearchCandidateResumes", kind: "not-attempted", reason: "Not attempted. Uses full-text search predicates; the scratch database has no full-text index, and PostgreSQL text search ranks differently, so this is a likely recorded failure." },
+  ...([
+    ["HumanResources", "dEmployee"], ["Person", "iuPerson"], ["Production", "iWorkOrder"], ["Production", "uWorkOrder"],
+    ["Purchasing", "dVendor"], ["Purchasing", "iPurchaseOrderDetail"], ["Purchasing", "uPurchaseOrderDetail"],
+    ["Purchasing", "uPurchaseOrderHeader"], ["Sales", "iduSalesOrderDetail"], ["Sales", "uSalesOrderHeader"],
+  ] as const).map(([schema, name]): Disposition => ({
+    database: AW, schema, name, kind: "not-attempted",
+    reason: "Not attempted. Trigger (in scope by ruling R11): needs a trigger mode in the harness (the same generated INSERT, UPDATE or DELETE on both engines, then every table it writes compared). Most of these triggers also call dbo.uspLogError, which is not attempted.",
+  })),
 ];
