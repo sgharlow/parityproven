@@ -199,7 +199,7 @@ async function initReceipt() {
          ${draft}${coverage}${traps}${mutants}${runtime}${precision}
          <li><strong>Harness:</strong> ${esc(ev.harnessVersion)}</li>
        </ul>
-       <p style="color:var(--c-muted);font-size:0.85rem;margin-bottom:0.25rem">Re-run from the public repo:</p>
+       <p style="color:var(--c-muted);font-size:0.85rem;margin-bottom:0.25rem">Re-run from the repo:</p>
        <div class="cmd">npm run convert -- --object ${esc(receipt.schemaName)}.${esc(receipt.objectName)} --seed ${ev.pbtSeeds[0]}</div>`
     : `<p style="color:var(--c-muted)">${notConverted ? 'Not converted, so there is no harness run for this object.' : 'No PBT run recorded yet.'}</p>`;
 
