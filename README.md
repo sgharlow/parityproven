@@ -88,7 +88,7 @@ An object becomes **verified** only when steps 1, 2 and 3 pass, step 4 passes or
 - The scratch database also takes the source database's compatibility level (WideWorldImporters: 130), which changes several T-SQL behaviours (JSON functions among them).
 - Every inventoried object appears on the scorecard. Objects that are not converted are listed with their reasons in `src/conversions/dispositions.ts`, in three kinds: recorded as failed (`npm run dispositions` writes a pair record), excluded as out of scope, or not attempted (with what the object would need). `npm run receipts:build` warns about any inventoried object with none of these.
 - Tier rules changed on 2026-11-11, after the v1 predictions were committed. Receipts show the current tier; scoring uses the rules the predictions were made with (`classifyTierAtPrediction` in `src/inventory/tier.ts`), and the scorecard states how many objects moved. The predictions are not edited.
-- The two hooks in `.kiro/hooks/` run when a pair record or a conversion is saved in Kiro with this repository open as the workspace. The CLIs read the saved file's path from the JSON the hook receives on stdin (`src/cli/hook-input.ts`).
+- The two hooks in `.kiro/hooks/` run when a pair record or a conversion is saved in Kiro with this repository open as the workspace. The CLIs read the saved file's path from the JSON the hook receives on stdin (`src/cli/hook-input.ts`), and each hook run appends a line to `.tmp/hook-runs.log` (gitignored), so a run can be observed rather than assumed. Both hooks were observed firing on 2026-11-13.
 
 ---
 

@@ -188,9 +188,13 @@ export function buildReceipts(input: BuildInput): BuildOutput {
 
   // Objects converted before the predictions were committed: the predictions were not blind for them, so say so.
   const predictionNotes: string[] = [];
-  for (const database of inventoryDatabases(input)) {
+  // Driven by the committed prediction files, not the (generated, uncommitted) inventories, so a fresh clone gets the same notes.
+  const predictedDatabases = existsSync(input.predictionsDir)
+    ? readdirSync(input.predictionsDir).filter((f) => f.endsWith("-v1.json")).map((f) => f.replace(/-v1\.json$/, "")).sort()
+    : [];
+  for (const database of predictedDatabases) {
     const p = join(input.predictionsDir, `${database}-v1.json`);
-    if (!existsSync(p) || !input.firstCommits) continue;
+    if (!input.firstCommits) continue;
     const predictedAt = Date.parse((JSON.parse(readFileSync(p, "utf-8")) as PredictionFile).committedAt);
     const early = Object.entries(input.firstCommits)
       .filter(([key, c]) => key.startsWith(`${database}/`) && Date.parse(c.at) < predictedAt)
