@@ -9,10 +9,10 @@ Source: the official rules at https://kiroween.devpost.com/rules. The deadline i
 - [x] The project was built during the submission period (from Oct 30, 2026), and all pre-existing code is disclosed. — first commit 2026-11-03; the v2.1 business plan was written after Oct 30 (owner, 2026-11-12); Claude-drafted steering is disclosed in the README.
 - [ ] No "financial or preferential support from the Sponsor" (AWS) beyond what the rules themselves offer, such as hackathon credits.
 - [x] The entrant is not an employee or agent of the Sponsor (AWS), Devpost, or an affiliate of either (rules §3). — confirmed by the owner 2026-11-12.
-- [ ] A working app with a public URL, testable free of charge until Jan 29, 2027. — Netlify config is publish-only; deploy after the flip; run `npm run predeploy:check` first.
+- [x] A working app with a public URL, testable free of charge until Jan 29, 2027. — live at https://parityproven.netlify.app (deployed 2026-11-13 after `npm run predeploy:check` passed; `.env`, `.git`, `.kiro`, `.claude` return 404). Keep the Netlify site up through Jan 29, 2027.
 - [ ] A text description of features and functionality.
 - [ ] A demo video under 3 minutes on YouTube (public), showing the app running, with no third-party music or trademarks.
-- [ ] A public **GitHub** repo with an open-source license visible in its About section (Apache-2.0). — licence detected and topics set; still private; set the homepage to the live URL after the deploy.
+- [x] A public **GitHub** repo with an open-source license visible in its About section (Apache-2.0). — public since 2026-11-13 after a full-history gitleaks scan (no leaks) and npm audit (0 vulnerabilities); licence detected, topics set, homepage set to the live URL.
 - [x] `/.kiro` at the repo root with specs, hooks and steering, and **not** listed in `.gitignore`.
 - [ ] Category: **Resurrection**. — chosen (R2); select it on the Devpost form.
 - [ ] Best Startup bonus: founder confirmation, LinkedIn profile, startup website.
