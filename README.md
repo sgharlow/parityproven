@@ -71,6 +71,7 @@ pwsh scripts/run-all.ps1                                         # every object,
 pwsh scripts/get-tsqlt.ps1                                       # pinned tSQLt from tsqlt.org, sha256 checked (for step 2)
 npm run agreed-tests -- --object Website.ChangePassword          # step 2: tSQLt + plain-SQL assertions from the fixed cases
 npm run review-packet -- --object Website.ChangePassword         # step 5: review packet for a human reviewer
+npm run predeploy:check                                          # web/ has no placeholders or forbidden wording (run before any deploy)
 ```
 
 **Step 2 (agreed tests)** turns an object's hand-derived fixed cases into a tSQLt test class for SQL Server and a plain-SQL assertion script for PostgreSQL (pgTAP is not in the pinned PostgreSQL image). Expected results are captured once from the original T-SQL and committed in `tests/<db>/<Object>.expected.json`, so a reviewer can check them against each case's label at step 5. `agreed-tests` also deploys each planted defect and reports how many the agreed tests catch (the gate for planted defects remains step 3).

@@ -22,6 +22,7 @@
     "apply-rulings": "node dist/cli/apply-rulings.js",
     "review-packet": "node dist/cli/review-packet.js",
     "agreed-tests": "node dist/cli/agreed-tests.js",
+    "predeploy:check": "node scripts/predeploy-check.mjs",
     "test": "vitest run"
   },
   "dependencies": {
