@@ -257,8 +257,9 @@ export function tsqltScript(spec: ObjectSpec, expected: ExpectedFile): string {
     header(spec, "tSQLt on SQL Server", [
       "Prerequisites: tSQLt installed in the database, the spec's tables created, the original T-SQL object deployed unchanged.",
       ...(spec.stateCheck ? [
-        "A case whose expected outcome is an error uses tSQLt.ExpectException and does not assert table state afterwards: an error",
-        "under SET XACT_ABORT ON dooms the test transaction. State after an error is asserted by the PostgreSQL script and step 3.",
+        "State tests run outside tSQLt's transaction (NoTransaction annotation; tSQLt undoes the FakeTable afterwards), because",
+        "a procedure that opens and fails its own transaction would doom tSQLt's. Each test asserts the outcome (completed, or",
+        "the declared error) and every row of the changed tables afterwards, as step 3 does.",
       ] : []),
     ]),
     `EXEC tSQLt.NewTestClass '${TEST_CLASS}';`,
@@ -266,34 +267,45 @@ export function tsqltScript(spec: ObjectSpec, expected: ExpectedFile): string {
   cases.forEach((fc, i) => {
     const exp = expected.cases[i];
     const body: string[] = [];
+    // state tests run outside tSQLt's transaction: a procedure that opens and fails its own transaction (or fails under
+    // XACT_ABORT) would otherwise doom it. tSQLt undoes the FakeTable afterwards (UndoTestDoubles).
+    const noTransaction = !!spec.stateCheck;
     for (const t of spec.tables) body.push(`EXEC tSQLt.FakeTable @TableName = N'${ssName(t.schema)}.${ssName(t.name)}';`);
     body.push(...ssInserts(spec, fc));
     const call = ssCallText(spec, fc);
     if (spec.stateCheck) {
       const outcome = exp.outcome ?? "";
-      if (outcome !== "completed") {
-        const cls = ssOutcomeCases(spec).find((c) => c.label === outcome);
-        if (!cls || !cls.numbers.length) throw new Error(`${spec.name}: no SQL Server error numbers for expected outcome "${outcome}"`);
-        if (cls.numbers.length > 1) throw new Error(`${spec.name}: outcome "${outcome}" has several SQL Server error numbers; tSQLt.ExpectException takes one`);
-        body.push(`EXEC tSQLt.ExpectException @ExpectedErrorNumber = ${cls.numbers[0]};`);
-        body.push(`${call};`);
-      } else {
-        stateTables(spec).forEach((t, k) => {
-          const st = exp.tables?.[tableKey(t)];
-          if (!st) throw new Error(`${spec.name}: expected state for ${tableKey(t)} missing in case "${fc.label}"`);
-          const ex = `#ExpectedState${k + 1}`;
-          body.push(`SELECT TOP (0) ${st.columns.map(ssName).join(", ")} INTO ${ex} FROM ${ssName(t.schema)}.${ssName(t.name)};`);
-          if (st.rows.length) {
-            body.push(`INSERT INTO ${ex} (${st.columns.map(ssName).join(", ")}) VALUES\n  ${st.rows.map((r) => `(${r.map(ssLiteral).join(", ")})`).join(",\n  ")};`);
-          }
-        });
-        body.push(`${call};`);
-        stateTables(spec).forEach((t, k) => {
-          const st = exp.tables![tableKey(t)];
-          body.push(`SELECT ${st.columns.map(ssName).join(", ")} INTO #ActualState${k + 1} FROM ${ssName(t.schema)}.${ssName(t.name)};`);
-          body.push(`EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedState${k + 1}', @Actual = N'#ActualState${k + 1}', @Message = N'${tableKey(t)} after the call';`);
-        });
-      }
+      stateTables(spec).forEach((t, k) => {
+        const st = exp.tables?.[tableKey(t)];
+        if (!st) throw new Error(`${spec.name}: expected state for ${tableKey(t)} missing in case "${fc.label}"`);
+        const ex = `#ExpectedState${k + 1}`;
+        body.push(`SELECT TOP (0) ${st.columns.map(ssName).join(", ")} INTO ${ex} FROM ${ssName(t.schema)}.${ssName(t.name)};`);
+        if (st.rows.length) {
+          body.push(`INSERT INTO ${ex} (${st.columns.map(ssName).join(", ")}) VALUES\n  ${st.rows.map((r) => `(${r.map(ssLiteral).join(", ")})`).join(",\n  ")};`);
+        }
+      });
+      // the outcome as the harness classifies it: only the declared errors are outcomes, any other error is reported
+      const whens = ssOutcomeCases(spec)
+        .filter((c) => c.numbers.length)
+        .map((c) => `WHEN ERROR_NUMBER() IN (${c.numbers.join(", ")}) THEN N'${c.label.replace(/'/g, "''")}'`);
+      body.push(
+        "DECLARE @outcome nvarchar(4000) = N'completed';",
+        "BEGIN TRY",
+        `  ${call};`,
+        "END TRY",
+        "BEGIN CATCH",
+        `  SET @outcome = CASE ${whens.join(" ")} ELSE N'unexpected error ' + CAST(ERROR_NUMBER() AS nvarchar(20)) + N': ' + ERROR_MESSAGE() END;`,
+        "  -- a procedure that fails inside its own transaction can leave it open (and uncommittable); the test is outside",
+        "  -- tSQLt's transaction (NoTransaction), so this undoes only the procedure's work, as SQL Server does at batch end",
+        "  IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;",
+        "END CATCH;",
+        `EXEC tSQLt.AssertEqualsString @Expected = N'${outcome.replace(/'/g, "''")}', @Actual = @outcome, @Message = N'outcome';`,
+      );
+      stateTables(spec).forEach((t, k) => {
+        const st = exp.tables![tableKey(t)];
+        body.push(`SELECT ${st.columns.map(ssName).join(", ")} INTO #ActualState${k + 1} FROM ${ssName(t.schema)}.${ssName(t.name)};`);
+        body.push(`EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedState${k + 1}', @Actual = N'#ActualState${k + 1}', @Message = N'${tableKey(t)} after the call';`);
+      });
     } else {
       const cols = exp.columns ?? [];
       if (!cols.length) throw new Error(`${spec.name}: expected columns missing in case "${fc.label}"`);
@@ -308,7 +320,7 @@ export function tsqltScript(spec: ObjectSpec, expected: ExpectedFile): string {
       body.push(`EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';`);
     }
     batches.push(
-      `-- case ${i + 1}: ${fc.label}\nCREATE PROCEDURE ${ssName(TEST_CLASS)}.${ssName(testName(i, fc.label))}\nAS\nBEGIN\n` +
+      `-- case ${i + 1}: ${fc.label}\n${noTransaction ? "--[@tSQLt:NoTransaction](DEFAULT)\n" : ""}CREATE PROCEDURE ${ssName(TEST_CLASS)}.${ssName(testName(i, fc.label))}\nAS\nBEGIN\n` +
       body.map((l) => l.split("\n").map((x) => `  ${x}`).join("\n")).join("\n") +
       "\nEND;"
     );

@@ -1,0 +1,205 @@
+{
+  "object": "Website.ActivateWebsiteLogon",
+  "database": "WideWorldImporters",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-13T00:01:35.946Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "activates person 2: copies person 1's preferences; hash of 'pw' + 'Café' (non-ASCII, UTF-16LE)",
+      "outcome": "completed",
+      "tables": {
+        "Application.People": {
+          "columns": [
+            "PersonID",
+            "FullName",
+            "IsPermittedToLogon",
+            "LogonName",
+            "HashedPassword",
+            "UserPreferences"
+          ],
+          "rows": [
+            [
+              "n:1",
+              "s:Person 1",
+              "b:1",
+              "∅",
+              "∅",
+              "s:{\"theme\":\"blue\"}"
+            ],
+            [
+              "n:2",
+              "s:Café",
+              "b:1",
+              "s:new@example.com",
+              "x:8218dde78f3f7ed4c9484b153487e1a0cb08945647bbc857b5187aaf17176d0f",
+              "s:{\"theme\":\"blue\"}"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "label": "person 1 is refused",
+      "outcome": "raised",
+      "tables": {
+        "Application.People": {
+          "columns": [
+            "PersonID",
+            "FullName",
+            "IsPermittedToLogon",
+            "LogonName",
+            "HashedPassword",
+            "UserPreferences"
+          ],
+          "rows": [
+            [
+              "n:1",
+              "s:Person 1",
+              "b:0",
+              "∅",
+              "∅",
+              "∅"
+            ],
+            [
+              "n:2",
+              "s:Person 2",
+              "b:0",
+              "∅",
+              "∅",
+              "∅"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "label": "an already-enabled person is refused",
+      "outcome": "raised",
+      "tables": {
+        "Application.People": {
+          "columns": [
+            "PersonID",
+            "FullName",
+            "IsPermittedToLogon",
+            "LogonName",
+            "HashedPassword",
+            "UserPreferences"
+          ],
+          "rows": [
+            [
+              "n:1",
+              "s:Person 1",
+              "b:0",
+              "∅",
+              "∅",
+              "∅"
+            ],
+            [
+              "n:2",
+              "s:Person 2",
+              "b:1",
+              "∅",
+              "∅",
+              "∅"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "label": "an unknown person is refused",
+      "outcome": "raised",
+      "tables": {
+        "Application.People": {
+          "columns": [
+            "PersonID",
+            "FullName",
+            "IsPermittedToLogon",
+            "LogonName",
+            "HashedPassword",
+            "UserPreferences"
+          ],
+          "rows": [
+            [
+              "n:1",
+              "s:Person 1",
+              "b:0",
+              "∅",
+              "∅",
+              "∅"
+            ],
+            [
+              "n:2",
+              "s:Person 2",
+              "b:0",
+              "∅",
+              "∅",
+              "∅"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "label": "person 0 is refused",
+      "outcome": "raised",
+      "tables": {
+        "Application.People": {
+          "columns": [
+            "PersonID",
+            "FullName",
+            "IsPermittedToLogon",
+            "LogonName",
+            "HashedPassword",
+            "UserPreferences"
+          ],
+          "rows": [
+            [
+              "n:1",
+              "s:Person 1",
+              "b:0",
+              "∅",
+              "∅",
+              "∅"
+            ],
+            [
+              "n:2",
+              "s:Person 2",
+              "b:0",
+              "∅",
+              "∅",
+              "∅"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "label": "no person 1: preferences become NULL",
+      "outcome": "completed",
+      "tables": {
+        "Application.People": {
+          "columns": [
+            "PersonID",
+            "FullName",
+            "IsPermittedToLogon",
+            "LogonName",
+            "HashedPassword",
+            "UserPreferences"
+          ],
+          "rows": [
+            [
+              "n:2",
+              "s:Person 2",
+              "b:1",
+              "s:x",
+              "x:25dc7e332fc46748fd18a7b9e20793bb56dffc320a51f39fbb426466242fd4ad",
+              "∅"
+            ]
+          ]
+        }
+      }
+    }
+  ]
+}

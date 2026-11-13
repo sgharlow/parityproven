@@ -57,7 +57,7 @@
     {
       "step": 2,
       "label": "Agreed tests pass (tSQLt / pgTAP)",
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "step": 3,
@@ -100,7 +100,23 @@
       "no error when nothing was updated"
     ],
     "subMicrosecondNormalised": 0,
-    "harnessVersion": "harness-generic-0.3.0"
+    "harnessVersion": "harness-generic-0.3.0",
+    "testsRun": [
+      "tSQLt V1.0.8083.3529 on SQL Server (tests/WideWorldImporters/Website.ActivateWebsiteLogon.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/WideWorldImporters/Website.ActivateWebsiteLogon.pg.sql); expected results tests/WideWorldImporters/Website.ActivateWebsiteLogon.expected.json",
+      "SQL Server: AgreedTests.[test 01 activates person 2: copies person 1s preferences; hash of pw + Café (non-ASCII, UTF-16LE)]: pass",
+      "SQL Server: AgreedTests.[test 02 person 1 is refused]: pass",
+      "SQL Server: AgreedTests.[test 03 an already-enabled person is refused]: pass",
+      "SQL Server: AgreedTests.[test 04 an unknown person is refused]: pass",
+      "SQL Server: AgreedTests.[test 05 person 0 is refused]: pass",
+      "SQL Server: AgreedTests.[test 06 no person 1: preferences become NULL]: pass",
+      "PostgreSQL: AgreedTests.[test 01 activates person 2: copies person 1s preferences; hash of pw + Café (non-ASCII, UTF-16LE)]: pass",
+      "PostgreSQL: AgreedTests.[test 02 person 1 is refused]: pass",
+      "PostgreSQL: AgreedTests.[test 03 an already-enabled person is refused]: pass",
+      "PostgreSQL: AgreedTests.[test 04 an unknown person is refused]: pass",
+      "PostgreSQL: AgreedTests.[test 05 person 0 is refused]: pass",
+      "PostgreSQL: AgreedTests.[test 06 no person 1: preferences become NULL]: pass",
+      "planted defects caught by the agreed tests: 5 of 5"
+    ]
   },
   "effort": {
     "humanMinutes": 0,
@@ -111,5 +127,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-12T23:33:17.859Z"
+  "builtAt": "2026-11-13T00:09:12.815Z"
 }

@@ -1,0 +1,285 @@
+{
+  "object": "Website.RecordVehicleTemperature",
+  "database": "WideWorldImporters",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-13T00:01:45.049Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "one valid recording",
+      "outcome": "completed",
+      "tables": {
+        "Warehouse.VehicleTemperatures": {
+          "columns": [
+            "VehicleRegistration",
+            "ChillerSensorNumber",
+            "RecordedWhen",
+            "Temperature",
+            "FullSensorData",
+            "IsCompressed",
+            "CompressedSensorData"
+          ],
+          "rows": [
+            [
+              "s:WWI-1",
+              "n:1",
+              "t:2016-01-01T07:00:00.000000",
+              "n:3.96",
+              "s:{\"type\":\"Feature\",\"properties\":{\"rego\":\"WWI-1\",\"sensor\":1,\"when\":\"2016-01-01T07:00:00\",\"temp\":3.96}}",
+              "b:0",
+              "∅"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "label": "empty 'when' converts to 1900-01-01",
+      "outcome": "completed",
+      "tables": {
+        "Warehouse.VehicleTemperatures": {
+          "columns": [
+            "VehicleRegistration",
+            "ChillerSensorNumber",
+            "RecordedWhen",
+            "Temperature",
+            "FullSensorData",
+            "IsCompressed",
+            "CompressedSensorData"
+          ],
+          "rows": [
+            [
+              "s:a",
+              "n:1",
+              "t:1900-01-01T00:00:00.000000",
+              "n:1",
+              "s:{\"type\":\"Feature\",\"properties\":{\"rego\":\"a\",\"sensor\":1,\"when\":\"\",\"temp\":1}}",
+              "b:0",
+              "∅"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "label": "temperature 3.965 rounds half away from zero to 3.97",
+      "outcome": "completed",
+      "tables": {
+        "Warehouse.VehicleTemperatures": {
+          "columns": [
+            "VehicleRegistration",
+            "ChillerSensorNumber",
+            "RecordedWhen",
+            "Temperature",
+            "FullSensorData",
+            "IsCompressed",
+            "CompressedSensorData"
+          ],
+          "rows": [
+            [
+              "s:a",
+              "n:1",
+              "t:2016-01-01T07:00:00.000000",
+              "n:3.97",
+              "s:{\"type\":\"Feature\",\"properties\":{\"rego\":\"a\",\"sensor\":1,\"when\":\"2016-01-01T07:00:00\",\"temp\":3.965}}",
+              "b:0",
+              "∅"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "label": "temperature in exponent notation is rejected",
+      "outcome": "raised",
+      "tables": {
+        "Warehouse.VehicleTemperatures": {
+          "columns": [
+            "VehicleRegistration",
+            "ChillerSensorNumber",
+            "RecordedWhen",
+            "Temperature",
+            "FullSensorData",
+            "IsCompressed",
+            "CompressedSensorData"
+          ],
+          "rows": []
+        }
+      }
+    },
+    {
+      "label": "registration of 21 characters does not fit nvarchar(20): rejected",
+      "outcome": "raised",
+      "tables": {
+        "Warehouse.VehicleTemperatures": {
+          "columns": [
+            "VehicleRegistration",
+            "ChillerSensorNumber",
+            "RecordedWhen",
+            "Temperature",
+            "FullSensorData",
+            "IsCompressed",
+            "CompressedSensorData"
+          ],
+          "rows": []
+        }
+      }
+    },
+    {
+      "label": "duplicate key: the first value is used",
+      "outcome": "completed",
+      "tables": {
+        "Warehouse.VehicleTemperatures": {
+          "columns": [
+            "VehicleRegistration",
+            "ChillerSensorNumber",
+            "RecordedWhen",
+            "Temperature",
+            "FullSensorData",
+            "IsCompressed",
+            "CompressedSensorData"
+          ],
+          "rows": [
+            [
+              "s:first",
+              "n:1",
+              "t:2016-01-01T07:00:00.000000",
+              "n:1",
+              "s:{\"type\":\"Feature\",\"properties\":{\"rego\":\"first\",\"rego\":\"second\",\"sensor\":1,\"when\":\"2016-01-01T07:00:00\",\"temp\":1}}",
+              "b:0",
+              "∅"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "label": "a JSON scalar is not accepted by ISJSON",
+      "outcome": "raised",
+      "tables": {
+        "Warehouse.VehicleTemperatures": {
+          "columns": [
+            "VehicleRegistration",
+            "ChillerSensorNumber",
+            "RecordedWhen",
+            "Temperature",
+            "FullSensorData",
+            "IsCompressed",
+            "CompressedSensorData"
+          ],
+          "rows": []
+        }
+      }
+    },
+    {
+      "label": "NULL document: no error, nothing inserted",
+      "outcome": "completed",
+      "tables": {
+        "Warehouse.VehicleTemperatures": {
+          "columns": [
+            "VehicleRegistration",
+            "ChillerSensorNumber",
+            "RecordedWhen",
+            "Temperature",
+            "FullSensorData",
+            "IsCompressed",
+            "CompressedSensorData"
+          ],
+          "rows": []
+        }
+      }
+    },
+    {
+      "label": "over 1000 characters: the parameter is truncated, so the JSON becomes invalid",
+      "outcome": "raised",
+      "tables": {
+        "Warehouse.VehicleTemperatures": {
+          "columns": [
+            "VehicleRegistration",
+            "ChillerSensorNumber",
+            "RecordedWhen",
+            "Temperature",
+            "FullSensorData",
+            "IsCompressed",
+            "CompressedSensorData"
+          ],
+          "rows": []
+        }
+      }
+    },
+    {
+      "label": "AS JSON keeps the element's original whitespace",
+      "outcome": "completed",
+      "tables": {
+        "Warehouse.VehicleTemperatures": {
+          "columns": [
+            "VehicleRegistration",
+            "ChillerSensorNumber",
+            "RecordedWhen",
+            "Temperature",
+            "FullSensorData",
+            "IsCompressed",
+            "CompressedSensorData"
+          ],
+          "rows": [
+            [
+              "s:a",
+              "n:1",
+              "t:2016-01-01T00:00:00.000000",
+              "n:1",
+              "s:{  \"properties\" : { \"rego\" : \"a\", \"sensor\" : 1, \"when\" : \"2016-01-01\", \"temp\" : 1 }  }",
+              "b:0",
+              "∅"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "label": "date in m/d/yyyy form",
+      "outcome": "completed",
+      "tables": {
+        "Warehouse.VehicleTemperatures": {
+          "columns": [
+            "VehicleRegistration",
+            "ChillerSensorNumber",
+            "RecordedWhen",
+            "Temperature",
+            "FullSensorData",
+            "IsCompressed",
+            "CompressedSensorData"
+          ],
+          "rows": [
+            [
+              "s:a",
+              "n:1",
+              "t:2016-01-02T00:00:00.000000",
+              "n:1",
+              "s:{\"type\":\"Feature\",\"properties\":{\"rego\":\"a\",\"sensor\":1,\"when\":\"1/2/2016\",\"temp\":1}}",
+              "b:0",
+              "∅"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "label": "hour without seconds after T is rejected",
+      "outcome": "raised",
+      "tables": {
+        "Warehouse.VehicleTemperatures": {
+          "columns": [
+            "VehicleRegistration",
+            "ChillerSensorNumber",
+            "RecordedWhen",
+            "Temperature",
+            "FullSensorData",
+            "IsCompressed",
+            "CompressedSensorData"
+          ],
+          "rows": []
+        }
+      }
+    }
+  ]
+}

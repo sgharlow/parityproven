@@ -61,7 +61,7 @@
   ],
   "evidence": {
     "step1": "pass",
-    "step2": "not-run",
+    "step2": "pass",
     "step3": "pass",
     "step4": "pass",
     "step5": "not-run",
@@ -97,7 +97,13 @@
       "tax amount truncates instead of rounding at 2dp",
       "lower cutoff inclusive"
     ],
-    "harnessVersion": "harness-generic-0.3.0"
+    "harnessVersion": "harness-generic-0.3.0",
+    "testsRun": [
+      "tSQLt V1.0.8083.3529 on SQL Server (tests/WideWorldImporters/Integration.GetOrderUpdates.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/WideWorldImporters/Integration.GetOrderUpdates.pg.sql); expected results tests/WideWorldImporters/Integration.GetOrderUpdates.expected.json",
+      "SQL Server: AgreedTests.[test 01 tax amount at the intermediate-scale boundary (0.99 * 0.505 / 100; SQL Server gives 0.004999 at scale…]: pass",
+      "PostgreSQL: AgreedTests.[test 01 tax amount at the intermediate-scale boundary (0.99 * 0.505 / 100; SQL Server gives 0.004999 at scale…]: pass",
+      "planted defects caught by the agreed tests: 0 of 2"
+    ]
   },
   "effort": {
     "humanMinutes": 0,

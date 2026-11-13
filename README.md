@@ -75,7 +75,7 @@ npm run review-packet -- --object Website.ChangePassword         # step 5: revie
 
 **Step 2 (agreed tests)** turns an object's hand-derived fixed cases into a tSQLt test class for SQL Server and a plain-SQL assertion script for PostgreSQL (pgTAP is not in the pinned PostgreSQL image). Expected results are captured once from the original T-SQL and committed in `tests/<db>/<Object>.expected.json`, so a reviewer can check them against each case's label at step 5. `agreed-tests` also deploys each planted defect and reports how many the agreed tests catch (the gate for planted defects remains step 3).
 
-An object becomes **verified** only when steps 1, 2 and 3 pass, step 4 passes or is ruled n/a, and step 5 (a second review at least a day after the first pass) is recorded. Step 2 has run for four objects so far (`Integration.GetMovementUpdates`, `Website.CalculateCustomerPrice`, `Sales.vSalesPerson`, `Website.ChangePassword`); no second review is recorded yet, so no object is verified today.
+An object becomes **verified** only when steps 1, 2 and 3 pass, step 4 passes or is ruled n/a, and step 5 (a second review at least a day after the first pass) is recorded. Step 2 has run for seven objects so far (`Integration.GetMovementUpdates`, `Integration.GetOrderUpdates`, `Website.CalculateCustomerPrice`, `Website.ActivateWebsiteLogon`, `Website.ChangePassword`, `Website.RecordVehicleTemperature`, `Sales.vSalesPerson`); the rest need hand-derived fixed cases first, or use features the test generator does not cover yet (table-valued parameters, JSON results, geography and xml columns, setup statements, dependencies). No second review is recorded yet, so no object is verified today.
 
 ### Known limits
 

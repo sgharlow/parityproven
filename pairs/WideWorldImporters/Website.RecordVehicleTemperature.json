@@ -59,7 +59,7 @@
   ],
   "evidence": {
     "step1": "pass",
-    "step2": "not-run",
+    "step2": "pass",
     "step3": "pass",
     "step4": "n/a",
     "step5": "not-run",
@@ -86,7 +86,35 @@
       "decimal accepts exponent notation",
       "AS JSON fragment normalised (jsonb)"
     ],
-    "harnessVersion": "harness-generic-0.3.0"
+    "harnessVersion": "harness-generic-0.3.0",
+    "testsRun": [
+      "tSQLt V1.0.8083.3529 on SQL Server (tests/WideWorldImporters/Website.RecordVehicleTemperature.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/WideWorldImporters/Website.RecordVehicleTemperature.pg.sql); expected results tests/WideWorldImporters/Website.RecordVehicleTemperature.expected.json",
+      "SQL Server: AgreedTests.[test 01 one valid recording]: pass",
+      "SQL Server: AgreedTests.[test 02 empty when converts to 1900-01-01]: pass",
+      "SQL Server: AgreedTests.[test 03 temperature 3.965 rounds half away from zero to 3.97]: pass",
+      "SQL Server: AgreedTests.[test 04 temperature in exponent notation is rejected]: pass",
+      "SQL Server: AgreedTests.[test 05 registration of 21 characters does not fit nvarchar(20): rejected]: pass",
+      "SQL Server: AgreedTests.[test 06 duplicate key: the first value is used]: pass",
+      "SQL Server: AgreedTests.[test 07 a JSON scalar is not accepted by ISJSON]: pass",
+      "SQL Server: AgreedTests.[test 08 NULL document: no error, nothing inserted]: pass",
+      "SQL Server: AgreedTests.[test 09 over 1000 characters: the parameter is truncated, so the JSON becomes invalid]: pass",
+      "SQL Server: AgreedTests.[test 10 AS JSON keeps the elements original whitespace]: pass",
+      "SQL Server: AgreedTests.[test 11 date in m/d/yyyy form]: pass",
+      "SQL Server: AgreedTests.[test 12 hour without seconds after T is rejected]: pass",
+      "PostgreSQL: AgreedTests.[test 01 one valid recording]: pass",
+      "PostgreSQL: AgreedTests.[test 02 empty when converts to 1900-01-01]: pass",
+      "PostgreSQL: AgreedTests.[test 03 temperature 3.965 rounds half away from zero to 3.97]: pass",
+      "PostgreSQL: AgreedTests.[test 04 temperature in exponent notation is rejected]: pass",
+      "PostgreSQL: AgreedTests.[test 05 registration of 21 characters does not fit nvarchar(20): rejected]: pass",
+      "PostgreSQL: AgreedTests.[test 06 duplicate key: the first value is used]: pass",
+      "PostgreSQL: AgreedTests.[test 07 a JSON scalar is not accepted by ISJSON]: pass",
+      "PostgreSQL: AgreedTests.[test 08 NULL document: no error, nothing inserted]: pass",
+      "PostgreSQL: AgreedTests.[test 09 over 1000 characters: the parameter is truncated, so the JSON becomes invalid]: pass",
+      "PostgreSQL: AgreedTests.[test 10 AS JSON keeps the elements original whitespace]: pass",
+      "PostgreSQL: AgreedTests.[test 11 date in m/d/yyyy form]: pass",
+      "PostgreSQL: AgreedTests.[test 12 hour without seconds after T is rejected]: pass",
+      "planted defects caught by the agreed tests: 6 of 6"
+    ]
   },
   "effort": {
     "humanMinutes": 0,

@@ -4,12 +4,14 @@
 -- Expected results were captured from the original T-SQL on SQL Server and are reviewed at step 5.
 -- Row order is not asserted here (multiset comparison); step 3 checks order where the source guarantees one.
 -- Prerequisites: tSQLt installed in the database, the spec's tables created, the original T-SQL object deployed unchanged.
--- A case whose expected outcome is an error uses tSQLt.ExpectException and does not assert table state afterwards: an error
--- under SET XACT_ABORT ON dooms the test transaction. State after an error is asserted by the PostgreSQL script and step 3.
+-- State tests run outside tSQLt's transaction (NoTransaction annotation; tSQLt undoes the FakeTable afterwards), because
+-- a procedure that opens and fails its own transaction would doom tSQLt's. Each test asserts the outcome (completed, or
+-- the declared error) and every row of the changed tables afterwards, as step 3 does.
 GO
 EXEC tSQLt.NewTestClass 'AgreedTests';
 GO
 -- case 1: correct old password ('pw' + 'Café'): new hash stored and logon re-enabled
+--[@tSQLt:NoTransaction](DEFAULT)
 CREATE PROCEDURE [AgreedTests].[test 01 correct old password (pw + Café): new hash stored and logon re-enabled]
 AS
 BEGIN
@@ -21,12 +23,23 @@ BEGIN
   INSERT INTO #ExpectedState1 ([PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences]) VALUES
     (1, N'Person 1', 0, NULL, NULL, NULL),
     (2, N'Café', 1, NULL, 0x206cabdeb7b468fcf48b41a8ce227b05ce4f9c9b754cc0b0b10df33571c422e6, NULL);
-  EXEC Website.ChangePassword @PersonID = 2, @OldPassword = N'pw', @NewPassword = N'secret';
+  DECLARE @outcome nvarchar(4000) = N'completed';
+  BEGIN TRY
+    EXEC Website.ChangePassword @PersonID = 2, @OldPassword = N'pw', @NewPassword = N'secret';
+  END TRY
+  BEGIN CATCH
+    SET @outcome = CASE WHEN ERROR_NUMBER() IN (51000) THEN N'raised' ELSE N'unexpected error ' + CAST(ERROR_NUMBER() AS nvarchar(20)) + N': ' + ERROR_MESSAGE() END;
+    -- a procedure that fails inside its own transaction can leave it open (and uncommittable); the test is outside
+    -- tSQLt's transaction (NoTransaction), so this undoes only the procedure's work, as SQL Server does at batch end
+    IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+  END CATCH;
+  EXEC tSQLt.AssertEqualsString @Expected = N'completed', @Actual = @outcome, @Message = N'outcome';
   SELECT [PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences] INTO #ActualState1 FROM [Application].[People];
   EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedState1', @Actual = N'#ActualState1', @Message = N'Application.People after the call';
 END;
 GO
 -- case 2: old password differs only in case: refused (hash comparison is binary)
+--[@tSQLt:NoTransaction](DEFAULT)
 CREATE PROCEDURE [AgreedTests].[test 02 old password differs only in case: refused (hash comparison is binary)]
 AS
 BEGIN
@@ -34,11 +47,27 @@ BEGIN
   INSERT INTO [Application].[People] ([PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences]) VALUES
     (1, N'Person 1', 0, NULL, NULL, NULL),
     (2, N'Café', 0, NULL, 0x8218dde78f3f7ed4c9484b153487e1a0cb08945647bbc857b5187aaf17176d0f, NULL);
-  EXEC tSQLt.ExpectException @ExpectedErrorNumber = 51000;
-  EXEC Website.ChangePassword @PersonID = 2, @OldPassword = N'PW', @NewPassword = N'secret';
+  SELECT TOP (0) [PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences] INTO #ExpectedState1 FROM [Application].[People];
+  INSERT INTO #ExpectedState1 ([PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences]) VALUES
+    (1, N'Person 1', 0, NULL, NULL, NULL),
+    (2, N'Café', 0, NULL, 0x8218dde78f3f7ed4c9484b153487e1a0cb08945647bbc857b5187aaf17176d0f, NULL);
+  DECLARE @outcome nvarchar(4000) = N'completed';
+  BEGIN TRY
+    EXEC Website.ChangePassword @PersonID = 2, @OldPassword = N'PW', @NewPassword = N'secret';
+  END TRY
+  BEGIN CATCH
+    SET @outcome = CASE WHEN ERROR_NUMBER() IN (51000) THEN N'raised' ELSE N'unexpected error ' + CAST(ERROR_NUMBER() AS nvarchar(20)) + N': ' + ERROR_MESSAGE() END;
+    -- a procedure that fails inside its own transaction can leave it open (and uncommittable); the test is outside
+    -- tSQLt's transaction (NoTransaction), so this undoes only the procedure's work, as SQL Server does at batch end
+    IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+  END CATCH;
+  EXEC tSQLt.AssertEqualsString @Expected = N'raised', @Actual = @outcome, @Message = N'outcome';
+  SELECT [PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences] INTO #ActualState1 FROM [Application].[People];
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedState1', @Actual = N'#ActualState1', @Message = N'Application.People after the call';
 END;
 GO
 -- case 3: old password with a trailing space: refused (hashing does not trim)
+--[@tSQLt:NoTransaction](DEFAULT)
 CREATE PROCEDURE [AgreedTests].[test 03 old password with a trailing space: refused (hashing does not trim)]
 AS
 BEGIN
@@ -46,11 +75,27 @@ BEGIN
   INSERT INTO [Application].[People] ([PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences]) VALUES
     (1, N'Person 1', 0, NULL, NULL, NULL),
     (2, N'Café', 0, NULL, 0x8218dde78f3f7ed4c9484b153487e1a0cb08945647bbc857b5187aaf17176d0f, NULL);
-  EXEC tSQLt.ExpectException @ExpectedErrorNumber = 51000;
-  EXEC Website.ChangePassword @PersonID = 2, @OldPassword = N'pw ', @NewPassword = N'secret';
+  SELECT TOP (0) [PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences] INTO #ExpectedState1 FROM [Application].[People];
+  INSERT INTO #ExpectedState1 ([PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences]) VALUES
+    (1, N'Person 1', 0, NULL, NULL, NULL),
+    (2, N'Café', 0, NULL, 0x8218dde78f3f7ed4c9484b153487e1a0cb08945647bbc857b5187aaf17176d0f, NULL);
+  DECLARE @outcome nvarchar(4000) = N'completed';
+  BEGIN TRY
+    EXEC Website.ChangePassword @PersonID = 2, @OldPassword = N'pw ', @NewPassword = N'secret';
+  END TRY
+  BEGIN CATCH
+    SET @outcome = CASE WHEN ERROR_NUMBER() IN (51000) THEN N'raised' ELSE N'unexpected error ' + CAST(ERROR_NUMBER() AS nvarchar(20)) + N': ' + ERROR_MESSAGE() END;
+    -- a procedure that fails inside its own transaction can leave it open (and uncommittable); the test is outside
+    -- tSQLt's transaction (NoTransaction), so this undoes only the procedure's work, as SQL Server does at batch end
+    IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+  END CATCH;
+  EXEC tSQLt.AssertEqualsString @Expected = N'raised', @Actual = @outcome, @Message = N'outcome';
+  SELECT [PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences] INTO #ActualState1 FROM [Application].[People];
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedState1', @Actual = N'#ActualState1', @Message = N'Application.People after the call';
 END;
 GO
 -- case 4: NULL new password: the stored hash becomes NULL
+--[@tSQLt:NoTransaction](DEFAULT)
 CREATE PROCEDURE [AgreedTests].[test 04 NULL new password: the stored hash becomes NULL]
 AS
 BEGIN
@@ -62,12 +107,23 @@ BEGIN
   INSERT INTO #ExpectedState1 ([PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences]) VALUES
     (1, N'Person 1', 0, NULL, NULL, NULL),
     (2, N'Café', 1, NULL, NULL, NULL);
-  EXEC Website.ChangePassword @PersonID = 2, @OldPassword = N'pw', @NewPassword = NULL;
+  DECLARE @outcome nvarchar(4000) = N'completed';
+  BEGIN TRY
+    EXEC Website.ChangePassword @PersonID = 2, @OldPassword = N'pw', @NewPassword = NULL;
+  END TRY
+  BEGIN CATCH
+    SET @outcome = CASE WHEN ERROR_NUMBER() IN (51000) THEN N'raised' ELSE N'unexpected error ' + CAST(ERROR_NUMBER() AS nvarchar(20)) + N': ' + ERROR_MESSAGE() END;
+    -- a procedure that fails inside its own transaction can leave it open (and uncommittable); the test is outside
+    -- tSQLt's transaction (NoTransaction), so this undoes only the procedure's work, as SQL Server does at batch end
+    IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+  END CATCH;
+  EXEC tSQLt.AssertEqualsString @Expected = N'completed', @Actual = @outcome, @Message = N'outcome';
   SELECT [PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences] INTO #ActualState1 FROM [Application].[People];
   EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedState1', @Actual = N'#ActualState1', @Message = N'Application.People after the call';
 END;
 GO
 -- case 5: person 1 with a correct password is refused
+--[@tSQLt:NoTransaction](DEFAULT)
 CREATE PROCEDURE [AgreedTests].[test 05 person 1 with a correct password is refused]
 AS
 BEGIN
@@ -75,7 +131,22 @@ BEGIN
   INSERT INTO [Application].[People] ([PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences]) VALUES
     (1, N'Café', 0, NULL, 0x8218dde78f3f7ed4c9484b153487e1a0cb08945647bbc857b5187aaf17176d0f, NULL),
     (2, N'Person 2', 0, NULL, NULL, NULL);
-  EXEC tSQLt.ExpectException @ExpectedErrorNumber = 51000;
-  EXEC Website.ChangePassword @PersonID = 1, @OldPassword = N'pw', @NewPassword = N'x';
+  SELECT TOP (0) [PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences] INTO #ExpectedState1 FROM [Application].[People];
+  INSERT INTO #ExpectedState1 ([PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences]) VALUES
+    (1, N'Café', 0, NULL, 0x8218dde78f3f7ed4c9484b153487e1a0cb08945647bbc857b5187aaf17176d0f, NULL),
+    (2, N'Person 2', 0, NULL, NULL, NULL);
+  DECLARE @outcome nvarchar(4000) = N'completed';
+  BEGIN TRY
+    EXEC Website.ChangePassword @PersonID = 1, @OldPassword = N'pw', @NewPassword = N'x';
+  END TRY
+  BEGIN CATCH
+    SET @outcome = CASE WHEN ERROR_NUMBER() IN (51000) THEN N'raised' ELSE N'unexpected error ' + CAST(ERROR_NUMBER() AS nvarchar(20)) + N': ' + ERROR_MESSAGE() END;
+    -- a procedure that fails inside its own transaction can leave it open (and uncommittable); the test is outside
+    -- tSQLt's transaction (NoTransaction), so this undoes only the procedure's work, as SQL Server does at batch end
+    IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+  END CATCH;
+  EXEC tSQLt.AssertEqualsString @Expected = N'raised', @Actual = @outcome, @Message = N'outcome';
+  SELECT [PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences] INTO #ActualState1 FROM [Application].[People];
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedState1', @Actual = N'#ActualState1', @Message = N'Application.People after the call';
 END;
 GO

@@ -64,7 +64,7 @@
     {
       "step": 2,
       "label": "Agreed tests pass (tSQLt / pgTAP)",
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "step": 3,
@@ -118,7 +118,13 @@
       "volumeMismatch": null
     },
     "subMicrosecondNormalised": 1190,
-    "harnessVersion": "harness-generic-0.3.0"
+    "harnessVersion": "harness-generic-0.3.0",
+    "testsRun": [
+      "tSQLt V1.0.8083.3529 on SQL Server (tests/WideWorldImporters/Integration.GetOrderUpdates.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/WideWorldImporters/Integration.GetOrderUpdates.pg.sql); expected results tests/WideWorldImporters/Integration.GetOrderUpdates.expected.json",
+      "SQL Server: AgreedTests.[test 01 tax amount at the intermediate-scale boundary (0.99 * 0.505 / 100; SQL Server gives 0.004999 at scale…]: pass",
+      "PostgreSQL: AgreedTests.[test 01 tax amount at the intermediate-scale boundary (0.99 * 0.505 / 100; SQL Server gives 0.004999 at scale…]: pass",
+      "planted defects caught by the agreed tests: 0 of 2"
+    ]
   },
   "effort": {
     "humanMinutes": 0,
@@ -129,5 +135,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-12T23:33:17.858Z"
+  "builtAt": "2026-11-13T00:09:12.810Z"
 }

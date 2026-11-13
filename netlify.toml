@@ -1,11 +1,11 @@
 # Netlify deployment config for ParityProven
 # Site root: web/ (HTML/CSS/JS)
 # Receipts JSON served as static assets from receipts/
-# Both are in the public repo and updated by npm run receipts:build before deploy.
+# Both are in the public repo and rebuilt locally with npm run receipts:build and committed.
 
 [build]
-  # Run receipts build before deploy
-  command = "npm run build:ci"
+  # Publish only, no build step: receipts/ is committed. receipts:build needs inventory/*.json, which is generated
+  # from the restored databases and not committed, so building on Netlify would fail.
   publish = "."        # serve from repo root so both web/ and receipts/ are reachable
 
 [build.environment]
