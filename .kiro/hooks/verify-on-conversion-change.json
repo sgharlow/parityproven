@@ -5,7 +5,7 @@
       "name": "Re-verify an object when its conversion changes",
       "trigger": "PostFileSave",
       "description": "When a conversion .sql file is saved, rebuild and re-run the property-based equivalence check for that one object, including its planted-defect mutants and the runtime step (a few minutes). The saved file path arrives on stdin (src/cli/hook-input.ts).",
-      "matcher": "conversions/.*\\.sql$",
+      "matcher": "conversions[/\\\\].*\\.sql$",
       "action": {
         "type": "command",
         "command": "npm run build --silent && node dist/cli/convert.js --file",

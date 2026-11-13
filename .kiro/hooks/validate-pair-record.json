@@ -5,7 +5,7 @@
       "name": "Validate pair record schema on save",
       "trigger": "PostFileSave",
       "description": "When a pair record JSON file is saved, validate it against the PairRecord schema to catch structural errors before commit. The saved file path arrives on stdin (src/cli/hook-input.ts).",
-      "matcher": "pairs/.*\\.json$",
+      "matcher": "pairs[/\\\\].*\\.json$",
       "action": {
         "type": "command",
         "command": "node dist/cli/validate-pair.js",
