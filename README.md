@@ -1,6 +1,6 @@
 # ParityProven
 
-Proves T-SQL to PL/pgSQL conversions object by object, and shows the evidence as a migration receipt.
+Checks T-SQL to PL/pgSQL conversions object by object against the original on SQL Server, and shows the evidence as a migration receipt. An object is marked verified only when it passes the listed test cases and a second human review.
 
 Hackathon: [Kiroween 2026](https://kiroween.devpost.com/) — category **Resurrection** — due **Dec 4, 2026 2:00 pm PT**.
 

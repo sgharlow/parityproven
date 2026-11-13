@@ -3,7 +3,7 @@
 import { readdirSync, readFileSync } from "fs";
 import { join } from "path";
 
-const FORBIDDEN = [/\[Steve:/, /DRAFT for Steve/, /behaves the same/i, /100% compatible/i, /production-ready/i, /guaranteed/i, /fully automated/i, /proved by/i];
+const FORBIDDEN = [/\[Steve:/, /DRAFT for Steve/, /behaves the same/i, /100% compatible/i, /production-ready/i, /guaranteed/i, /fully automated/i, /\bproved by\b/i];
 let problems = 0;
 for (const f of readdirSync("web").filter((x) => /\.(html|js)$/.test(x))) {
   readFileSync(join("web", f), "utf-8").split(/\r?\n/).forEach((line, i) => {

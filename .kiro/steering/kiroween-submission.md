@@ -8,7 +8,7 @@ Source: the official rules at https://kiroween.devpost.com/rules. The deadline i
 
 - [x] The project was built during the submission period (from Oct 30, 2026), and all pre-existing code is disclosed. — first commit 2026-11-03; the v2.1 business plan was written after Oct 30 (owner, 2026-11-12); Claude-drafted steering is disclosed in the README.
 - [ ] No "financial or preferential support from the Sponsor" (AWS) beyond what the rules themselves offer, such as hackathon credits.
-- [ ] The entrant is not an employee or agent of the Sponsor (AWS), Devpost, or an affiliate of either (rules §3). Owner to confirm.
+- [x] The entrant is not an employee or agent of the Sponsor (AWS), Devpost, or an affiliate of either (rules §3). — confirmed by the owner 2026-11-12.
 - [ ] A working app with a public URL, testable free of charge until Jan 29, 2027. — Netlify config is publish-only; deploy after the flip; run `npm run predeploy:check` first.
 - [ ] A text description of features and functionality.
 - [ ] A demo video under 3 minutes on YouTube (public), showing the app running, with no third-party music or trademarks.
