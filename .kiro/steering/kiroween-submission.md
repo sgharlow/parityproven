@@ -20,7 +20,7 @@ Source: the official rules at https://kiroween.devpost.com/rules and the overvie
 
 ## Working app
 - [x] A working app with a public URL, testable free of charge until the Judging Period ends (Jan 29, 2027). — live at https://parityproven.netlify.app (deployed 2026-11-13 after `npm run predeploy:check` passed; `.env`, `.git`, `.kiro`, `.claude` return 404; home, receipt, questionnaire and about pages return 200). Keep the Netlify site up and the repo public through Jan 29, 2027. No login needed.
-- [ ] `parityproven.com` resolves to the site. — attached on Netlify 2026-11-13; Cloudflare DNS records are the owner's (DNS only, not proxied).
+- [x] `parityproven.com` resolves to the site. — attached on Netlify 2026-11-13; Cloudflare DNS records are the owner's (DNS only, not proxied). Checked 2026-11-16: `parityproven.com` and `www.parityproven.com` return 200 with the site's page.
 
 ## Devpost form (the owner's words, N1A)
 - [ ] A text description of features and functionality.
