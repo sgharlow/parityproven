@@ -84,7 +84,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "pass",
-    "step5": "not-run",
+    "step5": "pass",
     "step6": "n/a",
     "runtimeRatio": 0.41,
     "runtime": {
@@ -120,12 +120,14 @@
       "SQL Server: AgreedTests.[test 01 no territory, two phones, no email; trailing space kept; a sales person without an address is dropped]: pass",
       "PostgreSQL: AgreedTests.[test 01 no territory, two phones, no email; trailing space kept; a sales person without an address is dropped]: pass",
       "planted defects caught by the agreed tests: 2 of 2"
-    ]
+    ],
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-16"
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

@@ -57,7 +57,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "n/a",
-    "step5": "not-run",
+    "step5": "pass",
     "step6": "n/a",
     "rowsCompared": 206,
     "trapsCovered": [
@@ -94,12 +94,14 @@
       "PostgreSQL: AgreedTests.[test 05 person 0 is refused]: pass",
       "PostgreSQL: AgreedTests.[test 06 no person 1: preferences become NULL]: pass",
       "planted defects caught by the agreed tests: 5 of 5"
-    ]
+    ],
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-16"
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

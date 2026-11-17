@@ -52,7 +52,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "pass",
-    "step5": "not-run",
+    "step5": "pass",
     "step6": "n/a",
     "runtimeRatio": 0.06,
     "runtime": {
@@ -93,12 +93,14 @@
       "PostgreSQL: AgreedTests.[test 02 pricing date equals the deals end date: BETWEEN is inclusive, so the special price 5.00 applies]: pass",
       "PostgreSQL: AgreedTests.[test 03 two competing discount amounts: the highest (25.00) must win, giving 75.00]: pass",
       "planted defects caught by the agreed tests: 3 of 3"
-    ]
+    ],
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-16"
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

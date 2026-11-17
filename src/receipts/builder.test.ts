@@ -23,8 +23,9 @@ describe("buildReceipts", () => {
     expect(r.database).toBe("WideWorldImporters");
     expect(r.objectName).toBe("GetMovementUpdates");
     expect(r.schemaName).toBe("Integration");
-    expect(r.status).toBe("pending");
+    expect(r.status).toBe("verified");   // step 5 recorded 2026-11-16 (was "pending" until the second review)
     expect(r.verificationSteps).toHaveLength(6);
+    expect(r.verificationSteps[4].status).toBe("pass");   // step5
     expect(r.verificationSteps[2].status).toBe("pass");   // step3
     expect(r.verificationSteps[2].label).toContain("Result sets match");
 

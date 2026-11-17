@@ -1,5 +1,5 @@
 {
-  "builtAt": "2026-11-13T23:05:21.894Z",
+  "builtAt": "2026-11-17T03:55:18.345Z",
   "receipts": [
     {
       "database": "AdventureWorks2025",
@@ -196,7 +196,7 @@
       "objectName": "vSalesPerson",
       "objectClass": "view",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "AdventureWorks2025/Sales.vSalesPerson.json"
     },
     {
@@ -268,7 +268,7 @@
       "objectName": "GetMovementUpdates",
       "objectClass": "procedure",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "WideWorldImporters/Integration.GetMovementUpdates.json"
     },
     {
@@ -277,7 +277,7 @@
       "objectName": "GetOrderUpdates",
       "objectClass": "procedure",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "WideWorldImporters/Integration.GetOrderUpdates.json"
     },
     {
@@ -367,7 +367,7 @@
       "objectName": "ActivateWebsiteLogon",
       "objectClass": "procedure",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "WideWorldImporters/Website.ActivateWebsiteLogon.json"
     },
     {
@@ -376,7 +376,7 @@
       "objectName": "CalculateCustomerPrice",
       "objectClass": "function",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "WideWorldImporters/Website.CalculateCustomerPrice.json"
     },
     {
@@ -385,7 +385,7 @@
       "objectName": "ChangePassword",
       "objectClass": "procedure",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "WideWorldImporters/Website.ChangePassword.json"
     },
     {
@@ -430,7 +430,7 @@
       "objectName": "RecordVehicleTemperature",
       "objectClass": "procedure",
       "tier": "medium",
-      "status": "pending",
+      "status": "verified",
       "path": "WideWorldImporters/Website.RecordVehicleTemperature.json"
     },
     {
@@ -946,8 +946,8 @@
   },
   "summary": {
     "total": 55,
-    "verified": 0,
-    "pending": 40,
+    "verified": 7,
+    "pending": 33,
     "failed": 15,
     "excluded": 17,
     "notAttempted": 26,
