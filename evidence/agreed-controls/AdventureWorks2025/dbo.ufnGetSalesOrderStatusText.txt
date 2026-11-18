@@ -1,0 +1,27 @@
+negative control for dbo.ufnGetSalesOrderStatusText (step 2), 2026-11-18T04:23:09.468Z
+corruption: case 1 expected value row 1, column result: s:In process -> s:In procesX
+SQL Server: test 01 status 1 maps to In process: FAIL — Failure: Unexpected/missing resultset rows!
+|_m_|result    |
++---+----------+
+|<  |In procesX|
+|>  |In process|
+SQL Server: test 02 status 2 maps to Approved: pass
+SQL Server: test 03 status 3 maps to Backordered: pass
+SQL Server: test 04 status 4 maps to Rejected: pass
+SQL Server: test 05 status 5 maps to Shipped: pass
+SQL Server: test 06 status 6 maps to Cancelled: pass
+SQL Server: test 07 status 0 (below the first mapped value) is ** Invalid **: pass
+SQL Server: test 08 status 7 (first value above the last mapped one) is ** Invalid **: pass
+SQL Server: test 09 status 255 (tinyint maximum) is ** Invalid **: pass
+SQL Server: test 10 NULL status takes the ELSE branch: ** Invalid **, not NULL: pass
+PostgreSQL: test 01 status 1 maps to In process: FAIL — agreed test failed (test 01 status 1 maps to In process): 1 expected row(s) missing, 1 unexpected row(s) in the result
+PostgreSQL: test 02 status 2 maps to Approved: pass
+PostgreSQL: test 03 status 3 maps to Backordered: pass
+PostgreSQL: test 04 status 4 maps to Rejected: pass
+PostgreSQL: test 05 status 5 maps to Shipped: pass
+PostgreSQL: test 06 status 6 maps to Cancelled: pass
+PostgreSQL: test 07 status 0 (below the first mapped value) is ** Invalid **: pass
+PostgreSQL: test 08 status 7 (first value above the last mapped one) is ** Invalid **: pass
+PostgreSQL: test 09 status 255 (tinyint maximum) is ** Invalid **: pass
+PostgreSQL: test 10 NULL status takes the ELSE branch: ** Invalid **, not NULL: pass
+RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed

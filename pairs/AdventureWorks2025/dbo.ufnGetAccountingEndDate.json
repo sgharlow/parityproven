@@ -23,7 +23,7 @@
   "columnMappings": [],
   "evidence": {
     "step1": "pass",
-    "step2": "not-run",
+    "step2": "pass",
     "step3": "pass",
     "step4": "pass",
     "step5": "not-run",
@@ -57,7 +57,13 @@
     "mutantsDetected": [
       "end date is exactly 2 ms before midnight (datetime would give .997)"
     ],
-    "harnessVersion": "harness-generic-0.3.0"
+    "harnessVersion": "harness-generic-0.3.0",
+    "testsRun": [
+      "tSQLt V1.0.8083.3529 on SQL Server (tests/AdventureWorks2025/dbo.ufnGetAccountingEndDate.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/AdventureWorks2025/dbo.ufnGetAccountingEndDate.pg.sql); expected results tests/AdventureWorks2025/dbo.ufnGetAccountingEndDate.expected.json",
+      "SQL Server: AgreedTests.[test 01 2 ms before 2004-07-01 is 2004-06-30 23:59:59.997 (datetime rounds to its 3.33 ms ticks, not .998)]: pass",
+      "PostgreSQL: AgreedTests.[test 01 2 ms before 2004-07-01 is 2004-06-30 23:59:59.997 (datetime rounds to its 3.33 ms ticks, not .998)]: pass",
+      "planted defects caught by the agreed tests: 1 of 1"
+    ]
   },
   "effort": {
     "humanMinutes": 0,

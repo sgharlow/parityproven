@@ -26,7 +26,7 @@
     {
       "step": 2,
       "label": "Agreed tests pass (tSQLt on SQL Server, plain-SQL assertions on PostgreSQL)",
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "step": 3,
@@ -73,7 +73,31 @@
       "volumeMismatch": null
     },
     "subMicrosecondNormalised": 0,
-    "harnessVersion": "harness-generic-0.3.0"
+    "harnessVersion": "harness-generic-0.3.0",
+    "testsRun": [
+      "tSQLt V1.0.8083.3529 on SQL Server (tests/AdventureWorks2025/dbo.ufnGetSalesOrderStatusText.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/AdventureWorks2025/dbo.ufnGetSalesOrderStatusText.pg.sql); expected results tests/AdventureWorks2025/dbo.ufnGetSalesOrderStatusText.expected.json",
+      "SQL Server: AgreedTests.[test 01 status 1 maps to In process]: pass",
+      "SQL Server: AgreedTests.[test 02 status 2 maps to Approved]: pass",
+      "SQL Server: AgreedTests.[test 03 status 3 maps to Backordered]: pass",
+      "SQL Server: AgreedTests.[test 04 status 4 maps to Rejected]: pass",
+      "SQL Server: AgreedTests.[test 05 status 5 maps to Shipped]: pass",
+      "SQL Server: AgreedTests.[test 06 status 6 maps to Cancelled]: pass",
+      "SQL Server: AgreedTests.[test 07 status 0 (below the first mapped value) is ** Invalid **]: pass",
+      "SQL Server: AgreedTests.[test 08 status 7 (first value above the last mapped one) is ** Invalid **]: pass",
+      "SQL Server: AgreedTests.[test 09 status 255 (tinyint maximum) is ** Invalid **]: pass",
+      "SQL Server: AgreedTests.[test 10 NULL status takes the ELSE branch: ** Invalid **, not NULL]: pass",
+      "PostgreSQL: AgreedTests.[test 01 status 1 maps to In process]: pass",
+      "PostgreSQL: AgreedTests.[test 02 status 2 maps to Approved]: pass",
+      "PostgreSQL: AgreedTests.[test 03 status 3 maps to Backordered]: pass",
+      "PostgreSQL: AgreedTests.[test 04 status 4 maps to Rejected]: pass",
+      "PostgreSQL: AgreedTests.[test 05 status 5 maps to Shipped]: pass",
+      "PostgreSQL: AgreedTests.[test 06 status 6 maps to Cancelled]: pass",
+      "PostgreSQL: AgreedTests.[test 07 status 0 (below the first mapped value) is ** Invalid **]: pass",
+      "PostgreSQL: AgreedTests.[test 08 status 7 (first value above the last mapped one) is ** Invalid **]: pass",
+      "PostgreSQL: AgreedTests.[test 09 status 255 (tinyint maximum) is ** Invalid **]: pass",
+      "PostgreSQL: AgreedTests.[test 10 NULL status takes the ELSE branch: ** Invalid **, not NULL]: pass",
+      "planted defects caught by the agreed tests: 1 of 1"
+    ]
   },
   "effort": {
     "humanMinutes": 0,
@@ -84,5 +108,5 @@
     "p50Hours": 1.5,
     "p90Hours": 4
   },
-  "builtAt": "2026-11-17T03:55:18.165Z"
+  "builtAt": "2026-11-18T04:24:58.851Z"
 }

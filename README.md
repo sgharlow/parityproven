@@ -10,9 +10,9 @@ Hackathon: [Kiroween 2026](https://kiroween.devpost.com/) — category **Resurre
 - Inventoried: 98 programmable objects (AdventureWorks2025 51, WideWorldImporters 47).
 - On the scorecard: 55 receipts (AdventureWorks2025 25, WideWorldImporters 30): **7 verified**, 33 pending, 15 failed. A further 17 are excluded as out of scope and 26 are not attempted, each with its reason.
 - Converted and run through the harness: 46 objects (the other 9 pair records are recorded as failed without a conversion).
-- Step 2 (agreed tests) passes for 7: `Sales.vSalesPerson`, `Integration.GetMovementUpdates`, `Integration.GetOrderUpdates`, `Website.ActivateWebsiteLogon`, `Website.CalculateCustomerPrice`, `Website.ChangePassword`, `Website.RecordVehicleTemperature`.
+- Step 2 (agreed tests) passes for 13: `Sales.vSalesPerson`, `dbo.ufnGetAccountingEndDate`, `dbo.ufnGetAccountingStartDate`, `dbo.ufnGetDocumentStatusText`, `dbo.ufnGetPurchaseOrderStatusText`, `dbo.ufnGetSalesOrderStatusText`, `dbo.ufnLeadingZeros`, `Integration.GetMovementUpdates`, `Integration.GetOrderUpdates`, `Website.ActivateWebsiteLogon`, `Website.CalculateCustomerPrice`, `Website.ChangePassword`, `Website.RecordVehicleTemperature`.
 - Step 5 (second review) recorded for 7 (Steve Harlow on 2026-11-16). Verified: `Sales.vSalesPerson`, `Integration.GetMovementUpdates`, `Integration.GetOrderUpdates`, `Website.ActivateWebsiteLogon`, `Website.CalculateCustomerPrice`, `Website.ChangePassword`, `Website.RecordVehicleTemperature`.
-- Receipts built 2026-11-17T03:55:18.345Z.
+- Receipts built 2026-11-18T04:24:58.907Z.
 <!-- status:end -->
 
 ---

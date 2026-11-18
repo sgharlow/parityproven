@@ -1,0 +1,149 @@
+{
+  "object": "dbo.ufnGetSalesOrderStatusText",
+  "database": "AdventureWorks2025",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-18T04:19:36.364Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "status 1 maps to 'In process'",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(15)"
+        }
+      ],
+      "rows": [
+        [
+          "s:In process"
+        ]
+      ]
+    },
+    {
+      "label": "status 2 maps to 'Approved'",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(15)"
+        }
+      ],
+      "rows": [
+        [
+          "s:Approved"
+        ]
+      ]
+    },
+    {
+      "label": "status 3 maps to 'Backordered'",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(15)"
+        }
+      ],
+      "rows": [
+        [
+          "s:Backordered"
+        ]
+      ]
+    },
+    {
+      "label": "status 4 maps to 'Rejected'",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(15)"
+        }
+      ],
+      "rows": [
+        [
+          "s:Rejected"
+        ]
+      ]
+    },
+    {
+      "label": "status 5 maps to 'Shipped'",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(15)"
+        }
+      ],
+      "rows": [
+        [
+          "s:Shipped"
+        ]
+      ]
+    },
+    {
+      "label": "status 6 maps to 'Cancelled'",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(15)"
+        }
+      ],
+      "rows": [
+        [
+          "s:Cancelled"
+        ]
+      ]
+    },
+    {
+      "label": "status 0 (below the first mapped value) is '** Invalid **'",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(15)"
+        }
+      ],
+      "rows": [
+        [
+          "s:** Invalid **"
+        ]
+      ]
+    },
+    {
+      "label": "status 7 (first value above the last mapped one) is '** Invalid **'",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(15)"
+        }
+      ],
+      "rows": [
+        [
+          "s:** Invalid **"
+        ]
+      ]
+    },
+    {
+      "label": "status 255 (tinyint maximum) is '** Invalid **'",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(15)"
+        }
+      ],
+      "rows": [
+        [
+          "s:** Invalid **"
+        ]
+      ]
+    },
+    {
+      "label": "NULL status takes the ELSE branch: '** Invalid **', not NULL",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(15)"
+        }
+      ],
+      "rows": [
+        [
+          "s:** Invalid **"
+        ]
+      ]
+    }
+  ]
+}

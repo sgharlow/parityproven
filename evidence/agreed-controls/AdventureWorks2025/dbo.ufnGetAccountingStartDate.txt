@@ -1,0 +1,9 @@
+negative control for dbo.ufnGetAccountingStartDate (step 2), 2026-11-18T04:22:38.605Z
+corruption: case 1 expected value row 1, column result: t:2003-07-01T00:00:00.000000 -> t:2004-07-01T00:00:00.000000
+SQL Server: test 01 20030701 with style 112 is 2003-07-01 00:00:00.000 (midnight, datetime): FAIL — Failure: Unexpected/missing resultset rows!
+|_m_|result                 |
++---+-----------------------+
+|<  |2004-07-01 00:00:00.000|
+|>  |2003-07-01 00:00:00.000|
+PostgreSQL: test 01 20030701 with style 112 is 2003-07-01 00:00:00.000 (midnight, datetime): FAIL — agreed test failed (test 01 20030701 with style 112 is 2003-07-01 00:00:00.000 (midnight, datetime)): 1 expected row(s) missing, 1 unexpected row(s) in the result
+RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed

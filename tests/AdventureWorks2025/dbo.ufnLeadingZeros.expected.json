@@ -1,0 +1,163 @@
+{
+  "object": "dbo.ufnLeadingZeros",
+  "database": "AdventureWorks2025",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-18T04:19:44.524Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "0 is padded to '00000000'",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "varchar(8)"
+        }
+      ],
+      "rows": [
+        [
+          "s:00000000"
+        ]
+      ]
+    },
+    {
+      "label": "5 is padded to '00000005'",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "varchar(8)"
+        }
+      ],
+      "rows": [
+        [
+          "s:00000005"
+        ]
+      ]
+    },
+    {
+      "label": "-5 keeps its sign inside the padding: '000000-5'",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "varchar(8)"
+        }
+      ],
+      "rows": [
+        [
+          "s:000000-5"
+        ]
+      ]
+    },
+    {
+      "label": "12345678 (exactly 8 characters) is unchanged",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "varchar(8)"
+        }
+      ],
+      "rows": [
+        [
+          "s:12345678"
+        ]
+      ]
+    },
+    {
+      "label": "99999999 (largest 8-digit value) is unchanged",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "varchar(8)"
+        }
+      ],
+      "rows": [
+        [
+          "s:99999999"
+        ]
+      ]
+    },
+    {
+      "label": "100000000 (9 characters) does not fit varchar(8): CONVERT gives '*', padded to '0000000*'",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "varchar(8)"
+        }
+      ],
+      "rows": [
+        [
+          "s:0000000*"
+        ]
+      ]
+    },
+    {
+      "label": "-9999999 (8 characters with the sign) is unchanged",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "varchar(8)"
+        }
+      ],
+      "rows": [
+        [
+          "s:-9999999"
+        ]
+      ]
+    },
+    {
+      "label": "-10000000 (9 characters with the sign) gives '0000000*'",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "varchar(8)"
+        }
+      ],
+      "rows": [
+        [
+          "s:0000000*"
+        ]
+      ]
+    },
+    {
+      "label": "2147483647 (int maximum) gives '0000000*'",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "varchar(8)"
+        }
+      ],
+      "rows": [
+        [
+          "s:0000000*"
+        ]
+      ]
+    },
+    {
+      "label": "-2147483648 (int minimum) gives '0000000*'",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "varchar(8)"
+        }
+      ],
+      "rows": [
+        [
+          "s:0000000*"
+        ]
+      ]
+    },
+    {
+      "label": "NULL stays NULL (REPLICATE with a NULL length is NULL)",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "varchar(8)"
+        }
+      ],
+      "rows": [
+        [
+          "∅"
+        ]
+      ]
+    }
+  ]
+}

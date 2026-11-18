@@ -1,0 +1,10 @@
+[
+  { "name": "text value not changed", "from": "return v.length ? `s:${v.slice(0, -1)}${v.endsWith(\"X\") ? \"Y\" : \"X\"}` : \"s:X\";", "to": "return v.length ? `s:${v}` : \"s:X\";" },
+  { "name": "text value made longer (would not fit the column)", "from": "return v.length ? `s:${v.slice(0, -1)}${v.endsWith(\"X\") ? \"Y\" : \"X\"}` : \"s:X\";", "to": "return v.length ? `s:${v}~corrupted` : \"s:X\";" },
+  { "name": "number not incremented", "from": "(BigInt(m[2]) + 1n)", "to": "(BigInt(m[2]) + 0n)" },
+  { "name": "decimal scale dropped", "from": "${m[3] ?? \"\"}`;", "to": "`;" },
+  { "name": "bit not flipped", "from": "case \"b\": return v === \"1\" ? \"b:0\" : \"b:1\";", "to": "case \"b\": return \"b:1\";" },
+  { "name": "outcome not flipped", "from": "c.outcome = was === \"completed\" ? \"raised\" : \"completed\";", "to": "c.outcome = was;" },
+  { "name": "committed expected file changed in place", "from": "const file = JSON.parse(JSON.stringify(expected)) as ExpectedFile;", "to": "const file = expected;" },
+  { "name": "no extra row when nothing can be changed", "from": "c.rows = [...(c.rows ?? []), Array.from({ length: width }, () => \"∅\")];", "to": "c.rows = [...(c.rows ?? [])];" }
+]

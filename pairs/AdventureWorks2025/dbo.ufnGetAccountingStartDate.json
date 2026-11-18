@@ -22,7 +22,7 @@
   "columnMappings": [],
   "evidence": {
     "step1": "pass",
-    "step2": "not-run",
+    "step2": "pass",
     "step3": "pass",
     "step4": "pass",
     "step5": "not-run",
@@ -51,7 +51,13 @@
     "mutantsDetected": [
       "start date one day late"
     ],
-    "harnessVersion": "harness-generic-0.3.0"
+    "harnessVersion": "harness-generic-0.3.0",
+    "testsRun": [
+      "tSQLt V1.0.8083.3529 on SQL Server (tests/AdventureWorks2025/dbo.ufnGetAccountingStartDate.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/AdventureWorks2025/dbo.ufnGetAccountingStartDate.pg.sql); expected results tests/AdventureWorks2025/dbo.ufnGetAccountingStartDate.expected.json",
+      "SQL Server: AgreedTests.[test 01 20030701 with style 112 is 2003-07-01 00:00:00.000 (midnight, datetime)]: pass",
+      "PostgreSQL: AgreedTests.[test 01 20030701 with style 112 is 2003-07-01 00:00:00.000 (midnight, datetime)]: pass",
+      "planted defects caught by the agreed tests: 1 of 1"
+    ]
   },
   "effort": {
     "humanMinutes": 0,

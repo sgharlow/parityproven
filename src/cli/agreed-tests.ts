@@ -1,5 +1,8 @@
 /**
  * CLI: npm run agreed-tests -- --object <Schema.Name> [--object ...] [--recapture]
+ *      npm run agreed-tests -- --object <Schema.Name> --negative-control
+ *        runs the tests against a copy of the committed expected results with case 1 corrupted (in memory); it must fail
+ *        on both engines while every other case passes. Output: evidence/agreed-controls/<db>/<obj>.txt. Records nothing.
  *
  * Verification step 2 (ruling 2026-11-12): the object's fixed cases as tSQLt tests on SQL Server and plain-SQL assertion
  * tests on PostgreSQL. For each object:
@@ -35,6 +38,7 @@ import {
   pgCases, pgScript, splitBatches, ssCallText, ssInserts, TEST_CLASS, testName, tsqltScript, unsupportedFeatures,
   type ExpectedCase, type ExpectedFile,
 } from "../agreed/generate.js";
+import { corruptExpected } from "../agreed/controls.js";
 import type { PairRecord } from "../pairs/schema.js";
 import { computeStatus } from "../pairs/status.js";
 
@@ -146,7 +150,7 @@ interface Outcome {
   defects: { caught: string[]; missed: string[]; skipped: string[] };
 }
 
-async function runOne(conn: Connections, spec: ObjectSpec, recapture: boolean): Promise<Outcome> {
+async function runOne(conn: Connections, spec: ObjectSpec, recapture: boolean, control = false): Promise<Outcome & { control?: string }> {
   const label = `${spec.schema}.${spec.name}`;
   const unsupported = unsupportedFeatures(spec);
   if (unsupported.length) throw new Error(`${label}: agreed tests cannot be generated yet (${unsupported.join("; ")})`);
@@ -165,10 +169,16 @@ async function runOne(conn: Connections, spec: ObjectSpec, recapture: boolean): 
   const testsDir = resolve(ROOT, "tests", spec.database);
   mkdirSync(testsDir, { recursive: true });
   const expectedPath = resolve(testsDir, `${label}.expected.json`);
-  const out: Outcome = { tests: [], defects: { caught: [], missed: [], skipped: [] } };
+  const out: Outcome & { control?: string } = { tests: [], defects: { caught: [], missed: [], skipped: [] } };
   try {
     let expected: ExpectedFile;
-    if (!existsSync(expectedPath) || recapture) {
+    if (control) {
+      if (!existsSync(expectedPath)) throw new Error(`${label}: --negative-control needs the committed tests/${spec.database}/${label}.expected.json; run agreed-tests without it first`);
+      const corrupted = corruptExpected(JSON.parse(readFileSync(expectedPath, "utf-8")) as ExpectedFile);
+      expected = corrupted.file;
+      out.control = corrupted.what;
+      console.log(`NEGATIVE CONTROL: ${corrupted.what} (in memory only; tests/ and the pair record are not changed)`);
+    } else if (!existsSync(expectedPath) || recapture) {
       expected = await capture(scratch, spec);
       writeFileSync(expectedPath, JSON.stringify(expected, null, 2) + "\n", "utf-8");
       console.log(`expected results CAPTURED from the original T-SQL: tests/${spec.database}/${label}.expected.json (review at step 5)`);
@@ -178,8 +188,10 @@ async function runOne(conn: Connections, spec: ObjectSpec, recapture: boolean): 
     }
     const tsqlt = tsqltScript(spec, expected);
     const pgSql = pgScript(spec, expected);
-    writeFileSync(resolve(testsDir, `${label}.tsqlt.sql`), tsqlt, "utf-8");
-    writeFileSync(resolve(testsDir, `${label}.pg.sql`), pgSql, "utf-8");
+    if (!control) {
+      writeFileSync(resolve(testsDir, `${label}.tsqlt.sql`), tsqlt, "utf-8");
+      writeFileSync(resolve(testsDir, `${label}.pg.sql`), pgSql, "utf-8");
+    }
 
     // ── SQL Server: tSQLt ──
     await runBatches(scratch, readFileSync(resolve(TSQLT_DIR, "tSQLt.class.sql"), "utf-8"), "tSQLt install");
@@ -218,7 +230,7 @@ async function runOne(conn: Connections, spec: ObjectSpec, recapture: boolean): 
 
     // ── planted defects: do the agreed tests notice them? (the real function name is replaced, then restored) ──
     const code = finalSql.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
-    const mutants = spec.mutants.length ? spec.mutants : autoMutants(finalSql);
+    const mutants = control ? [] : spec.mutants.length ? spec.mutants : autoMutants(finalSql);
     for (const m of mutants) {
       if (!code.includes(m.from)) { out.defects.skipped.push(m.name); continue; }
       try {
@@ -236,6 +248,7 @@ async function runOne(conn: Connections, spec: ObjectSpec, recapture: boolean): 
   }
 
   for (const t of out.tests) console.log(`${t.engine}: ${t.name}: ${t.passed ? "pass" : `FAIL — ${t.message}`}`);
+  if (control) return out;   // a control never records step 2
   const total = out.defects.caught.length + out.defects.missed.length;
   console.log(`planted defects caught by the agreed tests: ${out.defects.caught.length} of ${total}` +
     (out.defects.missed.length ? ` (not caught: ${out.defects.missed.join("; ")})` : "") +
@@ -272,7 +285,8 @@ async function main(): Promise<void> {
     if (!s) throw new Error(`unknown object ${n}`);
     return s;
   });
-  if (!specs.length) throw new Error("Usage: agreed-tests --object <Schema.Name> [--object ...] [--recapture]");
+  if (!specs.length) throw new Error("Usage: agreed-tests --object <Schema.Name> [--object ...] [--recapture | --negative-control]");
+  const control = process.argv.includes("--negative-control");
   checkTsqlt();
 
   const project = process.env["COMPOSE_PROJECT_NAME"] ?? "docker";
@@ -295,6 +309,30 @@ async function main(): Promise<void> {
         if (spec.database === "AdventureWorks2025") await ensureAdventureWorksRestored(restoreOpts);
         else await ensureWwiRestored(restoreOpts);
         restored.add(spec.database);
+      }
+      if (control) {
+        const r = await runOne(conn, spec, false, true);
+        const first = testName(0, spec.fixedCases![0].label);
+        // it must fail as an ASSERTION, not as an error (a truncation error proves nothing about the comparison)
+        const assertion = { "SQL Server": /^Failure:/, PostgreSQL: /agreed test failed/ } as const;
+        const firstFailed = (engine: "SQL Server" | "PostgreSQL") =>
+          r.tests.some((t) => t.engine === engine && t.name === first && !t.passed && assertion[engine].test(t.message ?? ""));
+        const othersPassed = r.tests.filter((t) => t.name !== first).every((t) => t.passed);
+        const seen = firstFailed("SQL Server") && firstFailed("PostgreSQL") && othersPassed;
+        ok = seen && ok;
+        const label = `${spec.schema}.${spec.name}`;
+        const dir = resolve(ROOT, "evidence", "agreed-controls", spec.database);
+        mkdirSync(dir, { recursive: true });
+        writeFileSync(resolve(dir, `${label}.txt`), [
+          `negative control for ${label} (step 2), ${new Date().toISOString()}`,
+          `corruption: ${r.control}`,
+          ...r.tests.map((t) => `${t.engine}: ${t.name}: ${t.passed ? "pass" : `FAIL — ${t.message}`}`),
+          seen
+            ? "RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed"
+            : "RESULT: CONTROL NOT SEEN FAILING — the corrupted case did not fail as an assertion on both engines, or another case failed",
+        ].join("\n") + "\n", "utf-8");
+        console.log(`${seen ? "control seen failing" : "CONTROL NOT SEEN FAILING"}: evidence/agreed-controls/${spec.database}/${label}.txt`);
+        continue;
       }
       const r = await runOne(conn, spec, process.argv.includes("--recapture"));
       ok = r.tests.every((t) => t.passed) && ok;

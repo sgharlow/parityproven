@@ -23,7 +23,7 @@
   "columnMappings": [],
   "evidence": {
     "step1": "pass",
-    "step2": "not-run",
+    "step2": "pass",
     "step3": "pass",
     "step4": "pass",
     "step5": "not-run",
@@ -57,7 +57,33 @@
     "mutantsDetected": [
       "auto: strict comparison made inclusive"
     ],
-    "harnessVersion": "harness-generic-0.3.0"
+    "harnessVersion": "harness-generic-0.3.0",
+    "testsRun": [
+      "tSQLt V1.0.8083.3529 on SQL Server (tests/AdventureWorks2025/dbo.ufnLeadingZeros.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/AdventureWorks2025/dbo.ufnLeadingZeros.pg.sql); expected results tests/AdventureWorks2025/dbo.ufnLeadingZeros.expected.json",
+      "SQL Server: AgreedTests.[test 01 0 is padded to 00000000]: pass",
+      "SQL Server: AgreedTests.[test 02 5 is padded to 00000005]: pass",
+      "SQL Server: AgreedTests.[test 03 -5 keeps its sign inside the padding: 000000-5]: pass",
+      "SQL Server: AgreedTests.[test 04 12345678 (exactly 8 characters) is unchanged]: pass",
+      "SQL Server: AgreedTests.[test 05 99999999 (largest 8-digit value) is unchanged]: pass",
+      "SQL Server: AgreedTests.[test 06 100000000 (9 characters) does not fit varchar(8): CONVERT gives *, padded to 0000000*]: pass",
+      "SQL Server: AgreedTests.[test 07 -9999999 (8 characters with the sign) is unchanged]: pass",
+      "SQL Server: AgreedTests.[test 08 -10000000 (9 characters with the sign) gives 0000000*]: pass",
+      "SQL Server: AgreedTests.[test 09 2147483647 (int maximum) gives 0000000*]: pass",
+      "SQL Server: AgreedTests.[test 10 -2147483648 (int minimum) gives 0000000*]: pass",
+      "SQL Server: AgreedTests.[test 11 NULL stays NULL (REPLICATE with a NULL length is NULL)]: pass",
+      "PostgreSQL: AgreedTests.[test 01 0 is padded to 00000000]: pass",
+      "PostgreSQL: AgreedTests.[test 02 5 is padded to 00000005]: pass",
+      "PostgreSQL: AgreedTests.[test 03 -5 keeps its sign inside the padding: 000000-5]: pass",
+      "PostgreSQL: AgreedTests.[test 04 12345678 (exactly 8 characters) is unchanged]: pass",
+      "PostgreSQL: AgreedTests.[test 05 99999999 (largest 8-digit value) is unchanged]: pass",
+      "PostgreSQL: AgreedTests.[test 06 100000000 (9 characters) does not fit varchar(8): CONVERT gives *, padded to 0000000*]: pass",
+      "PostgreSQL: AgreedTests.[test 07 -9999999 (8 characters with the sign) is unchanged]: pass",
+      "PostgreSQL: AgreedTests.[test 08 -10000000 (9 characters with the sign) gives 0000000*]: pass",
+      "PostgreSQL: AgreedTests.[test 09 2147483647 (int maximum) gives 0000000*]: pass",
+      "PostgreSQL: AgreedTests.[test 10 -2147483648 (int minimum) gives 0000000*]: pass",
+      "PostgreSQL: AgreedTests.[test 11 NULL stays NULL (REPLICATE with a NULL length is NULL)]: pass",
+      "planted defects caught by the agreed tests: 1 of 1"
+    ]
   },
   "effort": {
     "humanMinutes": 0,

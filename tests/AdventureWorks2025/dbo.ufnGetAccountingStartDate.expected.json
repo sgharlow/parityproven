@@ -1,0 +1,23 @@
+{
+  "object": "dbo.ufnGetAccountingStartDate",
+  "database": "AdventureWorks2025",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-18T04:19:04.105Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "'20030701' with style 112 is 2003-07-01 00:00:00.000 (midnight, datetime)",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "datetime"
+        }
+      ],
+      "rows": [
+        [
+          "t:2003-07-01T00:00:00.000000"
+        ]
+      ]
+    }
+  ]
+}

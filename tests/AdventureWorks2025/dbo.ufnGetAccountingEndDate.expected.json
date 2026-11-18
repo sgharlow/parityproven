@@ -1,0 +1,23 @@
+{
+  "object": "dbo.ufnGetAccountingEndDate",
+  "database": "AdventureWorks2025",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-18T04:19:11.946Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "2 ms before 2004-07-01 is 2004-06-30 23:59:59.997 (datetime rounds to its 3.33 ms ticks, not .998)",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "datetime"
+        }
+      ],
+      "rows": [
+        [
+          "t:2004-06-30T23:59:59.997000"
+        ]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+negative control for dbo.ufnGetDocumentStatusText (step 2), 2026-11-18T04:22:53.340Z
+corruption: case 1 expected value row 1, column result: s:Pending approval -> s:Pending approvaX
+SQL Server: test 01 status 1 maps to Pending approval: FAIL — Failure: Unexpected/missing resultset rows!
+|_m_|result          |
++---+----------------+
+|<  |Pending approvaX|
+|>  |Pending approval|
+SQL Server: test 02 status 2 maps to Approved: pass
+SQL Server: test 03 status 3 maps to Obsolete: pass
+SQL Server: test 04 status 0 (below the first mapped value) is ** Invalid **: pass
+SQL Server: test 05 status 4 (first value above the last mapped one) is ** Invalid **: pass
+SQL Server: test 06 status 255 (tinyint maximum) is ** Invalid **: pass
+SQL Server: test 07 NULL status takes the ELSE branch: ** Invalid **, not NULL: pass
+PostgreSQL: test 01 status 1 maps to Pending approval: FAIL — agreed test failed (test 01 status 1 maps to Pending approval): 1 expected row(s) missing, 1 unexpected row(s) in the result
+PostgreSQL: test 02 status 2 maps to Approved: pass
+PostgreSQL: test 03 status 3 maps to Obsolete: pass
+PostgreSQL: test 04 status 0 (below the first mapped value) is ** Invalid **: pass
+PostgreSQL: test 05 status 4 (first value above the last mapped one) is ** Invalid **: pass
+PostgreSQL: test 06 status 255 (tinyint maximum) is ** Invalid **: pass
+PostgreSQL: test 07 NULL status takes the ELSE branch: ** Invalid **, not NULL: pass
+RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed

@@ -64,8 +64,25 @@ const priceFn = (name: string, pgName: string): ObjectSpec =>
     ONE_PERIOD
   );
 
-const statusFn = (name: string, pgName: string, special: number[]): ObjectSpec =>
+/**
+ * Fixed cases for a CASE @Status ... ELSE N'** Invalid **' function (hand-derived from the source): every mapped value,
+ * 0 (below the first), the first unmapped value above the last, 255 (tinyint maximum), and NULL (CASE NULL WHEN ...
+ * matches no WHEN, so it takes the ELSE branch, not NULL).
+ */
+function statusCases(texts: string[]): FixedCase[] {
+  const mapped = texts.map((t, i): FixedCase => ({ label: `status ${i + 1} maps to '${t}'`, args: [i + 1], tables: {} }));
+  return [
+    ...mapped,
+    { label: "status 0 (below the first mapped value) is '** Invalid **'", args: [0], tables: {} },
+    { label: `status ${texts.length + 1} (first value above the last mapped one) is '** Invalid **'`, args: [texts.length + 1], tables: {} },
+    { label: "status 255 (tinyint maximum) is '** Invalid **'", args: [255], tables: {} },
+    { label: "NULL status takes the ELSE branch: '** Invalid **', not NULL", args: [null], tables: {} },
+  ];
+}
+
+const statusFn = (name: string, pgName: string, special: number[], texts: string[]): ObjectSpec =>
   noTables(`dbo.${name}`, `dbo.${pgName}`, {
+    fixedCases: statusCases(texts),
     params: [tiny("Status", special)],
     ssCall: `SELECT dbo.${name}(?) AS result`,
     pgCall: "SELECT {fn}($1::smallint) AS result",
@@ -103,6 +120,7 @@ export const AW_SPECS: ObjectSpec[] = [
     benchVolume: 10,
     ...scalarBench({ ssFn: "dbo.ufnGetAccountingStartDate", pgFn: "dbo.ufn_get_accounting_start_date", ssArgs: "", pgArgs: "", calls: 20000, ...MAX_AGG }),
     mutants: [{ name: "start date one day late", from: "2003-07-01", to: "2003-07-02" }],
+    fixedCases: [{ label: "'20030701' with style 112 is 2003-07-01 00:00:00.000 (midnight, datetime)", args: [], tables: {} }],
   }),
   noTables("dbo.ufnGetAccountingEndDate", "dbo.ufn_get_accounting_end_date", {
     ssCall: "SELECT dbo.ufnGetAccountingEndDate() AS result",
@@ -111,10 +129,12 @@ export const AW_SPECS: ObjectSpec[] = [
     ...scalarBench({ ssFn: "dbo.ufnGetAccountingEndDate", pgFn: "dbo.ufn_get_accounting_end_date", ssArgs: "", pgArgs: "", calls: 20000, ...MAX_AGG }),
     mutants: [{ name: "end date is exactly 2 ms before midnight (datetime would give .997)", from: "23:59:59.997", to: "23:59:59.998" }],
     notes: ["DATEADD(millisecond, -2, '20040701') on datetime rounds to .997, not .998: SQL Server datetime has 3.33 ms resolution."],
+    fixedCases: [{ label: "2 ms before 2004-07-01 is 2004-06-30 23:59:59.997 (datetime rounds to its 3.33 ms ticks, not .998)", args: [], tables: {} }],
   }),
-  statusFn("ufnGetDocumentStatusText", "ufn_get_document_status_text", [1, 2, 3, 4]),
-  statusFn("ufnGetPurchaseOrderStatusText", "ufn_get_purchase_order_status_text", [1, 2, 3, 4, 5]),
-  statusFn("ufnGetSalesOrderStatusText", "ufn_get_sales_order_status_text", [1, 2, 3, 4, 5, 6, 7]),
+  statusFn("ufnGetDocumentStatusText", "ufn_get_document_status_text", [1, 2, 3, 4], ["Pending approval", "Approved", "Obsolete"]),
+  statusFn("ufnGetPurchaseOrderStatusText", "ufn_get_purchase_order_status_text", [1, 2, 3, 4, 5], ["Pending", "Approved", "Rejected", "Complete"]),
+  statusFn("ufnGetSalesOrderStatusText", "ufn_get_sales_order_status_text", [1, 2, 3, 4, 5, 6, 7],
+    ["In process", "Approved", "Backordered", "Rejected", "Shipped", "Cancelled"]),
   priceFn("ufnGetProductDealerPrice", "ufn_get_product_dealer_price"),
   priceFn("ufnGetProductListPrice", "ufn_get_product_list_price"),
   priceFn("ufnGetProductStandardCost", "ufn_get_product_standard_cost"),
@@ -142,6 +162,19 @@ export const AW_SPECS: ObjectSpec[] = [
     benchVolume: 10,
     ...scalarBench({ ssFn: "dbo.ufnLeadingZeros", pgFn: "dbo.ufn_leading_zeros", ssArgs: "v.n * 7919", pgArgs: "n * 7919", calls: 20000, ssAgg: "SUM(LEN({call}))", pgAgg: "sum(length({call}))" }),
     notes: ["CONVERT(varchar(8), int) yields '*' when the number needs more than 8 characters; DATALENGTH counts bytes."],
+    fixedCases: [
+      { label: "0 is padded to '00000000'", args: [0], tables: {} },
+      { label: "5 is padded to '00000005'", args: [5], tables: {} },
+      { label: "-5 keeps its sign inside the padding: '000000-5'", args: [-5], tables: {} },
+      { label: "12345678 (exactly 8 characters) is unchanged", args: [12345678], tables: {} },
+      { label: "99999999 (largest 8-digit value) is unchanged", args: [99999999], tables: {} },
+      { label: "100000000 (9 characters) does not fit varchar(8): CONVERT gives '*', padded to '0000000*'", args: [100000000], tables: {} },
+      { label: "-9999999 (8 characters with the sign) is unchanged", args: [-9999999], tables: {} },
+      { label: "-10000000 (9 characters with the sign) gives '0000000*'", args: [-10000000], tables: {} },
+      { label: "2147483647 (int maximum) gives '0000000*'", args: [2147483647], tables: {} },
+      { label: "-2147483648 (int minimum) gives '0000000*'", args: [-2147483648], tables: {} },
+      { label: "NULL stays NULL (REPLICATE with a NULL length is NULL)", args: [null], tables: {} },
+    ],
   }),
 ];
 

@@ -27,7 +27,7 @@
     {
       "step": 2,
       "label": "Agreed tests pass (tSQLt on SQL Server, plain-SQL assertions on PostgreSQL)",
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "step": 3,
@@ -79,7 +79,13 @@
       "detail": "random sample: value differs in group 0 (key \"*\"), column \"result\": SQL Server t:2004-06-30T23:59:59.997000 vs PostgreSQL t:2004-06-30T23:59:59.998000"
     },
     "subMicrosecondNormalised": 0,
-    "harnessVersion": "harness-generic-0.3.0"
+    "harnessVersion": "harness-generic-0.3.0",
+    "testsRun": [
+      "tSQLt V1.0.8083.3529 on SQL Server (tests/AdventureWorks2025/dbo.ufnGetAccountingEndDate.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/AdventureWorks2025/dbo.ufnGetAccountingEndDate.pg.sql); expected results tests/AdventureWorks2025/dbo.ufnGetAccountingEndDate.expected.json",
+      "SQL Server: AgreedTests.[test 01 2 ms before 2004-07-01 is 2004-06-30 23:59:59.997 (datetime rounds to its 3.33 ms ticks, not .998)]: pass",
+      "PostgreSQL: AgreedTests.[test 01 2 ms before 2004-07-01 is 2004-06-30 23:59:59.997 (datetime rounds to its 3.33 ms ticks, not .998)]: pass",
+      "planted defects caught by the agreed tests: 1 of 1"
+    ]
   },
   "effort": {
     "humanMinutes": 0,
@@ -90,5 +96,5 @@
     "p50Hours": 1.5,
     "p90Hours": 4
   },
-  "builtAt": "2026-11-17T03:55:18.144Z"
+  "builtAt": "2026-11-18T04:24:58.849Z"
 }

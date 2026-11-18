@@ -1,0 +1,29 @@
+negative control for dbo.ufnLeadingZeros (step 2), 2026-11-18T04:23:16.393Z
+corruption: case 1 expected value row 1, column result: s:00000000 -> s:0000000X
+SQL Server: test 01 0 is padded to 00000000: FAIL — Failure: Unexpected/missing resultset rows!
+|_m_|result  |
++---+--------+
+|<  |0000000X|
+|>  |00000000|
+SQL Server: test 02 5 is padded to 00000005: pass
+SQL Server: test 03 -5 keeps its sign inside the padding: 000000-5: pass
+SQL Server: test 04 12345678 (exactly 8 characters) is unchanged: pass
+SQL Server: test 05 99999999 (largest 8-digit value) is unchanged: pass
+SQL Server: test 06 100000000 (9 characters) does not fit varchar(8): CONVERT gives *, padded to 0000000*: pass
+SQL Server: test 07 -9999999 (8 characters with the sign) is unchanged: pass
+SQL Server: test 08 -10000000 (9 characters with the sign) gives 0000000*: pass
+SQL Server: test 09 2147483647 (int maximum) gives 0000000*: pass
+SQL Server: test 10 -2147483648 (int minimum) gives 0000000*: pass
+SQL Server: test 11 NULL stays NULL (REPLICATE with a NULL length is NULL): pass
+PostgreSQL: test 01 0 is padded to 00000000: FAIL — agreed test failed (test 01 0 is padded to 00000000): 1 expected row(s) missing, 1 unexpected row(s) in the result
+PostgreSQL: test 02 5 is padded to 00000005: pass
+PostgreSQL: test 03 -5 keeps its sign inside the padding: 000000-5: pass
+PostgreSQL: test 04 12345678 (exactly 8 characters) is unchanged: pass
+PostgreSQL: test 05 99999999 (largest 8-digit value) is unchanged: pass
+PostgreSQL: test 06 100000000 (9 characters) does not fit varchar(8): CONVERT gives *, padded to 0000000*: pass
+PostgreSQL: test 07 -9999999 (8 characters with the sign) is unchanged: pass
+PostgreSQL: test 08 -10000000 (9 characters with the sign) gives 0000000*: pass
+PostgreSQL: test 09 2147483647 (int maximum) gives 0000000*: pass
+PostgreSQL: test 10 -2147483648 (int minimum) gives 0000000*: pass
+PostgreSQL: test 11 NULL stays NULL (REPLICATE with a NULL length is NULL): pass
+RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed

@@ -1,0 +1,23 @@
+negative control for dbo.ufnGetPurchaseOrderStatusText (step 2), 2026-11-18T04:23:01.238Z
+corruption: case 1 expected value row 1, column result: s:Pending -> s:PendinX
+SQL Server: test 01 status 1 maps to Pending: FAIL — Failure: Unexpected/missing resultset rows!
+|_m_|result |
++---+-------+
+|<  |PendinX|
+|>  |Pending|
+SQL Server: test 02 status 2 maps to Approved: pass
+SQL Server: test 03 status 3 maps to Rejected: pass
+SQL Server: test 04 status 4 maps to Complete: pass
+SQL Server: test 05 status 0 (below the first mapped value) is ** Invalid **: pass
+SQL Server: test 06 status 5 (first value above the last mapped one) is ** Invalid **: pass
+SQL Server: test 07 status 255 (tinyint maximum) is ** Invalid **: pass
+SQL Server: test 08 NULL status takes the ELSE branch: ** Invalid **, not NULL: pass
+PostgreSQL: test 01 status 1 maps to Pending: FAIL — agreed test failed (test 01 status 1 maps to Pending): 1 expected row(s) missing, 1 unexpected row(s) in the result
+PostgreSQL: test 02 status 2 maps to Approved: pass
+PostgreSQL: test 03 status 3 maps to Rejected: pass
+PostgreSQL: test 04 status 4 maps to Complete: pass
+PostgreSQL: test 05 status 0 (below the first mapped value) is ** Invalid **: pass
+PostgreSQL: test 06 status 5 (first value above the last mapped one) is ** Invalid **: pass
+PostgreSQL: test 07 status 255 (tinyint maximum) is ** Invalid **: pass
+PostgreSQL: test 08 NULL status takes the ELSE branch: ** Invalid **, not NULL: pass
+RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed
