@@ -59,7 +59,7 @@
     {
       "step": 2,
       "label": "Agreed tests pass (tSQLt on SQL Server, plain-SQL assertions on PostgreSQL)",
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "step": 3,
@@ -102,7 +102,21 @@
       "update changes the temperature only"
     ],
     "subMicrosecondNormalised": 601,
-    "harnessVersion": "harness-generic-0.3.0"
+    "harnessVersion": "harness-generic-0.3.0",
+    "testsRun": [
+      "tSQLt V1.0.8083.3529 on SQL Server (tests/WideWorldImporters/Website.RecordColdRoomTemperatures.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/WideWorldImporters/Website.RecordColdRoomTemperatures.pg.sql); expected results tests/WideWorldImporters/Website.RecordColdRoomTemperatures.expected.json",
+      "SQL Server: AgreedTests.[test 01 two readings for the same new sensor: the first inserts, the second updates it]: pass",
+      "SQL Server: AgreedTests.[test 02 a reading updates every existing row for its sensor]: pass",
+      "SQL Server: AgreedTests.[test 03 a NULL sensor number in the second reading: everything is rolled back, including the first reading]: pass",
+      "SQL Server: AgreedTests.[test 04 a temperature that overflows decimal(10,2): rolled back]: pass",
+      "SQL Server: AgreedTests.[test 05 no readings: nothing changes]: pass",
+      "PostgreSQL: AgreedTests.[test 01 two readings for the same new sensor: the first inserts, the second updates it]: pass",
+      "PostgreSQL: AgreedTests.[test 02 a reading updates every existing row for its sensor]: pass",
+      "PostgreSQL: AgreedTests.[test 03 a NULL sensor number in the second reading: everything is rolled back, including the first reading]: pass",
+      "PostgreSQL: AgreedTests.[test 04 a temperature that overflows decimal(10,2): rolled back]: pass",
+      "PostgreSQL: AgreedTests.[test 05 no readings: nothing changes]: pass",
+      "planted defects caught by the agreed tests: 4 of 4"
+    ]
   },
   "effort": {
     "humanMinutes": 0,
@@ -113,5 +127,5 @@
     "p50Hours": 3,
     "p90Hours": 6
   },
-  "builtAt": "2026-11-18T20:31:48.103Z"
+  "builtAt": "2026-11-18T20:37:53.133Z"
 }

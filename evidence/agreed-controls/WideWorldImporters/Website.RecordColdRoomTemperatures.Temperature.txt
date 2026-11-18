@@ -1,0 +1,18 @@
+negative control for Website.RecordColdRoomTemperatures (step 2), 2026-11-18T20:37:08.692Z
+corruption: case 1 expected state of Warehouse.ColdRoomTemperatures row 1, column Temperature: n:4.5 -> n:5.5
+SQL Server: test 01 two readings for the same new sensor: the first inserts, the second updates it: FAIL — Failure: Warehouse.ColdRoomTemperatures after the call
+Unexpected/missing resultset rows!
+|_m_|ColdRoomSensorNumber|RecordedWhen               |Temperature|
++---+--------------------+---------------------------+-----------+
+|<  |3                   |2020-01-01 00:00:05.1234560|5.50       |
+|>  |3                   |2020-01-01 00:00:05.1234560|4.50       |
+SQL Server: test 02 a reading updates every existing row for its sensor: pass
+SQL Server: test 03 a NULL sensor number in the second reading: everything is rolled back, including the first reading: pass
+SQL Server: test 04 a temperature that overflows decimal(10,2): rolled back: pass
+SQL Server: test 05 no readings: nothing changes: pass
+PostgreSQL: test 01 two readings for the same new sensor: the first inserts, the second updates it: FAIL — agreed test failed (test 01 two readings for the same new sensor: the first inserts, the second updates it): 1 expected row(s) missing, 1 unexpected row(s) in Warehouse.ColdRoomTemperatures after the call
+PostgreSQL: test 02 a reading updates every existing row for its sensor: pass
+PostgreSQL: test 03 a NULL sensor number in the second reading: everything is rolled back, including the first reading: pass
+PostgreSQL: test 04 a temperature that overflows decimal(10,2): rolled back: pass
+PostgreSQL: test 05 no readings: nothing changes: pass
+RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed

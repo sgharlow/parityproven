@@ -160,3 +160,31 @@ describe("per-case setup and state observation queries (tranche C)", () => {
     expect(pg).toContain("in next value of each sequence after the call");
   });
 });
+describe("table-valued parameters, identity columns and memory-optimized tables (tranche C)", () => {
+  const s = specByName("Website.RecordColdRoomTemperatures")!;
+  const exp: ExpectedFile = {
+    object: "Website.RecordColdRoomTemperatures", database: s.database, capturedFrom: "", capturedAt: "", review: "",
+    cases: (s.fixedCases ?? []).map((fc) => ({ label: fc.label, outcome: "completed", tables: { "Warehouse.ColdRoomTemperatures": { columns: ["ColdRoomSensorNumber", "RecordedWhen", "Temperature"], rows: [] } } })),
+  } as ExpectedFile;
+  it("is supported", () => {
+    expect(unsupportedFeatures(s)).toEqual([]);
+  });
+  it("SQL Server: the readings fill a table variable (identity column not inserted) that the call passes; memory-optimized tables are emptied, not faked", () => {
+    const ss = tsqltScript(s, exp);
+    const body = ss.split("-- case 1:")[1].split("\nGO\n")[0];
+    expect(body).toContain("DECLARE @tvp0 [Website].[SensorDataList];");
+    expect(body).toContain("INSERT INTO @tvp0 ([ColdRoomSensorNumber], [RecordedWhen], [Temperature]) VALUES (3, ");
+    expect(body).not.toContain("SensorDataListID], [");
+    expect(body).toContain("EXEC Website.RecordColdRoomTemperatures @SensorReadings = @tvp0");
+    expect(body).toContain("DELETE FROM [Warehouse].[ColdRoomTemperatures];");
+    expect(body).not.toContain("FakeTable");
+    expect(body).not.toMatch(/DELETE FROM \[Website\]\.\[SensorDataList\]/);
+  });
+  it("PostgreSQL: the readings are one JSON array at the parameter's position, numbered 1..n by the identity column", () => {
+    const pg = pgCases(pgScript(s, exp))[0].sql;
+    expect(pg).toContain("CALL website.record_cold_room_temperatures(website.sensor_data_list_from_json('[{");
+    expect(pg).toContain('"SensorDataListID":1');
+    expect(pg).toContain('"SensorDataListID":2');
+    expect(pg).not.toContain("DELETE FROM website.sensor_data_list");
+  });
+});

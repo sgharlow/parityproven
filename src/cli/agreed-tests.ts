@@ -86,7 +86,7 @@ async function runBatches(client: MssqlClient, script: string, what: string): Pr
 }
 
 async function clearSs(scratch: MssqlClient, spec: ObjectSpec): Promise<void> {
-  for (const t of spec.tables) await scratch.query(`DELETE FROM [${t.schema}].[${t.name}]`, []);
+  for (const t of spec.tables.filter((x) => !x.tvp)) await scratch.query(`DELETE FROM [${t.schema}].[${t.name}]`, []);
 }
 
 /** Expected results from the ORIGINAL T-SQL: the same literal rows and call text the tSQLt tests use. */

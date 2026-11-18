@@ -159,7 +159,6 @@ const pgString = (s: string): string => `'${s.replace(/'/g, "''")}'`;
 export function unsupportedFeatures(spec: ObjectSpec): string[] {
   const out: string[] = [];
   if (!spec.fixedCases?.length) out.push("no fixed cases (the agreed tests are the fixed cases)");
-  if (spec.tables.some((t) => t.tvp)) out.push("table-valued parameters");
   // FOR JSON procedures: no tSQLt test can observe the result (INSERT ... EXEC is refused, also via tSQLt.ResultSetFilter,
   // error 6549, measured 2026-11-18). Ruling J1 (owner, 2026-11-18): their SQL Server side is a client re-run of the
   // original procedure (ssClientScript), not tSQLt; PostgreSQL compares as jsonb.
@@ -170,8 +169,10 @@ export function unsupportedFeatures(spec: ObjectSpec): string[] {
   // per-case setup (spec.sampleSetup, called with the fixed case) and state observation queries are supported (2026-11-18)
   if (spec.setup) out.push("one-off setup statements");
   if (spec.dependencies?.length) out.push("dependencies on other converted objects");
-  if (spec.tables.some((t) => t.columns.some((c) => c.identity))) out.push("identity columns");
-  if (spec.tables.some((t) => t.memoryOptimized) || spec.memoryOptimizedFilegroup) out.push("memory-optimized tables");
+  // table-valued parameters (SQL Server: a table variable of the type, filled by INSERTs; PostgreSQL: one JSON array),
+  // identity columns of those types (numbered 1..n in row order) and memory-optimized tables (emptied with DELETE, as
+  // tSQLt.FakeTable cannot fake them) are supported (2026-11-18)
+  if (spec.tables.some((t) => !t.tvp && t.columns.some((c) => c.identity))) out.push("identity columns in a table");
   // geography (points, as WKT) and xml (as text) are supported (2026-11-18)
   return out;
 }
@@ -198,15 +199,51 @@ export function caseTeardown(spec: ObjectSpec, fc: FixedCase): string[] {
   return spec.sampleTeardown ? spec.sampleTeardown({ args: fc.args, tables: fc.tables }).sqlServer : [];
 }
 
+/** The table-valued parameters of a spec, in argument order. */
+const tvpTables = (spec: ObjectSpec): TableSpec[] => spec.tables.filter((t) => t.tvp).sort((a, b) => a.tvp!.argIndex - b.tvp!.argIndex);
+
+/**
+ * SQL Server: one table variable per table-valued parameter, filled with one INSERT per row in case order, so an IDENTITY
+ * column numbers the rows 1..n (as the step 3 harness does). Identity columns are not inserted.
+ */
+function tvpPrefix(spec: ObjectSpec, fc: FixedCase): string[] {
+  const out: string[] = [];
+  for (const t of tvpTables(spec)) {
+    const variable = `@tvp${t.tvp!.argIndex}`;
+    out.push(`DECLARE ${variable} ${ssName(t.schema)}.${ssName(t.name)};`);
+    const cols = t.columns.filter((c) => !c.identity);
+    for (const r of fc.tables[tableKey(t)] ?? []) {
+      out.push(`INSERT INTO ${variable} (${cols.map((c) => ssName(c.name)).join(", ")}) VALUES (${cols.map((c) => ssLiteral(inputCell(r[c.name], c.type))).join(", ")});`);
+    }
+  }
+  return out;
+}
+
+/** PostgreSQL: a table-valued parameter arrives as one JSON array; identity columns carry the 1..n numbering. */
+function tvpJson(t: TableSpec, fc: FixedCase): string {
+  const rows = (fc.tables[tableKey(t)] ?? []).map((r, i) => Object.fromEntries(t.columns.map((c) => [c.name, c.identity ? i + 1 : (r[c.name] ?? null)])));
+  return JSON.stringify(rows);
+}
+
 /** The SQL Server call with literal arguments. */
 export function ssCallText(spec: ObjectSpec, fc: FixedCase): string {
   const call = spec.ssCall ?? (spec.objectClass === "view"
     ? `SELECT * FROM ${spec.schema}.${spec.name}`
     : spec.windowParams ? `EXEC ${spec.schema}.${spec.name} @LastCutoff = ?, @NewCutoff = ?` : `EXEC ${spec.schema}.${spec.name}`);
   const args = caseArgs(spec, fc);
+  const tvps = tvpTables(spec);
   const parts = call.split("?");
-  if (parts.length - 1 !== args.length) throw new Error(`${spec.name}: ssCall has ${parts.length - 1} placeholders, the case has ${args.length} arguments`);
-  return parts.reduce((acc, p, i) => acc + (i ? ssArgLiteral(args[i - 1]) : "") + p, "");
+  if (parts.length - 1 !== args.length + tvps.length) {
+    throw new Error(`${spec.name}: ssCall has ${parts.length - 1} placeholders, the case has ${args.length} arguments and ${tvps.length} table-valued parameters`);
+  }
+  // a placeholder at a table-valued parameter's argument position is its table variable; the others take the arguments in order
+  let next = 0;
+  const text = parts.reduce((acc, p, i) => {
+    if (!i) return p;
+    const tvp = tvps.find((t) => t.tvp!.argIndex === i - 1);
+    return acc + (tvp ? `@tvp${tvp.tvp!.argIndex}` : ssArgLiteral(args[next++])) + p;
+  }, "");
+  return tvps.length ? `${tvpPrefix(spec, fc).join("\n")}\n${text}` : text;
 }
 
 /** The PostgreSQL call with literal arguments ($n replaced, {fn} = the conversion). */
@@ -214,10 +251,12 @@ export function pgCallText(spec: ObjectSpec, fc: FixedCase): string {
   const call = spec.pgCall ?? (spec.objectClass === "view"
     ? "SELECT * FROM {fn}"
     : spec.windowParams ? "SELECT * FROM {fn}($1::timestamp, $2::timestamp)" : "SELECT * FROM {fn}()");
-  const args = caseArgs(spec, fc);
+  const all = caseArgs(spec, fc).map((a) => pgLiteral(a));
+  // a table-valued parameter is one JSON text argument at its position
+  for (const t of tvpTables(spec)) all.splice(t.tvp!.argIndex, 0, pgString(tvpJson(t, fc)));
   let text = call.replace("{fn}", spec.pgFunction);
   // highest index first, so $1 never matches the start of $10
-  for (let i = args.length; i >= 1; i--) text = text.split(`$${i}`).join(pgLiteral(args[i - 1]));
+  for (let i = all.length; i >= 1; i--) text = text.split(`$${i}`).join(all[i - 1]);
   if (/\$\d/.test(text)) throw new Error(`${spec.name}: pgCall has more placeholders than the case has arguments`);
   return text;
 }
@@ -226,6 +265,7 @@ export function pgCallText(spec: ObjectSpec, fc: FixedCase): string {
 function inserts(spec: ObjectSpec, fc: FixedCase, engine: "ss" | "pg"): string[] {
   const out: string[] = [];
   for (const t of spec.tables) {
+    if (t.tvp) continue;   // a table-valued parameter's rows travel in the call (tvpPrefix, tvpJson)
     const rows: Row[] = fc.tables[tableKey(t)] ?? [];
     if (!rows.length) continue;
     const cols = t.columns;
@@ -331,8 +371,9 @@ export function tsqltScript(spec: ObjectSpec, expected: ExpectedFile, options: T
     // state tests run outside tSQLt's transaction: a procedure that opens and fails its own transaction (or fails under
     // XACT_ABORT) would otherwise doom it. tSQLt undoes the FakeTable afterwards (UndoTestDoubles).
     const noTransaction = !!spec.stateCheck;
-    for (const t of spec.tables) {
-      body.push(options.schemaBound
+    for (const t of spec.tables.filter((x) => !x.tvp)) {
+      // tSQLt.FakeTable cannot fake a memory-optimized table: it is emptied instead (a state test runs outside tSQLt's transaction)
+      body.push(options.schemaBound || t.memoryOptimized
         ? `DELETE FROM ${ssName(t.schema)}.${ssName(t.name)};`
         : `EXEC tSQLt.FakeTable @TableName = N'${ssName(t.schema)}.${ssName(t.name)}';`);
     }
@@ -440,7 +481,7 @@ export function ssClientScript(spec: ObjectSpec, expected: ExpectedFile): string
     const doc = expected.cases[i]?.rows?.[0]?.[0] ?? "∅";
     parts.push([
       `-- case ${i + 1}: ${fc.label}`,
-      ...spec.tables.map((t) => `DELETE FROM ${ssName(t.schema)}.${ssName(t.name)};`),
+      ...spec.tables.filter((t) => !t.tvp).map((t) => `DELETE FROM ${ssName(t.schema)}.${ssName(t.name)};`),
       ...ssInserts(spec, fc),
       `${ssCallText(spec, fc)};`,
       `-- expected document: ${doc === "∅" ? "(no rows)" : doc.slice(2)}`,
@@ -516,7 +557,7 @@ export function pgScript(spec: ObjectSpec, expected: ExpectedFile): string {
     const exp = expected.cases[i];
     const name = testName(i, fc.label);
     const lines: string[] = [`${PG_CASE_MARKER}${i + 1}: ${fc.label}`, "BEGIN;"];
-    for (const t of spec.tables) lines.push(`DELETE FROM ${pgTableName(t)};`);
+    for (const t of spec.tables.filter((x) => !x.tvp)) lines.push(`DELETE FROM ${pgTableName(t)};`);
     lines.push(...inserts(spec, fc, "pg"));
     lines.push(...caseSetup(spec, fc).postgres.map((s) => `${s};`));
     const call = pgCallText(spec, fc);

@@ -75,6 +75,20 @@ export function corruptCell(cell: string): string | undefined {
 function corruptColumn(expected: ExpectedFile, column: string): Corrupted {
   const file = JSON.parse(JSON.stringify(expected)) as ExpectedFile;
   for (const [k, c] of file.cases.entries()) {
+    // a state object: the column of a state table (so a value that travelled in a table-valued parameter is seen failing)
+    for (const [key, st] of Object.entries(c.tables ?? {})) {
+      const si = st.columns.indexOf(column);
+      if (si < 0) continue;
+      for (const [r, row] of st.rows.entries()) {
+        const bad = corruptCell(row[si]);
+        if (row[si] !== "∅" && bad && bad !== row[si]) {
+          const was = row[si];
+          row[si] = bad;
+          return { file, caseIndex: k, what: `case ${k + 1} expected state of ${key} row ${r + 1}, column ${column}: ${was} -> ${bad}` };
+        }
+      }
+    }
+    if (!c.columns) continue;
     const i = (c.columns ?? []).findIndex((x) => x.name === column);
     if (i < 0) throw new Error(`no result column "${column}" in case ${k + 1}`);
     for (const [r, row] of (c.rows ?? []).entries()) {

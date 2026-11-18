@@ -85,3 +85,21 @@ describe("corruptExpected", () => {
     expect(corruptExpected(nulls).file.cases[0].rows).toEqual([["∅"], ["∅"]]);
   });
 });
+describe("corruptExpected on state objects", () => {
+  it("--control-column changes the first non-NULL value of that column in a state table", () => {
+    const f = file([
+      { label: "empty", outcome: "completed", tables: { "w.t": { columns: ["A", "B"], rows: [] } } },
+      { label: "rows", outcome: "completed", tables: { "w.t": { columns: ["A", "B"], rows: [["n:1", "∅"], ["n:2", "n:4.50"]] } } },
+    ] as ExpectedFile["cases"]);
+    const c = corruptExpected(f, "B");
+    expect(c.caseIndex).toBe(1);
+    expect(c.file.cases[1].tables!["w.t"].rows[1][1]).toBe("n:5.50");
+    expect(f.cases[1].tables!["w.t"].rows[1][1]).toBe("n:4.50");   // the original is untouched
+  });
+  it("a case with state observation queries gets the first query value corrupted", () => {
+    const f = file([{ label: "q", outcome: "completed", tables: {}, queries: [{ label: "next", columns: [{ name: "V", sqlServerType: "int" }], rows: [["n:11"]] }] }] as ExpectedFile["cases"]);
+    const c = corruptExpected(f);
+    expect(c.file.cases[0].queries![0].rows[0][0]).toBe("n:12");
+    expect(c.file.cases[0].outcome).toBe("completed");
+  });
+});
