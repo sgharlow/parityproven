@@ -1,0 +1,11 @@
+negative control for Integration.GetStockHoldingUpdates (step 2), 2026-11-18T05:33:19.327Z
+corruption: case 1 expected value row 1, column Quantity On Hand: n:-2 -> n:-3
+SQL Server: test 01 every holding is listed: empty and trailing-space bin locations kept, zero and negative quantities, c…: FAIL — Failure: Unexpected/missing resultset rows!
+|_m_|Quantity On Hand|Bin Location|Last Stocktake Quantity|Last Cost Price|Reorder Level|Target Stock Level|WWI Stock Item ID|
++---+----------------+------------+-----------------------+---------------+-------------+------------------+-----------------+
+|<  |-3              |L-1         |-1                     |12345.67       |10           |100               |1                |
+|=  |0               |            |1                      |0.01           |5            |50                |3                |
+|=  |7               |A-1         |8                      |0.00           |0            |1                 |2                |
+|>  |-2              |L-1         |-1                     |12345.67       |10           |100               |1                |
+PostgreSQL: test 01 every holding is listed: empty and trailing-space bin locations kept, zero and negative quantities, c…: FAIL — agreed test failed (test 01 every holding is listed: empty and trailing-space bin locations kept, zero and negative quantities, c…): 1 expected row(s) missing, 1 unexpected row(s) in the result
+RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed

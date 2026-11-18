@@ -14,7 +14,7 @@ Requirements: `requirements.md`. Design: `design.md`. Dates (owner, T1): A by 20
 - [ ] Follow-up (not in this tranche): step 3 generator producing text keys that differ only in case or trailing spaces, so CI-collation joins are tested on random data too
 - [x] Batch 3: AdventureWorks views (`Purchasing.vVendorWithAddresses`, `vVendorWithContacts`, `Sales.vSalesPersonSalesByFiscalYears`, `vStoreWithAddresses`, `vStoreWithContacts`) — step 2 pass on both engines, labels and row counts checked against the captured values, negative controls seen failing, review packets
   - [x] Finding (same as batch 2): `Purchasing.vVendorWithAddresses` and `Sales.vStoreWithAddresses` joined CountryRegionCode case-sensitively and counted trailing spaces; both conversions corrected the same way (drafts kept), regression cases kept, step 3 re-run (three targeted planted defects caught each)
-- [ ] Batch 4: WideWorldImporters `Integration.GetPurchaseUpdates`, `GetSaleUpdates`, `GetStockHoldingUpdates`, `GetTransactionUpdates`
+- [x] Batch 4: WideWorldImporters `Integration.GetPurchaseUpdates`, `GetSaleUpdates`, `GetStockHoldingUpdates`, `GetTransactionUpdates` — step 2 pass on both engines (window edges to the microsecond), labels and row counts checked against the captured values, negative controls seen failing, review packets. `GetStockHoldingUpdates`' planted defect "descending order" is not caught by the agreed tests by design (they compare multisets; order is step 3's, which catches it)
 - [ ] Optional (fail step 4 whatever step 2 says): `dbo.ufnGetProductDealerPrice`, `ufnGetProductListPrice`, `ufnGetProductStandardCost`, `ufnGetStock`
 
 ## Tranche B — generator support (9 pending objects)

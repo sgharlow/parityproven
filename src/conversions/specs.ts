@@ -4,7 +4,7 @@
  * Only columns the procedure references are declared.
  */
 
-import type { ColSpec, ObjectSpec, TableSpec } from "../harness/generic/spec.js";
+import type { ColSpec, FixedCase, ObjectSpec, Row, TableSpec } from "../harness/generic/spec.js";
 import { AW_SPECS, AW_VIEWS } from "./specs-aw.js";
 import { SEARCH_SPECS } from "./specs-search.js";
 import { LOGON_SPECS } from "./specs-logon.js";
@@ -38,6 +38,12 @@ const customers: TableSpec = {
 const WINDOW = { last: "2020-06-15T11:00:00.000000", new: "2020-06-15T13:00:00.000000" };
 const IN_WINDOW_1 = "2020-06-15T12:00:00.000000";
 const IN_WINDOW_2 = "2020-06-15T12:00:01.000000";
+// window edges, to the microsecond (the harness's resolution): > @LastCutoff and <= @NewCutoff
+const AT_LAST = "2020-06-15T11:00:00.000000";        // excluded
+const JUST_AFTER_LAST = "2020-06-15T11:00:00.000001"; // included
+const AT_NEW = "2020-06-15T13:00:00.000000";         // included
+const JUST_AFTER_NEW = "2020-06-15T13:00:00.000001";  // excluded
+const BEFORE = "2020-06-15T09:00:00.000000";         // older than the window
 
 const base = { database: "WideWorldImporters", objectClass: "procedure" } as const;
 
@@ -114,6 +120,7 @@ export const SPECS: ObjectSpec[] = [
       { name: "ordered quantity uses outers only", from: 'pol."OrderedOuters" * si."QuantityPerOuter"', to: 'pol."OrderedOuters"' },
       { name: "upper cutoff exclusive", from: "<= new_cutoff", to: "< new_cutoff" },
     ],
+    fixedCases: [purchaseUpdatesCase()],
   },
   {
     ...base, schema: "Integration", name: "GetSaleUpdates", windowParams: true,
@@ -135,6 +142,7 @@ export const SPECS: ObjectSpec[] = [
       { name: "bill-to join dropped to customer", from: 'bt."CustomerID" = i."BillToCustomerID"', to: 'bt."CustomerID" = i."CustomerID"' },
     ],
     notes: ["ORDER BY i.InvoiceID, il.InvoiceLineID: InvoiceLineID is not an output column, so rows sharing an InvoiceID are compared as a multiset."],
+    fixedCases: [saleUpdatesCase()],
   },
   {
     ...base, schema: "Integration", name: "GetStockHoldingUpdates", windowParams: false,
@@ -151,6 +159,7 @@ export const SPECS: ObjectSpec[] = [
       { name: "descending order", from: 'ORDER BY sih."StockItemID"', to: 'ORDER BY sih."StockItemID" DESC' },
       { name: "swapped reorder / target", from: 'sih."ReorderLevel",\n        sih."TargetStockLevel"', to: 'sih."TargetStockLevel",\n        sih."ReorderLevel"' },
     ],
+    fixedCases: [stockHoldingCase()],
   },
   {
     ...base, schema: "Integration", name: "GetTransactionUpdates", windowParams: true,
@@ -174,8 +183,122 @@ export const SPECS: ObjectSpec[] = [
       { name: "LEFT OUTER JOIN to invoices becomes INNER JOIN", from: "LEFT OUTER JOIN", to: "INNER JOIN" },
     ],
     notes: ["Source has no ORDER BY; the whole result is compared as a multiset."],
+    fixedCases: [transactionUpdatesCase()],
   },
 ];
+
+/**
+ * Integration.GetPurchaseUpdates (hand-derived). "Last modified" = the later of the order's and the line's LastEditedWhen.
+ * Expected: 4 rows (orders 2, 3, 5, 6).
+ *  - order 1: modified exactly at @LastCutoff (excluded, the lower bound is exclusive)
+ *  - order 2: the order is older than the window, its line 1 µs after @LastCutoff (included: the line's time counts)
+ *  - order 3: modified exactly at @NewCutoff (included, the upper bound is inclusive)
+ *  - order 4: 1 µs after @NewCutoff (excluded)
+ *  - order 5: three lines in the window; one has no StockItem row and one no PackageType row (both dropped)
+ *  - order 6: order and line modified at the same instant (the ELSE branch picks the order's, same value); 29 Feb date
+ *  - Ordered Quantity = OrderedOuters * QuantityPerOuter (3 * 12 = 36; 0 * 12 = 0); IsOrderLineFinalized 1 and 0
+ */
+function purchaseUpdatesCase(): FixedCase {
+  const po = (id: number, edited: string, date = "2020-06-01"): Row => ({ PurchaseOrderID: id, SupplierID: 7, OrderDate: date, LastEditedWhen: edited });
+  const line = (id: number, order: number, item: number, pkg: number, outers: number, edited: string, fin = 0): Row =>
+    ({ PurchaseOrderLineID: id, PurchaseOrderID: order, StockItemID: item, OrderedOuters: outers, ReceivedOuters: outers ? 1 : 0, PackageTypeID: pkg, IsOrderLineFinalized: fin, LastEditedWhen: edited });
+  return {
+    label: "window edges to the microsecond (at @LastCutoff excluded, +1 µs included, at @NewCutoff included, +1 µs excluded); a line newer than its order counts; missing stock item or package type drops the line; Ordered Quantity = outers x quantity per outer",
+    cutoffs: WINDOW,
+    tables: {
+      "Purchasing.PurchaseOrders": [po(1, AT_LAST), po(2, BEFORE), po(3, AT_NEW), po(4, JUST_AFTER_NEW), po(5, IN_WINDOW_1), po(6, IN_WINDOW_2, "2020-02-29")],
+      "Purchasing.PurchaseOrderLines": [
+        line(1, 1, 1, 1, 3, BEFORE), line(2, 2, 1, 1, 3, JUST_AFTER_LAST, 1), line(3, 3, 1, 1, 3, BEFORE), line(4, 4, 1, 1, 3, BEFORE),
+        line(5, 5, 2, 1, 0, IN_WINDOW_1), line(6, 5, 99, 1, 3, IN_WINDOW_1), line(7, 5, 1, 99, 3, IN_WINDOW_1),
+        line(8, 6, 1, 1, 3, IN_WINDOW_2),
+      ],
+      "Warehouse.StockItems": [{ StockItemID: 1, QuantityPerOuter: 12 }, { StockItemID: 2, QuantityPerOuter: 12 }],
+      "Warehouse.PackageTypes": [{ PackageTypeID: 1, PackageTypeName: "Carton" }],
+    },
+  };
+}
+
+/**
+ * Integration.GetSaleUpdates (hand-derived). Expected: 4 rows (invoice 1: two lines; invoice 4: one line; invoice 5: one).
+ *  - invoice 1 (in the window): a dry line (IsChillerStock 0: dry = Quantity, chiller = 0) and a chiller line (the
+ *    reverse); Total Excluding Tax = ExtendedPrice - TaxAmount (10.00 - 1.50 = 8.50); one UnitPrice NULL; a description
+ *    with a trailing space; ConfirmedDeliveryTime NULL (Delivery Date Key NULL); bill-to customer 2 differs from customer
+ *    1, and WWI City ID is customer 1's delivery city (10)
+ *  - invoice 2: in the window, but its bill-to customer does not exist (dropped by the inner join to bt)
+ *  - invoice 3: invoice and line modified exactly at @LastCutoff (excluded)
+ *  - invoice 4: modified exactly at @NewCutoff (included); ConfirmedDeliveryTime 23:59:59.999999 is still that date
+ *  - invoice 5: the invoice is older than the window, its line 1 µs after @LastCutoff (included)
+ */
+function saleUpdatesCase(): FixedCase {
+  const inv = (id: number, billTo: number, edited: string, delivered: string | null = null): Row =>
+    ({ InvoiceID: id, CustomerID: 1, BillToCustomerID: billTo, SalespersonPersonID: 3, InvoiceDate: "2020-06-14", ConfirmedDeliveryTime: delivered, LastEditedWhen: edited });
+  const line = (id: number, invoice: number, item: number, edited: string, over: Row = {}): Row => ({
+    InvoiceLineID: id, InvoiceID: invoice, StockItemID: item, Description: `item ${id}`, PackageTypeID: 1, Quantity: 4,
+    UnitPrice: "2.50", TaxRate: "15.000", TaxAmount: "1.50", LineProfit: "3.00", ExtendedPrice: "10.00", LastEditedWhen: edited, ...over,
+  });
+  return {
+    label: "dry and chiller lines split Quantity; Total Excluding Tax = ExtendedPrice - TaxAmount; UnitPrice and delivery time NULL kept; city from the customer, not the bill-to; a missing bill-to customer drops the invoice; window edges to the microsecond; a line newer than its invoice counts",
+    cutoffs: WINDOW,
+    tables: {
+      "Sales.Invoices": [inv(1, 2, IN_WINDOW_1), inv(2, 99, IN_WINDOW_1), inv(3, 2, AT_LAST), inv(4, 1, AT_NEW, "2020-06-15T23:59:59.999999"), inv(5, 1, BEFORE)],
+      "Sales.InvoiceLines": [
+        line(1, 1, 1, IN_WINDOW_1, { Description: "dry item " }),
+        line(2, 1, 2, IN_WINDOW_2, { UnitPrice: null }),
+        line(3, 2, 1, IN_WINDOW_1),
+        line(4, 3, 1, AT_LAST),
+        line(5, 4, 1, BEFORE),
+        line(6, 5, 2, JUST_AFTER_LAST),
+      ],
+      "Warehouse.StockItems": [{ StockItemID: 1, IsChillerStock: 0 }, { StockItemID: 2, IsChillerStock: 1 }],
+      "Warehouse.PackageTypes": [{ PackageTypeID: 1, PackageTypeName: "Each" }],
+      "Sales.Customers": [{ CustomerID: 1, DeliveryCityID: 10 }, { CustomerID: 2, DeliveryCityID: 20 }],
+    },
+  };
+}
+
+/**
+ * Integration.GetStockHoldingUpdates (hand-derived; no window). Expected: every holding, 3 rows.
+ *  - BinLocation '' (kept, not NULL) and one with a trailing space; QuantityOnHand 0 and negative; LastCostPrice 0.01 and
+ *    0.00; ReorderLevel and TargetStockLevel different, so a swap is visible
+ */
+function stockHoldingCase(): FixedCase {
+  const h = (id: number, qty: number, bin: string, cost: string, reorder: number, target: number): Row =>
+    ({ StockItemID: id, QuantityOnHand: qty, BinLocation: bin, LastStocktakeQuantity: qty + 1, LastCostPrice: cost, ReorderLevel: reorder, TargetStockLevel: target });
+  return {
+    label: "every holding is listed: empty and trailing-space bin locations kept, zero and negative quantities, cost prices to 2 places, reorder and target levels not swapped",
+    tables: { "Warehouse.StockItemHoldings": [h(3, 0, "", "0.01", 5, 50), h(1, -2, "L-1 ", "12345.67", 10, 100), h(2, 7, "A-1", "0.00", 0, 1)] },
+  };
+}
+
+/**
+ * Integration.GetTransactionUpdates (hand-derived). UNION ALL of customer and supplier transactions. Expected: 6 rows.
+ *  - customer transaction 1: no invoice (InvoiceID NULL): WWI Customer ID falls back to the transaction's customer
+ *  - customer transaction 2: an invoice for customer 8 while the transaction is for customer 5: WWI Customer ID = 8,
+ *    WWI Bill To Customer ID = 5
+ *  - customer transaction 3: an InvoiceID with no invoice row (the LEFT JOIN keeps it; falls back to customer 5)
+ *  - customer transaction 4: exactly at @LastCutoff (excluded); 5: exactly at @NewCutoff (included); IsFinalized NULL
+ *  - supplier transaction 1: SupplierInvoiceNumber '' (kept, not NULL), PurchaseOrderID NULL, a negative balance;
+ *    supplier transaction 2: 1 µs after @LastCutoff (included); 3: 1 µs after @NewCutoff (excluded)
+ */
+function transactionUpdatesCase(): FixedCase {
+  const ct = (id: number, customer: number, invoice: number | null, edited: string, fin: number | null = 1): Row => ({
+    CustomerTransactionID: id, CustomerID: customer, TransactionTypeID: 1, InvoiceID: invoice, PaymentMethodID: null, TransactionDate: "2020-06-15",
+    AmountExcludingTax: "100.00", TaxAmount: "15.00", TransactionAmount: "115.00", OutstandingBalance: "0.00", IsFinalized: fin, LastEditedWhen: edited,
+  });
+  const st = (id: number, number: string | null, po: number | null, edited: string, balance = "0.00"): Row => ({
+    SupplierTransactionID: id, SupplierID: 4, TransactionTypeID: 5, PurchaseOrderID: po, PaymentMethodID: 2, SupplierInvoiceNumber: number,
+    TransactionDate: "2020-06-15", AmountExcludingTax: "-50.00", TaxAmount: "-7.50", TransactionAmount: "-57.50", OutstandingBalance: balance, IsFinalized: 0, LastEditedWhen: edited,
+  });
+  return {
+    label: "customer id from the invoice when there is one, else from the transaction (no invoice, or an InvoiceID with no invoice row); supplier rows have NULL customer columns; '' invoice number kept; window edges to the microsecond on both halves",
+    cutoffs: WINDOW,
+    tables: {
+      "Sales.CustomerTransactions": [ct(1, 5, null, IN_WINDOW_1), ct(2, 5, 1, IN_WINDOW_1), ct(3, 5, 99, IN_WINDOW_2), ct(4, 5, null, AT_LAST), ct(5, 5, null, AT_NEW, null)],
+      "Sales.Invoices": [{ InvoiceID: 1, CustomerID: 8 }],
+      "Purchasing.SupplierTransactions": [st(1, "", null, IN_WINDOW_1, "-57.50"), st(2, "INV-2", 3, JUST_AFTER_LAST), st(3, "INV-3", 3, JUST_AFTER_NEW)],
+    },
+  };
+}
 
 // ── views over reference data (Website.Customers / Website.Suppliers) ──────────────────────────
 const geography = { kind: "geography" } as const;

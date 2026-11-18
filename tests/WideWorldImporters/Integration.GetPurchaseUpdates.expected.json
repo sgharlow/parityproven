@@ -1,0 +1,104 @@
+{
+  "object": "Integration.GetPurchaseUpdates",
+  "database": "WideWorldImporters",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-18T05:31:41.369Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "window edges to the microsecond (at @LastCutoff excluded, +1 µs included, at @NewCutoff included, +1 µs excluded); a line newer than its order counts; missing stock item or package type drops the line; Ordered Quantity = outers x quantity per outer",
+      "columns": [
+        {
+          "name": "Date Key",
+          "sqlServerType": "date"
+        },
+        {
+          "name": "WWI Purchase Order ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Ordered Outers",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Ordered Quantity",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Received Outers",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Package",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Is Order Finalized",
+          "sqlServerType": "bit"
+        },
+        {
+          "name": "WWI Supplier ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Stock Item ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Last Modified When",
+          "sqlServerType": "datetime2(7)"
+        }
+      ],
+      "rows": [
+        [
+          "d:2020-06-01",
+          "n:2",
+          "n:3",
+          "n:36",
+          "n:1",
+          "s:Carton",
+          "b:1",
+          "n:7",
+          "n:1",
+          "t:2020-06-15T11:00:00.000001"
+        ],
+        [
+          "d:2020-06-01",
+          "n:3",
+          "n:3",
+          "n:36",
+          "n:1",
+          "s:Carton",
+          "b:0",
+          "n:7",
+          "n:1",
+          "t:2020-06-15T13:00:00.000000"
+        ],
+        [
+          "d:2020-06-01",
+          "n:5",
+          "n:0",
+          "n:0",
+          "n:0",
+          "s:Carton",
+          "b:0",
+          "n:7",
+          "n:2",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-02-29",
+          "n:6",
+          "n:3",
+          "n:36",
+          "n:1",
+          "s:Carton",
+          "b:0",
+          "n:7",
+          "n:1",
+          "t:2020-06-15T12:00:01.000000"
+        ]
+      ]
+    }
+  ]
+}

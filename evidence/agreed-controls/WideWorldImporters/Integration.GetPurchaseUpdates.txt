@@ -1,0 +1,12 @@
+negative control for Integration.GetPurchaseUpdates (step 2), 2026-11-18T05:33:04.986Z
+corruption: case 1 expected value row 1, column Date Key: d:2020-06-01 -> d:2021-06-01
+SQL Server: test 01 window edges to the microsecond (at @LastCutoff excluded, +1 µs included, at @NewCutoff included, +1…: FAIL — Failure: Unexpected/missing resultset rows!
+|_m_|Date Key  |WWI Purchase Order ID|Ordered Outers|Ordered Quantity|Received Outers|Package|Is Order Finalized|WWI Supplier ID|WWI Stock Item ID|Last Modified When         |
++---+----------+---------------------+--------------+----------------+---------------+-------+------------------+---------------+-----------------+---------------------------+
+|<  |2021-06-01|2                    |3             |36              |1              |Carton |True              |7              |1                |2020-06-15 11:00:00.0000010|
+|=  |2020-02-29|6                    |3             |36              |1              |Carton |False             |7              |1                |2020-06-15 12:00:01.0000000|
+|=  |2020-06-01|3                    |3             |36              |1              |Carton |False             |7              |1                |2020-06-15 13:00:00.0000000|
+|=  |2020-06-01|5                    |0             |0               |0              |Carton |False             |7              |2                |2020-06-15 12:00:00.0000000|
+|>  |2020-06-01|2                    |3             |36              |1              |Carton |True              |7              |1                |2020-06-15 11:00:00.0000010|
+PostgreSQL: test 01 window edges to the microsecond (at @LastCutoff excluded, +1 µs included, at @NewCutoff included, +1…: FAIL — agreed test failed (test 01 window edges to the microsecond (at @LastCutoff excluded, +1 µs included, at @NewCutoff included, +1…): 1 expected row(s) missing, 1 unexpected row(s) in the result
+RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed

@@ -39,7 +39,7 @@
     {
       "step": 2,
       "label": "Agreed tests pass (tSQLt on SQL Server, plain-SQL assertions on PostgreSQL)",
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "step": 3,
@@ -91,7 +91,13 @@
       "volumeMismatch": null
     },
     "subMicrosecondNormalised": 0,
-    "harnessVersion": "harness-generic-0.3.0"
+    "harnessVersion": "harness-generic-0.3.0",
+    "testsRun": [
+      "tSQLt V1.0.8083.3529 on SQL Server (tests/WideWorldImporters/Integration.GetStockHoldingUpdates.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/WideWorldImporters/Integration.GetStockHoldingUpdates.pg.sql); expected results tests/WideWorldImporters/Integration.GetStockHoldingUpdates.expected.json",
+      "SQL Server: AgreedTests.[test 01 every holding is listed: empty and trailing-space bin locations kept, zero and negative quantities, c…]: pass",
+      "PostgreSQL: AgreedTests.[test 01 every holding is listed: empty and trailing-space bin locations kept, zero and negative quantities, c…]: pass",
+      "planted defects caught by the agreed tests: 1 of 2"
+    ]
   },
   "effort": {
     "humanMinutes": 0,
@@ -102,5 +108,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-17T03:55:18.235Z"
+  "builtAt": "2026-11-18T05:33:30.268Z"
 }
