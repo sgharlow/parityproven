@@ -100,6 +100,16 @@ describe("generated values fit their declared types", () => {
     const vals = sample({ name: "s", type: { kind: "nvarchar", n: 20 }, strings: ["alpha"] }, 400);
     expect(vals.filter((v) => v === "alpha").length).toBeGreaterThan(200);
   });
+  it("caseVariants text keys come back in lower case, with a trailing space, or both, and fit the column", () => {
+    const vals = sample({ name: "k", type: { kind: "char", n: 3 }, role: "ref", caseVariants: true }, 600).map(String);
+    expect(vals.some((v) => /^k\d$/.test(v))).toBe(true);
+    expect(vals.some((v) => /^K\d $/.test(v))).toBe(true);
+    expect(vals.some((v) => /^k\d $/.test(v))).toBe(true);
+    expect(vals.some((v) => /^K\d$/.test(v))).toBe(true);
+    for (const v of vals) expect(v.length).toBeLessThanOrEqual(3);
+    // without the opt-in the keys are exactly K<n>
+    for (const v of sample({ name: "k", type: { kind: "char", n: 3 }, role: "ref" }, 200).map(String)) expect(v).toMatch(/^K\d+$/);
+  });
   it("trueFraction biases bit columns", () => {
     const vals = sample({ name: "b", type: { kind: "bit" }, trueFraction: 0.1 }, 1000);
     expect(vals.filter((v) => v === true).length).toBeLessThan(200);

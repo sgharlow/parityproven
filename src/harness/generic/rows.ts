@@ -119,14 +119,16 @@ export function baseColArb(col: ColSpec, c: Cutoffs | null, k: number): fc.Arbit
     }
     case "char":
       if (col.role === "ref" && t.n >= 2) {
-        return fc.oneof({ arbitrary: fc.integer({ min: 1, max: k }).map((n) => `K${n}`), weight: 12 }, { arbitrary: fc.constant(`K${k + 1}`), weight: 1 });
+        const key = fc.oneof({ arbitrary: fc.integer({ min: 1, max: k }).map((n) => `K${n}`), weight: 12 }, { arbitrary: fc.constant(`K${k + 1}`), weight: 1 });
+        return col.caseVariants ? key.chain((v) => fc.constantFrom(v, v, v.toLowerCase(), `${v} `, `${v.toLowerCase()} `).map((s) => s.slice(0, t.n))) : key;
       }
       return fc.oneof(fc.constantFrom("", "a", "A", " a"), fc.string({ maxLength: t.n })).map((s) => s.slice(0, t.n));
     case "decimal":
       return decimalArb(t.p, t.s);
     case "nvarchar":
       if (col.role === "ref" && t.n >= 2) {
-        return fc.oneof({ arbitrary: fc.integer({ min: 1, max: k }).map((n) => `K${n}`), weight: 12 }, { arbitrary: fc.constant(`K${k + 1}`), weight: 1 });
+        const key = fc.oneof({ arbitrary: fc.integer({ min: 1, max: k }).map((n) => `K${n}`), weight: 12 }, { arbitrary: fc.constant(`K${k + 1}`), weight: 1 });
+        return col.caseVariants ? key.chain((v) => fc.constantFrom(v, v, v.toLowerCase(), `${v} `, `${v.toLowerCase()} `).map((s) => s.slice(0, t.n))) : key;
       }
       if (col.strings?.length) {
         // a spec vocabulary (names, search terms) dominates, so that text searches actually hit

@@ -103,11 +103,11 @@
   ],
   "evidence": {
     "pbtSeeds": [
-      1924790115
+      14445940
     ],
-    "rowsCompared": 290,
+    "rowsCompared": 242,
     "samples": 200,
-    "samplesWithRows": 126,
+    "samplesWithRows": 108,
     "trapsCovered": [
       "NULL in every nullable column",
       "empty string and trailing spaces"
@@ -120,18 +120,18 @@
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
-      "sqlServerMs": 87,
-      "postgresMs": 32.2,
-      "ratio": 0.37,
+      "sqlServerMs": 86,
+      "postgresMs": 26.45,
+      "ratio": 0.31,
       "threshold": 1.5,
       "passed": true,
       "belowResolution": false,
-      "resultRows": 6796,
+      "resultRows": 6741,
       "volumeMismatch": null
     },
     "engineOutputCheck": {
       "step3": "fail",
-      "seed": 1924790115,
+      "seed": 14445940,
       "detail": "fixed case \"collation: province code 'us' joins country 'US' (case-insensitive CI_AS), so the employee is listed\": row count differs: SQL Server 1, PostgreSQL 0"
     },
     "subMicrosecondNormalised": 0,
@@ -156,5 +156,5 @@
     "p50Hours": 0.75,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-18T20:45:15.348Z"
+  "builtAt": "2026-11-18T21:07:02.684Z"
 }

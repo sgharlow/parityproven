@@ -60,33 +60,33 @@
       "PostgreSQL: AgreedTests.[test 03 trailing space: province code CA joins country CA (SQL Server equality ignores trailing spaces)]: pass",
       "planted defects caught by the agreed tests: 3 of 3"
     ],
-    "runtimeRatio": 0.67,
+    "runtimeRatio": 0.71,
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
-      "sqlServerMs": 11,
-      "postgresMs": 7.33,
-      "ratio": 0.67,
+      "sqlServerMs": 8,
+      "postgresMs": 5.66,
+      "ratio": 0.71,
       "threshold": 1.5,
       "passed": true,
       "belowResolution": false,
       "resultRows": 5000,
       "volumeMismatch": null
     },
-    "rowsCompared": 309,
+    "rowsCompared": 336,
     "trapsCovered": [
       "empty string and trailing spaces"
     ],
     "pbtSeeds": [
-      184644805
+      1885045325
     ],
     "engineOutputCheck": {
       "step3": "fail",
-      "seed": 184644805,
+      "seed": 1885045325,
       "detail": "fixed case \"collation: province code 'us' joins country 'US' (case-insensitive CI_AS); CountryRegionCode comes from the country row ('US')\": row count differs: SQL Server 1, PostgreSQL 0"
     },
     "samples": 200,
-    "samplesWithRows": 183,
+    "samplesWithRows": 180,
     "subMicrosecondNormalised": 0,
     "mutantsDetected": [
       "join is case-sensitive (collation dropped)",

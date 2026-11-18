@@ -6,7 +6,7 @@
 
 import type { ColSpec, FixedCase, ObjectSpec, Row } from "../harness/generic/spec.js";
 import { specFromCatalog, type CatalogOptions } from "./catalog.js";
-import { ciJoinFix, countryCodeVariants, EMAIL_LEFT_JOIN } from "./specs-aw.js";
+import { ciJoinFix, countryCodeVariants, EMAIL_LEFT_JOIN, withCaseVariantKeys } from "./specs-aw.js";
 
 const DB = "AdventureWorks2025";
 const ref = (name: string, nullable = false): ColSpec => ({ name, type: { kind: "int" }, role: "ref", nullable });
@@ -236,7 +236,7 @@ function employeeCases(): FixedCase[] {
   ];
 }
 
-export const AW2_SPECS: ObjectSpec[] = [
+const AW2_SPECS_RAW: ObjectSpec[] = [
   {
     ...view("HumanResources.vEmployee", "humanresources.v_employee", [XML_NOTE]), fixedCases: employeeCases(),
     mutants: ciJoinFix("HumanResources.vEmployee", EMAIL_LEFT_JOIN).mutants,
@@ -257,6 +257,7 @@ export const AW2_SPECS: ObjectSpec[] = [
   bom("uspGetBillOfMaterials", "usp_get_bill_of_materials", "down"),
   bom("uspGetWhereUsedProductID", "usp_get_where_used_product_id", "up"),
 ];
+export const AW2_SPECS: ObjectSpec[] = AW2_SPECS_RAW.map(withCaseVariantKeys);
 
 /**
  * Sales.vIndividualCustomer trap case (hand-derived). Expected: 2 rows.

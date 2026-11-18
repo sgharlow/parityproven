@@ -14,8 +14,8 @@
     "engine": "kiro",
     "notes": [
       "Finding (step 2, 2026-11-18): Kiro's draft of Sales.vSalesPerson joined CountryRegionCode with PostgreSQL '=', which is case-sensitive and counts trailing spaces. Under the source collation (SQL_Latin1_General_CP1_CI_AS) 'us' joins 'US' and 'US ' joins 'US'. Step 3 passed because the generated codes never differed only in case or trailing spaces; the fixed cases 'collation' and 'trailing space' failed on PostgreSQL. Fixed in the conversion as for Person.vStateProvinceCountryRegion (rtrim + a case-insensitive ICU collation in the join); both cases are kept as regression cases.",
-      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step).",
-      "Step 5 reset on 2026-11-18: this object was verified after a second review by Steve Harlow on 2026-11-16, but that review covered the previous conversion. The conversion was then corrected (the CountryRegionCode join under CI_AS, finding of 2026-11-18), so the corrected code needs a new review before the object can be verified again."
+      "Step 5 reset on 2026-11-18: this object was verified after a second review by Steve Harlow on 2026-11-16, but that review covered the previous conversion. The conversion was then corrected (the CountryRegionCode join under CI_AS, finding of 2026-11-18), so the corrected code needs a new review before the object can be verified again.",
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
     ]
   },
   "columnMappings": [
@@ -112,11 +112,11 @@
   ],
   "evidence": {
     "pbtSeeds": [
-      398997157
+      903532920
     ],
-    "rowsCompared": 231,
+    "rowsCompared": 292,
     "samples": 200,
-    "samplesWithRows": 111,
+    "samplesWithRows": 123,
     "trapsCovered": [
       "NULL in every nullable column",
       "empty string and trailing spaces"
@@ -129,18 +129,18 @@
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
-      "sqlServerMs": 69,
-      "postgresMs": 35.67,
-      "ratio": 0.52,
+      "sqlServerMs": 81,
+      "postgresMs": 40.49,
+      "ratio": 0.5,
       "threshold": 1.5,
       "passed": true,
       "belowResolution": false,
-      "resultRows": 6810,
+      "resultRows": 6803,
       "volumeMismatch": null
     },
     "engineOutputCheck": {
       "step3": "fail",
-      "seed": 398997157,
+      "seed": 903532920,
       "detail": "fixed case \"collation: the first case with lowercase province country codes ('us' joins 'US' under CI_AS): the same rows\": row count differs: SQL Server 3, PostgreSQL 0"
     },
     "subMicrosecondNormalised": 0,
@@ -165,5 +165,5 @@
     "p50Hours": 0.75,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-18T20:45:15.352Z"
+  "builtAt": "2026-11-18T21:07:02.693Z"
 }

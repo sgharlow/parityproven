@@ -48,6 +48,11 @@ export interface ColSpec {
   special?: number[];
   /** int IDENTITY(1,1) on SQL Server; generated values are ignored (rows are numbered 1..n in generated order). */
   identity?: boolean;
+  /**
+   * Text `ref` columns: the key a row refers to is sometimes written in lower case, with a trailing space, or both, as a
+   * case-insensitive collation (SQL Server's CI_AS) treats those as the same key. Opt in where the source joins on such a key.
+   */
+  caseVariants?: boolean;
   /** Extra text values mixed in for nvarchar columns/arguments (names, search terms, LIKE metacharacters). */
   strings?: string[];
   /**

@@ -130,6 +130,20 @@ export const EMAIL_LEFT_JOIN: ObjectSpec["mutants"] = [
   { name: "LEFT JOIN to email made an inner join (people without email dropped)", from: "LEFT OUTER JOIN person.email_address ea", to: "INNER JOIN person.email_address ea" },
 ];
 
+/**
+ * Step 3 generator for the CI_AS key join (follow-up of the 2026-11-18 finding): Person.StateProvince.CountryRegionCode
+ * is generated with case and trailing-space variants of the country codes it refers to, so a join that compares them
+ * case-sensitively or counts trailing spaces is caught by random data too, not only by the fixed cases.
+ */
+export function withCaseVariantKeys(spec: ObjectSpec): ObjectSpec {
+  return {
+    ...spec,
+    tables: spec.tables.map((t) =>
+      t.schema === "Person" && t.name === "StateProvince"
+        ? { ...t, columns: t.columns.map((c) => (c.name === "CountryRegionCode" && c.role === "ref" ? { ...c, caseVariants: true } : c)) }
+        : t),
+  };
+}
 export const ciJoinFix = (qualified: string, extra: ObjectSpec["mutants"] = [
   { name: "inner join to address type made a left join (unknown address types kept)", from: "INNER JOIN person.address_type at", to: "LEFT JOIN person.address_type at" },
 ]): Pick<ObjectSpec, "mutants" | "notes"> => ({
@@ -144,7 +158,7 @@ export const ciJoinFix = (qualified: string, extra: ObjectSpec["mutants"] = [
   ],
 });
 
-export const AW_VIEWS: ObjectSpec[] = [
+const AW_VIEWS_RAW: ObjectSpec[] = [
   {
     ...view("Person.vStateProvinceCountryRegion", "person.v_state_province_country_region"),
     fixedCases: stateProvinceCases(),
@@ -177,6 +191,7 @@ export const AW_VIEWS: ObjectSpec[] = [
     fixedCases: [fiscalYearsCase()],
   },
 ];
+export const AW_VIEWS: ObjectSpec[] = AW_VIEWS_RAW.map(withCaseVariantKeys);
 
 export const AW_SPECS: ObjectSpec[] = [
   noTables("dbo.ufnGetAccountingStartDate", "dbo.ufn_get_accounting_start_date", {

@@ -107,11 +107,11 @@
   ],
   "evidence": {
     "pbtSeeds": [
-      2062176362
+      1690129823
     ],
-    "rowsCompared": 565,
+    "rowsCompared": 638,
     "samples": 200,
-    "samplesWithRows": 94,
+    "samplesWithRows": 90,
     "trapsCovered": [
       "NULL in every nullable column",
       "empty string and trailing spaces"
@@ -124,18 +124,18 @@
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
-      "sqlServerMs": 57,
-      "postgresMs": 14.46,
-      "ratio": 0.25,
+      "sqlServerMs": 47,
+      "postgresMs": 11.02,
+      "ratio": 0.23,
       "threshold": 1.5,
       "passed": true,
       "belowResolution": false,
-      "resultRows": 1029,
+      "resultRows": 1211,
       "volumeMismatch": null
     },
     "engineOutputCheck": {
       "step3": "fail",
-      "seed": 2062176362,
+      "seed": 1690129823,
       "detail": "fixed case \"collation: the first case with lowercase province country codes ('us' joins 'US' under CI_AS): the same rows\": row count differs: SQL Server 2, PostgreSQL 0"
     },
     "subMicrosecondNormalised": 0,
@@ -160,5 +160,5 @@
     "p50Hours": 0.75,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-18T20:45:15.352Z"
+  "builtAt": "2026-11-18T21:07:02.691Z"
 }
