@@ -1,0 +1,99 @@
+{
+  "object": "HumanResources.vEmployeeDepartmentHistory",
+  "database": "AdventureWorks2025",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-18T04:45:06.162Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "ended and open histories both listed (EndDate NULL kept); missing shift or person dropped; 1753-01-01 to 9999-12-31; Title '' kept, not NULL",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Title",
+          "sqlServerType": "nvarchar(8)"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "MiddleName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Suffix",
+          "sqlServerType": "nvarchar(10)"
+        },
+        {
+          "name": "Shift",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Department",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "GroupName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "StartDate",
+          "sqlServerType": "date"
+        },
+        {
+          "name": "EndDate",
+          "sqlServerType": "date"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "∅",
+          "s:Ann",
+          "∅",
+          "s:Lee",
+          "∅",
+          "s:Day",
+          "s:Engineering",
+          "s:Research and Development",
+          "d:2001-01-01",
+          "d:2005-06-30"
+        ],
+        [
+          "n:1",
+          "∅",
+          "s:Ann",
+          "∅",
+          "s:Lee",
+          "∅",
+          "s:Evening",
+          "s:Sales",
+          "s:Sales and Marketing",
+          "d:2005-07-01",
+          "∅"
+        ],
+        [
+          "n:2",
+          "s:",
+          "s:Bo",
+          "s:J",
+          "s:Ng",
+          "s:Jr.",
+          "s:Day",
+          "s:Sales",
+          "s:Sales and Marketing",
+          "d:1753-01-01",
+          "d:9999-12-31"
+        ]
+      ]
+    }
+  ]
+}

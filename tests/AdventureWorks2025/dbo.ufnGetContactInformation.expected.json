@@ -1,0 +1,336 @@
+{
+  "object": "dbo.ufnGetContactInformation",
+  "database": "AdventureWorks2025",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-18T04:51:48.999Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "person 1 has all four roles: Employee (Buyer), Vendor Contact (Owner), Store Contact (Purchasing Manager), Consumer; being also a store's customer adds no second Consumer row",
+      "columns": [
+        {
+          "name": "PersonID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "BusinessEntityType",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:Ann",
+          "s:Lee",
+          "s:Buyer",
+          "s:Employee"
+        ],
+        [
+          "n:1",
+          "s:Ann",
+          "s:Lee",
+          "s:Owner",
+          "s:Vendor Contact"
+        ],
+        [
+          "n:1",
+          "s:Ann",
+          "s:Lee",
+          "s:Purchasing Manager",
+          "s:Store Contact"
+        ],
+        [
+          "n:1",
+          "s:Ann",
+          "s:Lee",
+          "∅",
+          "s:Consumer"
+        ]
+      ]
+    },
+    {
+      "label": "person 2 is a customer of a store (StoreID not NULL), so not a Consumer: no rows",
+      "columns": [
+        {
+          "name": "PersonID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "BusinessEntityType",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": []
+    },
+    {
+      "label": "person 3 is a contact of two vendors: two Vendor Contact rows",
+      "columns": [
+        {
+          "name": "PersonID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "BusinessEntityType",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:3",
+          "s:Cy",
+          "s:Oh",
+          "s:Owner",
+          "s:Vendor Contact"
+        ],
+        [
+          "n:3",
+          "s:Cy",
+          "s:Oh",
+          "s:Purchasing Manager",
+          "s:Vendor Contact"
+        ]
+      ]
+    },
+    {
+      "label": "person 4 is an employee with no Person row: EXISTS is true but the join to Person returns no row",
+      "columns": [
+        {
+          "name": "PersonID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "BusinessEntityType",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": []
+    },
+    {
+      "label": "person 5 is a contact of an entity that is neither vendor nor store: no rows",
+      "columns": [
+        {
+          "name": "PersonID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "BusinessEntityType",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": []
+    },
+    {
+      "label": "person 6 is two customers without a store: two identical Consumer rows",
+      "columns": [
+        {
+          "name": "PersonID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "BusinessEntityType",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:6",
+          "s:Flo",
+          "s:Su",
+          "∅",
+          "s:Consumer"
+        ],
+        [
+          "n:6",
+          "s:Flo",
+          "s:Su",
+          "∅",
+          "s:Consumer"
+        ]
+      ]
+    },
+    {
+      "label": "person 7's contact type does not exist: EXISTS is true but the join to ContactType drops the row",
+      "columns": [
+        {
+          "name": "PersonID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "BusinessEntityType",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": []
+    },
+    {
+      "label": "person 8's JobTitle is '' (empty string, kept, not NULL)",
+      "columns": [
+        {
+          "name": "PersonID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "BusinessEntityType",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:8",
+          "s:Hal",
+          "s:Uy",
+          "s:",
+          "s:Employee"
+        ]
+      ]
+    },
+    {
+      "label": "NULL PersonID returns no rows (IF @PersonID IS NOT NULL)",
+      "columns": [
+        {
+          "name": "PersonID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "BusinessEntityType",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": []
+    },
+    {
+      "label": "an unknown PersonID (999) returns no rows",
+      "columns": [
+        {
+          "name": "PersonID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "BusinessEntityType",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": []
+    }
+  ]
+}

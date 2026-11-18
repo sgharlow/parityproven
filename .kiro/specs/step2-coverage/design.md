@@ -15,5 +15,13 @@ The four AdventureWorks scalar functions that fail step 4 come last and may be s
 
 Checked on two pilot objects before use (2026-11-18): `Sales.vSalesPerson` (value `n:1 -> n:2`) and `Website.ChangePassword` (outcome `completed -> raised`) both failed on both engines; no pair record changed.
 
+## Schema-bound objects (batch 2)
+`tSQLt.FakeTable` renames a table, and SQL Server refuses to rename a table that a `WITH SCHEMABINDING` object depends on ("cannot be renamed because the object participates in enforced dependencies"; seen 2026-11-18 on `Person.vStateProvinceCountryRegion` and `Production.vProductAndDescription`). `agreed-tests` detects `WITH SCHEMABINDING` in the source definition and passes `tsqltScript(..., { schemaBound: true })`: each test then empties the spec's tables with `DELETE` instead, inside tSQLt's test transaction, which tSQLt rolls back. A schema-bound object with state tests (which run outside that transaction) is refused rather than handled. Unit tests: `src/agreed/generate.test.ts`. Both views' negative controls were seen failing on this path.
+
+## Finding: Person.vStateProvinceCountryRegion (batch 2, REQ-4.3)
+Step 2 found a real difference that step 3 had passed. The view joins `CountryRegionCode` under the source collation `SQL_Latin1_General_CP1_CI_AS`: case-insensitive and blind to trailing spaces, so `'us'` joins `'US'` and `'CA '` joins `'CA'`. Kiro's draft used PostgreSQL `=`, which is neither; the generated data never produced codes that differ only in case or trailing spaces, so step 3 passed. The draft is kept as `conversions/AdventureWorks2025/Person.vStateProvinceCountryRegion.draft.sql` (the receipt shows it failing), the conversion now compares `rtrim(code)` under a nondeterministic case-insensitive ICU collation (`tsql_compat.ci_as_equal`), and the two failing cases stay as regression cases. Planted defects for each part of the fix (collation dropped from both sides, rtrim dropped, inner join made left) are caught by step 3 and by the agreed tests. A first version of the collation defect removed it from one side only, which is unobservable (an explicit collation on either side applies) and was replaced.
+
+Other objects may share the pattern: any join or comparison on text under a CI collation. The step 3 generator does not yet produce keys that differ only in case or trailing spaces; that is noted here, not fixed in this tranche.
+
 ## Tranches B and C
 Not designed yet: JSON results, declared result errors and geography/xml columns (B); setup statements, state observation queries, table-valued parameters, identity columns, dependencies and memory-optimized tables (C). Each new feature gets unit tests in `src/agreed/` and its own negative control before a pass is trusted.

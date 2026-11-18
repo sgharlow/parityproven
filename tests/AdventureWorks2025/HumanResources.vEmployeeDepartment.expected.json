@@ -1,0 +1,92 @@
+{
+  "object": "HumanResources.vEmployeeDepartment",
+  "database": "AdventureWorks2025",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-18T04:44:57.698Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "only open histories: ended ones excluded, missing department or person dropped, two open histories give two rows; 1753-01-01 and 9999-12-31 start dates; Title '' kept, not NULL",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Title",
+          "sqlServerType": "nvarchar(8)"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "MiddleName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Suffix",
+          "sqlServerType": "nvarchar(10)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Department",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "GroupName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "StartDate",
+          "sqlServerType": "date"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "∅",
+          "s:Ann",
+          "∅",
+          "s:Lee",
+          "∅",
+          "s:Engineer",
+          "s:Engineering",
+          "s:Research and Development",
+          "d:2005-07-01"
+        ],
+        [
+          "n:2",
+          "s:",
+          "s:Bo",
+          "s:J",
+          "s:Ng",
+          "s:Jr.",
+          "s:Tester ",
+          "s:Engineering",
+          "s:Research and Development",
+          "d:1753-01-01"
+        ],
+        [
+          "n:2",
+          "s:",
+          "s:Bo",
+          "s:J",
+          "s:Ng",
+          "s:Jr.",
+          "s:Tester ",
+          "s:Sales",
+          "s:Sales and Marketing",
+          "d:9999-12-31"
+        ]
+      ]
+    }
+  ]
+}

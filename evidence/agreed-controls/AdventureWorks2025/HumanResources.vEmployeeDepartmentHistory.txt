@@ -1,0 +1,11 @@
+negative control for HumanResources.vEmployeeDepartmentHistory (step 2), 2026-11-18T04:55:47.982Z
+corruption: case 1 expected value row 1, column BusinessEntityID: n:1 -> n:2
+SQL Server: test 01 ended and open histories both listed (EndDate NULL kept); missing shift or person dropped; 1753-01-01…: FAIL — Failure: Unexpected/missing resultset rows!
+|_m_|BusinessEntityID|Title |FirstName|MiddleName|LastName|Suffix|Shift  |Department |GroupName               |StartDate |EndDate   |
++---+----------------+------+---------+----------+--------+------+-------+-----------+------------------------+----------+----------+
+|<  |2               |!NULL!|Ann      |!NULL!    |Lee     |!NULL!|Day    |Engineering|Research and Development|2001-01-01|2005-06-30|
+|=  |2               |      |Bo       |J         |Ng      |Jr.   |Day    |Sales      |Sales and Marketing     |1753-01-01|9999-12-31|
+|=  |1               |!NULL!|Ann      |!NULL!    |Lee     |!NULL!|Evening|Sales      |Sales and Marketing     |2005-07-01|!NULL!    |
+|>  |1               |!NULL!|Ann      |!NULL!    |Lee     |!NULL!|Day    |Engineering|Research and Development|2001-01-01|2005-06-30|
+PostgreSQL: test 01 ended and open histories both listed (EndDate NULL kept); missing shift or person dropped; 1753-01-01…: FAIL — agreed test failed (test 01 ended and open histories both listed (EndDate NULL kept); missing shift or person dropped; 1753-01-01…): 1 expected row(s) missing, 1 unexpected row(s) in the result
+RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed

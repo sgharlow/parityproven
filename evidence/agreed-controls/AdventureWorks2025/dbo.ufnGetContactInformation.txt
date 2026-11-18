@@ -1,0 +1,30 @@
+negative control for dbo.ufnGetContactInformation (step 2), 2026-11-18T04:55:31.723Z
+corruption: case 1 expected value row 1, column PersonID: n:1 -> n:2
+SQL Server: test 01 person 1 has all four roles: Employee (Buyer), Vendor Contact (Owner), Store Contact (Purchasing Mana…: FAIL — Failure: Unexpected/missing resultset rows!
+|_m_|PersonID|FirstName|LastName|JobTitle          |BusinessEntityType|
++---+--------+---------+--------+------------------+------------------+
+|<  |2       |Ann      |Lee     |Buyer             |Employee          |
+|=  |1       |Ann      |Lee     |!NULL!            |Consumer          |
+|=  |1       |Ann      |Lee     |Owner             |Vendor Contact    |
+|=  |1       |Ann      |Lee     |Purchasing Manager|Store Contact     |
+|>  |1       |Ann      |Lee     |Buyer             |Employee          |
+SQL Server: test 02 person 2 is a customer of a store (StoreID not NULL), so not a Consumer: no rows: pass
+SQL Server: test 03 person 3 is a contact of two vendors: two Vendor Contact rows: pass
+SQL Server: test 04 person 4 is an employee with no Person row: EXISTS is true but the join to Person returns no row: pass
+SQL Server: test 05 person 5 is a contact of an entity that is neither vendor nor store: no rows: pass
+SQL Server: test 06 person 6 is two customers without a store: two identical Consumer rows: pass
+SQL Server: test 07 person 7s contact type does not exist: EXISTS is true but the join to ContactType drops the row: pass
+SQL Server: test 08 person 8s JobTitle is (empty string, kept, not NULL): pass
+SQL Server: test 09 NULL PersonID returns no rows (IF @PersonID IS NOT NULL): pass
+SQL Server: test 10 an unknown PersonID (999) returns no rows: pass
+PostgreSQL: test 01 person 1 has all four roles: Employee (Buyer), Vendor Contact (Owner), Store Contact (Purchasing Mana…: FAIL — agreed test failed (test 01 person 1 has all four roles: Employee (Buyer), Vendor Contact (Owner), Store Contact (Purchasing Mana…): 1 expected row(s) missing, 1 unexpected row(s) in the result
+PostgreSQL: test 02 person 2 is a customer of a store (StoreID not NULL), so not a Consumer: no rows: pass
+PostgreSQL: test 03 person 3 is a contact of two vendors: two Vendor Contact rows: pass
+PostgreSQL: test 04 person 4 is an employee with no Person row: EXISTS is true but the join to Person returns no row: pass
+PostgreSQL: test 05 person 5 is a contact of an entity that is neither vendor nor store: no rows: pass
+PostgreSQL: test 06 person 6 is two customers without a store: two identical Consumer rows: pass
+PostgreSQL: test 07 person 7s contact type does not exist: EXISTS is true but the join to ContactType drops the row: pass
+PostgreSQL: test 08 person 8s JobTitle is (empty string, kept, not NULL): pass
+PostgreSQL: test 09 NULL PersonID returns no rows (IF @PersonID IS NOT NULL): pass
+PostgreSQL: test 10 an unknown PersonID (999) returns no rows: pass
+RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed

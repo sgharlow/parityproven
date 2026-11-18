@@ -36,7 +36,7 @@
   ],
   "evidence": {
     "step1": "pass",
-    "step2": "not-run",
+    "step2": "pass",
     "step3": "pass",
     "step4": "pass",
     "step5": "not-run",
@@ -70,7 +70,31 @@
       "vendor contacts labelled as store contacts",
       "employee rows without the person join (JobTitle from the wrong row)"
     ],
-    "harnessVersion": "harness-generic-0.3.0"
+    "harnessVersion": "harness-generic-0.3.0",
+    "testsRun": [
+      "tSQLt V1.0.8083.3529 on SQL Server (tests/AdventureWorks2025/dbo.ufnGetContactInformation.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/AdventureWorks2025/dbo.ufnGetContactInformation.pg.sql); expected results tests/AdventureWorks2025/dbo.ufnGetContactInformation.expected.json",
+      "SQL Server: AgreedTests.[test 01 person 1 has all four roles: Employee (Buyer), Vendor Contact (Owner), Store Contact (Purchasing Mana…]: pass",
+      "SQL Server: AgreedTests.[test 02 person 2 is a customer of a store (StoreID not NULL), so not a Consumer: no rows]: pass",
+      "SQL Server: AgreedTests.[test 03 person 3 is a contact of two vendors: two Vendor Contact rows]: pass",
+      "SQL Server: AgreedTests.[test 04 person 4 is an employee with no Person row: EXISTS is true but the join to Person returns no row]: pass",
+      "SQL Server: AgreedTests.[test 05 person 5 is a contact of an entity that is neither vendor nor store: no rows]: pass",
+      "SQL Server: AgreedTests.[test 06 person 6 is two customers without a store: two identical Consumer rows]: pass",
+      "SQL Server: AgreedTests.[test 07 person 7s contact type does not exist: EXISTS is true but the join to ContactType drops the row]: pass",
+      "SQL Server: AgreedTests.[test 08 person 8s JobTitle is (empty string, kept, not NULL)]: pass",
+      "SQL Server: AgreedTests.[test 09 NULL PersonID returns no rows (IF @PersonID IS NOT NULL)]: pass",
+      "SQL Server: AgreedTests.[test 10 an unknown PersonID (999) returns no rows]: pass",
+      "PostgreSQL: AgreedTests.[test 01 person 1 has all four roles: Employee (Buyer), Vendor Contact (Owner), Store Contact (Purchasing Mana…]: pass",
+      "PostgreSQL: AgreedTests.[test 02 person 2 is a customer of a store (StoreID not NULL), so not a Consumer: no rows]: pass",
+      "PostgreSQL: AgreedTests.[test 03 person 3 is a contact of two vendors: two Vendor Contact rows]: pass",
+      "PostgreSQL: AgreedTests.[test 04 person 4 is an employee with no Person row: EXISTS is true but the join to Person returns no row]: pass",
+      "PostgreSQL: AgreedTests.[test 05 person 5 is a contact of an entity that is neither vendor nor store: no rows]: pass",
+      "PostgreSQL: AgreedTests.[test 06 person 6 is two customers without a store: two identical Consumer rows]: pass",
+      "PostgreSQL: AgreedTests.[test 07 person 7s contact type does not exist: EXISTS is true but the join to ContactType drops the row]: pass",
+      "PostgreSQL: AgreedTests.[test 08 person 8s JobTitle is (empty string, kept, not NULL)]: pass",
+      "PostgreSQL: AgreedTests.[test 09 NULL PersonID returns no rows (IF @PersonID IS NOT NULL)]: pass",
+      "PostgreSQL: AgreedTests.[test 10 an unknown PersonID (999) returns no rows]: pass",
+      "planted defects caught by the agreed tests: 3 of 3"
+    ]
   },
   "effort": {
     "humanMinutes": 0,

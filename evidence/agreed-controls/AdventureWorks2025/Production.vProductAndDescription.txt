@@ -1,0 +1,14 @@
+negative control for Production.vProductAndDescription (step 2), 2026-11-18T04:56:01.900Z
+corruption: case 1 expected value row 1, column ProductID: n:1 -> n:2
+SQL Server: test 01 two products sharing a model fan out over its three described cultures; char(6) culture codes padded;…: FAIL — Failure: Unexpected/missing resultset rows!
+|_m_|ProductID|Name      |ProductModel|CultureID|Description       |
++---+---------+----------+------------+---------+------------------+
+|<  |2        |Bike      |Road-150    |en       |Light, stiff frame|
+|=  |4        |Bike Frame|Road-150    |en       |Light, stiff frame|
+|=  |4        |Bike Frame|Road-150    |fr       |Cadre léger       |
+|=  |4        |Bike Frame|Road-150    |zh-cht   |                  |
+|=  |1        |Bike      |Road-150    |fr       |Cadre léger       |
+|=  |1        |Bike      |Road-150    |zh-cht   |                  |
+|>  |1        |Bike      |Road-150    |en       |Light, stiff frame|
+PostgreSQL: test 01 two products sharing a model fan out over its three described cultures; char(6) culture codes padded;…: FAIL — agreed test failed (test 01 two products sharing a model fan out over its three described cultures; char(6) culture codes padded;…): 1 expected row(s) missing, 1 unexpected row(s) in the result
+RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed

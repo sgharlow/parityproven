@@ -251,11 +251,29 @@ const header = (spec: ObjectSpec, engine: string, extra: string[]): string => [
 // ── tSQLt ───────────────────────────────────────────────────────────────────────────────────────
 
 /** The tSQLt script: batches separated by GO. Run in the scratch database after tSQLt and the original object are installed. */
-export function tsqltScript(spec: ObjectSpec, expected: ExpectedFile): string {
+export interface TsqltOptions {
+  /**
+   * The original object is WITH SCHEMABINDING. tSQLt.FakeTable renames the table, which SQL Server refuses for a table a
+   * schema-bound object depends on ("cannot be renamed because the object participates in enforced dependencies", seen
+   * 2026-11-18 on Person.vStateProvinceCountryRegion). The test then empties the table with DELETE instead; tSQLt runs the
+   * test inside a transaction and rolls it back, so the scratch tables are left as they were.
+   */
+  schemaBound?: boolean;
+}
+
+export function tsqltScript(spec: ObjectSpec, expected: ExpectedFile, options: TsqltOptions = {}): string {
   const cases = checkExpected(spec, expected);
+  if (options.schemaBound && spec.stateCheck) {
+    // a state test runs outside tSQLt's transaction (NoTransaction), so a DELETE would not be rolled back
+    throw new Error(`${spec.name}: schema-bound object with state tests is not supported (FakeTable cannot rename its tables, and DELETE would not be rolled back)`);
+  }
   const batches: string[] = [
     header(spec, "tSQLt on SQL Server", [
       "Prerequisites: tSQLt installed in the database, the spec's tables created, the original T-SQL object deployed unchanged.",
+      ...(options.schemaBound ? [
+        "The object is WITH SCHEMABINDING, so tSQLt.FakeTable cannot rename its tables: each test empties them with DELETE",
+        "instead, inside tSQLt's test transaction, which tSQLt rolls back.",
+      ] : []),
       ...(spec.stateCheck ? [
         "State tests run outside tSQLt's transaction (NoTransaction annotation; tSQLt undoes the FakeTable afterwards), because",
         "a procedure that opens and fails its own transaction would doom tSQLt's. Each test asserts the outcome (completed, or",
@@ -270,7 +288,11 @@ export function tsqltScript(spec: ObjectSpec, expected: ExpectedFile): string {
     // state tests run outside tSQLt's transaction: a procedure that opens and fails its own transaction (or fails under
     // XACT_ABORT) would otherwise doom it. tSQLt undoes the FakeTable afterwards (UndoTestDoubles).
     const noTransaction = !!spec.stateCheck;
-    for (const t of spec.tables) body.push(`EXEC tSQLt.FakeTable @TableName = N'${ssName(t.schema)}.${ssName(t.name)}';`);
+    for (const t of spec.tables) {
+      body.push(options.schemaBound
+        ? `DELETE FROM ${ssName(t.schema)}.${ssName(t.name)};`
+        : `EXEC tSQLt.FakeTable @TableName = N'${ssName(t.schema)}.${ssName(t.name)}';`);
+    }
     body.push(...ssInserts(spec, fc));
     const call = ssCallText(spec, fc);
     if (spec.stateCheck) {

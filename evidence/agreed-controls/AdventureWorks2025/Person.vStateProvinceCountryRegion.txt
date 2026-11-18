@@ -1,0 +1,14 @@
+negative control for Person.vStateProvinceCountryRegion (step 2), 2026-11-18T04:55:55.222Z
+corruption: case 1 expected value row 1, column StateProvinceID: n:1 -> n:2
+SQL Server: test 01 WA in char(3) comes back padded; IsOnlyStateProvinceFlag 1 and a trailing space in the name are kept;…: FAIL — Failure: Unexpected/missing resultset rows!
+|_m_|StateProvinceID|StateProvinceCode|IsOnlyStateProvinceFlag|StateProvinceName|TerritoryID|CountryRegionCode|CountryRegionName|
++---+---------------+-----------------+-----------------------+-----------------+-----------+-----------------+-----------------+
+|<  |2              |WA               |False                  |Washington       |1          |US               |United States    |
+|=  |2              |AB               |True                   |Alberta          |6          |CA               |Canada           |
+|>  |1              |WA               |False                  |Washington       |1          |US               |United States    |
+SQL Server: test 02 collation: province code us joins country US (case-insensitive CI_AS); CountryRegionCode comes from t…: pass
+SQL Server: test 03 trailing space: province code CA joins country CA (SQL Server equality ignores trailing spaces): pass
+PostgreSQL: test 01 WA in char(3) comes back padded; IsOnlyStateProvinceFlag 1 and a trailing space in the name are kept;…: FAIL — agreed test failed (test 01 WA in char(3) comes back padded; IsOnlyStateProvinceFlag 1 and a trailing space in the name are kept;…): 1 expected row(s) missing, 1 unexpected row(s) in the result
+PostgreSQL: test 02 collation: province code us joins country US (case-insensitive CI_AS); CountryRegionCode comes from t…: pass
+PostgreSQL: test 03 trailing space: province code CA joins country CA (SQL Server equality ignores trailing spaces): pass
+RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed

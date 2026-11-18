@@ -1,0 +1,78 @@
+{
+  "object": "Production.vProductAndDescription",
+  "database": "AdventureWorks2025",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-18T04:45:21.564Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "two products sharing a model fan out over its three described cultures; char(6) culture codes padded; '' and trailing-space descriptions kept; no model, no cultures or a missing description drops the row",
+      "columns": [
+        {
+          "name": "ProductID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Name",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "ProductModel",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "CultureID",
+          "sqlServerType": "char(6)"
+        },
+        {
+          "name": "Description",
+          "sqlServerType": "nvarchar(400)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:Bike",
+          "s:Road-150",
+          "s:en    ",
+          "s:Light, stiff frame"
+        ],
+        [
+          "n:4",
+          "s:Bike Frame",
+          "s:Road-150",
+          "s:en    ",
+          "s:Light, stiff frame"
+        ],
+        [
+          "n:1",
+          "s:Bike",
+          "s:Road-150",
+          "s:fr    ",
+          "s:Cadre léger "
+        ],
+        [
+          "n:4",
+          "s:Bike Frame",
+          "s:Road-150",
+          "s:fr    ",
+          "s:Cadre léger "
+        ],
+        [
+          "n:1",
+          "s:Bike",
+          "s:Road-150",
+          "s:zh-cht",
+          "s:"
+        ],
+        [
+          "n:4",
+          "s:Bike Frame",
+          "s:Road-150",
+          "s:zh-cht",
+          "s:"
+        ]
+      ]
+    }
+  ]
+}

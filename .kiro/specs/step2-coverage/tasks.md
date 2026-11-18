@@ -7,7 +7,11 @@ Requirements: `requirements.md`. Design: `design.md`. Dates (owner, T1): A by 20
 
 ## Tranche A — fixed cases, no generator change (20 pending objects)
 - [x] Batch 1, scalar functions without tables: `dbo.ufnGetAccountingStartDate`, `dbo.ufnGetAccountingEndDate`, `dbo.ufnGetDocumentStatusText`, `dbo.ufnGetPurchaseOrderStatusText`, `dbo.ufnGetSalesOrderStatusText`, `dbo.ufnLeadingZeros` — step 2 pass on both engines, labels checked against the captured values, negative controls seen failing, review packets
-- [ ] Batch 2: `dbo.ufnGetContactInformation` and AdventureWorks views (`HumanResources.vEmployeeDepartment`, `vEmployeeDepartmentHistory`, `Person.vStateProvinceCountryRegion`, `Production.vProductAndDescription`)
+- [x] Batch 2: `dbo.ufnGetContactInformation` and AdventureWorks views (`HumanResources.vEmployeeDepartment`, `vEmployeeDepartmentHistory`, `Person.vStateProvinceCountryRegion`, `Production.vProductAndDescription`) — step 2 pass on both engines, labels and row counts checked against the captured values, negative controls seen failing, review packets
+  - [x] Generator: schema-bound objects empty their tables with DELETE instead of tSQLt.FakeTable (`tsqltScript` option `schemaBound`, unit tests in `generate.test.ts`)
+  - [x] Finding: `Person.vStateProvinceCountryRegion` joined case-sensitively and counted trailing spaces; conversion fixed (draft kept), regression cases kept, step 3 re-run (three targeted planted defects caught), see design.md
+  - [x] `ufnGetContactInformation`: a person who is also a store's customer added, so the agreed tests catch the planted defect "consumer rows include store customers" (3 of 3)
+- [ ] Follow-up (not in this tranche): step 3 generator producing text keys that differ only in case or trailing spaces, so CI-collation joins are tested on random data too
 - [ ] Batch 3: AdventureWorks views (`Purchasing.vVendorWithAddresses`, `vVendorWithContacts`, `Sales.vSalesPersonSalesByFiscalYears`, `vStoreWithAddresses`, `vStoreWithContacts`)
 - [ ] Batch 4: WideWorldImporters `Integration.GetPurchaseUpdates`, `GetSaleUpdates`, `GetStockHoldingUpdates`, `GetTransactionUpdates`
 - [ ] Optional (fail step 4 whatever step 2 says): `dbo.ufnGetProductDealerPrice`, `ufnGetProductListPrice`, `ufnGetProductStandardCost`, `ufnGetStock`

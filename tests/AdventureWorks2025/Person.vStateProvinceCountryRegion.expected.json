@@ -1,0 +1,150 @@
+{
+  "object": "Person.vStateProvinceCountryRegion",
+  "database": "AdventureWorks2025",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-18T04:45:14.032Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "'WA' in char(3) comes back padded; IsOnlyStateProvinceFlag 1 and a trailing space in the name are kept; a province of a country with no CountryRegion row (FR) is dropped; a country with no province (DE) is not listed",
+      "columns": [
+        {
+          "name": "StateProvinceID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "StateProvinceCode",
+          "sqlServerType": "char(3)"
+        },
+        {
+          "name": "IsOnlyStateProvinceFlag",
+          "sqlServerType": "bit"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TerritoryID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "CountryRegionCode",
+          "sqlServerType": "nvarchar(3)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:WA ",
+          "b:0",
+          "s:Washington",
+          "n:1",
+          "s:US",
+          "s:United States"
+        ],
+        [
+          "n:2",
+          "s:AB ",
+          "b:1",
+          "s:Alberta ",
+          "n:6",
+          "s:CA",
+          "s:Canada"
+        ]
+      ]
+    },
+    {
+      "label": "collation: province code 'us' joins country 'US' (case-insensitive CI_AS); CountryRegionCode comes from the country row ('US')",
+      "columns": [
+        {
+          "name": "StateProvinceID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "StateProvinceCode",
+          "sqlServerType": "char(3)"
+        },
+        {
+          "name": "IsOnlyStateProvinceFlag",
+          "sqlServerType": "bit"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TerritoryID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "CountryRegionCode",
+          "sqlServerType": "nvarchar(3)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:WA ",
+          "b:0",
+          "s:Washington",
+          "n:1",
+          "s:US",
+          "s:United States"
+        ]
+      ]
+    },
+    {
+      "label": "trailing space: province code 'CA ' joins country 'CA' (SQL Server equality ignores trailing spaces)",
+      "columns": [
+        {
+          "name": "StateProvinceID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "StateProvinceCode",
+          "sqlServerType": "char(3)"
+        },
+        {
+          "name": "IsOnlyStateProvinceFlag",
+          "sqlServerType": "bit"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TerritoryID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "CountryRegionCode",
+          "sqlServerType": "nvarchar(3)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:2",
+          "s:AB ",
+          "b:0",
+          "s:Alberta",
+          "n:6",
+          "s:CA",
+          "s:Canada"
+        ]
+      ]
+    }
+  ]
+}

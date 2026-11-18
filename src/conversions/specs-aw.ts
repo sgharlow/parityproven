@@ -99,10 +99,22 @@ const view = (qualified: string, pgName: string, opts: CatalogOptions = {}): Obj
   specFromCatalog(DB, qualified, { orderKey: [], mutants: [], pgFunction: pgName }, opts);
 
 export const AW_VIEWS: ObjectSpec[] = [
-  view("Person.vStateProvinceCountryRegion", "person.v_state_province_country_region"),
-  view("HumanResources.vEmployeeDepartment", "humanresources.v_employee_department"),
-  view("HumanResources.vEmployeeDepartmentHistory", "humanresources.v_employee_department_history"),
-  view("Production.vProductAndDescription", "production.v_product_and_description"),
+  {
+    ...view("Person.vStateProvinceCountryRegion", "person.v_state_province_country_region"),
+    fixedCases: stateProvinceCases(),
+    mutants: [
+      // both sides: an explicit collation on either side of '=' applies to the comparison, so dropping one is unobservable
+      { name: "join is case-sensitive (collation dropped)", from: " COLLATE tsql_compat.ci_as_equal = rtrim(cr.\"CountryRegionCode\", ' ') COLLATE tsql_compat.ci_as_equal;", to: " = rtrim(cr.\"CountryRegionCode\", ' ');" },
+      { name: "trailing spaces count in the join (rtrim dropped)", from: "rtrim(sp.\"CountryRegionCode\", ' ') COLLATE", to: "sp.\"CountryRegionCode\" COLLATE" },
+      { name: "inner join made a left join (provinces of unknown countries kept)", from: "INNER JOIN person.country_region cr", to: "LEFT JOIN person.country_region cr" },
+    ],
+    notes: [
+      "Finding (step 2, 2026-11-18): Kiro's draft joined CountryRegionCode with PostgreSQL '=', which is case-sensitive and counts trailing spaces. Under the source collation (SQL_Latin1_General_CP1_CI_AS) 'us' joins 'US' and 'CA ' joins 'CA'. Step 3 passed because the generated codes never differed only in case or trailing spaces; the fixed cases 'collation' and 'trailing space' failed on PostgreSQL. Fixed in the conversion (rtrim + a case-insensitive ICU collation in the join); both cases are kept as regression cases.",
+    ],
+  },
+  { ...view("HumanResources.vEmployeeDepartment", "humanresources.v_employee_department"), fixedCases: [employeeDepartmentCase()] },
+  { ...view("HumanResources.vEmployeeDepartmentHistory", "humanresources.v_employee_department_history"), fixedCases: [employeeDepartmentHistoryCase()] },
+  { ...view("Production.vProductAndDescription", "production.v_product_and_description"), fixedCases: [productAndDescriptionCase()] },
   view("Purchasing.vVendorWithAddresses", "purchasing.v_vendor_with_addresses"),
   view("Purchasing.vVendorWithContacts", "purchasing.v_vendor_with_contacts"),
   { ...view("Sales.vSalesPerson", "sales.v_sales_person"), fixedCases: [salesPersonCase()] },
@@ -213,6 +225,141 @@ function salesPersonCase(): FixedCase {
         { BusinessEntityID: 1, PhoneNumber: "555-0199", PhoneNumberTypeID: 9 },
       ],
       "Person.PhoneNumberType": [{ PhoneNumberTypeID: 1, Name: "Cell" }],
+    },
+  };
+}
+
+/**
+ * Person.vStateProvinceCountryRegion (hand-derived). The source database's collation is SQL_Latin1_General_CP1_CI_AS, so
+ * the join on CountryRegionCode is case-insensitive and ignores trailing spaces; each of those gets its own case.
+ */
+function stateProvinceCases(): FixedCase[] {
+  const sp = (id: number, code: string, country: string, only: number, name: string, territory: number): Row =>
+    ({ StateProvinceID: id, StateProvinceCode: code, CountryRegionCode: country, IsOnlyStateProvinceFlag: only, Name: name, TerritoryID: territory });
+  return [
+    {
+      label: "'WA' in char(3) comes back padded; IsOnlyStateProvinceFlag 1 and a trailing space in the name are kept; a province of a country with no CountryRegion row (FR) is dropped; a country with no province (DE) is not listed",
+      tables: {
+        "Person.CountryRegion": [{ CountryRegionCode: "US", Name: "United States" }, { CountryRegionCode: "CA", Name: "Canada" }, { CountryRegionCode: "DE", Name: "Germany" }],
+        "Person.StateProvince": [sp(1, "WA", "US", 0, "Washington", 1), sp(2, "AB", "CA", 1, "Alberta ", 6), sp(3, "75", "FR", 0, "Paris", 7)],
+      },
+    },
+    {
+      label: "collation: province code 'us' joins country 'US' (case-insensitive CI_AS); CountryRegionCode comes from the country row ('US')",
+      tables: {
+        "Person.CountryRegion": [{ CountryRegionCode: "US", Name: "United States" }],
+        "Person.StateProvince": [sp(1, "WA", "us", 0, "Washington", 1)],
+      },
+    },
+    {
+      label: "trailing space: province code 'CA ' joins country 'CA' (SQL Server equality ignores trailing spaces)",
+      tables: {
+        "Person.CountryRegion": [{ CountryRegionCode: "CA", Name: "Canada" }],
+        "Person.StateProvince": [sp(2, "AB", "CA ", 0, "Alberta", 6)],
+      },
+    },
+  ];
+}
+
+/**
+ * HumanResources.vEmployeeDepartment (hand-derived). Expected: 3 rows, only open department histories (EndDate IS NULL).
+ *  - employee 1: an ended history (excluded), an open one (kept), an open one to a department that does not exist (dropped)
+ *  - employee 2: two open histories at the date boundaries 1753-01-01 and 9999-12-31 (two rows); Title '' (not NULL),
+ *    MiddleName and Suffix set, JobTitle with a trailing space (kept)
+ *  - employee 3: one history that ended the day it started (excluded)
+ *  - employee 4: an open history but no Person row (dropped by the inner join)
+ *  - department 3 has no history (not listed)
+ */
+function employeeDepartmentCase(): FixedCase {
+  const edh = (id: number, dept: number, start: string, end: string | null): Row => ({ BusinessEntityID: id, DepartmentID: dept, StartDate: start, EndDate: end });
+  return {
+    label: "only open histories: ended ones excluded, missing department or person dropped, two open histories give two rows; 1753-01-01 and 9999-12-31 start dates; Title '' kept, not NULL",
+    tables: {
+      "Person.Person": [
+        { BusinessEntityID: 1, Title: null, FirstName: "Ann", MiddleName: null, LastName: "Lee", Suffix: null },
+        { BusinessEntityID: 2, Title: "", FirstName: "Bo", MiddleName: "J", LastName: "Ng", Suffix: "Jr." },
+        { BusinessEntityID: 3, Title: "Mr.", FirstName: "Cy", MiddleName: null, LastName: "Oh", Suffix: null },
+      ],
+      "HumanResources.Employee": [
+        { BusinessEntityID: 1, JobTitle: "Engineer" }, { BusinessEntityID: 2, JobTitle: "Tester " },
+        { BusinessEntityID: 3, JobTitle: "Clerk" }, { BusinessEntityID: 4, JobTitle: "Ghost" },
+      ],
+      "HumanResources.Department": [
+        { DepartmentID: 1, Name: "Engineering", GroupName: "Research and Development" },
+        { DepartmentID: 2, Name: "Sales", GroupName: "Sales and Marketing" },
+        { DepartmentID: 3, Name: "Unused", GroupName: "Executive General and Administration" },
+      ],
+      "HumanResources.EmployeeDepartmentHistory": [
+        edh(1, 2, "2001-01-01", "2005-06-30"), edh(1, 1, "2005-07-01", null), edh(1, 9, "2011-01-01", null),
+        edh(2, 1, "1753-01-01", null), edh(2, 2, "9999-12-31", null),
+        edh(3, 2, "2010-01-01", "2010-01-01"),
+        edh(4, 1, "2002-02-02", null),
+      ],
+    },
+  };
+}
+
+/**
+ * HumanResources.vEmployeeDepartmentHistory (hand-derived). Expected: 3 rows, ended histories included.
+ *  - employee 1: an ended history and an open one (EndDate NULL): two rows
+ *  - employee 2: a history with a shift that does not exist (dropped); one from 1753-01-01 to 9999-12-31 (kept); Title ''
+ *  - employee 3: a history but no Person row (dropped)
+ */
+function employeeDepartmentHistoryCase(): FixedCase {
+  const edh = (id: number, dept: number, shift: number, start: string, end: string | null): Row =>
+    ({ BusinessEntityID: id, DepartmentID: dept, ShiftID: shift, StartDate: start, EndDate: end });
+  return {
+    label: "ended and open histories both listed (EndDate NULL kept); missing shift or person dropped; 1753-01-01 to 9999-12-31; Title '' kept, not NULL",
+    tables: {
+      "Person.Person": [
+        { BusinessEntityID: 1, Title: null, FirstName: "Ann", MiddleName: null, LastName: "Lee", Suffix: null },
+        { BusinessEntityID: 2, Title: "", FirstName: "Bo", MiddleName: "J", LastName: "Ng", Suffix: "Jr." },
+      ],
+      "HumanResources.Employee": [{ BusinessEntityID: 1 }, { BusinessEntityID: 2 }, { BusinessEntityID: 3 }],
+      "HumanResources.Shift": [{ ShiftID: 1, Name: "Day" }, { ShiftID: 2, Name: "Evening" }],
+      "HumanResources.Department": [
+        { DepartmentID: 1, Name: "Engineering", GroupName: "Research and Development" },
+        { DepartmentID: 2, Name: "Sales", GroupName: "Sales and Marketing" },
+      ],
+      "HumanResources.EmployeeDepartmentHistory": [
+        edh(1, 1, 1, "2001-01-01", "2005-06-30"), edh(1, 2, 2, "2005-07-01", null),
+        edh(2, 1, 3, "2003-03-03", null), edh(2, 2, 1, "1753-01-01", "9999-12-31"),
+        edh(3, 1, 1, "2004-04-04", null),
+      ],
+    },
+  };
+}
+
+/**
+ * Production.vProductAndDescription (hand-derived). Expected: 6 rows (products 1 and 4 share model 1, which has three
+ * described cultures).
+ *  - culture codes in char(6) come back padded ('en' -> 'en    '); 'zh-cht' fills all six characters
+ *  - one description is '' (empty, kept, not NULL); one has an accent and a trailing space (kept)
+ *  - a culture row pointing at a missing description is dropped; a product with no model (NULL) is dropped; a product
+ *    whose model has no culture rows is dropped; a model with culture rows but no product is not listed
+ */
+function productAndDescriptionCase(): FixedCase {
+  return {
+    label: "two products sharing a model fan out over its three described cultures; char(6) culture codes padded; '' and trailing-space descriptions kept; no model, no cultures or a missing description drops the row",
+    tables: {
+      "Production.Product": [
+        { ProductID: 1, Name: "Bike", ProductModelID: 1 }, { ProductID: 2, Name: "Helmet", ProductModelID: null },
+        { ProductID: 3, Name: "Chain", ProductModelID: 2 }, { ProductID: 4, Name: "Bike Frame", ProductModelID: 1 },
+      ],
+      "Production.ProductModel": [{ ProductModelID: 1, Name: "Road-150" }, { ProductModelID: 2, Name: "Chain" }, { ProductModelID: 3, Name: "Orphan" }],
+      "Production.ProductDescription": [
+        { ProductDescriptionID: 10, Description: "Light, stiff frame" },
+        { ProductDescriptionID: 11, Description: "" },
+        { ProductDescriptionID: 12, Description: "Cadre léger " },
+        { ProductDescriptionID: 13, Description: "Orphan model text" },
+      ],
+      "Production.ProductModelProductDescriptionCulture": [
+        { ProductModelID: 1, ProductDescriptionID: 10, CultureID: "en" },
+        { ProductModelID: 1, ProductDescriptionID: 12, CultureID: "fr" },
+        { ProductModelID: 1, ProductDescriptionID: 11, CultureID: "zh-cht" },
+        { ProductModelID: 1, ProductDescriptionID: 99, CultureID: "de" },
+        { ProductModelID: 3, ProductDescriptionID: 13, CultureID: "ar" },
+      ],
     },
   };
 }

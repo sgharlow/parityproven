@@ -186,7 +186,7 @@ async function runOne(conn: Connections, spec: ObjectSpec, recapture: boolean, c
       expected = JSON.parse(readFileSync(expectedPath, "utf-8")) as ExpectedFile;
       console.log(`expected results: tests/${spec.database}/${label}.expected.json (committed)`);
     }
-    const tsqlt = tsqltScript(spec, expected);
+    const tsqlt = tsqltScript(spec, expected, { schemaBound: /\bWITH\s+SCHEMABINDING\b/i.test(definition) });
     const pgSql = pgScript(spec, expected);
     if (!control) {
       writeFileSync(resolve(testsDir, `${label}.tsqlt.sql`), tsqlt, "utf-8");

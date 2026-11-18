@@ -64,7 +64,7 @@
     {
       "step": 2,
       "label": "Agreed tests pass (tSQLt on SQL Server, plain-SQL assertions on PostgreSQL)",
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "step": 3,
@@ -115,7 +115,13 @@
       "volumeMismatch": null
     },
     "subMicrosecondNormalised": 0,
-    "harnessVersion": "harness-generic-0.3.0"
+    "harnessVersion": "harness-generic-0.3.0",
+    "testsRun": [
+      "tSQLt V1.0.8083.3529 on SQL Server (tests/AdventureWorks2025/HumanResources.vEmployeeDepartmentHistory.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/AdventureWorks2025/HumanResources.vEmployeeDepartmentHistory.pg.sql); expected results tests/AdventureWorks2025/HumanResources.vEmployeeDepartmentHistory.expected.json",
+      "SQL Server: AgreedTests.[test 01 ended and open histories both listed (EndDate NULL kept); missing shift or person dropped; 1753-01-01…]: pass",
+      "PostgreSQL: AgreedTests.[test 01 ended and open histories both listed (EndDate NULL kept); missing shift or person dropped; 1753-01-01…]: pass",
+      "planted defects caught by the agreed tests: 2 of 2"
+    ]
   },
   "effort": {
     "humanMinutes": 0,
@@ -126,5 +132,5 @@
     "p50Hours": 0.75,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-17T03:55:18.181Z"
+  "builtAt": "2026-11-18T04:59:07.750Z"
 }

@@ -131,7 +131,62 @@ const contactInformation: ObjectSpec = specFromCatalog(DB, "dbo.ufnGetContactInf
   notes: [
     "Multi-statement table-valued function: the table variable it fills becomes RETURN QUERY steps in a PL/pgSQL set-returning function. The rows a person gets (one per role) are compared as a multiset; the source does not define their order.",
   ],
+  fixedCases: contactInformationCases(),
 });
+
+/**
+ * ufnGetContactInformation fixed cases (hand-derived from the source). One set of rows, called once per person:
+ *  - person 1 has all four roles: employee ('Buyer'), contact of vendor 100 ('Owner'), contact of store 200
+ *    ('Purchasing Manager') and a customer without a store, so four rows; also a customer of store 200, which adds none
+ *  - person 2 is a customer of store 200 only (StoreID not NULL), so not a consumer: no rows
+ *  - person 3 is a contact of two vendors, so two 'Vendor Contact' rows
+ *  - person 4 is an employee with no Person row: the IF EXISTS is true, but the INNER JOIN to Person returns nothing
+ *  - person 5 is a contact of business entity 300, which is neither a vendor nor a store: no rows
+ *  - person 6 is two customers without a store: two identical 'Consumer' rows (a multiset, not a set)
+ *  - person 7 is a vendor contact whose ContactType 99 does not exist: EXISTS is true, the join drops the row
+ *  - person 8 is an employee whose JobTitle is '' (empty, not NULL)
+ */
+function contactInformationCases(): FixedCase[] {
+  const person = (id: number, first: string, last: string) => ({ BusinessEntityID: id, FirstName: first, LastName: last });
+  const tables: FixedCase["tables"] = {
+    "Person.Person": [person(1, "Ann", "Lee"), person(2, "Bo", "Ng"), person(3, "Cy", "Oh"), person(5, "Ed", "Ra"),
+      person(6, "Flo", "Su"), person(7, "Gus", "Tu"), person(8, "Hal", "Uy")],
+    "HumanResources.Employee": [{ BusinessEntityID: 1, JobTitle: "Buyer" }, { BusinessEntityID: 4, JobTitle: "Clerk" }, { BusinessEntityID: 8, JobTitle: "" }],
+    "Purchasing.Vendor": [{ BusinessEntityID: 100 }, { BusinessEntityID: 101 }],
+    "Sales.Store": [{ BusinessEntityID: 200 }],
+    "Person.ContactType": [{ ContactTypeID: 1, Name: "Owner" }, { ContactTypeID: 2, Name: "Purchasing Manager" }],
+    "Person.BusinessEntityContact": [
+      { BusinessEntityID: 100, PersonID: 1, ContactTypeID: 1 },
+      { BusinessEntityID: 200, PersonID: 1, ContactTypeID: 2 },
+      { BusinessEntityID: 100, PersonID: 3, ContactTypeID: 1 },
+      { BusinessEntityID: 101, PersonID: 3, ContactTypeID: 2 },
+      { BusinessEntityID: 300, PersonID: 5, ContactTypeID: 1 },
+      { BusinessEntityID: 100, PersonID: 7, ContactTypeID: 99 },
+    ],
+    "Sales.Customer": [
+      { PersonID: 1, StoreID: null },
+      // person 1 is also a customer of a store: that adds no Consumer row (only StoreID IS NULL counts). Without this
+      // row the planted defect "consumer rows include store customers" went unnoticed by the agreed tests (2026-11-18).
+      { PersonID: 1, StoreID: 200 },
+      { PersonID: 2, StoreID: 200 },
+      { PersonID: 6, StoreID: null },
+      { PersonID: 6, StoreID: null },
+    ],
+  };
+  const call = (label: string, id: number | null): FixedCase => ({ label, args: [id], tables });
+  return [
+    call("person 1 has all four roles: Employee (Buyer), Vendor Contact (Owner), Store Contact (Purchasing Manager), Consumer; being also a store's customer adds no second Consumer row", 1),
+    call("person 2 is a customer of a store (StoreID not NULL), so not a Consumer: no rows", 2),
+    call("person 3 is a contact of two vendors: two Vendor Contact rows", 3),
+    call("person 4 is an employee with no Person row: EXISTS is true but the join to Person returns no row", 4),
+    call("person 5 is a contact of an entity that is neither vendor nor store: no rows", 5),
+    call("person 6 is two customers without a store: two identical Consumer rows", 6),
+    call("person 7's contact type does not exist: EXISTS is true but the join to ContactType drops the row", 7),
+    call("person 8's JobTitle is '' (empty string, kept, not NULL)", 8),
+    call("NULL PersonID returns no rows (IF @PersonID IS NOT NULL)", null),
+    call("an unknown PersonID (999) returns no rows", 999),
+  ];
+}
 
 export const AW2_SPECS: ObjectSpec[] = [
   view("HumanResources.vEmployee", "humanresources.v_employee", [XML_NOTE]),
