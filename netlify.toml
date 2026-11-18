@@ -36,6 +36,10 @@
   to   = "/web/about.html"
   status = 200
 [[redirects]]
+  from = "/access-map"
+  to   = "/web/access-map.html"
+  status = 200
+[[redirects]]
   from = "/questionnaire"
   to   = "/web/questionnaire.html"
   status = 200

@@ -52,3 +52,5 @@ Licence text fetched verbatim from https://github.com/microsoft/sql-server-sampl
 | tSQLt V1.0.8083.3529 ([tsqlt.org](https://tsqlt.org/downloads/); zip SHA-256 `af841f357dd9189f8b197c34c5014fe0dbabd3be34b024ed46967dafe13d4f50`) | Apache-2.0 | unit-test framework for verification step 2 on SQL Server; downloaded by `scripts/get-tsqlt.ps1`, installed only into the scratch database |
 | highlight.js 11.9.0 (CDN) | BSD-3-Clause | SQL highlighting on receipt pages |
 | npm dependencies (`mssql`, `pg`, `fast-check`, TypeScript, Vitest) | see each package; listed in `package-lock.json` | build and test |
+| `@modelcontextprotocol/sdk` 1.32.2 (and its dependencies, listed in `package-lock.json`) | MIT | the local MCP server (`src/mcp/`), stdio transport only |
+| `zod` 4.6.7 | MIT | the MCP server's tool argument schemas |

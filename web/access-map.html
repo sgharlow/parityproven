@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Access Map — ParityProven</title>
+  <link rel="stylesheet" href="/web/style.css">
+</head>
+<body>
+  <div class="container">
+    <nav>
+      <a href="/" class="brand">ParityProven</a>
+      <a href="/">Scorecard</a>
+      <a href="/questionnaire">Questionnaire</a>
+      <a href="/access-map">Agent Access Map</a>
+      <a href="/about">About</a>
+      <a href="https://github.com/sgharlow/parityproven" target="_blank" rel="noopener">GitHub ↗</a>
+    </nav>
+
+    <h1>Agent Access Map</h1>
+    <p style="color:var(--c-muted)">What an AI agent may read from a database through an MCP server, how, and what it may not. Rendered from the committed map
+      (<a href="/web/data/agent-access-map.json">agent-access-map.json</a>), which also defines the server's tools.</p>
+
+    <div id="access-map"></div>
+  </div>
+  <script src="/web/access-map.js"></script>
+</body>
+</html>

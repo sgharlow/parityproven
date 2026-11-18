@@ -90,6 +90,23 @@ npm run site:check -- https://parityproven.com                   # deployed site
 
 An object becomes **verified** only when steps 1, 2 and 3 pass, step 4 passes or is ruled n/a, and step 5 (a second review at least a day after the first pass) is recorded. The objects that pass step 2, and those with a recorded step 5, are listed in the status block at the top. The rest need hand-derived fixed cases first, or use features the test generator does not cover yet (table-valued parameters, JSON results, geography and xml columns, setup statements, dependencies).
 
+### MCP server and Agent Access Map (local prototype)
+
+A read-only MCP server over the restored WideWorldImporters sample on SQL Server. Its tools and the live [Agent Access Map](https://parityproven.com/access-map) page both come from `web/data/agent-access-map.json`.
+
+```sh
+# once, with the Docker stack up: set MCP_READER_PASSWORD in .env (rules as MSSQL_SA_PASSWORD), then
+npm run build
+npm run mcp:setup     # as sa: login pp_mcp_reader, SELECT on the map's views only, one territory role for row-level security
+npm run mcp:check     # negative test AS pp_mcp_reader: every view readable; writes, DDL, base tables and procedures refused
+node scripts/mcp-smoke.mjs   # protocol smoke test with the SDK's own client
+npm run mcp:server    # stdio; an MCP client starts this (Kiro: .kiro/settings/mcp.json)
+```
+
+- Read-only by construction: the login has no write or DDL permission, and every tool runs one fixed parameterised query against one view (`src/mcp/tools.ts`); undeclared arguments are rejected.
+- Each call is appended to `evidence/mcp/tool-calls.log` (time, client, tool, arguments, row count; no row data).
+- Data is the public sample, restored at run time. Nothing is hosted; the live page only displays the map.
+
 ### Known limits
 
 - `datetime2(7)` holds 100 ns ticks and PostgreSQL `timestamp` holds 1 µs. Generated datetime values (and cutoffs) are normalised to microseconds on both engines. The number of values that changed is recorded in each pair record as a finding; the harness does not claim equivalence for sub-microsecond inputs.

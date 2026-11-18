@@ -1,0 +1,59 @@
+{
+  "system": "WideWorldImporters",
+  "sourceDatabase": "WideWorldImporters (Microsoft sample, restored from the pinned release asset in sources/manifest.json)",
+  "status": "Local prototype over public sample data. The MCP server runs on the developer's machine against the local Docker stack; nothing is hosted.",
+  "judgmentNote": "Risk ratings and the effort range are judgments by the author, not measurements.",
+  "exposed": [
+    {
+      "entity": "Customers",
+      "actions": ["Look up a customer's category, contacts, phone numbers, delivery method and city", "List customers in a delivery city"],
+      "view": "Website.Customers",
+      "tool": "list_customers",
+      "filters": [{ "name": "city", "column": "CityName", "description": "Exact delivery city name (optional)" }],
+      "columns": ["CustomerID", "CustomerName", "CustomerCategoryName", "PrimaryContact", "AlternateContact", "PhoneNumber", "FaxNumber", "BuyingGroupName", "WebsiteURL", "DeliveryMethod", "CityName", "DeliveryRun", "RunPosition"],
+      "orderBy": "CustomerID",
+      "maxRows": 50,
+      "risk": { "sensitivity": "medium", "writeRisk": "none (read-only view)", "rationale": "Business contact names and phone numbers; no payment data." }
+    },
+    {
+      "entity": "Suppliers",
+      "actions": ["Look up a supplier's category, contacts, delivery method and reference", "List suppliers in a category"],
+      "view": "Website.Suppliers",
+      "tool": "list_suppliers",
+      "filters": [{ "name": "category", "column": "SupplierCategoryName", "description": "Exact supplier category name (optional)" }],
+      "columns": ["SupplierID", "SupplierName", "SupplierCategoryName", "PrimaryContact", "AlternateContact", "PhoneNumber", "FaxNumber", "WebsiteURL", "DeliveryMethod", "CityName", "SupplierReference"],
+      "orderBy": "SupplierID",
+      "maxRows": 50,
+      "risk": { "sensitivity": "low", "writeRisk": "none (read-only view)", "rationale": "Company contact data that suppliers publish." }
+    },
+    {
+      "entity": "Vehicle temperatures",
+      "actions": ["Read recorded chiller temperatures for a vehicle"],
+      "view": "Website.VehicleTemperatures",
+      "tool": "list_vehicle_temperatures",
+      "filters": [{ "name": "registration", "column": "VehicleRegistration", "description": "Exact vehicle registration (optional)" }],
+      "columns": ["VehicleTemperatureID", "VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature"],
+      "orderBy": "VehicleTemperatureID",
+      "maxRows": 50,
+      "risk": { "sensitivity": "low", "writeRisk": "none (read-only view)", "rationale": "Telemetry; no personal data." }
+    }
+  ],
+  "notExposed": [
+    { "entity": "People (Application.People)", "reason": "Holds logon names and password hashes. An agent never needs them; exposing the table would be the highest-risk choice in this database.", "risk": "high" },
+    { "entity": "Orders and invoices (Sales.Orders, Sales.Invoices)", "reason": "Useful for order-status questions, but each row carries customer-specific commercial terms; needs row-level limits by customer before exposure.", "risk": "medium" },
+    { "entity": "Any table directly", "reason": "Agents read named views only, so the columns an agent sees are chosen, and the base tables stay unreadable to its login.", "risk": "n/a" }
+  ],
+  "controls": {
+    "authentication": "A dedicated SQL Server login (pp_mcp_reader) whose database user has SELECT on the views above and nothing else. The password lives in the local .env, never in the repository.",
+    "readOnlyBy": "Construction: the login cannot write (no INSERT, UPDATE, DELETE or DDL permission), and no tool accepts SQL text. Each tool runs one fixed, parameterised query against one view. The negative test (npm run mcp:check) runs as this login and records that every write is refused.",
+    "rowLimits": "Every tool returns at most maxRows rows per call. Customer rows are also limited by the database's own row-level security policy (Application.FilterCustomersBySalesTerritoryRole on Sales.Customers): a login sees only the customers of the sales-territory roles it belongs to. The prototype's login belongs to one territory role, which carries no permissions of its own, so it sees that territory's customers only. The visible row counts are measured by npm run mcp:check (evidence/mcp/readonly-check.txt), not stated here.",
+    "rowLevelRoles": ["Far West Sales"],
+    "audit": "Each tool call is appended to evidence/mcp/tool-calls.log with its time, tool, arguments and row count, and no row data. A production deployment would add SQL Server Audit on the login."
+  },
+  "firstUseCase": {
+    "title": "Customer lookup for an order-support agent",
+    "description": "An assistant answers 'who is the contact for this customer, and where do we deliver?' from Website.Customers through list_customers, without database credentials of its own.",
+    "effortHours": { "p50": 16, "p90": 40 },
+    "effortBasis": "Judgment only: login and grants, three views, the server and its tests, an access map review with the system owner."
+  }
+}

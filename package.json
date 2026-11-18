@@ -26,12 +26,17 @@
     "site:build": "node scripts/build-site.mjs",
     "readme:status": "node dist/cli/readme-status.js",
     "site:check": "node scripts/check-site.mjs",
+    "mcp:setup": "node dist/cli/mcp-setup.js",
+    "mcp:check": "node dist/cli/mcp-check.js",
+    "mcp:server": "node dist/mcp/server.js",
     "test": "vitest run"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
     "fast-check": "3.22.0",
     "mssql": "11.0.1",
-    "pg": "8.13.1"
+    "pg": "8.13.1",
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@types/mssql": "9.1.5",

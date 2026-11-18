@@ -137,8 +137,28 @@ if (receiptPageForBackLink) {
   }
 }
 
+// ── 3b. the Agent Access Map page, reached from the scorecard's own nav link, renders every tool in the map ──────
+const mapHref = hrefsIn(scorecard.text).find((h) => /access-map/.test(h));
+let mapTools = 0;
+if (!mapHref) fail('scorecard has no "Agent Access Map" link');
+else {
+  const mapUrl = new URL(mapHref, scorecardUrl);
+  const page = await get(mapUrl.href);
+  const data = await get(new URL("/web/data/agent-access-map.json", scorecardUrl).href);
+  if (page.status !== 200) fail(`${mapUrl.pathname} returned ${page.status}`);
+  else if (data.status !== 200) fail(`/web/data/agent-access-map.json returned ${data.status}`);
+  else {
+    const r = await render(page.text, page.url, "access-map");
+    const tools = JSON.parse(data.text).exposed.map((e) => e.tool);
+    mapTools = tools.length;
+    if (r.error) fail(`access map: ${r.error}`);
+    else if (/Could not load/.test(r.html)) fail("access map page rendered, but says it could not load the map");
+    else for (const t of tools) if (!r.html.includes(t)) fail(`access map page does not show the tool ${t}`);
+  }
+}
+
 // ── 4. what the site publishes ──────────────────────────────────────────────────────────────────────────────────
-const mustServe = ["/", "/receipt", "/about", "/questionnaire", "/receipts/index.json", "/web/app.js", "/web/style.css"];
+const mustServe = ["/", "/receipt", "/about", "/questionnaire", "/access-map", "/receipts/index.json", "/web/app.js", "/web/style.css", "/web/data/agent-access-map.json"];
 const mustNotServe = ["/src/cli/convert.ts", "/package.json", "/README.md", "/scripts/predeploy-check.mjs",
   "/sources/manifest.json", "/.kiro/steering/product.md", "/pairs/WideWorldImporters/Integration.GetMovementUpdates.json", "/.env"];
 for (const p of mustServe) {
@@ -154,6 +174,7 @@ for (const p of mustNotServe) {
 console.log(`site check: ${base}  (${new Date().toISOString()})`);
 console.log(`scorecard links followed: ${receiptLinks.length}`);
 for (const [db, c] of Object.entries(perDatabase)) console.log(`  ${db}: ${c.ok} rendered a receipt, ${c.bad} did not`);
+console.log(`agent access map: followed from the scorecard's nav link; ${mapTools} tool(s) from the committed map required on the page`);
 console.log(`pages that must return 200: ${mustServe.length}; repository files that must return 404: ${mustNotServe.length}`);
 if (failures.length) {
   console.log(`FAIL: ${failures.length} problem(s)`);

@@ -1,0 +1,10 @@
+site check: https://parityproven.com  (2026-11-18T18:48:16.922Z)
+scorecard links followed: 55
+  AdventureWorks2025: 25 rendered a receipt, 0 did not
+  WideWorldImporters: 30 rendered a receipt, 0 did not
+agent access map: followed from the scorecard's nav link; 0 tool(s) from the committed map required on the page
+pages that must return 200: 9; repository files that must return 404: 8
+FAIL: 3 problem(s)
+  - scorecard has no "Agent Access Map" link
+  - /access-map returned 404, expected 200
+  - /web/data/agent-access-map.json returned 404, expected 200

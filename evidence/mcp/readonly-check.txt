@@ -1,0 +1,18 @@
+MCP reader negative test, run as pp_mcp_reader on WideWorldImporters, 2026-11-18T18:36:49.840Z
+connected as login pp_mcp_reader, database user pp_mcp_reader
+row-level security role [Far West Sales]: member
+reads (each view in the access map; must succeed):
+  READ OK  Website.Customers (76 rows visible to this login)
+  READ OK  Website.Suppliers (13 rows visible to this login)
+  READ OK  Website.VehicleTemperatures (65998 rows visible to this login)
+writes and other access (must each be refused with a permission error):
+  REFUSED  INSERT into a base table (Sales.Customers): error 229 The INSERT permission was denied on the object 'Customers', database 'WideWorldImporters', schema 'Sales'.
+  REFUSED  UPDATE a base table (Sales.Customers): error 229 The UPDATE permission was denied on the object 'Customers', database 'WideWorldImporters', schema 'Sales'.
+  REFUSED  DELETE from a base table (Sales.Customers): error 229 The DELETE permission was denied on the object 'Customers', database 'WideWorldImporters', schema 'Sales'.
+  REFUSED  UPDATE through an exposed view (Website.Suppliers): error 229 The UPDATE permission was denied on the object 'Suppliers', database 'WideWorldImporters', schema 'Website'.
+  REFUSED  DELETE through an exposed view (Website.VehicleTemperatures): error 229 The DELETE permission was denied on the object 'VehicleTemperatures', database 'WideWorldImporters', schema 'Website'.
+  REFUSED  DDL: CREATE TABLE: error 262 CREATE TABLE permission denied in database 'WideWorldImporters'.
+  REFUSED  DDL: CREATE VIEW: error 262 CREATE VIEW permission denied in database 'WideWorldImporters'.
+  REFUSED  read a base table directly (Sales.Customers): error 229 The SELECT permission was denied on the object 'Customers', database 'WideWorldImporters', schema 'Sales'.
+  REFUSED  run a procedure (Website.SearchForCustomers): error 229 The EXECUTE permission was denied on the object 'SearchForCustomers', database 'WideWorldImporters', schema 'Website'.
+RESULT: PASS — every view is readable and every write, DDL, base-table read and procedure call was refused

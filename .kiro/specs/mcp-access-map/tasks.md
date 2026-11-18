@@ -1,0 +1,11 @@
+# mcp-access-map tasks
+- [x] Agent Access Map for WideWorldImporters, committed (`web/data/agent-access-map.json`), validated (`src/mcp/access-map.ts`)
+- [x] Tool layer: fixed parameterised query per view, argument validation (`src/mcp/tools.ts`, unit tests `tools.test.ts`)
+- [x] MCP server, stdio, SDK 1.32.2 pinned; strict input schemas; audit log with client name (`src/mcp/server.ts`)
+- [x] `npm run mcp:setup`: login, SELECT on the map's views, row-level-security role (refuses roles with permissions)
+- [x] `npm run mcp:check`: negative test as the reader, seen passing 2026-11-18 (evidence/mcp/readonly-check.txt); an earlier run failed on 0 visible customers (row-level security) and on a 4405 that proved nothing, both fixed
+- [x] Protocol smoke test with the SDK client (`scripts/mcp-smoke.mjs`): tools listed, a call returns rows, an undeclared `sql` argument is refused
+- [x] Live page `/access-map` rendered from the map; nav link on every page; `site:check` covers it
+- [x] Pinned dependencies and notices; npm 11.5.2 dropped rolldown's optional platform entries from the lockfile when packages were added, re-added unchanged from the committed lock (`npm ci` verified)
+- [ ] Register in the workspace Kiro MCP configuration (`.kiro/settings/mcp.json`) — the agent may not write `.kiro/settings/`; the owner adds it
+- [ ] One real use by Kiro, visible in `evidence/mcp/tool-calls.log` with Kiro as the client; then `product.md` and `kiroween-submission.md` say MCP was used, and how
