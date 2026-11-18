@@ -103,7 +103,7 @@
   ],
   "evidence": {
     "step1": "pass",
-    "step2": "not-run",
+    "step2": "pass",
     "step3": "pass",
     "step4": "n/a",
     "step5": "not-run",
@@ -131,7 +131,23 @@
       "customer transaction booked to the customer, not the bill-to customer",
       "missing address line 2 kept as line 1 (concat instead of ||)"
     ],
-    "harnessVersion": "harness-generic-0.3.0"
+    "harnessVersion": "harness-generic-0.3.0",
+    "testsRun": [
+      "tSQLt V1.0.8083.3529 on SQL Server (tests/WideWorldImporters/Website.InvoiceCustomerOrders.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/WideWorldImporters/Website.InvoiceCustomerOrders.pg.sql); expected results tests/WideWorldImporters/Website.InvoiceCustomerOrders.expected.json",
+      "SQL Server: AgreedTests.[test 01 one order, a dry and a chilled line (tax 3 x 0.99 x 0.505 % = 0.0149985 rounds to 0.01), billed to an…]: pass",
+      "SQL Server: AgreedTests.[test 02 two orders; the second customer has no address line 2 (delivery instructions NULL)]: pass",
+      "SQL Server: AgreedTests.[test 03 an unknown order: THROW 51000, nothing written]: pass",
+      "SQL Server: AgreedTests.[test 04 an order that is not picked: THROW 51000]: pass",
+      "SQL Server: AgreedTests.[test 05 an order without lines: its customer transaction sums are NULL, a NOT NULL violation rolls everything…]: pass",
+      "SQL Server: AgreedTests.[test 06 the Stock Issue transaction type appears twice: the scalar subquery fails]: pass",
+      "PostgreSQL: AgreedTests.[test 01 one order, a dry and a chilled line (tax 3 x 0.99 x 0.505 % = 0.0149985 rounds to 0.01), billed to an…]: pass",
+      "PostgreSQL: AgreedTests.[test 02 two orders; the second customer has no address line 2 (delivery instructions NULL)]: pass",
+      "PostgreSQL: AgreedTests.[test 03 an unknown order: THROW 51000, nothing written]: pass",
+      "PostgreSQL: AgreedTests.[test 04 an order that is not picked: THROW 51000]: pass",
+      "PostgreSQL: AgreedTests.[test 05 an order without lines: its customer transaction sums are NULL, a NOT NULL violation rolls everything…]: pass",
+      "PostgreSQL: AgreedTests.[test 06 the Stock Issue transaction type appears twice: the scalar subquery fails]: pass",
+      "planted defects caught by the agreed tests: 7 of 7"
+    ]
   },
   "effort": {
     "humanMinutes": 0,

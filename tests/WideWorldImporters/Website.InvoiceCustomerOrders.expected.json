@@ -1,0 +1,2523 @@
+{
+  "object": "Website.InvoiceCustomerOrders",
+  "database": "WideWorldImporters",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-18T20:43:47.422Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "one order, a dry and a chilled line (tax 3 x 0.99 x 0.505 % = 0.0149985 rounds to 0.01), billed to another customer",
+      "outcome": "completed",
+      "tables": {},
+      "queries": [
+        {
+          "label": "invoices",
+          "columns": [
+            {
+              "name": "OrderID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "Invoice",
+              "sqlServerType": "nvarchar(10)"
+            },
+            {
+              "name": "CustomerID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "BillToCustomerID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "DeliveryMethodID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "ContactPersonID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "AccountsPersonID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "SalespersonPersonID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "PackedByPersonID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "InvoiceDate_now",
+              "sqlServerType": "nvarchar(5)"
+            },
+            {
+              "name": "InvoiceDate",
+              "sqlServerType": "date"
+            },
+            {
+              "name": "CustomerPurchaseOrderNumber",
+              "sqlServerType": "nvarchar(20)"
+            },
+            {
+              "name": "IsCreditNote",
+              "sqlServerType": "bit"
+            },
+            {
+              "name": "CreditNoteReason",
+              "sqlServerType": "nvarchar(400)"
+            },
+            {
+              "name": "Comments",
+              "sqlServerType": "nvarchar(400)"
+            },
+            {
+              "name": "DeliveryInstructions",
+              "sqlServerType": "nvarchar(400)"
+            },
+            {
+              "name": "InternalComments",
+              "sqlServerType": "nvarchar(400)"
+            },
+            {
+              "name": "TotalDryItems",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "TotalChillerItems",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "DeliveryRun",
+              "sqlServerType": "nvarchar(5)"
+            },
+            {
+              "name": "RunPosition",
+              "sqlServerType": "nvarchar(5)"
+            },
+            {
+              "name": "ReturnedDeliveryData",
+              "sqlServerType": "nvarchar(4000)"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": [
+            [
+              "n:1",
+              "s:new",
+              "n:1",
+              "n:2",
+              "n:3",
+              "n:3",
+              "n:12",
+              "n:7",
+              "n:5",
+              "s:today",
+              "∅",
+              "s:PO-1",
+              "b:0",
+              "∅",
+              "∅",
+              "s:Shop 12, 1 Main St",
+              "∅",
+              "n:1",
+              "n:1",
+              "s:A",
+              "s:1",
+              "s:{\"Events\": [{ \"Event\":\"Ready for collection\",\"EventTime\":\"<call time, 20 chars, ends .>\",\"ConNote\":\"EAN-125-<InvoiceID + 1050>\"}]}",
+              "n:9",
+              "s:now",
+              "∅"
+            ]
+          ]
+        },
+        {
+          "label": "invoice lines, by their invoice's order",
+          "columns": [
+            {
+              "name": "InvoiceOrder",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "StockItemID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "Description",
+              "sqlServerType": "nvarchar(100)"
+            },
+            {
+              "name": "PackageTypeID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "Quantity",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "UnitPrice",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "TaxRate",
+              "sqlServerType": "decimal(18,3)"
+            },
+            {
+              "name": "TaxAmount",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "LineProfit",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "ExtendedPrice",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": [
+            [
+              "n:1",
+              "n:1",
+              "s:dry",
+              "n:7",
+              "n:3",
+              "n:0.99",
+              "n:0.505",
+              "n:0.01",
+              "n:1.47",
+              "n:2.98",
+              "n:9",
+              "s:now",
+              "∅"
+            ],
+            [
+              "n:1",
+              "n:2",
+              "s:chilled",
+              "n:9",
+              "n:2",
+              "n:10",
+              "n:15",
+              "n:3",
+              "n:8",
+              "n:23",
+              "n:9",
+              "s:now",
+              "∅"
+            ]
+          ]
+        },
+        {
+          "label": "stock transactions, by their invoice's order",
+          "columns": [
+            {
+              "name": "InvoiceOrder",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "StockItemID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "TransactionTypeID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "CustomerID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "SupplierID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "PurchaseOrderID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "TransactionOccurredWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "TransactionOccurredWhen",
+              "sqlServerType": "datetime2(7)"
+            },
+            {
+              "name": "Quantity",
+              "sqlServerType": "decimal(18,3)"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": [
+            [
+              "n:1",
+              "n:1",
+              "n:10",
+              "n:1",
+              "∅",
+              "∅",
+              "s:now",
+              "∅",
+              "n:-3",
+              "n:9",
+              "s:now",
+              "∅"
+            ],
+            [
+              "n:1",
+              "n:2",
+              "n:10",
+              "n:1",
+              "∅",
+              "∅",
+              "s:now",
+              "∅",
+              "n:-2",
+              "n:9",
+              "s:now",
+              "∅"
+            ]
+          ]
+        },
+        {
+          "label": "customer transactions, by their invoice's order",
+          "columns": [
+            {
+              "name": "InvoiceOrder",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "CustomerID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "TransactionTypeID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "PaymentMethodID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "TransactionDate_now",
+              "sqlServerType": "nvarchar(5)"
+            },
+            {
+              "name": "TransactionDate",
+              "sqlServerType": "date"
+            },
+            {
+              "name": "AmountExcludingTax",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "TaxAmount",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "TransactionAmount",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "OutstandingBalance",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "FinalizationDate",
+              "sqlServerType": "date"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": [
+            [
+              "n:1",
+              "n:2",
+              "n:1",
+              "∅",
+              "s:today",
+              "∅",
+              "n:22.97",
+              "n:3.01",
+              "n:25.98",
+              "n:25.98",
+              "∅",
+              "n:9",
+              "s:now",
+              "∅"
+            ]
+          ]
+        },
+        {
+          "label": "stock holdings",
+          "columns": [
+            {
+              "name": "StockItemID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "QuantityOnHand",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastCostPrice",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": [
+            [
+              "n:1",
+              "n:97",
+              "n:0.5",
+              "n:9",
+              "s:now",
+              "∅"
+            ],
+            [
+              "n:2",
+              "n:8",
+              "n:6",
+              "n:9",
+              "s:now",
+              "∅"
+            ]
+          ]
+        },
+        {
+          "label": "invoice IDs used",
+          "columns": [
+            {
+              "name": "Invoices",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "DistinctIDs",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "InRange",
+              "sqlServerType": "nvarchar(26)"
+            }
+          ],
+          "rows": [
+            [
+              "n:1",
+              "n:1",
+              "s:within the allocated range"
+            ]
+          ]
+        },
+        {
+          "label": "next invoice ID",
+          "columns": [
+            {
+              "name": "NextInvoiceID",
+              "sqlServerType": "int"
+            }
+          ],
+          "rows": [
+            [
+              "n:70512"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "label": "two orders; the second customer has no address line 2 (delivery instructions NULL)",
+      "outcome": "completed",
+      "tables": {},
+      "queries": [
+        {
+          "label": "invoices",
+          "columns": [
+            {
+              "name": "OrderID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "Invoice",
+              "sqlServerType": "nvarchar(10)"
+            },
+            {
+              "name": "CustomerID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "BillToCustomerID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "DeliveryMethodID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "ContactPersonID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "AccountsPersonID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "SalespersonPersonID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "PackedByPersonID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "InvoiceDate_now",
+              "sqlServerType": "nvarchar(5)"
+            },
+            {
+              "name": "InvoiceDate",
+              "sqlServerType": "date"
+            },
+            {
+              "name": "CustomerPurchaseOrderNumber",
+              "sqlServerType": "nvarchar(20)"
+            },
+            {
+              "name": "IsCreditNote",
+              "sqlServerType": "bit"
+            },
+            {
+              "name": "CreditNoteReason",
+              "sqlServerType": "nvarchar(400)"
+            },
+            {
+              "name": "Comments",
+              "sqlServerType": "nvarchar(400)"
+            },
+            {
+              "name": "DeliveryInstructions",
+              "sqlServerType": "nvarchar(400)"
+            },
+            {
+              "name": "InternalComments",
+              "sqlServerType": "nvarchar(400)"
+            },
+            {
+              "name": "TotalDryItems",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "TotalChillerItems",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "DeliveryRun",
+              "sqlServerType": "nvarchar(5)"
+            },
+            {
+              "name": "RunPosition",
+              "sqlServerType": "nvarchar(5)"
+            },
+            {
+              "name": "ReturnedDeliveryData",
+              "sqlServerType": "nvarchar(4000)"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": [
+            [
+              "n:1",
+              "s:new",
+              "n:1",
+              "n:2",
+              "n:3",
+              "n:3",
+              "n:12",
+              "n:7",
+              "n:5",
+              "s:today",
+              "∅",
+              "s:PO-1",
+              "b:0",
+              "∅",
+              "∅",
+              "s:Shop 12, 1 Main St",
+              "∅",
+              "n:1",
+              "n:1",
+              "s:A",
+              "s:1",
+              "s:{\"Events\": [{ \"Event\":\"Ready for collection\",\"EventTime\":\"<call time, 20 chars, ends .>\",\"ConNote\":\"EAN-125-<InvoiceID + 1050>\"}]}",
+              "n:9",
+              "s:now",
+              "∅"
+            ],
+            [
+              "n:2",
+              "s:new",
+              "n:2",
+              "n:2",
+              "n:3",
+              "n:4",
+              "n:12",
+              "n:8",
+              "n:5",
+              "s:today",
+              "∅",
+              "∅",
+              "b:0",
+              "∅",
+              "∅",
+              "∅",
+              "∅",
+              "n:1",
+              "n:0",
+              "∅",
+              "∅",
+              "s:{\"Events\": [{ \"Event\":\"Ready for collection\",\"EventTime\":\"<call time, 20 chars, ends .>\",\"ConNote\":\"EAN-125-<InvoiceID + 1050>\"}]}",
+              "n:9",
+              "s:now",
+              "∅"
+            ]
+          ]
+        },
+        {
+          "label": "invoice lines, by their invoice's order",
+          "columns": [
+            {
+              "name": "InvoiceOrder",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "StockItemID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "Description",
+              "sqlServerType": "nvarchar(100)"
+            },
+            {
+              "name": "PackageTypeID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "Quantity",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "UnitPrice",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "TaxRate",
+              "sqlServerType": "decimal(18,3)"
+            },
+            {
+              "name": "TaxAmount",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "LineProfit",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "ExtendedPrice",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": [
+            [
+              "n:1",
+              "n:1",
+              "s:dry",
+              "n:7",
+              "n:3",
+              "n:0.99",
+              "n:0.505",
+              "n:0.01",
+              "n:1.47",
+              "n:2.98",
+              "n:9",
+              "s:now",
+              "∅"
+            ],
+            [
+              "n:1",
+              "n:2",
+              "s:chilled",
+              "n:9",
+              "n:2",
+              "n:10",
+              "n:15",
+              "n:3",
+              "n:8",
+              "n:23",
+              "n:9",
+              "s:now",
+              "∅"
+            ],
+            [
+              "n:2",
+              "n:1",
+              "s:dry",
+              "n:7",
+              "n:1",
+              "n:5.55",
+              "n:10",
+              "n:0.56",
+              "n:5.05",
+              "n:6.11",
+              "n:9",
+              "s:now",
+              "∅"
+            ]
+          ]
+        },
+        {
+          "label": "stock transactions, by their invoice's order",
+          "columns": [
+            {
+              "name": "InvoiceOrder",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "StockItemID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "TransactionTypeID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "CustomerID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "SupplierID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "PurchaseOrderID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "TransactionOccurredWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "TransactionOccurredWhen",
+              "sqlServerType": "datetime2(7)"
+            },
+            {
+              "name": "Quantity",
+              "sqlServerType": "decimal(18,3)"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": [
+            [
+              "n:1",
+              "n:1",
+              "n:10",
+              "n:1",
+              "∅",
+              "∅",
+              "s:now",
+              "∅",
+              "n:-3",
+              "n:9",
+              "s:now",
+              "∅"
+            ],
+            [
+              "n:1",
+              "n:2",
+              "n:10",
+              "n:1",
+              "∅",
+              "∅",
+              "s:now",
+              "∅",
+              "n:-2",
+              "n:9",
+              "s:now",
+              "∅"
+            ],
+            [
+              "n:2",
+              "n:1",
+              "n:10",
+              "n:2",
+              "∅",
+              "∅",
+              "s:now",
+              "∅",
+              "n:-1",
+              "n:9",
+              "s:now",
+              "∅"
+            ]
+          ]
+        },
+        {
+          "label": "customer transactions, by their invoice's order",
+          "columns": [
+            {
+              "name": "InvoiceOrder",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "CustomerID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "TransactionTypeID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "PaymentMethodID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "TransactionDate_now",
+              "sqlServerType": "nvarchar(5)"
+            },
+            {
+              "name": "TransactionDate",
+              "sqlServerType": "date"
+            },
+            {
+              "name": "AmountExcludingTax",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "TaxAmount",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "TransactionAmount",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "OutstandingBalance",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "FinalizationDate",
+              "sqlServerType": "date"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": [
+            [
+              "n:1",
+              "n:2",
+              "n:1",
+              "∅",
+              "s:today",
+              "∅",
+              "n:22.97",
+              "n:3.01",
+              "n:25.98",
+              "n:25.98",
+              "∅",
+              "n:9",
+              "s:now",
+              "∅"
+            ],
+            [
+              "n:2",
+              "n:2",
+              "n:1",
+              "∅",
+              "s:today",
+              "∅",
+              "n:5.55",
+              "n:0.56",
+              "n:6.11",
+              "n:6.11",
+              "∅",
+              "n:9",
+              "s:now",
+              "∅"
+            ]
+          ]
+        },
+        {
+          "label": "stock holdings",
+          "columns": [
+            {
+              "name": "StockItemID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "QuantityOnHand",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastCostPrice",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": [
+            [
+              "n:1",
+              "n:96",
+              "n:0.5",
+              "n:9",
+              "s:now",
+              "∅"
+            ],
+            [
+              "n:2",
+              "n:8",
+              "n:6",
+              "n:9",
+              "s:now",
+              "∅"
+            ]
+          ]
+        },
+        {
+          "label": "invoice IDs used",
+          "columns": [
+            {
+              "name": "Invoices",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "DistinctIDs",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "InRange",
+              "sqlServerType": "nvarchar(26)"
+            }
+          ],
+          "rows": [
+            [
+              "n:2",
+              "n:2",
+              "s:within the allocated range"
+            ]
+          ]
+        },
+        {
+          "label": "next invoice ID",
+          "columns": [
+            {
+              "name": "NextInvoiceID",
+              "sqlServerType": "int"
+            }
+          ],
+          "rows": [
+            [
+              "n:70513"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "label": "an unknown order: THROW 51000, nothing written",
+      "outcome": "raised: THROW 51000 (order missing, not picked or already invoiced)",
+      "tables": {},
+      "queries": [
+        {
+          "label": "invoices",
+          "columns": [
+            {
+              "name": "OrderID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "Invoice",
+              "sqlServerType": "nvarchar(10)"
+            },
+            {
+              "name": "CustomerID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "BillToCustomerID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "DeliveryMethodID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "ContactPersonID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "AccountsPersonID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "SalespersonPersonID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "PackedByPersonID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "InvoiceDate_now",
+              "sqlServerType": "nvarchar(5)"
+            },
+            {
+              "name": "InvoiceDate",
+              "sqlServerType": "date"
+            },
+            {
+              "name": "CustomerPurchaseOrderNumber",
+              "sqlServerType": "nvarchar(20)"
+            },
+            {
+              "name": "IsCreditNote",
+              "sqlServerType": "bit"
+            },
+            {
+              "name": "CreditNoteReason",
+              "sqlServerType": "nvarchar(400)"
+            },
+            {
+              "name": "Comments",
+              "sqlServerType": "nvarchar(400)"
+            },
+            {
+              "name": "DeliveryInstructions",
+              "sqlServerType": "nvarchar(400)"
+            },
+            {
+              "name": "InternalComments",
+              "sqlServerType": "nvarchar(400)"
+            },
+            {
+              "name": "TotalDryItems",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "TotalChillerItems",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "DeliveryRun",
+              "sqlServerType": "nvarchar(5)"
+            },
+            {
+              "name": "RunPosition",
+              "sqlServerType": "nvarchar(5)"
+            },
+            {
+              "name": "ReturnedDeliveryData",
+              "sqlServerType": "nvarchar(4000)"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": []
+        },
+        {
+          "label": "invoice lines, by their invoice's order",
+          "columns": [
+            {
+              "name": "InvoiceOrder",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "StockItemID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "Description",
+              "sqlServerType": "nvarchar(100)"
+            },
+            {
+              "name": "PackageTypeID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "Quantity",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "UnitPrice",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "TaxRate",
+              "sqlServerType": "decimal(18,3)"
+            },
+            {
+              "name": "TaxAmount",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "LineProfit",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "ExtendedPrice",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": []
+        },
+        {
+          "label": "stock transactions, by their invoice's order",
+          "columns": [
+            {
+              "name": "InvoiceOrder",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "StockItemID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "TransactionTypeID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "CustomerID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "SupplierID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "PurchaseOrderID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "TransactionOccurredWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "TransactionOccurredWhen",
+              "sqlServerType": "datetime2(7)"
+            },
+            {
+              "name": "Quantity",
+              "sqlServerType": "decimal(18,3)"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": []
+        },
+        {
+          "label": "customer transactions, by their invoice's order",
+          "columns": [
+            {
+              "name": "InvoiceOrder",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "CustomerID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "TransactionTypeID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "PaymentMethodID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "TransactionDate_now",
+              "sqlServerType": "nvarchar(5)"
+            },
+            {
+              "name": "TransactionDate",
+              "sqlServerType": "date"
+            },
+            {
+              "name": "AmountExcludingTax",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "TaxAmount",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "TransactionAmount",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "OutstandingBalance",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "FinalizationDate",
+              "sqlServerType": "date"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": []
+        },
+        {
+          "label": "stock holdings",
+          "columns": [
+            {
+              "name": "StockItemID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "QuantityOnHand",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastCostPrice",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": [
+            [
+              "n:1",
+              "n:100",
+              "n:0.5",
+              "n:1",
+              "∅",
+              "t:2020-01-01T00:00:00.000000"
+            ],
+            [
+              "n:2",
+              "n:10",
+              "n:6",
+              "n:1",
+              "∅",
+              "t:2020-01-01T00:00:00.000000"
+            ]
+          ]
+        },
+        {
+          "label": "invoice IDs used",
+          "columns": [
+            {
+              "name": "Invoices",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "DistinctIDs",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "InRange",
+              "sqlServerType": "nvarchar(26)"
+            }
+          ],
+          "rows": [
+            [
+              "n:0",
+              "n:0",
+              "s:within the allocated range"
+            ]
+          ]
+        },
+        {
+          "label": "next invoice ID",
+          "columns": [
+            {
+              "name": "NextInvoiceID",
+              "sqlServerType": "int"
+            }
+          ],
+          "rows": [
+            [
+              "n:70512"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "label": "an order that is not picked: THROW 51000",
+      "outcome": "raised: THROW 51000 (order missing, not picked or already invoiced)",
+      "tables": {},
+      "queries": [
+        {
+          "label": "invoices",
+          "columns": [
+            {
+              "name": "OrderID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "Invoice",
+              "sqlServerType": "nvarchar(10)"
+            },
+            {
+              "name": "CustomerID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "BillToCustomerID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "DeliveryMethodID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "ContactPersonID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "AccountsPersonID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "SalespersonPersonID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "PackedByPersonID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "InvoiceDate_now",
+              "sqlServerType": "nvarchar(5)"
+            },
+            {
+              "name": "InvoiceDate",
+              "sqlServerType": "date"
+            },
+            {
+              "name": "CustomerPurchaseOrderNumber",
+              "sqlServerType": "nvarchar(20)"
+            },
+            {
+              "name": "IsCreditNote",
+              "sqlServerType": "bit"
+            },
+            {
+              "name": "CreditNoteReason",
+              "sqlServerType": "nvarchar(400)"
+            },
+            {
+              "name": "Comments",
+              "sqlServerType": "nvarchar(400)"
+            },
+            {
+              "name": "DeliveryInstructions",
+              "sqlServerType": "nvarchar(400)"
+            },
+            {
+              "name": "InternalComments",
+              "sqlServerType": "nvarchar(400)"
+            },
+            {
+              "name": "TotalDryItems",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "TotalChillerItems",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "DeliveryRun",
+              "sqlServerType": "nvarchar(5)"
+            },
+            {
+              "name": "RunPosition",
+              "sqlServerType": "nvarchar(5)"
+            },
+            {
+              "name": "ReturnedDeliveryData",
+              "sqlServerType": "nvarchar(4000)"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": []
+        },
+        {
+          "label": "invoice lines, by their invoice's order",
+          "columns": [
+            {
+              "name": "InvoiceOrder",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "StockItemID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "Description",
+              "sqlServerType": "nvarchar(100)"
+            },
+            {
+              "name": "PackageTypeID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "Quantity",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "UnitPrice",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "TaxRate",
+              "sqlServerType": "decimal(18,3)"
+            },
+            {
+              "name": "TaxAmount",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "LineProfit",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "ExtendedPrice",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": []
+        },
+        {
+          "label": "stock transactions, by their invoice's order",
+          "columns": [
+            {
+              "name": "InvoiceOrder",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "StockItemID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "TransactionTypeID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "CustomerID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "SupplierID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "PurchaseOrderID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "TransactionOccurredWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "TransactionOccurredWhen",
+              "sqlServerType": "datetime2(7)"
+            },
+            {
+              "name": "Quantity",
+              "sqlServerType": "decimal(18,3)"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": []
+        },
+        {
+          "label": "customer transactions, by their invoice's order",
+          "columns": [
+            {
+              "name": "InvoiceOrder",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "CustomerID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "TransactionTypeID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "PaymentMethodID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "TransactionDate_now",
+              "sqlServerType": "nvarchar(5)"
+            },
+            {
+              "name": "TransactionDate",
+              "sqlServerType": "date"
+            },
+            {
+              "name": "AmountExcludingTax",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "TaxAmount",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "TransactionAmount",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "OutstandingBalance",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "FinalizationDate",
+              "sqlServerType": "date"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": []
+        },
+        {
+          "label": "stock holdings",
+          "columns": [
+            {
+              "name": "StockItemID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "QuantityOnHand",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastCostPrice",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": [
+            [
+              "n:1",
+              "n:100",
+              "n:0.5",
+              "n:1",
+              "∅",
+              "t:2020-01-01T00:00:00.000000"
+            ],
+            [
+              "n:2",
+              "n:10",
+              "n:6",
+              "n:1",
+              "∅",
+              "t:2020-01-01T00:00:00.000000"
+            ]
+          ]
+        },
+        {
+          "label": "invoice IDs used",
+          "columns": [
+            {
+              "name": "Invoices",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "DistinctIDs",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "InRange",
+              "sqlServerType": "nvarchar(26)"
+            }
+          ],
+          "rows": [
+            [
+              "n:0",
+              "n:0",
+              "s:within the allocated range"
+            ]
+          ]
+        },
+        {
+          "label": "next invoice ID",
+          "columns": [
+            {
+              "name": "NextInvoiceID",
+              "sqlServerType": "int"
+            }
+          ],
+          "rows": [
+            [
+              "n:70511"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "label": "an order without lines: its customer transaction sums are NULL, a NOT NULL violation rolls everything back",
+      "outcome": "raised: NULL into a NOT NULL column",
+      "tables": {},
+      "queries": [
+        {
+          "label": "invoices",
+          "columns": [
+            {
+              "name": "OrderID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "Invoice",
+              "sqlServerType": "nvarchar(10)"
+            },
+            {
+              "name": "CustomerID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "BillToCustomerID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "DeliveryMethodID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "ContactPersonID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "AccountsPersonID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "SalespersonPersonID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "PackedByPersonID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "InvoiceDate_now",
+              "sqlServerType": "nvarchar(5)"
+            },
+            {
+              "name": "InvoiceDate",
+              "sqlServerType": "date"
+            },
+            {
+              "name": "CustomerPurchaseOrderNumber",
+              "sqlServerType": "nvarchar(20)"
+            },
+            {
+              "name": "IsCreditNote",
+              "sqlServerType": "bit"
+            },
+            {
+              "name": "CreditNoteReason",
+              "sqlServerType": "nvarchar(400)"
+            },
+            {
+              "name": "Comments",
+              "sqlServerType": "nvarchar(400)"
+            },
+            {
+              "name": "DeliveryInstructions",
+              "sqlServerType": "nvarchar(400)"
+            },
+            {
+              "name": "InternalComments",
+              "sqlServerType": "nvarchar(400)"
+            },
+            {
+              "name": "TotalDryItems",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "TotalChillerItems",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "DeliveryRun",
+              "sqlServerType": "nvarchar(5)"
+            },
+            {
+              "name": "RunPosition",
+              "sqlServerType": "nvarchar(5)"
+            },
+            {
+              "name": "ReturnedDeliveryData",
+              "sqlServerType": "nvarchar(4000)"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": []
+        },
+        {
+          "label": "invoice lines, by their invoice's order",
+          "columns": [
+            {
+              "name": "InvoiceOrder",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "StockItemID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "Description",
+              "sqlServerType": "nvarchar(100)"
+            },
+            {
+              "name": "PackageTypeID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "Quantity",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "UnitPrice",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "TaxRate",
+              "sqlServerType": "decimal(18,3)"
+            },
+            {
+              "name": "TaxAmount",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "LineProfit",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "ExtendedPrice",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": []
+        },
+        {
+          "label": "stock transactions, by their invoice's order",
+          "columns": [
+            {
+              "name": "InvoiceOrder",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "StockItemID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "TransactionTypeID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "CustomerID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "SupplierID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "PurchaseOrderID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "TransactionOccurredWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "TransactionOccurredWhen",
+              "sqlServerType": "datetime2(7)"
+            },
+            {
+              "name": "Quantity",
+              "sqlServerType": "decimal(18,3)"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": []
+        },
+        {
+          "label": "customer transactions, by their invoice's order",
+          "columns": [
+            {
+              "name": "InvoiceOrder",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "CustomerID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "TransactionTypeID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "PaymentMethodID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "TransactionDate_now",
+              "sqlServerType": "nvarchar(5)"
+            },
+            {
+              "name": "TransactionDate",
+              "sqlServerType": "date"
+            },
+            {
+              "name": "AmountExcludingTax",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "TaxAmount",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "TransactionAmount",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "OutstandingBalance",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "FinalizationDate",
+              "sqlServerType": "date"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": []
+        },
+        {
+          "label": "stock holdings",
+          "columns": [
+            {
+              "name": "StockItemID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "QuantityOnHand",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastCostPrice",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": [
+            [
+              "n:1",
+              "n:100",
+              "n:0.5",
+              "n:1",
+              "∅",
+              "t:2020-01-01T00:00:00.000000"
+            ],
+            [
+              "n:2",
+              "n:10",
+              "n:6",
+              "n:1",
+              "∅",
+              "t:2020-01-01T00:00:00.000000"
+            ]
+          ]
+        },
+        {
+          "label": "invoice IDs used",
+          "columns": [
+            {
+              "name": "Invoices",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "DistinctIDs",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "InRange",
+              "sqlServerType": "nvarchar(26)"
+            }
+          ],
+          "rows": [
+            [
+              "n:0",
+              "n:0",
+              "s:within the allocated range"
+            ]
+          ]
+        },
+        {
+          "label": "next invoice ID",
+          "columns": [
+            {
+              "name": "NextInvoiceID",
+              "sqlServerType": "int"
+            }
+          ],
+          "rows": [
+            [
+              "n:70512"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "label": "the 'Stock Issue' transaction type appears twice: the scalar subquery fails",
+      "outcome": "raised: scalar subquery returned more than one row",
+      "tables": {},
+      "queries": [
+        {
+          "label": "invoices",
+          "columns": [
+            {
+              "name": "OrderID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "Invoice",
+              "sqlServerType": "nvarchar(10)"
+            },
+            {
+              "name": "CustomerID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "BillToCustomerID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "DeliveryMethodID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "ContactPersonID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "AccountsPersonID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "SalespersonPersonID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "PackedByPersonID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "InvoiceDate_now",
+              "sqlServerType": "nvarchar(5)"
+            },
+            {
+              "name": "InvoiceDate",
+              "sqlServerType": "date"
+            },
+            {
+              "name": "CustomerPurchaseOrderNumber",
+              "sqlServerType": "nvarchar(20)"
+            },
+            {
+              "name": "IsCreditNote",
+              "sqlServerType": "bit"
+            },
+            {
+              "name": "CreditNoteReason",
+              "sqlServerType": "nvarchar(400)"
+            },
+            {
+              "name": "Comments",
+              "sqlServerType": "nvarchar(400)"
+            },
+            {
+              "name": "DeliveryInstructions",
+              "sqlServerType": "nvarchar(400)"
+            },
+            {
+              "name": "InternalComments",
+              "sqlServerType": "nvarchar(400)"
+            },
+            {
+              "name": "TotalDryItems",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "TotalChillerItems",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "DeliveryRun",
+              "sqlServerType": "nvarchar(5)"
+            },
+            {
+              "name": "RunPosition",
+              "sqlServerType": "nvarchar(5)"
+            },
+            {
+              "name": "ReturnedDeliveryData",
+              "sqlServerType": "nvarchar(4000)"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": []
+        },
+        {
+          "label": "invoice lines, by their invoice's order",
+          "columns": [
+            {
+              "name": "InvoiceOrder",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "StockItemID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "Description",
+              "sqlServerType": "nvarchar(100)"
+            },
+            {
+              "name": "PackageTypeID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "Quantity",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "UnitPrice",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "TaxRate",
+              "sqlServerType": "decimal(18,3)"
+            },
+            {
+              "name": "TaxAmount",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "LineProfit",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "ExtendedPrice",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": []
+        },
+        {
+          "label": "stock transactions, by their invoice's order",
+          "columns": [
+            {
+              "name": "InvoiceOrder",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "StockItemID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "TransactionTypeID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "CustomerID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "SupplierID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "PurchaseOrderID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "TransactionOccurredWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "TransactionOccurredWhen",
+              "sqlServerType": "datetime2(7)"
+            },
+            {
+              "name": "Quantity",
+              "sqlServerType": "decimal(18,3)"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": []
+        },
+        {
+          "label": "customer transactions, by their invoice's order",
+          "columns": [
+            {
+              "name": "InvoiceOrder",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "CustomerID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "TransactionTypeID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "PaymentMethodID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "TransactionDate_now",
+              "sqlServerType": "nvarchar(5)"
+            },
+            {
+              "name": "TransactionDate",
+              "sqlServerType": "date"
+            },
+            {
+              "name": "AmountExcludingTax",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "TaxAmount",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "TransactionAmount",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "OutstandingBalance",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "FinalizationDate",
+              "sqlServerType": "date"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": []
+        },
+        {
+          "label": "stock holdings",
+          "columns": [
+            {
+              "name": "StockItemID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "QuantityOnHand",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastCostPrice",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": [
+            [
+              "n:1",
+              "n:100",
+              "n:0.5",
+              "n:1",
+              "∅",
+              "t:2020-01-01T00:00:00.000000"
+            ],
+            [
+              "n:2",
+              "n:10",
+              "n:6",
+              "n:1",
+              "∅",
+              "t:2020-01-01T00:00:00.000000"
+            ]
+          ]
+        },
+        {
+          "label": "invoice IDs used",
+          "columns": [
+            {
+              "name": "Invoices",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "DistinctIDs",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "InRange",
+              "sqlServerType": "nvarchar(26)"
+            }
+          ],
+          "rows": [
+            [
+              "n:0",
+              "n:0",
+              "s:within the allocated range"
+            ]
+          ]
+        },
+        {
+          "label": "next invoice ID",
+          "columns": [
+            {
+              "name": "NextInvoiceID",
+              "sqlServerType": "int"
+            }
+          ],
+          "rows": [
+            [
+              "n:70512"
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

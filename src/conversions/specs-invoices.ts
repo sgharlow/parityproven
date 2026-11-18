@@ -291,7 +291,7 @@ function fixedCases(): FixedCase[] {
     ...over,
   });
   return [
-    { label: "one order, a dry and a chilled line (tax 0.99 x 0.505 % rounds to 0.00), billed to another customer", args: [5, 9], tables: base() },
+    { label: "one order, a dry and a chilled line (tax 3 x 0.99 x 0.505 % = 0.0149985 rounds to 0.01), billed to another customer", args: [5, 9], tables: base() },
     { label: "two orders; the second customer has no address line 2 (delivery instructions NULL)", args: [5, 9], tables: base({ "Website.OrderIDList": [{ OrderID: 1 }, { OrderID: 2 }] }) },
     { label: "an unknown order: THROW 51000, nothing written", args: [5, 9], tables: base({ "Website.OrderIDList": [{ OrderID: 1 }, { OrderID: 99 }] }) },
     {

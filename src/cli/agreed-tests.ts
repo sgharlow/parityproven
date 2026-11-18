@@ -190,14 +190,20 @@ async function runOne(conn: Connections, spec: ObjectSpec, recapture: boolean, c
 
   const source = new MssqlClient({ ...mssqlEndpoint(), user: "sa", password: conn.saPassword, database: spec.database });
   let definition: string, collation: string, compat: number;
+  // dependencies: SQL Server gets the original definition, PostgreSQL the dependency's own (separately verified) conversion
+  const dependencyDefinitions: string[] = [];
   try {
+    for (const dep of spec.dependencies ?? []) {
+      const [schema, name] = dep.split(".");
+      dependencyDefinitions.push(await fetchSourceDefinition(source, { schema, name }));
+    }
     definition = await fetchSourceDefinition(source, spec);
     collation = await fetchSourceCollation(source);
     compat = await fetchSourceCompatibilityLevel(source);
   } finally {
     await source.close();
   }
-  const scratch = await prepareSqlServer(conn, spec, definition, collation, compat);
+  const scratch = await prepareSqlServer(conn, spec, definition, collation, compat, dependencyDefinitions);
   const testsDir = resolve(ROOT, "tests", spec.database);
   mkdirSync(testsDir, { recursive: true });
   const expectedPath = resolve(testsDir, `${label}.expected.json`);
@@ -268,6 +274,11 @@ async function runOne(conn: Connections, spec: ObjectSpec, recapture: boolean, c
 
     // ── PostgreSQL: plain SQL ──
     await preparePostgres(conn, spec);
+    for (const dep of spec.dependencies ?? []) {
+      const depSpec = specByName(dep);
+      if (!depSpec) throw new Error(`${label} depends on ${dep}, which has no spec`);
+      await deployPgFunction(conn, depSpec, readSql(resolve(ROOT, "conversions", spec.database, `${dep}.sql`)));
+    }
     const finalSql = readSql(resolve(ROOT, "conversions", spec.database, `${label}.sql`));
     await deployPgFunction(conn, spec, finalSql);
     const runPg = async (): Promise<Array<{ name: string; passed: boolean; message?: string }>> => {

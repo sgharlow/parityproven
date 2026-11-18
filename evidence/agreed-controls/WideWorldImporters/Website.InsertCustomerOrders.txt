@@ -1,0 +1,27 @@
+negative control for Website.InsertCustomerOrders (step 2), 2026-11-18T20:41:58.229Z
+corruption: case 1 expected state query "orders" row 1, column CustomerID: n:1 -> n:2
+SQL Server: test 01 two orders with two lines each: FAIL — Failure: orders
+Unexpected/missing resultset rows!
+|_m_|CustomerID|SalespersonPersonID|PickedByPersonID|ContactPersonID|BackorderOrderID|OrderDate_now|OrderDate|ExpectedDeliveryDate|CustomerPurchaseOrderNumber|IsUndersupplyBackordered|Comments|DeliveryInstructions|InternalComments|PickingCompletedWhen|LastEditedBy|LastEditedWhen_now|LastEditedWhen|
++---+----------+-------------------+----------------+---------------+----------------+-------------+---------+--------------------+---------------------------+------------------------+--------+--------------------+----------------+--------------------+------------+------------------+--------------+
+|<  |2         |2                  |!NULL!          |3              |!NULL!          |today        |!NULL!   |2030-01-01          |PO-1                       |False                   |!NULL!  |!NULL!              |!NULL!          |!NULL!              |1           |now               |!NULL!        |
+|=  |2         |2                  |!NULL!          |3              |!NULL!          |today        |!NULL!   |2030-01-01          |PO-2                       |False                   |!NULL!  |!NULL!              |!NULL!          |!NULL!              |1           |now               |!NULL!        |
+|>  |1         |2                  |!NULL!          |3              |!NULL!          |today        |!NULL!   |2030-01-01          |PO-1                       |False                   |!NULL!  |!NULL!              |!NULL!          |!NULL!              |1           |now               |!NULL!        |
+SQL Server: test 02 a line for an unknown stock item is dropped (INNER JOIN): pass
+SQL Server: test 03 a line for an unknown order reference is dropped: pass
+SQL Server: test 04 a special deal valid today lowers the line price: pass
+SQL Server: test 05 a deal that ended yesterday does not apply: pass
+SQL Server: test 06 NULL customer: NOT NULL violation, nothing inserted, order IDs still consumed: pass
+SQL Server: test 07 a NULL in the second of three orders: all three IDs are consumed: pass
+SQL Server: test 08 NULL line description: NOT NULL violation, the orders are rolled back too: pass
+SQL Server: test 09 no orders: nothing happens: pass
+PostgreSQL: test 01 two orders with two lines each: FAIL — agreed test failed (test 01 two orders with two lines each): 1 expected row(s) missing, 1 unexpected row(s) in orders
+PostgreSQL: test 02 a line for an unknown stock item is dropped (INNER JOIN): pass
+PostgreSQL: test 03 a line for an unknown order reference is dropped: pass
+PostgreSQL: test 04 a special deal valid today lowers the line price: pass
+PostgreSQL: test 05 a deal that ended yesterday does not apply: pass
+PostgreSQL: test 06 NULL customer: NOT NULL violation, nothing inserted, order IDs still consumed: pass
+PostgreSQL: test 07 a NULL in the second of three orders: all three IDs are consumed: pass
+PostgreSQL: test 08 NULL line description: NOT NULL violation, the orders are rolled back too: pass
+PostgreSQL: test 09 no orders: nothing happens: pass
+RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed

@@ -167,12 +167,19 @@ export function unsupportedFeatures(spec: ObjectSpec): string[] {
   // declared result errors are supported (2026-11-18): each case asserts its outcome, and its rows when it completed
   if (spec.resultErrorClasses?.length && spec.stateCheck) out.push("declared result errors together with state checks");
   // per-case setup (spec.sampleSetup, called with the fixed case) and state observation queries are supported (2026-11-18)
-  if (spec.setup) out.push("one-off setup statements");
-  if (spec.dependencies?.length) out.push("dependencies on other converted objects");
+  // one-off setup (spec.setup) is run by the harness when it prepares both engines; dependencies are deployed there too
+  // (SQL Server: the original definition, PostgreSQL: the dependency's own conversion), so neither is refused (2026-11-18)
   // table-valued parameters (SQL Server: a table variable of the type, filled by INSERTs; PostgreSQL: one JSON array),
   // identity columns of those types (numbered 1..n in row order) and memory-optimized tables (emptied with DELETE, as
   // tSQLt.FakeTable cannot fake them) are supported (2026-11-18)
-  if (spec.tables.some((t) => !t.tvp && t.columns.some((c) => c.identity))) out.push("identity columns in a table");
+  // an identity column of a table is filled by the engine: fixed cases do not insert into it (see inserts)
+  for (const t of spec.tables.filter((x) => !x.tvp)) {
+    for (const fc of spec.fixedCases ?? []) {
+      if ((fc.tables[tableKey(t)] ?? []).some((r) => t.columns.some((c) => c.identity && r[c.name] !== undefined && r[c.name] !== null))) {
+        out.push(`a fixed case gives a value for the identity column of ${tableKey(t)}`);
+      }
+    }
+  }
   // geography (points, as WKT) and xml (as text) are supported (2026-11-18)
   return out;
 }
@@ -268,7 +275,7 @@ function inserts(spec: ObjectSpec, fc: FixedCase, engine: "ss" | "pg"): string[]
     if (t.tvp) continue;   // a table-valued parameter's rows travel in the call (tvpPrefix, tvpJson)
     const rows: Row[] = fc.tables[tableKey(t)] ?? [];
     if (!rows.length) continue;
-    const cols = t.columns;
+    const cols = t.columns.filter((c) => !c.identity);   // the engine numbers identity columns
     const values = rows.map((r) => `(${cols.map((c) => {
       const cell = inputCell(r[c.name], c.type);
       return engine === "ss" ? ssLiteral(cell) : pgLiteral(cell);
@@ -373,7 +380,10 @@ export function tsqltScript(spec: ObjectSpec, expected: ExpectedFile, options: T
     const noTransaction = !!spec.stateCheck;
     for (const t of spec.tables.filter((x) => !x.tvp)) {
       // tSQLt.FakeTable cannot fake a memory-optimized table: it is emptied instead (a state test runs outside tSQLt's transaction)
-      body.push(options.schemaBound || t.memoryOptimized
+      // The same for a state object with declared error classes: tSQLt.FakeTable drops NOT NULL (and every other constraint),
+      // so a NOT NULL violation the original raises on its real table could not be observed (seen 2026-11-18 on
+      // Website.InsertCustomerOrders, cases 6-8). Those tables are emptied and keep their constraints.
+      body.push(options.schemaBound || t.memoryOptimized || spec.stateCheck?.errorClasses?.length
         ? `DELETE FROM ${ssName(t.schema)}.${ssName(t.name)};`
         : `EXEC tSQLt.FakeTable @TableName = N'${ssName(t.schema)}.${ssName(t.name)}';`);
     }

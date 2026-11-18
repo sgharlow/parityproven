@@ -188,3 +188,28 @@ describe("table-valued parameters, identity columns and memory-optimized tables 
     expect(pg).not.toContain("DELETE FROM website.sensor_data_list");
   });
 });
+describe("state objects with declared errors, dependencies and identity columns (tranche C)", () => {
+  const s = specByName("Website.InsertCustomerOrders")!;
+  const exp: ExpectedFile = {
+    object: "Website.InsertCustomerOrders", database: s.database, capturedFrom: "", capturedAt: "", review: "",
+    cases: (s.fixedCases ?? []).map((fc) => ({ label: fc.label, outcome: "completed", tables: {}, queries: (s.stateCheck!.queries ?? []).map((q) => ({ label: q.label, columns: [{ name: "X", sqlServerType: "int" }], rows: [] })) })),
+  } as ExpectedFile;
+  it("is supported although it depends on another object and uses setup statements", () => {
+    expect(unsupportedFeatures(s)).toEqual([]);
+    expect(s.dependencies).toEqual(["Website.CalculateCustomerPrice"]);
+  });
+  it("tables are emptied, not faked, so NOT NULL violations the original raises can be observed; both table-valued parameters are passed", () => {
+    const body = tsqltScript(s, exp).split("-- case 1:")[1].split("\nGO\n")[0];
+    expect(body).toContain("DELETE FROM [Sales].[Orders];");
+    expect(body).not.toContain("FakeTable");
+    expect(body).toContain("DECLARE @tvp0 [Website].[OrderList];");
+    expect(body).toContain("DECLARE @tvp1 [Website].[OrderLineList];");
+    expect(body).toContain("EXEC Website.InsertCustomerOrders @Orders = @tvp0, @OrderLines = @tvp1, @OrdersCreatedByPersonID = 1, @SalespersonPersonID = 2");
+  });
+  it("identity columns of a table are not inserted into; a fixed case that gives a value for one is refused", () => {
+    const inv = specByName("Website.InvoiceCustomerOrders")!;
+    expect(unsupportedFeatures(inv)).toEqual([]);
+    const withValue = { ...inv, fixedCases: [{ label: "x", args: [5, 9], tables: { "Sales.InvoiceLines": [{ InvoiceLineID: 7, InvoiceID: 1 }] } }] } as typeof inv;
+    expect(unsupportedFeatures(withValue)).toEqual(["a fixed case gives a value for the identity column of Sales.InvoiceLines"]);
+  });
+});

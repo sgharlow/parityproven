@@ -1,0 +1,20 @@
+negative control for Website.InvoiceCustomerOrders (step 2), 2026-11-18T20:44:15.337Z
+corruption: case 1 expected state query "invoices" row 1, column OrderID: n:1 -> n:2
+SQL Server: test 01 one order, a dry and a chilled line (tax 3 x 0.99 x 0.505 % = 0.0149985 rounds to 0.01), billed to an…: FAIL — Failure: invoices
+Unexpected/missing resultset rows!
+|_m_|OrderID|Invoice|CustomerID|BillToCustomerID|DeliveryMethodID|ContactPersonID|AccountsPersonID|SalespersonPersonID|PackedByPersonID|InvoiceDate_now|InvoiceDate|CustomerPurchaseOrderNumber|IsCreditNote|CreditNoteReason|Comments|DeliveryInstructions|InternalComments|TotalDryItems|TotalChillerItems|DeliveryRun|RunPosition|ReturnedDeliveryData                                                                                                              |LastEditedBy|LastEditedWhen_now|LastEditedWhen|
++---+-------+-------+----------+----------------+----------------+---------------+----------------+-------------------+----------------+---------------+-----------+---------------------------+------------+----------------+--------+--------------------+----------------+-------------+-----------------+-----------+-----------+----------------------------------------------------------------------------------------------------------------------------------+------------+------------------+--------------+
+|<  |2      |new    |1         |2               |3               |3              |12              |7                  |5               |today          |!NULL!     |PO-1                       |False       |!NULL!          |!NULL!  |Shop 12, 1 Main St  |!NULL!          |1            |1                |A          |1          |{"Events": [{ "Event":"Ready for collection","EventTime":"<call time, 20 chars, ends .>","ConNote":"EAN-125-<InvoiceID + 1050>"}]}|9           |now               |!NULL!        |
+|>  |1      |new    |1         |2               |3               |3              |12              |7                  |5               |today          |!NULL!     |PO-1                       |False       |!NULL!          |!NULL!  |Shop 12, 1 Main St  |!NULL!          |1            |1                |A          |1          |{"Events": [{ "Event":"Ready for collection","EventTime":"<call time, 20 chars, ends .>","ConNote":"EAN-125-<InvoiceID + 1050>"}]}|9           |now               |!NULL!        |
+SQL Server: test 02 two orders; the second customer has no address line 2 (delivery instructions NULL): pass
+SQL Server: test 03 an unknown order: THROW 51000, nothing written: pass
+SQL Server: test 04 an order that is not picked: THROW 51000: pass
+SQL Server: test 05 an order without lines: its customer transaction sums are NULL, a NOT NULL violation rolls everything…: pass
+SQL Server: test 06 the Stock Issue transaction type appears twice: the scalar subquery fails: pass
+PostgreSQL: test 01 one order, a dry and a chilled line (tax 3 x 0.99 x 0.505 % = 0.0149985 rounds to 0.01), billed to an…: FAIL — agreed test failed (test 01 one order, a dry and a chilled line (tax 3 x 0.99 x 0.505 % = 0.0149985 rounds to 0.01), billed to an…): 1 expected row(s) missing, 1 unexpected row(s) in invoices
+PostgreSQL: test 02 two orders; the second customer has no address line 2 (delivery instructions NULL): pass
+PostgreSQL: test 03 an unknown order: THROW 51000, nothing written: pass
+PostgreSQL: test 04 an order that is not picked: THROW 51000: pass
+PostgreSQL: test 05 an order without lines: its customer transaction sums are NULL, a NOT NULL violation rolls everything…: pass
+PostgreSQL: test 06 the Stock Issue transaction type appears twice: the scalar subquery fails: pass
+RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed
