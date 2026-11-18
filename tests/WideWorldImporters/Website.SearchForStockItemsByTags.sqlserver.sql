@@ -74,3 +74,14 @@ INSERT INTO [Warehouse].[StockItems] ([StockItemID], [StockItemName], [Tags]) VA
 EXEC Website.SearchForStockItemsByTags @SearchText = N'[a]_', @MaximumRowsToReturn = 5;
 -- expected document: {"StockItems":[{"StockItemID":1,"StockItemName":"Item0001"},{"StockItemID":2,"StockItemName":"Item0002"},{"StockItemID":4,"StockItemName":"Item0004"}]}
 GO
+-- case 8: Tags: five hits, @MaximumRowsToReturn = 2 returns exactly two
+DELETE FROM [Warehouse].[StockItems];
+INSERT INTO [Warehouse].[StockItems] ([StockItemID], [StockItemName], [Tags]) VALUES
+  (1, N'Item0001', N'ab'),
+  (2, N'Item0002', N'AB'),
+  (3, N'Item0003', N'xab'),
+  (4, N'Item0004', N'abx'),
+  (5, N'Item0005', N'zab');
+EXEC Website.SearchForStockItemsByTags @SearchText = N'ab', @MaximumRowsToReturn = 2;
+-- expected document: {"StockItems":[{"StockItemID":1,"StockItemName":"Item0001"},{"StockItemID":2,"StockItemName":"Item0002"}]}
+GO

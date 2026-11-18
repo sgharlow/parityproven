@@ -1,4 +1,4 @@
-negative control for Website.SearchForCustomers (step 2), 2026-11-18T18:29:17.869Z
+negative control for Website.SearchForCustomers (step 2), 2026-11-18T20:21:16.730Z
 corruption: case 1 expected value row 1, column result: s:{"Customers":[{"CustomerID":1,"CustomerName":"a_b0001","PhoneNumber":"(201) 555-0100","FaxNumber":"","ct":[{"CityName":"Town","p":[{"PrimaryContactFullName":"Mo Lo0001","PrimaryContactPreferredName":"Mo"}]}]},{"CustomerID":3,"CustomerName":"a0003","PhoneNumber":"(201) 555-0100","FaxNumber":"","ct":[{"CityName":"Town","p":[{"PrimaryContactFullName":"Mo Lo0001","PrimaryContactPreferredName":"Mo"}]}]},{"CustomerID":4,"CustomerName":"A-0004","PhoneNumber":"(201) 555-0100","FaxNumber":"","ct":[{"CityName":"Town","p":[{"PrimaryContactFullName":"Mo Lo0001","PrimaryContactPreferredName":"Mo"}]}]},{"CustomerID":2,"CustomerName":"xay0002","PhoneNumber":"(201) 555-0100","FaxNumber":"","ct":[{"CityName":"Town","p":[{"PrimaryContactFullName":"Mo Lo0001","PrimaryContactPreferredName":"Mo"}]}]}]} -> s:{"Customers":[{"CustomerID":2,"CustomerName":"a_b0001","PhoneNumber":"(201) 555-0100","FaxNumber":"","ct":[{"CityName":"Town","p":[{"PrimaryContactFullName":"Mo Lo0001","PrimaryContactPreferredName":"Mo"}]}]},{"CustomerID":3,"CustomerName":"a0003","PhoneNumber":"(201) 555-0100","FaxNumber":"","ct":[{"CityName":"Town","p":[{"PrimaryContactFullName":"Mo Lo0001","PrimaryContactPreferredName":"Mo"}]}]},{"CustomerID":4,"CustomerName":"A-0004","PhoneNumber":"(201) 555-0100","FaxNumber":"","ct":[{"CityName":"Town","p":[{"PrimaryContactFullName":"Mo Lo0001","PrimaryContactPreferredName":"Mo"}]}]},{"CustomerID":2,"CustomerName":"xay0002","PhoneNumber":"(201) 555-0100","FaxNumber":"","ct":[{"CityName":"Town","p":[{"PrimaryContactFullName":"Mo Lo0001","PrimaryContactPreferredName":"Mo"}]}]}]}
 SQL Server: test 01 name: LIKE a_: FAIL — Failure: the JSON document differs (client re-run, not tSQLt): expected s:{"Customers":[{"CustomerID":2,"CustomerName":"a_b0001","PhoneNumber":"(201) 555-0100","FaxNumber":"","ct":[{"CityName", got s:{"Customers":[{"CustomerID":1,"CustomerName":"a_b0001","PhoneNumber":"(201) 555-0100","FaxNumber":"","ct":[{"CityName"
 SQL Server: test 02 name: LIKE [a-c: pass
@@ -7,6 +7,8 @@ SQL Server: test 04 name: LIKE café: pass
 SQL Server: test 05 name: LIKE [^a: pass
 SQL Server: test 06 name: LIKE a\\b: pass
 SQL Server: test 07 name: LIKE [a _: pass
+SQL Server: test 08 five hits, @MaximumRowsToReturn = 2 returns exactly two: pass
+SQL Server: test 09 customer without a contact person is found by its own name: pass
 PostgreSQL: test 01 name: LIKE a_: FAIL — agreed test failed (test 01 name: LIKE a_): the JSON document differs: {"Customers": [{"ct": [{"p": [{"PrimaryContactFullName": "Mo Lo0001", "PrimaryContactPreferredName": "Mo"}], "CityName": "Town"}], "FaxNumber": "", "CustomerID": 1, "PhoneNumber": "(201) 555-0100", "CustomerName": "a_b0001"}, {"ct": [{"p": [{"PrimaryContactFullName": "Mo Lo0001", "PrimaryContactPreferredName": "Mo"}], "CityName": "Town"}], "FaxNumber": "", "CustomerID": 3, "PhoneNumber": "(201) 555-0100", "CustomerName": "a0003"}, {"ct": [{"p": [{"PrimaryContactFullName": "Mo Lo0001", "PrimaryContactPreferredName": "Mo"}], "CityName": "Town"}], "FaxNumber": "", "CustomerID": 4, "PhoneNumber": "(201) 555-0100", "CustomerName": "A-0004"}, {"ct": [{"p": [{"PrimaryContactFullName": "Mo Lo0001", "PrimaryContactPreferredName": "Mo"}], "CityName": "Town"}], "FaxNumber": "", "CustomerID": 2, "PhoneNumber": "(201) 555-0100", "CustomerName": "xay0002"}]}
 PostgreSQL: test 02 name: LIKE [a-c: pass
 PostgreSQL: test 03 name: LIKE _: pass
@@ -14,4 +16,6 @@ PostgreSQL: test 04 name: LIKE café: pass
 PostgreSQL: test 05 name: LIKE [^a: pass
 PostgreSQL: test 06 name: LIKE a\\b: pass
 PostgreSQL: test 07 name: LIKE [a _: pass
+PostgreSQL: test 08 five hits, @MaximumRowsToReturn = 2 returns exactly two: pass
+PostgreSQL: test 09 customer without a contact person is found by its own name: pass
 RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed

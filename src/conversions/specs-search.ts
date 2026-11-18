@@ -84,37 +84,59 @@ const pad4 = (n: number): string => String(n).padStart(4, "0");
 const likeCases = (label: string, build: (values: string[]) => Record<string, Row[]>): FixedCase[] =>
   LIKE_CASES.map(([term, values]) => ({ label: `${label}: LIKE ${JSON.stringify(term)}`, args: [term, 5], tables: build(values) }));
 
-const stockCases = (column: string): FixedCase[] =>
-  likeCases(column, (values) => ({
+// Five hits for the term "ab" with a limit of 2: the limit must cut the list.
+const MORE_THAN_MAX = ["ab", "AB", "xab", "abx", "zab"];
+const stockCases = (column: string): FixedCase[] => {
+  const build = (values: string[]): Record<string, Row[]> => ({
     "Warehouse.StockItems": values.map((v, i) => ({ StockItemID: i + 1, StockItemName: `Item${pad4(i + 1)}`, [column]: v })),
-  }));
+  });
+  return [
+    ...likeCases(column, build),
+    { label: `${column}: five hits, @MaximumRowsToReturn = 2 returns exactly two`, args: ["ab", 2], tables: build(MORE_THAN_MAX) },
+  ];
+};
 // The contact's names contain none of the characters the terms look for, so a hit can only come from the searched name.
 const contactTables = (): Record<string, Row[]> => ({
   "Application.Cities": [{ CityID: 1, CityName: "Town" }],
   "Application.People": [{ PersonID: 1, FullName: "Mo Lo0001", PreferredName: "Mo" }],
 });
-const customerCases = (): FixedCase[] =>
-  likeCases("name", (values) => ({
-    ...contactTables(),
-    "Sales.Customers": values.map((v, i) => ({
-      CustomerID: i + 1, CustomerName: `${v}${pad4(i + 1)}`, DeliveryCityID: 1, PhoneNumber: "(201) 555-0100", FaxNumber: "", PrimaryContactPersonID: 1,
-    })),
+const customerRows = (values: string[], contact: number): Row[] =>
+  values.map((v, i) => ({
+    CustomerID: i + 1, CustomerName: `${v}${pad4(i + 1)}`, DeliveryCityID: 1, PhoneNumber: "(201) 555-0100", FaxNumber: "", PrimaryContactPersonID: contact,
   }));
-const supplierCases = (): FixedCase[] =>
-  likeCases("name", (values) => ({
-    ...contactTables(),
-    "Purchasing.Suppliers": values.map((v, i) => ({
-      SupplierID: i + 1, SupplierName: `${v}${pad4(i + 1)}`, DeliveryCityID: 1, PhoneNumber: "(201) 555-0100", FaxNumber: "", PrimaryContactPersonID: 1,
-    })),
+const customerCases = (): FixedCase[] => [
+  ...likeCases("name", (values) => ({ ...contactTables(), "Sales.Customers": customerRows(values, 1) })),
+  { label: "five hits, @MaximumRowsToReturn = 2 returns exactly two", args: ["ab", 2], tables: { ...contactTables(), "Sales.Customers": customerRows(MORE_THAN_MAX, 1) } },
+  // The contact is optional: a customer whose contact person does not exist is still found by its own name (LEFT JOIN, CONCAT ignores NULL).
+  { label: "customer without a contact person is found by its own name", args: ["ab", 5], tables: { ...contactTables(), "Sales.Customers": customerRows(["ab", "xab"], 99) } },
+];
+const supplierRows = (values: string[], contact: number): Row[] =>
+  values.map((v, i) => ({
+    SupplierID: i + 1, SupplierName: `${v}${pad4(i + 1)}`, DeliveryCityID: 1, PhoneNumber: "(201) 555-0100", FaxNumber: "", PrimaryContactPersonID: contact,
   }));
-const peopleCases = (): FixedCase[] =>
-  likeCases("search name", (values) => ({
-    "Application.People": values.map((v, i) => ({
-      PersonID: i + 1, FullName: `Q${pad4(i + 1)}`, PreferredName: "Q", IsSalesperson: false, IsEmployee: i % 2 === 0, SearchName: v,
-    })),
+const supplierCases = (): FixedCase[] => [
+  ...likeCases("name", (values) => ({ ...contactTables(), "Purchasing.Suppliers": supplierRows(values, 1) })),
+  { label: "five hits, @MaximumRowsToReturn = 2 returns exactly two", args: ["ab", 2], tables: { ...contactTables(), "Purchasing.Suppliers": supplierRows(MORE_THAN_MAX, 1) } },
+  { label: "supplier without a contact person is found by its own name", args: ["ab", 5], tables: { ...contactTables(), "Purchasing.Suppliers": supplierRows(["ab", "xab"], 99) } },
+];
+const peopleRows = (values: string[], flags: (i: number) => { IsSalesperson: boolean; IsEmployee: boolean }): Row[] =>
+  values.map((v, i) => ({ PersonID: i + 1, FullName: `Q${pad4(i + 1)}`, PreferredName: "Q", ...flags(i), SearchName: v }));
+const peopleCases = (): FixedCase[] => [
+  ...likeCases("search name", (values) => ({
+    "Application.People": peopleRows(values, (i) => ({ IsSalesperson: false, IsEmployee: i % 2 === 0 })),
     "Sales.Customers": [],
     "Purchasing.Suppliers": [],
-  }));
+  })),
+  {
+    label: "five hits, @MaximumRowsToReturn = 2 returns exactly two", args: ["ab", 2],
+    tables: { "Application.People": peopleRows(MORE_THAN_MAX, () => ({ IsSalesperson: false, IsEmployee: true })), "Sales.Customers": [], "Purchasing.Suppliers": [] },
+  },
+  // A person flagged both salesperson and employee is reported as a salesperson (the source tests IsSalesperson first).
+  {
+    label: "person flagged salesperson and employee is a salesperson", args: ["ab", 5],
+    tables: { "Application.People": peopleRows(["ab", "xab"], () => ({ IsSalesperson: true, IsEmployee: true })), "Sales.Customers": [], "Purchasing.Suppliers": [] },
+  },
+];
 
 /** Why the runtime step is missed by the two search procedures that match across the contact's names (measured, not guessed). */
 const RUNTIME_NOTE_CONTACT = [

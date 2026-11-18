@@ -1,4 +1,4 @@
-negative control for Website.SearchForSuppliers (step 2), 2026-11-18T18:29:21.285Z
+negative control for Website.SearchForSuppliers (step 2), 2026-11-18T20:21:22.648Z
 corruption: case 1 expected value row 1, column result: s:{"Suppliers":[{"SupplierID":1,"SupplierName":"a_b0001","PhoneNumber":"(201) 555-0100","FaxNumber":"","c":[{"CityName":"Town","p":[{"PrimaryContactFullName":"Mo Lo0001","PrimaryContactPreferredName":"Mo"}]}]},{"SupplierID":3,"SupplierName":"a0003","PhoneNumber":"(201) 555-0100","FaxNumber":"","c":[{"CityName":"Town","p":[{"PrimaryContactFullName":"Mo Lo0001","PrimaryContactPreferredName":"Mo"}]}]},{"SupplierID":4,"SupplierName":"A-0004","PhoneNumber":"(201) 555-0100","FaxNumber":"","c":[{"CityName":"Town","p":[{"PrimaryContactFullName":"Mo Lo0001","PrimaryContactPreferredName":"Mo"}]}]},{"SupplierID":2,"SupplierName":"xay0002","PhoneNumber":"(201) 555-0100","FaxNumber":"","c":[{"CityName":"Town","p":[{"PrimaryContactFullName":"Mo Lo0001","PrimaryContactPreferredName":"Mo"}]}]}]} -> s:{"Suppliers":[{"SupplierID":2,"SupplierName":"a_b0001","PhoneNumber":"(201) 555-0100","FaxNumber":"","c":[{"CityName":"Town","p":[{"PrimaryContactFullName":"Mo Lo0001","PrimaryContactPreferredName":"Mo"}]}]},{"SupplierID":3,"SupplierName":"a0003","PhoneNumber":"(201) 555-0100","FaxNumber":"","c":[{"CityName":"Town","p":[{"PrimaryContactFullName":"Mo Lo0001","PrimaryContactPreferredName":"Mo"}]}]},{"SupplierID":4,"SupplierName":"A-0004","PhoneNumber":"(201) 555-0100","FaxNumber":"","c":[{"CityName":"Town","p":[{"PrimaryContactFullName":"Mo Lo0001","PrimaryContactPreferredName":"Mo"}]}]},{"SupplierID":2,"SupplierName":"xay0002","PhoneNumber":"(201) 555-0100","FaxNumber":"","c":[{"CityName":"Town","p":[{"PrimaryContactFullName":"Mo Lo0001","PrimaryContactPreferredName":"Mo"}]}]}]}
 SQL Server: test 01 name: LIKE a_: FAIL — Failure: the JSON document differs (client re-run, not tSQLt): expected s:{"Suppliers":[{"SupplierID":2,"SupplierName":"a_b0001","PhoneNumber":"(201) 555-0100","FaxNumber":"","c":[{"CityName":, got s:{"Suppliers":[{"SupplierID":1,"SupplierName":"a_b0001","PhoneNumber":"(201) 555-0100","FaxNumber":"","c":[{"CityName":
 SQL Server: test 02 name: LIKE [a-c: pass
@@ -7,6 +7,8 @@ SQL Server: test 04 name: LIKE café: pass
 SQL Server: test 05 name: LIKE [^a: pass
 SQL Server: test 06 name: LIKE a\\b: pass
 SQL Server: test 07 name: LIKE [a _: pass
+SQL Server: test 08 five hits, @MaximumRowsToReturn = 2 returns exactly two: pass
+SQL Server: test 09 supplier without a contact person is found by its own name: pass
 PostgreSQL: test 01 name: LIKE a_: FAIL — agreed test failed (test 01 name: LIKE a_): the JSON document differs: {"Suppliers": [{"c": [{"p": [{"PrimaryContactFullName": "Mo Lo0001", "PrimaryContactPreferredName": "Mo"}], "CityName": "Town"}], "FaxNumber": "", "SupplierID": 1, "PhoneNumber": "(201) 555-0100", "SupplierName": "a_b0001"}, {"c": [{"p": [{"PrimaryContactFullName": "Mo Lo0001", "PrimaryContactPreferredName": "Mo"}], "CityName": "Town"}], "FaxNumber": "", "SupplierID": 3, "PhoneNumber": "(201) 555-0100", "SupplierName": "a0003"}, {"c": [{"p": [{"PrimaryContactFullName": "Mo Lo0001", "PrimaryContactPreferredName": "Mo"}], "CityName": "Town"}], "FaxNumber": "", "SupplierID": 4, "PhoneNumber": "(201) 555-0100", "SupplierName": "A-0004"}, {"c": [{"p": [{"PrimaryContactFullName": "Mo Lo0001", "PrimaryContactPreferredName": "Mo"}], "CityName": "Town"}], "FaxNumber": "", "SupplierID": 2, "PhoneNumber": "(201) 555-0100", "SupplierName": "xay0002"}]}
 PostgreSQL: test 02 name: LIKE [a-c: pass
 PostgreSQL: test 03 name: LIKE _: pass
@@ -14,4 +16,6 @@ PostgreSQL: test 04 name: LIKE café: pass
 PostgreSQL: test 05 name: LIKE [^a: pass
 PostgreSQL: test 06 name: LIKE a\\b: pass
 PostgreSQL: test 07 name: LIKE [a _: pass
+PostgreSQL: test 08 five hits, @MaximumRowsToReturn = 2 returns exactly two: pass
+PostgreSQL: test 09 supplier without a contact person is found by its own name: pass
 RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed

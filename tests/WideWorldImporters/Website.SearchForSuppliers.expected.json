@@ -2,7 +2,7 @@
   "object": "Website.SearchForSuppliers",
   "database": "WideWorldImporters",
   "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
-  "capturedAt": "2026-11-18T18:28:21.221Z",
+  "capturedAt": "2026-11-18T20:20:50.467Z",
   "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
   "cases": [
     {
@@ -100,6 +100,34 @@
       "rows": [
         [
           "s:{\"Suppliers\":[{\"SupplierID\":2,\"SupplierName\":\"A-0002\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"c\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]},{\"SupplierID\":3,\"SupplierName\":\"a0003\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"c\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]},{\"SupplierID\":1,\"SupplierName\":\"a10001\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"c\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]},{\"SupplierID\":4,\"SupplierName\":\"ab c0004\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"c\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]}]}"
+        ]
+      ]
+    },
+    {
+      "label": "five hits, @MaximumRowsToReturn = 2 returns exactly two",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"Suppliers\":[{\"SupplierID\":1,\"SupplierName\":\"ab0001\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"c\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]},{\"SupplierID\":2,\"SupplierName\":\"AB0002\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"c\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]}]}"
+        ]
+      ]
+    },
+    {
+      "label": "supplier without a contact person is found by its own name",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"Suppliers\":[{\"SupplierID\":1,\"SupplierName\":\"ab0001\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"c\":[{\"CityName\":\"Town\",\"p\":[{}]}]},{\"SupplierID\":2,\"SupplierName\":\"xab0002\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"c\":[{\"CityName\":\"Town\",\"p\":[{}]}]}]}"
         ]
       ]
     }

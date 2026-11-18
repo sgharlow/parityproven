@@ -170,3 +170,50 @@ BEGIN
   END IF;
 END $pp$;
 ROLLBACK;
+
+-- @case 8: five hits, @MaximumRowsToReturn = 2 returns exactly two
+BEGIN;
+DELETE FROM purchasing.suppliers;
+DELETE FROM application.cities;
+DELETE FROM application.people;
+INSERT INTO purchasing.suppliers ("SupplierID", "SupplierName", "DeliveryCityID", "PhoneNumber", "FaxNumber", "PrimaryContactPersonID") VALUES
+  ('1', 'ab0001', '1', '(201) 555-0100', '', '1'),
+  ('2', 'AB0002', '1', '(201) 555-0100', '', '1'),
+  ('3', 'xab0003', '1', '(201) 555-0100', '', '1'),
+  ('4', 'abx0004', '1', '(201) 555-0100', '', '1'),
+  ('5', 'zab0005', '1', '(201) 555-0100', '', '1');
+INSERT INTO application.cities ("CityID", "CityName") VALUES
+  ('1', 'Town');
+INSERT INTO application.people ("PersonID", "FullName", "PreferredName") VALUES
+  ('1', 'Mo Lo0001', 'Mo');
+DO $pp$
+DECLARE got jsonb;
+BEGIN
+  SELECT (q.result)::jsonb INTO got FROM (SELECT website.search_for_suppliers('ab'::text, '2'::integer) AS result) AS q;
+  IF got IS DISTINCT FROM '{"Suppliers":[{"SupplierID":1,"SupplierName":"ab0001","PhoneNumber":"(201) 555-0100","FaxNumber":"","c":[{"CityName":"Town","p":[{"PrimaryContactFullName":"Mo Lo0001","PrimaryContactPreferredName":"Mo"}]}]},{"SupplierID":2,"SupplierName":"AB0002","PhoneNumber":"(201) 555-0100","FaxNumber":"","c":[{"CityName":"Town","p":[{"PrimaryContactFullName":"Mo Lo0001","PrimaryContactPreferredName":"Mo"}]}]}]}'::jsonb THEN
+    RAISE EXCEPTION 'agreed test failed (%): the JSON document differs: %', 'test 08 five hits, @MaximumRowsToReturn = 2 returns exactly two', got;
+  END IF;
+END $pp$;
+ROLLBACK;
+
+-- @case 9: supplier without a contact person is found by its own name
+BEGIN;
+DELETE FROM purchasing.suppliers;
+DELETE FROM application.cities;
+DELETE FROM application.people;
+INSERT INTO purchasing.suppliers ("SupplierID", "SupplierName", "DeliveryCityID", "PhoneNumber", "FaxNumber", "PrimaryContactPersonID") VALUES
+  ('1', 'ab0001', '1', '(201) 555-0100', '', '99'),
+  ('2', 'xab0002', '1', '(201) 555-0100', '', '99');
+INSERT INTO application.cities ("CityID", "CityName") VALUES
+  ('1', 'Town');
+INSERT INTO application.people ("PersonID", "FullName", "PreferredName") VALUES
+  ('1', 'Mo Lo0001', 'Mo');
+DO $pp$
+DECLARE got jsonb;
+BEGIN
+  SELECT (q.result)::jsonb INTO got FROM (SELECT website.search_for_suppliers('ab'::text, '5'::integer) AS result) AS q;
+  IF got IS DISTINCT FROM '{"Suppliers":[{"SupplierID":1,"SupplierName":"ab0001","PhoneNumber":"(201) 555-0100","FaxNumber":"","c":[{"CityName":"Town","p":[{}]}]},{"SupplierID":2,"SupplierName":"xab0002","PhoneNumber":"(201) 555-0100","FaxNumber":"","c":[{"CityName":"Town","p":[{}]}]}]}'::jsonb THEN
+    RAISE EXCEPTION 'agreed test failed (%): the JSON document differs: %', 'test 09 supplier without a contact person is found by its own name', got;
+  END IF;
+END $pp$;
+ROLLBACK;

@@ -108,6 +108,7 @@
       "SQL Server (client re-run, not tSQLt): AgreedTests.[test 05 SearchDetails: LIKE [^a]: pass",
       "SQL Server (client re-run, not tSQLt): AgreedTests.[test 06 SearchDetails: LIKE a\\\\b]: pass",
       "SQL Server (client re-run, not tSQLt): AgreedTests.[test 07 SearchDetails: LIKE [a _]: pass",
+      "SQL Server (client re-run, not tSQLt): AgreedTests.[test 08 SearchDetails: five hits, @MaximumRowsToReturn = 2 returns exactly two]: pass",
       "PostgreSQL: AgreedTests.[test 01 SearchDetails: LIKE a_]: pass",
       "PostgreSQL: AgreedTests.[test 02 SearchDetails: LIKE [a-c]: pass",
       "PostgreSQL: AgreedTests.[test 03 SearchDetails: LIKE _]: pass",
@@ -115,7 +116,8 @@
       "PostgreSQL: AgreedTests.[test 05 SearchDetails: LIKE [^a]: pass",
       "PostgreSQL: AgreedTests.[test 06 SearchDetails: LIKE a\\\\b]: pass",
       "PostgreSQL: AgreedTests.[test 07 SearchDetails: LIKE [a _]: pass",
-      "planted defects caught by the agreed tests: 4 of 5"
+      "PostgreSQL: AgreedTests.[test 08 SearchDetails: five hits, @MaximumRowsToReturn = 2 returns exactly two]: pass",
+      "planted defects caught by the agreed tests: 5 of 5"
     ]
   },
   "effort": {
@@ -127,5 +129,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-18T18:29:25.546Z"
+  "builtAt": "2026-11-18T20:21:49.048Z"
 }

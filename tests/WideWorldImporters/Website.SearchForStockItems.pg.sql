@@ -128,3 +128,22 @@ BEGIN
   END IF;
 END $pp$;
 ROLLBACK;
+
+-- @case 8: SearchDetails: five hits, @MaximumRowsToReturn = 2 returns exactly two
+BEGIN;
+DELETE FROM warehouse.stock_items;
+INSERT INTO warehouse.stock_items ("StockItemID", "StockItemName", "SearchDetails") VALUES
+  ('1', 'Item0001', 'ab'),
+  ('2', 'Item0002', 'AB'),
+  ('3', 'Item0003', 'xab'),
+  ('4', 'Item0004', 'abx'),
+  ('5', 'Item0005', 'zab');
+DO $pp$
+DECLARE got jsonb;
+BEGIN
+  SELECT (q.result)::jsonb INTO got FROM (SELECT website.search_for_stock_items('ab'::text, '2'::integer) AS result) AS q;
+  IF got IS DISTINCT FROM '{"StockItems":[{"StockItemID":1,"StockItemName":"Item0001"},{"StockItemID":2,"StockItemName":"Item0002"}]}'::jsonb THEN
+    RAISE EXCEPTION 'agreed test failed (%): the JSON document differs: %', 'test 08 SearchDetails: five hits, @MaximumRowsToReturn = 2 returns exactly two', got;
+  END IF;
+END $pp$;
+ROLLBACK;

@@ -88,3 +88,26 @@ INSERT INTO [Application].[People] ([PersonID], [FullName], [PreferredName], [Is
 EXEC Website.SearchForPeople @SearchText = N'[a]_', @MaximumRowsToReturn = 5;
 -- expected document: {"People":[{"PersonID":1,"FullName":"Q0001","PreferredName":"Q","Relationship":"Employee","Company":"WWI"},{"PersonID":2,"FullName":"Q0002","PreferredName":"Q","Company":"WWI"},{"PersonID":4,"FullName":"Q0004","PreferredName":"Q","Company":"WWI"}]}
 GO
+-- case 8: five hits, @MaximumRowsToReturn = 2 returns exactly two
+DELETE FROM [Application].[People];
+DELETE FROM [Sales].[Customers];
+DELETE FROM [Purchasing].[Suppliers];
+INSERT INTO [Application].[People] ([PersonID], [FullName], [PreferredName], [IsSalesperson], [IsEmployee], [SearchName]) VALUES
+  (1, N'Q0001', N'Q', 0, 1, N'ab'),
+  (2, N'Q0002', N'Q', 0, 1, N'AB'),
+  (3, N'Q0003', N'Q', 0, 1, N'xab'),
+  (4, N'Q0004', N'Q', 0, 1, N'abx'),
+  (5, N'Q0005', N'Q', 0, 1, N'zab');
+EXEC Website.SearchForPeople @SearchText = N'ab', @MaximumRowsToReturn = 2;
+-- expected document: {"People":[{"PersonID":1,"FullName":"Q0001","PreferredName":"Q","Relationship":"Employee","Company":"WWI"},{"PersonID":2,"FullName":"Q0002","PreferredName":"Q","Relationship":"Employee","Company":"WWI"}]}
+GO
+-- case 9: person flagged salesperson and employee is a salesperson
+DELETE FROM [Application].[People];
+DELETE FROM [Sales].[Customers];
+DELETE FROM [Purchasing].[Suppliers];
+INSERT INTO [Application].[People] ([PersonID], [FullName], [PreferredName], [IsSalesperson], [IsEmployee], [SearchName]) VALUES
+  (1, N'Q0001', N'Q', 1, 1, N'ab'),
+  (2, N'Q0002', N'Q', 1, 1, N'xab');
+EXEC Website.SearchForPeople @SearchText = N'ab', @MaximumRowsToReturn = 5;
+-- expected document: {"People":[{"PersonID":1,"FullName":"Q0001","PreferredName":"Q","Relationship":"Salesperson","Company":"WWI"},{"PersonID":2,"FullName":"Q0002","PreferredName":"Q","Relationship":"Salesperson","Company":"WWI"}]}
+GO

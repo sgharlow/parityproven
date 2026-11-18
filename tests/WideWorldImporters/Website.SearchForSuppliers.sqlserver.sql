@@ -116,3 +116,34 @@ INSERT INTO [Application].[People] ([PersonID], [FullName], [PreferredName]) VAL
 EXEC Website.SearchForSuppliers @SearchText = N'[a]_', @MaximumRowsToReturn = 5;
 -- expected document: {"Suppliers":[{"SupplierID":2,"SupplierName":"A-0002","PhoneNumber":"(201) 555-0100","FaxNumber":"","c":[{"CityName":"Town","p":[{"PrimaryContactFullName":"Mo Lo0001","PrimaryContactPreferredName":"Mo"}]}]},{"SupplierID":3,"SupplierName":"a0003","PhoneNumber":"(201) 555-0100","FaxNumber":"","c":[{"CityName":"Town","p":[{"PrimaryContactFullName":"Mo Lo0001","PrimaryContactPreferredName":"Mo"}]}]},{"SupplierID":1,"SupplierName":"a10001","PhoneNumber":"(201) 555-0100","FaxNumber":"","c":[{"CityName":"Town","p":[{"PrimaryContactFullName":"Mo Lo0001","PrimaryContactPreferredName":"Mo"}]}]},{"SupplierID":4,"SupplierName":"ab c0004","PhoneNumber":"(201) 555-0100","FaxNumber":"","c":[{"CityName":"Town","p":[{"PrimaryContactFullName":"Mo Lo0001","PrimaryContactPreferredName":"Mo"}]}]}]}
 GO
+-- case 8: five hits, @MaximumRowsToReturn = 2 returns exactly two
+DELETE FROM [Purchasing].[Suppliers];
+DELETE FROM [Application].[Cities];
+DELETE FROM [Application].[People];
+INSERT INTO [Purchasing].[Suppliers] ([SupplierID], [SupplierName], [DeliveryCityID], [PhoneNumber], [FaxNumber], [PrimaryContactPersonID]) VALUES
+  (1, N'ab0001', 1, N'(201) 555-0100', N'', 1),
+  (2, N'AB0002', 1, N'(201) 555-0100', N'', 1),
+  (3, N'xab0003', 1, N'(201) 555-0100', N'', 1),
+  (4, N'abx0004', 1, N'(201) 555-0100', N'', 1),
+  (5, N'zab0005', 1, N'(201) 555-0100', N'', 1);
+INSERT INTO [Application].[Cities] ([CityID], [CityName]) VALUES
+  (1, N'Town');
+INSERT INTO [Application].[People] ([PersonID], [FullName], [PreferredName]) VALUES
+  (1, N'Mo Lo0001', N'Mo');
+EXEC Website.SearchForSuppliers @SearchText = N'ab', @MaximumRowsToReturn = 2;
+-- expected document: {"Suppliers":[{"SupplierID":1,"SupplierName":"ab0001","PhoneNumber":"(201) 555-0100","FaxNumber":"","c":[{"CityName":"Town","p":[{"PrimaryContactFullName":"Mo Lo0001","PrimaryContactPreferredName":"Mo"}]}]},{"SupplierID":2,"SupplierName":"AB0002","PhoneNumber":"(201) 555-0100","FaxNumber":"","c":[{"CityName":"Town","p":[{"PrimaryContactFullName":"Mo Lo0001","PrimaryContactPreferredName":"Mo"}]}]}]}
+GO
+-- case 9: supplier without a contact person is found by its own name
+DELETE FROM [Purchasing].[Suppliers];
+DELETE FROM [Application].[Cities];
+DELETE FROM [Application].[People];
+INSERT INTO [Purchasing].[Suppliers] ([SupplierID], [SupplierName], [DeliveryCityID], [PhoneNumber], [FaxNumber], [PrimaryContactPersonID]) VALUES
+  (1, N'ab0001', 1, N'(201) 555-0100', N'', 99),
+  (2, N'xab0002', 1, N'(201) 555-0100', N'', 99);
+INSERT INTO [Application].[Cities] ([CityID], [CityName]) VALUES
+  (1, N'Town');
+INSERT INTO [Application].[People] ([PersonID], [FullName], [PreferredName]) VALUES
+  (1, N'Mo Lo0001', N'Mo');
+EXEC Website.SearchForSuppliers @SearchText = N'ab', @MaximumRowsToReturn = 5;
+-- expected document: {"Suppliers":[{"SupplierID":1,"SupplierName":"ab0001","PhoneNumber":"(201) 555-0100","FaxNumber":"","c":[{"CityName":"Town","p":[{}]}]},{"SupplierID":2,"SupplierName":"xab0002","PhoneNumber":"(201) 555-0100","FaxNumber":"","c":[{"CityName":"Town","p":[{}]}]}]}
+GO

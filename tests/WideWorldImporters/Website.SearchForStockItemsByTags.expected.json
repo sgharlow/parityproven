@@ -2,7 +2,7 @@
   "object": "Website.SearchForStockItemsByTags",
   "database": "WideWorldImporters",
   "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
-  "capturedAt": "2026-11-18T18:28:09.935Z",
+  "capturedAt": "2026-11-18T20:20:42.969Z",
   "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
   "cases": [
     {
@@ -100,6 +100,20 @@
       "rows": [
         [
           "s:{\"StockItems\":[{\"StockItemID\":1,\"StockItemName\":\"Item0001\"},{\"StockItemID\":2,\"StockItemName\":\"Item0002\"},{\"StockItemID\":4,\"StockItemName\":\"Item0004\"}]}"
+        ]
+      ]
+    },
+    {
+      "label": "Tags: five hits, @MaximumRowsToReturn = 2 returns exactly two",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"StockItems\":[{\"StockItemID\":1,\"StockItemName\":\"Item0001\"},{\"StockItemID\":2,\"StockItemName\":\"Item0002\"}]}"
         ]
       ]
     }

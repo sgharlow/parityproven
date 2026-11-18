@@ -1,4 +1,4 @@
-negative control for Website.SearchForPeople (step 2), 2026-11-18T18:29:14.494Z
+negative control for Website.SearchForPeople (step 2), 2026-11-18T20:21:28.120Z
 corruption: case 1 expected value row 1, column result: s:{"People":[{"PersonID":1,"FullName":"Q0001","PreferredName":"Q","Relationship":"Employee","Company":"WWI"},{"PersonID":2,"FullName":"Q0002","PreferredName":"Q","Company":"WWI"},{"PersonID":4,"FullName":"Q0004","PreferredName":"Q","Company":"WWI"}]} -> s:{"People":[{"PersonID":2,"FullName":"Q0001","PreferredName":"Q","Relationship":"Employee","Company":"WWI"},{"PersonID":2,"FullName":"Q0002","PreferredName":"Q","Company":"WWI"},{"PersonID":4,"FullName":"Q0004","PreferredName":"Q","Company":"WWI"}]}
 SQL Server: test 01 search name: LIKE a_: FAIL — Failure: the JSON document differs (client re-run, not tSQLt): expected s:{"People":[{"PersonID":2,"FullName":"Q0001","PreferredName":"Q","Relationship":"Employee","Company":"WWI"},{"PersonID", got s:{"People":[{"PersonID":1,"FullName":"Q0001","PreferredName":"Q","Relationship":"Employee","Company":"WWI"},{"PersonID"
 SQL Server: test 02 search name: LIKE [a-c: pass
@@ -7,6 +7,8 @@ SQL Server: test 04 search name: LIKE café: pass
 SQL Server: test 05 search name: LIKE [^a: pass
 SQL Server: test 06 search name: LIKE a\\b: pass
 SQL Server: test 07 search name: LIKE [a _: pass
+SQL Server: test 08 five hits, @MaximumRowsToReturn = 2 returns exactly two: pass
+SQL Server: test 09 person flagged salesperson and employee is a salesperson: pass
 PostgreSQL: test 01 search name: LIKE a_: FAIL — agreed test failed (test 01 search name: LIKE a_): the JSON document differs: {"People": [{"Company": "WWI", "FullName": "Q0001", "PersonID": 1, "Relationship": "Employee", "PreferredName": "Q"}, {"Company": "WWI", "FullName": "Q0002", "PersonID": 2, "PreferredName": "Q"}, {"Company": "WWI", "FullName": "Q0004", "PersonID": 4, "PreferredName": "Q"}]}
 PostgreSQL: test 02 search name: LIKE [a-c: pass
 PostgreSQL: test 03 search name: LIKE _: pass
@@ -14,4 +16,6 @@ PostgreSQL: test 04 search name: LIKE café: pass
 PostgreSQL: test 05 search name: LIKE [^a: pass
 PostgreSQL: test 06 search name: LIKE a\\b: pass
 PostgreSQL: test 07 search name: LIKE [a _: pass
+PostgreSQL: test 08 five hits, @MaximumRowsToReturn = 2 returns exactly two: pass
+PostgreSQL: test 09 person flagged salesperson and employee is a salesperson: pass
 RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed

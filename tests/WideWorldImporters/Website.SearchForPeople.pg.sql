@@ -142,3 +142,42 @@ BEGIN
   END IF;
 END $pp$;
 ROLLBACK;
+
+-- @case 8: five hits, @MaximumRowsToReturn = 2 returns exactly two
+BEGIN;
+DELETE FROM application.people;
+DELETE FROM sales.customers;
+DELETE FROM purchasing.suppliers;
+INSERT INTO application.people ("PersonID", "FullName", "PreferredName", "IsSalesperson", "IsEmployee", "SearchName") VALUES
+  ('1', 'Q0001', 'Q', '0', '1', 'ab'),
+  ('2', 'Q0002', 'Q', '0', '1', 'AB'),
+  ('3', 'Q0003', 'Q', '0', '1', 'xab'),
+  ('4', 'Q0004', 'Q', '0', '1', 'abx'),
+  ('5', 'Q0005', 'Q', '0', '1', 'zab');
+DO $pp$
+DECLARE got jsonb;
+BEGIN
+  SELECT (q.result)::jsonb INTO got FROM (SELECT website.search_for_people('ab'::text, '2'::integer) AS result) AS q;
+  IF got IS DISTINCT FROM '{"People":[{"PersonID":1,"FullName":"Q0001","PreferredName":"Q","Relationship":"Employee","Company":"WWI"},{"PersonID":2,"FullName":"Q0002","PreferredName":"Q","Relationship":"Employee","Company":"WWI"}]}'::jsonb THEN
+    RAISE EXCEPTION 'agreed test failed (%): the JSON document differs: %', 'test 08 five hits, @MaximumRowsToReturn = 2 returns exactly two', got;
+  END IF;
+END $pp$;
+ROLLBACK;
+
+-- @case 9: person flagged salesperson and employee is a salesperson
+BEGIN;
+DELETE FROM application.people;
+DELETE FROM sales.customers;
+DELETE FROM purchasing.suppliers;
+INSERT INTO application.people ("PersonID", "FullName", "PreferredName", "IsSalesperson", "IsEmployee", "SearchName") VALUES
+  ('1', 'Q0001', 'Q', '1', '1', 'ab'),
+  ('2', 'Q0002', 'Q', '1', '1', 'xab');
+DO $pp$
+DECLARE got jsonb;
+BEGIN
+  SELECT (q.result)::jsonb INTO got FROM (SELECT website.search_for_people('ab'::text, '5'::integer) AS result) AS q;
+  IF got IS DISTINCT FROM '{"People":[{"PersonID":1,"FullName":"Q0001","PreferredName":"Q","Relationship":"Salesperson","Company":"WWI"},{"PersonID":2,"FullName":"Q0002","PreferredName":"Q","Relationship":"Salesperson","Company":"WWI"}]}'::jsonb THEN
+    RAISE EXCEPTION 'agreed test failed (%): the JSON document differs: %', 'test 09 person flagged salesperson and employee is a salesperson', got;
+  END IF;
+END $pp$;
+ROLLBACK;

@@ -88,6 +88,7 @@
       "SQL Server (client re-run, not tSQLt): AgreedTests.[test 05 Tags: LIKE [^a]: pass",
       "SQL Server (client re-run, not tSQLt): AgreedTests.[test 06 Tags: LIKE a\\\\b]: pass",
       "SQL Server (client re-run, not tSQLt): AgreedTests.[test 07 Tags: LIKE [a _]: pass",
+      "SQL Server (client re-run, not tSQLt): AgreedTests.[test 08 Tags: five hits, @MaximumRowsToReturn = 2 returns exactly two]: pass",
       "PostgreSQL: AgreedTests.[test 01 Tags: LIKE a_]: pass",
       "PostgreSQL: AgreedTests.[test 02 Tags: LIKE [a-c]: pass",
       "PostgreSQL: AgreedTests.[test 03 Tags: LIKE _]: pass",
@@ -95,7 +96,8 @@
       "PostgreSQL: AgreedTests.[test 05 Tags: LIKE [^a]: pass",
       "PostgreSQL: AgreedTests.[test 06 Tags: LIKE a\\\\b]: pass",
       "PostgreSQL: AgreedTests.[test 07 Tags: LIKE [a _]: pass",
-      "planted defects caught by the agreed tests: 5 of 6"
+      "PostgreSQL: AgreedTests.[test 08 Tags: five hits, @MaximumRowsToReturn = 2 returns exactly two]: pass",
+      "planted defects caught by the agreed tests: 6 of 6"
     ]
   },
   "effort": {
