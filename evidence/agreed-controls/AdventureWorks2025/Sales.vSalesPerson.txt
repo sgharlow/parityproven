@@ -1,4 +1,4 @@
-negative control for Sales.vSalesPerson (step 2), 2026-11-18T04:23:24.191Z
+negative control for Sales.vSalesPerson (step 2), 2026-11-18T06:08:10.167Z
 corruption: case 1 expected value row 1, column BusinessEntityID: n:1 -> n:2
 SQL Server: test 01 no territory, two phones, no email; trailing space kept; a sales person without an address is dropped: FAIL — Failure: Unexpected/missing resultset rows!
 |_m_|BusinessEntityID|Title |FirstName|MiddleName|LastName|Suffix|JobTitle            |PhoneNumber|PhoneNumberType|EmailAddress   |EmailPromotion|AddressLine1|AddressLine2|City   |StateProvinceName|PostalCode|CountryRegionName|TerritoryName|TerritoryGroup|SalesQuota |SalesYTD|SalesLastYear|
@@ -7,5 +7,9 @@ SQL Server: test 01 no territory, two phones, no email; trailing space kept; a s
 |=  |2               |Ms.   |Ann      |!NULL!    |Last2   |Jr.   |Sales Representative|!NULL!     |!NULL!         |ann@example.com|2             |2 High St   |Suite 5     |Seattle|Washington       |98104     |United States    |Northwest    |North America |300000.0000|-5.5000 |0.0000       |
 |=  |1               |!NULL!|First1   |!NULL!    |Last1   |!NULL!|Sales Representative|555-0199   |!NULL!         |!NULL!         |0             |1 Main St   |!NULL!      |Bothell|Washington       |98011     |United States    |!NULL!       |!NULL!        |!NULL!     |0.0001  |1234567.8912 |
 |>  |1               |!NULL!|First1   |!NULL!    |Last1   |!NULL!|Sales Representative|555-0100   |Cell           |!NULL!         |0             |1 Main St   |!NULL!      |Bothell|Washington       |98011     |United States    |!NULL!       |!NULL!        |!NULL!     |0.0001  |1234567.8912 |
+SQL Server: test 02 collation: the first case with lowercase province country codes (us joins US under CI_AS): the same r…: pass
+SQL Server: test 03 trailing space: the first case with a trailing space on province country codes (US joins US): the sam…: pass
 PostgreSQL: test 01 no territory, two phones, no email; trailing space kept; a sales person without an address is dropped: FAIL — agreed test failed (test 01 no territory, two phones, no email; trailing space kept; a sales person without an address is dropped): 1 expected row(s) missing, 1 unexpected row(s) in the result
+PostgreSQL: test 02 collation: the first case with lowercase province country codes (us joins US under CI_AS): the same r…: pass
+PostgreSQL: test 03 trailing space: the first case with a trailing space on province country codes (US joins US): the sam…: pass
 RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed

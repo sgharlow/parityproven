@@ -21,6 +21,9 @@ describe("corruptCell", () => {
     expect(corruptCell("x:0a")).toBe("x:1a");
     expect(corruptCell("x:")).toBe("x:00");
   });
+  it("moves a geography point along x, keeping it a valid point", () => {
+    expect(corruptCell("g:POINT(-122.25 47.5)")).toBe("g:POINT(-121.25 47.5)");
+  });
   it("leaves NULL alone", () => {
     expect(corruptCell("∅")).toBeUndefined();
   });
@@ -49,6 +52,23 @@ describe("corruptExpected", () => {
     expect(bad.cases[0].rows).toEqual([]);
     expect(raised.cases[0].raised).toBe("raised: maximum recursion");
     expect(what).toContain('"raised: maximum recursion" -> "completed"');
+  });
+  it("targets a named column: the first non-NULL value in the first case that has one, and says which case", () => {
+    const cols = [{ name: "id", sqlServerType: "int" }, { name: "loc", sqlServerType: "nvarchar(max)" }];
+    const f = file([
+      { label: "a", columns: cols, rows: [["n:1", "∅"]] },
+      { label: "b", columns: cols, rows: [["n:2", "∅"], ["n:3", "g:POINT(0.5 -1.75)"]] },
+    ]);
+    const r = corruptExpected(f, "loc");
+    expect(r.caseIndex).toBe(1);
+    expect(r.file.cases[1].rows).toEqual([["n:2", "∅"], ["n:3", "g:POINT(1.5 -1.75)"]]);
+    expect(r.file.cases[0].rows).toEqual([["n:1", "∅"]]);
+    expect(r.what).toContain("case 2 expected value row 2, column loc");
+    expect(() => corruptExpected(f, "nope")).toThrow(/no result column/);
+    expect(() => corruptExpected(file([{ label: "a", columns: cols, rows: [["n:1", "∅"]] }]), "loc")).toThrow(/no non-NULL value/);
+  });
+  it("untargeted controls corrupt case 1 (caseIndex 0)", () => {
+    expect(corruptExpected(file([{ label: "a", columns: [{ name: "x", sqlServerType: "int" }], rows: [["n:1"]] }])).caseIndex).toBe(0);
   });
   it("adds an all-NULL row when there is no value to change", () => {
     const empty = file([{ label: "a", columns: [{ name: "x", sqlServerType: "int" }, { name: "y", sqlServerType: "int" }], rows: [] }]);

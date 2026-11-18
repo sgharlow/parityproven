@@ -1,5 +1,5 @@
 {
-  "builtAt": "2026-11-18T05:38:46.534Z",
+  "builtAt": "2026-11-18T06:11:14.835Z",
   "receipts": [
     {
       "database": "AdventureWorks2025",
@@ -196,7 +196,7 @@
       "objectName": "vSalesPerson",
       "objectClass": "view",
       "tier": "simple",
-      "status": "verified",
+      "status": "pending",
       "path": "AdventureWorks2025/Sales.vSalesPerson.json"
     },
     {
@@ -946,8 +946,8 @@
   },
   "summary": {
     "total": 55,
-    "verified": 7,
-    "pending": 33,
+    "verified": 6,
+    "pending": 34,
     "failed": 15,
     "excluded": 17,
     "notAttempted": 26,

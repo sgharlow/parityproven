@@ -1,0 +1,11 @@
+negative control for Website.Customers (step 2), 2026-11-18T06:10:18.790Z
+corruption: case 1 expected value row 1, column DeliveryLocation: g:POINT(-122.25 47.5) -> g:POINT(-121.25 47.5)
+SQL Server: test 01 LEFT JOINs keep every customer: missing category, contact, method or city give NULL; same person as b…: FAIL — Failure: Unexpected/missing resultset rows!
+|_m_|CustomerID|CustomerName|CustomerCategoryName|PrimaryContact|AlternateContact|PhoneNumber   |FaxNumber     |BuyingGroupName|WebsiteURL           |DeliveryMethod|CityName|DeliveryLocation    |DeliveryRun|RunPosition|
++---+----------+------------+--------------------+--------------+----------------+--------------+--------------+---------------+---------------------+--------------+--------+--------------------+-----------+-----------+
+|<  |1         |Customer 1  |Novelty Shop        |Ann Lee       |Bo Ng           |(206) 555-0100|(206) 555-0101|!NULL!         |http://c1.example.com|Delivery Van  |Seattle |POINT (-121.25 47.5)|           |!NULL!     |
+|=  |2         |Customer 2  |!NULL!              |!NULL!        |!NULL!          |(206) 555-0100|(206) 555-0101|!NULL!         |http://c2.example.com|!NULL!        |!NULL!  |!NULL!              |!NULL!     |!NULL!     |
+|=  |3         |Customer 3  |Novelty Shop        |Ann Lee       |Ann Lee         |(206) 555-0100|(206) 555-0101|Tailspin Toys  |http://c3.example.com|Delivery Van  |Seattle |POINT (0.5 -1.75)   |!NULL!     |7          |
+|>  |1         |Customer 1  |Novelty Shop        |Ann Lee       |Bo Ng           |(206) 555-0100|(206) 555-0101|!NULL!         |http://c1.example.com|Delivery Van  |Seattle |POINT (-122.25 47.5)|           |!NULL!     |
+PostgreSQL: test 01 LEFT JOINs keep every customer: missing category, contact, method or city give NULL; same person as b…: FAIL — agreed test failed (test 01 LEFT JOINs keep every customer: missing category, contact, method or city give NULL; same person as b…): 1 expected row(s) missing, 1 unexpected row(s) in the result
+RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed

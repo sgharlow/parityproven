@@ -11,12 +11,14 @@
   "tier": "simple",
   "code": {
     "source": "\r\nCREATE VIEW [Sales].[vSalesPerson]\r\nAS\r\nSELECT\r\n    s.[BusinessEntityID]\r\n    ,p.[Title]\r\n    ,p.[FirstName]\r\n    ,p.[MiddleName]\r\n    ,p.[LastName]\r\n    ,p.[Suffix]\r\n    ,e.[JobTitle]\r\n    ,pp.[PhoneNumber]\r\n\t,pnt.[Name] AS [PhoneNumberType]\r\n    ,ea.[EmailAddress]\r\n    ,p.[EmailPromotion]\r\n    ,a.[AddressLine1]\r\n    ,a.[AddressLine2]\r\n    ,a.[City]\r\n    ,[StateProvinceName] = sp.[Name]\r\n    ,a.[PostalCode]\r\n    ,[CountryRegionName] = cr.[Name]\r\n    ,[TerritoryName] = st.[Name]\r\n    ,[TerritoryGroup] = st.[Group]\r\n    ,s.[SalesQuota]\r\n    ,s.[SalesYTD]\r\n    ,s.[SalesLastYear]\r\nFROM [Sales].[SalesPerson] s\r\n    INNER JOIN [HumanResources].[Employee] e\r\n    ON e.[BusinessEntityID] = s.[BusinessEntityID]\r\n\tINNER JOIN [Person].[Person] p\r\n\tON p.[BusinessEntityID] = s.[BusinessEntityID]\r\n    INNER JOIN [Person].[BusinessEntityAddress] bea\r\n    ON bea.[BusinessEntityID] = s.[BusinessEntityID]\r\n    INNER JOIN [Person].[Address] a\r\n    ON a.[AddressID] = bea.[AddressID]\r\n    INNER JOIN [Person].[StateProvince] sp\r\n    ON sp.[StateProvinceID] = a.[StateProvinceID]\r\n    INNER JOIN [Person].[CountryRegion] cr\r\n    ON cr.[CountryRegionCode] = sp.[CountryRegionCode]\r\n    LEFT OUTER JOIN [Sales].[SalesTerritory] st\r\n    ON st.[TerritoryID] = s.[TerritoryID]\r\n\tLEFT OUTER JOIN [Person].[EmailAddress] ea\r\n\tON ea.[BusinessEntityID] = p.[BusinessEntityID]\r\n\tLEFT OUTER JOIN [Person].[PersonPhone] pp\r\n\tON pp.[BusinessEntityID] = p.[BusinessEntityID]\r\n\tLEFT OUTER JOIN [Person].[PhoneNumberType] pnt\r\n\tON pnt.[PhoneNumberTypeID] = pp.[PhoneNumberTypeID];\r\n",
-    "engineOutput": "-- PostgreSQL conversion of the view Sales.vSalesPerson (AdventureWorks2025).\n-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case).\n-- Verified by the property-based harness, not by this script.\n\nCREATE OR REPLACE VIEW sales.v_sales_person AS\nSELECT\r\n    s.\"BusinessEntityID\" AS \"BusinessEntityID\"\r\n    ,p.\"Title\" AS \"Title\"\r\n    ,p.\"FirstName\" AS \"FirstName\"\r\n    ,p.\"MiddleName\" AS \"MiddleName\"\r\n    ,p.\"LastName\" AS \"LastName\"\r\n    ,p.\"Suffix\" AS \"Suffix\"\r\n    ,e.\"JobTitle\" AS \"JobTitle\"\r\n    ,pp.\"PhoneNumber\" AS \"PhoneNumber\"\r\n\t,pnt.\"Name\" AS \"PhoneNumberType\"\r\n    ,ea.\"EmailAddress\" AS \"EmailAddress\"\r\n    ,p.\"EmailPromotion\" AS \"EmailPromotion\"\r\n    ,a.\"AddressLine1\" AS \"AddressLine1\"\r\n    ,a.\"AddressLine2\" AS \"AddressLine2\"\r\n    ,a.\"City\" AS \"City\"\r\n    ,sp.\"Name\" AS \"StateProvinceName\"\n    ,a.\"PostalCode\" AS \"PostalCode\"\r\n    ,cr.\"Name\" AS \"CountryRegionName\"\n    ,st.\"Name\" AS \"TerritoryName\"\n    ,st.\"Group\" AS \"TerritoryGroup\"\n    ,s.\"SalesQuota\" AS \"SalesQuota\"\r\n    ,s.\"SalesYTD\" AS \"SalesYTD\"\r\n    ,s.\"SalesLastYear\" AS \"SalesLastYear\"\r\nFROM sales.sales_person s\r\n    INNER JOIN humanresources.employee e\r\n    ON e.\"BusinessEntityID\" = s.\"BusinessEntityID\"\r\n\tINNER JOIN person.person p\r\n\tON p.\"BusinessEntityID\" = s.\"BusinessEntityID\"\r\n    INNER JOIN person.business_entity_address bea\r\n    ON bea.\"BusinessEntityID\" = s.\"BusinessEntityID\"\r\n    INNER JOIN person.address a\r\n    ON a.\"AddressID\" = bea.\"AddressID\"\r\n    INNER JOIN person.state_province sp\r\n    ON sp.\"StateProvinceID\" = a.\"StateProvinceID\"\r\n    INNER JOIN person.country_region cr\r\n    ON cr.\"CountryRegionCode\" = sp.\"CountryRegionCode\"\r\n    LEFT OUTER JOIN sales.sales_territory st\r\n    ON st.\"TerritoryID\" = s.\"TerritoryID\"\r\n\tLEFT OUTER JOIN person.email_address ea\r\n\tON ea.\"BusinessEntityID\" = p.\"BusinessEntityID\"\r\n\tLEFT OUTER JOIN person.person_phone pp\r\n\tON pp.\"BusinessEntityID\" = p.\"BusinessEntityID\"\r\n\tLEFT OUTER JOIN person.phone_number_type pnt\r\n\tON pnt.\"PhoneNumberTypeID\" = pp.\"PhoneNumberTypeID\";\n",
-    "final": "-- PostgreSQL conversion of the view Sales.vSalesPerson (AdventureWorks2025).\n-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case).\n-- Verified by the property-based harness, not by this script.\n\nCREATE OR REPLACE VIEW sales.v_sales_person AS\nSELECT\r\n    s.\"BusinessEntityID\" AS \"BusinessEntityID\"\r\n    ,p.\"Title\" AS \"Title\"\r\n    ,p.\"FirstName\" AS \"FirstName\"\r\n    ,p.\"MiddleName\" AS \"MiddleName\"\r\n    ,p.\"LastName\" AS \"LastName\"\r\n    ,p.\"Suffix\" AS \"Suffix\"\r\n    ,e.\"JobTitle\" AS \"JobTitle\"\r\n    ,pp.\"PhoneNumber\" AS \"PhoneNumber\"\r\n\t,pnt.\"Name\" AS \"PhoneNumberType\"\r\n    ,ea.\"EmailAddress\" AS \"EmailAddress\"\r\n    ,p.\"EmailPromotion\" AS \"EmailPromotion\"\r\n    ,a.\"AddressLine1\" AS \"AddressLine1\"\r\n    ,a.\"AddressLine2\" AS \"AddressLine2\"\r\n    ,a.\"City\" AS \"City\"\r\n    ,sp.\"Name\" AS \"StateProvinceName\"\n    ,a.\"PostalCode\" AS \"PostalCode\"\r\n    ,cr.\"Name\" AS \"CountryRegionName\"\n    ,st.\"Name\" AS \"TerritoryName\"\n    ,st.\"Group\" AS \"TerritoryGroup\"\n    ,s.\"SalesQuota\" AS \"SalesQuota\"\r\n    ,s.\"SalesYTD\" AS \"SalesYTD\"\r\n    ,s.\"SalesLastYear\" AS \"SalesLastYear\"\r\nFROM sales.sales_person s\r\n    INNER JOIN humanresources.employee e\r\n    ON e.\"BusinessEntityID\" = s.\"BusinessEntityID\"\r\n\tINNER JOIN person.person p\r\n\tON p.\"BusinessEntityID\" = s.\"BusinessEntityID\"\r\n    INNER JOIN person.business_entity_address bea\r\n    ON bea.\"BusinessEntityID\" = s.\"BusinessEntityID\"\r\n    INNER JOIN person.address a\r\n    ON a.\"AddressID\" = bea.\"AddressID\"\r\n    INNER JOIN person.state_province sp\r\n    ON sp.\"StateProvinceID\" = a.\"StateProvinceID\"\r\n    INNER JOIN person.country_region cr\r\n    ON cr.\"CountryRegionCode\" = sp.\"CountryRegionCode\"\r\n    LEFT OUTER JOIN sales.sales_territory st\r\n    ON st.\"TerritoryID\" = s.\"TerritoryID\"\r\n\tLEFT OUTER JOIN person.email_address ea\r\n\tON ea.\"BusinessEntityID\" = p.\"BusinessEntityID\"\r\n\tLEFT OUTER JOIN person.person_phone pp\r\n\tON pp.\"BusinessEntityID\" = p.\"BusinessEntityID\"\r\n\tLEFT OUTER JOIN person.phone_number_type pnt\r\n\tON pnt.\"PhoneNumberTypeID\" = pp.\"PhoneNumberTypeID\";\n",
-    "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
+    "engineOutput": "-- PostgreSQL conversion of the view Sales.vSalesPerson (AdventureWorks2025).\n-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case).\n-- Verified by the property-based harness, not by this script.\n\nCREATE OR REPLACE VIEW sales.v_sales_person AS\nSELECT\n    s.\"BusinessEntityID\" AS \"BusinessEntityID\"\n    ,p.\"Title\" AS \"Title\"\n    ,p.\"FirstName\" AS \"FirstName\"\n    ,p.\"MiddleName\" AS \"MiddleName\"\n    ,p.\"LastName\" AS \"LastName\"\n    ,p.\"Suffix\" AS \"Suffix\"\n    ,e.\"JobTitle\" AS \"JobTitle\"\n    ,pp.\"PhoneNumber\" AS \"PhoneNumber\"\n\t,pnt.\"Name\" AS \"PhoneNumberType\"\n    ,ea.\"EmailAddress\" AS \"EmailAddress\"\n    ,p.\"EmailPromotion\" AS \"EmailPromotion\"\n    ,a.\"AddressLine1\" AS \"AddressLine1\"\n    ,a.\"AddressLine2\" AS \"AddressLine2\"\n    ,a.\"City\" AS \"City\"\n    ,sp.\"Name\" AS \"StateProvinceName\"\n    ,a.\"PostalCode\" AS \"PostalCode\"\n    ,cr.\"Name\" AS \"CountryRegionName\"\n    ,st.\"Name\" AS \"TerritoryName\"\n    ,st.\"Group\" AS \"TerritoryGroup\"\n    ,s.\"SalesQuota\" AS \"SalesQuota\"\n    ,s.\"SalesYTD\" AS \"SalesYTD\"\n    ,s.\"SalesLastYear\" AS \"SalesLastYear\"\nFROM sales.sales_person s\n    INNER JOIN humanresources.employee e\n    ON e.\"BusinessEntityID\" = s.\"BusinessEntityID\"\n\tINNER JOIN person.person p\n\tON p.\"BusinessEntityID\" = s.\"BusinessEntityID\"\n    INNER JOIN person.business_entity_address bea\n    ON bea.\"BusinessEntityID\" = s.\"BusinessEntityID\"\n    INNER JOIN person.address a\n    ON a.\"AddressID\" = bea.\"AddressID\"\n    INNER JOIN person.state_province sp\n    ON sp.\"StateProvinceID\" = a.\"StateProvinceID\"\n    INNER JOIN person.country_region cr\n    ON cr.\"CountryRegionCode\" = sp.\"CountryRegionCode\"\n    LEFT OUTER JOIN sales.sales_territory st\n    ON st.\"TerritoryID\" = s.\"TerritoryID\"\n\tLEFT OUTER JOIN person.email_address ea\n\tON ea.\"BusinessEntityID\" = p.\"BusinessEntityID\"\n\tLEFT OUTER JOIN person.person_phone pp\n\tON pp.\"BusinessEntityID\" = p.\"BusinessEntityID\"\n\tLEFT OUTER JOIN person.phone_number_type pnt\n\tON pnt.\"PhoneNumberTypeID\" = pp.\"PhoneNumberTypeID\";\n",
+    "final": "-- PostgreSQL conversion of the view Sales.vSalesPerson (AdventureWorks2025).\n-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case; kept as the .draft.sql),\n-- corrected by Kiro on 2026-11-18 after step 2 found a difference that step 3's generated data had not produced.\n-- No human edit; the owner's step 5 review of this corrected version is still to come.\n--\n-- The source database's collation is SQL_Latin1_General_CP1_CI_AS, so the join on CountryRegionCode is case-insensitive\n-- ('us' joins 'US'), accent-sensitive, and ignores trailing spaces ('US ' joins 'US'); PostgreSQL '=' is none of those.\n-- Same fix as Person.vStateProvinceCountryRegion: rtrim under a nondeterministic case-insensitive ICU collation.\n-- Checked for the text the harness and the fixed cases use (ASCII codes), not for every collation rule.\nCREATE SCHEMA IF NOT EXISTS tsql_compat;\nCREATE COLLATION IF NOT EXISTS tsql_compat.ci_as_equal (\n    provider = icu, locale = 'und-u-ks-level2', deterministic = false\n);\n\nCREATE OR REPLACE VIEW sales.v_sales_person AS\nSELECT\n    s.\"BusinessEntityID\" AS \"BusinessEntityID\"\n    ,p.\"Title\" AS \"Title\"\n    ,p.\"FirstName\" AS \"FirstName\"\n    ,p.\"MiddleName\" AS \"MiddleName\"\n    ,p.\"LastName\" AS \"LastName\"\n    ,p.\"Suffix\" AS \"Suffix\"\n    ,e.\"JobTitle\" AS \"JobTitle\"\n    ,pp.\"PhoneNumber\" AS \"PhoneNumber\"\n\t,pnt.\"Name\" AS \"PhoneNumberType\"\n    ,ea.\"EmailAddress\" AS \"EmailAddress\"\n    ,p.\"EmailPromotion\" AS \"EmailPromotion\"\n    ,a.\"AddressLine1\" AS \"AddressLine1\"\n    ,a.\"AddressLine2\" AS \"AddressLine2\"\n    ,a.\"City\" AS \"City\"\n    ,sp.\"Name\" AS \"StateProvinceName\"\n    ,a.\"PostalCode\" AS \"PostalCode\"\n    ,cr.\"Name\" AS \"CountryRegionName\"\n    ,st.\"Name\" AS \"TerritoryName\"\n    ,st.\"Group\" AS \"TerritoryGroup\"\n    ,s.\"SalesQuota\" AS \"SalesQuota\"\n    ,s.\"SalesYTD\" AS \"SalesYTD\"\n    ,s.\"SalesLastYear\" AS \"SalesLastYear\"\nFROM sales.sales_person s\n    INNER JOIN humanresources.employee e\n    ON e.\"BusinessEntityID\" = s.\"BusinessEntityID\"\n\tINNER JOIN person.person p\n\tON p.\"BusinessEntityID\" = s.\"BusinessEntityID\"\n    INNER JOIN person.business_entity_address bea\n    ON bea.\"BusinessEntityID\" = s.\"BusinessEntityID\"\n    INNER JOIN person.address a\n    ON a.\"AddressID\" = bea.\"AddressID\"\n    INNER JOIN person.state_province sp\n    ON sp.\"StateProvinceID\" = a.\"StateProvinceID\"\n    INNER JOIN person.country_region cr\n    ON rtrim(cr.\"CountryRegionCode\", ' ') COLLATE tsql_compat.ci_as_equal = rtrim(sp.\"CountryRegionCode\", ' ') COLLATE tsql_compat.ci_as_equal\n    LEFT OUTER JOIN sales.sales_territory st\n    ON st.\"TerritoryID\" = s.\"TerritoryID\"\n\tLEFT OUTER JOIN person.email_address ea\n\tON ea.\"BusinessEntityID\" = p.\"BusinessEntityID\"\n\tLEFT OUTER JOIN person.person_phone pp\n\tON pp.\"BusinessEntityID\" = p.\"BusinessEntityID\"\n\tLEFT OUTER JOIN person.phone_number_type pnt\n\tON pnt.\"PhoneNumberTypeID\" = pp.\"PhoneNumberTypeID\";\n",
+    "diff": "--- engineOutput\n+++ final\n@@ engineOutput line 2 / final line 2 @@\n+-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case; kept as the .draft.sql),\n+-- corrected by Kiro on 2026-11-18 after step 2 found a difference that step 3's generated data had not produced.\n+-- No human edit; the owner's step 5 review of this corrected version is still to come.\n+--\n+-- The source database's collation is SQL_Latin1_General_CP1_CI_AS, so the join on CountryRegionCode is case-insensitive\n+-- ('us' joins 'US'), accent-sensitive, and ignores trailing spaces ('US ' joins 'US'); PostgreSQL '=' is none of those.\n+-- Same fix as Person.vStateProvinceCountryRegion: rtrim under a nondeterministic case-insensitive ICU collation.\n+-- Checked for the text the harness and the fixed cases use (ASCII codes), not for every collation rule.\n+CREATE SCHEMA IF NOT EXISTS tsql_compat;\n+CREATE COLLATION IF NOT EXISTS tsql_compat.ci_as_equal (\n+    provider = icu, locale = 'und-u-ks-level2', deterministic = false\n+);\n--- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case).\n--- Verified by the property-based harness, not by this script.\n@@ engineOutput line 41 / final line 51 @@\n+    ON rtrim(cr.\"CountryRegionCode\", ' ') COLLATE tsql_compat.ci_as_equal = rtrim(sp.\"CountryRegionCode\", ' ') COLLATE tsql_compat.ci_as_equal\n-    ON cr.\"CountryRegionCode\" = sp.\"CountryRegionCode\"",
     "engine": "kiro",
     "notes": [
-      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
+      "Finding (step 2, 2026-11-18): Kiro's draft of Sales.vSalesPerson joined CountryRegionCode with PostgreSQL '=', which is case-sensitive and counts trailing spaces. Under the source collation (SQL_Latin1_General_CP1_CI_AS) 'us' joins 'US' and 'US ' joins 'US'. Step 3 passed because the generated codes never differed only in case or trailing spaces; the fixed cases 'collation' and 'trailing space' failed on PostgreSQL. Fixed in the conversion as for Person.vStateProvinceCountryRegion (rtrim + a case-insensitive ICU collation in the join); both cases are kept as regression cases.",
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step).",
+      "Step 5 reset on 2026-11-18: this object was verified after a second review by Steve Harlow on 2026-11-16, but that review covered the previous conversion. The conversion was then corrected (the CountryRegionCode join under CI_AS, finding of 2026-11-18), so the corrected code needs a new review before the object can be verified again."
     ]
   },
   "columnMappings": [
@@ -84,50 +86,58 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "pass",
-    "step5": "pass",
+    "step5": "not-run",
     "step6": "n/a",
-    "runtimeRatio": 0.41,
+    "testsRun": [
+      "tSQLt V1.0.8083.3529 on SQL Server (tests/AdventureWorks2025/Sales.vSalesPerson.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/AdventureWorks2025/Sales.vSalesPerson.pg.sql); expected results tests/AdventureWorks2025/Sales.vSalesPerson.expected.json",
+      "SQL Server: AgreedTests.[test 01 no territory, two phones, no email; trailing space kept; a sales person without an address is dropped]: pass",
+      "SQL Server: AgreedTests.[test 02 collation: the first case with lowercase province country codes (us joins US under CI_AS): the same r…]: pass",
+      "SQL Server: AgreedTests.[test 03 trailing space: the first case with a trailing space on province country codes (US joins US): the sam…]: pass",
+      "PostgreSQL: AgreedTests.[test 01 no territory, two phones, no email; trailing space kept; a sales person without an address is dropped]: pass",
+      "PostgreSQL: AgreedTests.[test 02 collation: the first case with lowercase province country codes (us joins US under CI_AS): the same r…]: pass",
+      "PostgreSQL: AgreedTests.[test 03 trailing space: the first case with a trailing space on province country codes (US joins US): the sam…]: pass",
+      "planted defects caught by the agreed tests: 3 of 3"
+    ],
+    "runtimeRatio": 0.52,
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
-      "sqlServerMs": 63,
-      "postgresMs": 26.06,
-      "ratio": 0.41,
+      "sqlServerMs": 69,
+      "postgresMs": 35.67,
+      "ratio": 0.52,
       "threshold": 1.5,
       "passed": true,
       "belowResolution": false,
-      "resultRows": 6902,
+      "resultRows": 6810,
       "volumeMismatch": null
     },
-    "rowsCompared": 250,
+    "rowsCompared": 231,
     "trapsCovered": [
       "NULL in every nullable column",
       "empty string and trailing spaces"
     ],
     "pbtSeeds": [
-      185133778
+      398997157
     ],
+    "engineOutputCheck": {
+      "step3": "fail",
+      "seed": 398997157,
+      "detail": "fixed case \"collation: the first case with lowercase province country codes ('us' joins 'US' under CI_AS): the same rows\": row count differs: SQL Server 3, PostgreSQL 0"
+    },
     "samples": 200,
-    "samplesWithRows": 118,
+    "samplesWithRows": 111,
     "subMicrosecondNormalised": 0,
     "mutantsDetected": [
-      "auto: LEFT JOIN becomes INNER JOIN",
-      "auto: two output columns swap values"
+      "join is case-sensitive (collation dropped)",
+      "trailing spaces count in the join (rtrim dropped)",
+      "LEFT JOIN to email made an inner join (people without email dropped)"
     ],
-    "harnessVersion": "harness-generic-0.3.0",
-    "testsRun": [
-      "tSQLt V1.0.8083.3529 on SQL Server (tests/AdventureWorks2025/Sales.vSalesPerson.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/AdventureWorks2025/Sales.vSalesPerson.pg.sql); expected results tests/AdventureWorks2025/Sales.vSalesPerson.expected.json",
-      "SQL Server: AgreedTests.[test 01 no territory, two phones, no email; trailing space kept; a sales person without an address is dropped]: pass",
-      "PostgreSQL: AgreedTests.[test 01 no territory, two phones, no email; trailing space kept; a sales person without an address is dropped]: pass",
-      "planted defects caught by the agreed tests: 2 of 2"
-    ],
-    "reviewer": "Steve Harlow",
-    "reviewDate": "2026-11-16"
+    "harnessVersion": "harness-generic-0.3.0"
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "verified"
+  "status": "pending"
 }

@@ -1,0 +1,14 @@
+negative control for Sales.vIndividualCustomer (step 2), 2026-11-18T06:07:33.265Z
+corruption: case 1 expected value row 1, column BusinessEntityID: n:1 -> n:2
+SQL Server: test 01 a customer without email or phone keeps a row (LEFT JOINs); unknown phone type; a store customer is d…: FAIL — Failure: Unexpected/missing resultset rows!
+|_m_|BusinessEntityID|Title |FirstName|MiddleName|LastName|Suffix|PhoneNumber|PhoneNumberType|EmailAddress   |EmailPromotion|AddressType|AddressLine1|AddressLine2|City   |StateProvinceName|PostalCode|CountryRegionName|Demographics|
++---+----------------+------+---------+----------+--------+------+-----------+---------------+---------------+--------------+-----------+------------+------------+-------+-----------------+----------+-----------------+------------+
+|<  |2               |!NULL!|First1   |!NULL!    |Last1   |!NULL!|!NULL!     |!NULL!         |!NULL!         |0             |Home       |1 Main St   |!NULL!      |Bothell|Washington       |98011     |United States    |!NULL!      |
+|=  |2               |!NULL!|First2   |!NULL!    |Last2   |!NULL!|555-0102   |!NULL!         |two@example.com|0             |Home       |1 Main St   |!NULL!      |Bothell|Washington       |98011     |United States    |!NULL!      |
+|>  |1               |!NULL!|First1   |!NULL!    |Last1   |!NULL!|!NULL!     |!NULL!         |!NULL!         |0             |Home       |1 Main St   |!NULL!      |Bothell|Washington       |98011     |United States    |!NULL!      |
+SQL Server: test 02 collation: the first case with lowercase province country codes (us joins US under CI_AS): the same r…: pass
+SQL Server: test 03 trailing space: the first case with a trailing space on province country codes (US joins US): the sam…: pass
+PostgreSQL: test 01 a customer without email or phone keeps a row (LEFT JOINs); unknown phone type; a store customer is d…: FAIL — agreed test failed (test 01 a customer without email or phone keeps a row (LEFT JOINs); unknown phone type; a store customer is d…): 1 expected row(s) missing, 1 unexpected row(s) in the result
+PostgreSQL: test 02 collation: the first case with lowercase province country codes (us joins US under CI_AS): the same r…: pass
+PostgreSQL: test 03 trailing space: the first case with a trailing space on province country codes (US joins US): the sam…: pass
+RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed

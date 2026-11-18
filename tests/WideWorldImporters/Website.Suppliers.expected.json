@@ -1,0 +1,106 @@
+{
+  "object": "Website.Suppliers",
+  "database": "WideWorldImporters",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-18T05:44:18.928Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "LEFT JOINs keep every supplier: missing category, contacts or city, and a NULL delivery method, give NULL; same person as both contacts; geography as WKT; '' and NULL kept apart",
+      "columns": [
+        {
+          "name": "SupplierID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "SupplierName",
+          "sqlServerType": "nvarchar(100)"
+        },
+        {
+          "name": "SupplierCategoryName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PrimaryContact",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AlternateContact",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PhoneNumber",
+          "sqlServerType": "nvarchar(20)"
+        },
+        {
+          "name": "FaxNumber",
+          "sqlServerType": "nvarchar(20)"
+        },
+        {
+          "name": "WebsiteURL",
+          "sqlServerType": "nvarchar(256)"
+        },
+        {
+          "name": "DeliveryMethod",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "CityName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "DeliveryLocation",
+          "sqlServerType": "nvarchar(max)"
+        },
+        {
+          "name": "SupplierReference",
+          "sqlServerType": "nvarchar(20)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:Supplier 1",
+          "s:Toy Supplier",
+          "s:Ann Lee",
+          "s:Bo Ng",
+          "s:(415) 555-0100",
+          "s:(415) 555-0101",
+          "s:http://s1.example.com",
+          "∅",
+          "s:Auckland",
+          "g:POINT(-0.25 51.5)",
+          "s:"
+        ],
+        [
+          "n:2",
+          "s:Supplier 2",
+          "∅",
+          "∅",
+          "∅",
+          "s:(415) 555-0100",
+          "s:(415) 555-0101",
+          "s:http://s2.example.com",
+          "∅",
+          "∅",
+          "∅",
+          "∅"
+        ],
+        [
+          "n:3",
+          "s:Supplier 3",
+          "s:Toy Supplier",
+          "s:Ann Lee",
+          "s:Ann Lee",
+          "s:(415) 555-0100",
+          "s:(415) 555-0101",
+          "s:http://s3.example.com",
+          "s:Air Freight",
+          "s:Auckland",
+          "g:POINT(174.75 -36.75)",
+          "s:REF-3"
+        ]
+      ]
+    }
+  ]
+}

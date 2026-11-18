@@ -60,7 +60,7 @@
     {
       "step": 2,
       "label": "Agreed tests pass (tSQLt on SQL Server, plain-SQL assertions on PostgreSQL)",
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "step": 3,
@@ -116,7 +116,13 @@
       "detail": "column \"DeliveryLocation\" does not exist"
     },
     "subMicrosecondNormalised": 0,
-    "harnessVersion": "harness-generic-0.3.0"
+    "harnessVersion": "harness-generic-0.3.0",
+    "testsRun": [
+      "tSQLt V1.0.8083.3529 on SQL Server (tests/WideWorldImporters/Website.Suppliers.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/WideWorldImporters/Website.Suppliers.pg.sql); expected results tests/WideWorldImporters/Website.Suppliers.expected.json",
+      "SQL Server: AgreedTests.[test 01 LEFT JOINs keep every supplier: missing category, contacts or city, and a NULL delivery method, give…]: pass",
+      "PostgreSQL: AgreedTests.[test 01 LEFT JOINs keep every supplier: missing category, contacts or city, and a NULL delivery method, give…]: pass",
+      "planted defects caught by the agreed tests: 2 of 2"
+    ]
   },
   "effort": {
     "humanMinutes": 0,
@@ -127,5 +133,5 @@
     "p50Hours": 0.75,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-17T03:55:18.298Z"
+  "builtAt": "2026-11-18T06:11:14.786Z"
 }

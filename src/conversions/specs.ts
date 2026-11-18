@@ -306,6 +306,66 @@ const people: TableSpec = { schema: "Application", name: "People", columns: [pk(
 const deliveryMethods: TableSpec = { schema: "Application", name: "DeliveryMethods", columns: [pk("DeliveryMethodID"), col("DeliveryMethodName", nv(50))] };
 const cities: TableSpec = { schema: "Application", name: "Cities", columns: [pk("CityID"), col("CityName", nv(50))] };
 
+/**
+ * Website.Customers (hand-derived). Every join is a LEFT JOIN, so every customer is listed: expected 3 rows.
+ *  - customer 1: every reference present; a different alternate contact; no buying group (NULL); DeliveryLocation
+ *    POINT(-122.25 47.5) (binary-exact coordinates, so neither engine rounds them in the text); DeliveryRun '' (kept,
+ *    not NULL), RunPosition NULL
+ *  - customer 2: category, primary contact, delivery method and city all point at missing rows (each NULL); no location
+ *  - customer 3: the same person as primary and alternate contact (both joins find the row); a buying group;
+ *    POINT(0.5 -1.75); a trailing space in the customer name (kept)
+ */
+function websiteCustomersCase(): FixedCase {
+  const c = (id: number, over: Row): Row => ({
+    CustomerID: id, CustomerName: `Customer ${id}`, CustomerCategoryID: 1, PrimaryContactPersonID: 1, AlternateContactPersonID: null,
+    BuyingGroupID: null, DeliveryMethodID: 1, DeliveryCityID: 1, PhoneNumber: "(206) 555-0100", FaxNumber: "(206) 555-0101",
+    WebsiteURL: `http://c${id}.example.com`, DeliveryLocation: null, DeliveryRun: null, RunPosition: null, ...over,
+  });
+  return {
+    label: "LEFT JOINs keep every customer: missing category, contact, method or city give NULL; same person as both contacts; geography as WKT; '' and NULL kept apart",
+    tables: {
+      "Sales.Customers": [
+        c(1, { AlternateContactPersonID: 2, DeliveryLocation: "POINT(-122.25 47.5)", DeliveryRun: "" }),
+        c(2, { CustomerCategoryID: 99, PrimaryContactPersonID: 99, DeliveryMethodID: 99, DeliveryCityID: 99 }),
+        c(3, { CustomerName: "Customer 3 ", AlternateContactPersonID: 1, BuyingGroupID: 1, DeliveryLocation: "POINT(0.5 -1.75)", RunPosition: "7" }),
+      ],
+      "Sales.CustomerCategories": [{ CustomerCategoryID: 1, CustomerCategoryName: "Novelty Shop" }],
+      "Sales.BuyingGroups": [{ BuyingGroupID: 1, BuyingGroupName: "Tailspin Toys" }],
+      "Application.People": [{ PersonID: 1, FullName: "Ann Lee" }, { PersonID: 2, FullName: "Bo Ng" }],
+      "Application.DeliveryMethods": [{ DeliveryMethodID: 1, DeliveryMethodName: "Delivery Van" }],
+      "Application.Cities": [{ CityID: 1, CityName: "Seattle" }],
+    },
+  };
+}
+
+/**
+ * Website.Suppliers (hand-derived). Every join is a LEFT JOIN: expected 3 rows.
+ *  - supplier 1: every reference present; DeliveryMethodID NULL (DeliveryMethod NULL); POINT(-0.25 51.5); SupplierReference ''
+ *  - supplier 2: category, both contacts and city point at missing rows (NULL); no location; SupplierReference NULL
+ *  - supplier 3: the same person as primary and alternate contact; a delivery method; POINT(174.75 -36.75)
+ */
+function websiteSuppliersCase(): FixedCase {
+  const s = (id: number, over: Row): Row => ({
+    SupplierID: id, SupplierName: `Supplier ${id}`, SupplierCategoryID: 1, PrimaryContactPersonID: 1, AlternateContactPersonID: 2,
+    DeliveryMethodID: null, DeliveryCityID: 1, SupplierReference: null, PhoneNumber: "(415) 555-0100", FaxNumber: "(415) 555-0101",
+    WebsiteURL: `http://s${id}.example.com`, DeliveryLocation: null, ...over,
+  });
+  return {
+    label: "LEFT JOINs keep every supplier: missing category, contacts or city, and a NULL delivery method, give NULL; same person as both contacts; geography as WKT; '' and NULL kept apart",
+    tables: {
+      "Purchasing.Suppliers": [
+        s(1, { DeliveryLocation: "POINT(-0.25 51.5)", SupplierReference: "" }),
+        s(2, { SupplierCategoryID: 99, PrimaryContactPersonID: 98, AlternateContactPersonID: 99, DeliveryCityID: 99 }),
+        s(3, { AlternateContactPersonID: 1, DeliveryMethodID: 1, DeliveryLocation: "POINT(174.75 -36.75)", SupplierReference: "REF-3" }),
+      ],
+      "Purchasing.SupplierCategories": [{ SupplierCategoryID: 1, SupplierCategoryName: "Toy Supplier" }],
+      "Application.People": [{ PersonID: 1, FullName: "Ann Lee" }, { PersonID: 2, FullName: "Bo Ng" }],
+      "Application.DeliveryMethods": [{ DeliveryMethodID: 1, DeliveryMethodName: "Air Freight" }],
+      "Application.Cities": [{ CityID: 1, CityName: "Auckland" }],
+    },
+  };
+}
+
 SPECS.push(
   {
     ...base, schema: "Website", name: "Customers", objectClass: "view", windowParams: false, orderKey: [],
@@ -327,6 +387,7 @@ SPECS.push(
       { name: "alternate contact joined on the primary contact id", from: 'ON s."AlternateContactPersonID" = ap."PersonID"', to: 'ON s."PrimaryContactPersonID" = ap."PersonID"' },
       { name: "buying group LEFT JOIN becomes INNER JOIN", from: "LEFT OUTER JOIN sales.buying_groups", to: "INNER JOIN sales.buying_groups" },
     ],
+    fixedCases: [websiteCustomersCase()],
   },
   {
     ...base, schema: "Website", name: "Suppliers", objectClass: "view", windowParams: false, orderKey: [],
@@ -346,6 +407,7 @@ SPECS.push(
       { name: "alternate contact joined on the primary contact id", from: 'ON s."AlternateContactPersonID" = ap."PersonID"', to: 'ON s."PrimaryContactPersonID" = ap."PersonID"' },
       { name: "delivery method LEFT JOIN becomes INNER JOIN", from: "LEFT OUTER JOIN application.delivery_methods", to: "INNER JOIN application.delivery_methods" },
     ],
+    fixedCases: [websiteSuppliersCase()],
   },
   {
     ...base, schema: "Website", name: "CalculateCustomerPrice", objectClass: "function", windowParams: false, orderKey: [],

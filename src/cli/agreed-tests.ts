@@ -160,7 +160,7 @@ interface Outcome {
   defects: { caught: string[]; missed: string[]; skipped: string[] };
 }
 
-async function runOne(conn: Connections, spec: ObjectSpec, recapture: boolean, control = false): Promise<Outcome & { control?: string }> {
+async function runOne(conn: Connections, spec: ObjectSpec, recapture: boolean, control = false, controlColumn?: string): Promise<Outcome & { control?: string; controlCase?: number }> {
   const label = `${spec.schema}.${spec.name}`;
   const unsupported = unsupportedFeatures(spec);
   if (unsupported.length) throw new Error(`${label}: agreed tests cannot be generated yet (${unsupported.join("; ")})`);
@@ -179,14 +179,15 @@ async function runOne(conn: Connections, spec: ObjectSpec, recapture: boolean, c
   const testsDir = resolve(ROOT, "tests", spec.database);
   mkdirSync(testsDir, { recursive: true });
   const expectedPath = resolve(testsDir, `${label}.expected.json`);
-  const out: Outcome & { control?: string } = { tests: [], defects: { caught: [], missed: [], skipped: [] } };
+  const out: Outcome & { control?: string; controlCase?: number } = { tests: [], defects: { caught: [], missed: [], skipped: [] } };
   try {
     let expected: ExpectedFile;
     if (control) {
       if (!existsSync(expectedPath)) throw new Error(`${label}: --negative-control needs the committed tests/${spec.database}/${label}.expected.json; run agreed-tests without it first`);
-      const corrupted = corruptExpected(JSON.parse(readFileSync(expectedPath, "utf-8")) as ExpectedFile);
+      const corrupted = corruptExpected(JSON.parse(readFileSync(expectedPath, "utf-8")) as ExpectedFile, controlColumn);
       expected = corrupted.file;
       out.control = corrupted.what;
+      out.controlCase = corrupted.caseIndex;
       console.log(`NEGATIVE CONTROL: ${corrupted.what} (in memory only; tests/ and the pair record are not changed)`);
     } else if (!existsSync(expectedPath) || recapture) {
       expected = await capture(scratch, spec);
@@ -297,6 +298,9 @@ async function main(): Promise<void> {
   });
   if (!specs.length) throw new Error("Usage: agreed-tests --object <Schema.Name> [--object ...] [--recapture | --negative-control]");
   const control = process.argv.includes("--negative-control");
+  // --control-column <name>: corrupt that result column (a newly supported type), not the first value of case 1
+  const controlColumn = argsOf("--control-column")[0];
+  if (controlColumn && !control) throw new Error("--control-column needs --negative-control");
   checkTsqlt();
 
   const project = process.env["COMPOSE_PROJECT_NAME"] ?? "docker";
@@ -321,8 +325,9 @@ async function main(): Promise<void> {
         restored.add(spec.database);
       }
       if (control) {
-        const r = await runOne(conn, spec, false, true);
-        const first = testName(0, spec.fixedCases![0].label);
+        const r = await runOne(conn, spec, false, true, controlColumn);
+        const ci = r.controlCase ?? 0;
+        const first = testName(ci, spec.fixedCases![ci].label);
         // it must fail as an ASSERTION, not as an error (a truncation error proves nothing about the comparison)
         const assertion = { "SQL Server": /^Failure:/, PostgreSQL: /agreed test failed/ } as const;
         const firstFailed = (engine: "SQL Server" | "PostgreSQL") =>
@@ -333,7 +338,8 @@ async function main(): Promise<void> {
         const label = `${spec.schema}.${spec.name}`;
         const dir = resolve(ROOT, "evidence", "agreed-controls", spec.database);
         mkdirSync(dir, { recursive: true });
-        writeFileSync(resolve(dir, `${label}.txt`), [
+        const evidenceName = controlColumn ? `${label}.${controlColumn}.txt` : `${label}.txt`;
+        writeFileSync(resolve(dir, evidenceName), [
           `negative control for ${label} (step 2), ${new Date().toISOString()}`,
           `corruption: ${r.control}`,
           ...r.tests.map((t) => `${t.engine}: ${t.name}: ${t.passed ? "pass" : `FAIL — ${t.message}`}`),
@@ -341,7 +347,7 @@ async function main(): Promise<void> {
             ? "RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed"
             : "RESULT: CONTROL NOT SEEN FAILING — the corrupted case did not fail as an assertion on both engines, or another case failed",
         ].join("\n") + "\n", "utf-8");
-        console.log(`${seen ? "control seen failing" : "CONTROL NOT SEEN FAILING"}: evidence/agreed-controls/${spec.database}/${label}.txt`);
+        console.log(`${seen ? "control seen failing" : "CONTROL NOT SEEN FAILING"}: evidence/agreed-controls/${spec.database}/${evidenceName}`);
         continue;
       }
       const r = await runOne(conn, spec, process.argv.includes("--recapture"));

@@ -1,0 +1,15 @@
+negative control for HumanResources.vEmployee (step 2), 2026-11-18T06:10:40.667Z
+corruption: case 1 expected value row 1, column AdditionalContactInfo: s:<info><phone>555-0100</phone><fax/></info> -> s:<info><phone>555-0100</phone><fax/></infoX
+SQL Server: test 01 two phones give two rows (unknown phone type NULL); no email NULL; kept, not NULL; xml passed through…: FAIL — Failure: Unexpected/missing resultset rows!
+|_m_|BusinessEntityID|Title |FirstName|MiddleName|LastName|Suffix|JobTitle|PhoneNumber|PhoneNumberType|EmailAddress |EmailPromotion|AddressLine1|AddressLine2|City   |StateProvinceName|PostalCode|CountryRegionName|AdditionalContactInfo                     |
++---+----------------+------+---------+----------+--------+------+--------+-----------+---------------+-------------+--------------+------------+------------+-------+-----------------+----------+-----------------+------------------------------------------+
+|<  |1               |!NULL!|First1   |!NULL!    |Last1   |!NULL!|Job 1   |555-0100   |Cell           |!NULL!       |0             |1 Main St   |!NULL!      |Bothell|Washington       |98011     |United States    |<info><phone>555-0100</phone><fax/></infoX|
+|=  |1               |!NULL!|First1   |!NULL!    |Last1   |!NULL!|Job 1   |555-0199   |!NULL!         |!NULL!       |0             |1 Main St   |!NULL!      |Bothell|Washington       |98011     |United States    |<info><phone>555-0100</phone><fax/></info>|
+|=  |2               |      |First2   |B         |Last2   |Jr.   |Job 2   |!NULL!     |!NULL!         |b@example.com|1             |2 Main St   |            |Bothell|Washington       |98011     |United States    |!NULL!                                    |
+|>  |1               |!NULL!|First1   |!NULL!    |Last1   |!NULL!|Job 1   |555-0100   |Cell           |!NULL!       |0             |1 Main St   |!NULL!      |Bothell|Washington       |98011     |United States    |<info><phone>555-0100</phone><fax/></info>|
+SQL Server: test 02 collation: province code us joins country US (case-insensitive CI_AS), so the employee is listed: pass
+SQL Server: test 03 trailing space: province code US joins country US (SQL Server equality ignores trailing spaces), so t…: pass
+PostgreSQL: test 01 two phones give two rows (unknown phone type NULL); no email NULL; kept, not NULL; xml passed through…: FAIL — agreed test failed (test 01 two phones give two rows (unknown phone type NULL); no email NULL; kept, not NULL; xml passed through…): 1 expected row(s) missing, 1 unexpected row(s) in the result
+PostgreSQL: test 02 collation: province code us joins country US (case-insensitive CI_AS), so the employee is listed: pass
+PostgreSQL: test 03 trailing space: province code US joins country US (SQL Server equality ignores trailing spaces), so t…: pass
+RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed

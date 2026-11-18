@@ -1,0 +1,120 @@
+{
+  "object": "Website.Customers",
+  "database": "WideWorldImporters",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-18T05:44:10.599Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "LEFT JOINs keep every customer: missing category, contact, method or city give NULL; same person as both contacts; geography as WKT; '' and NULL kept apart",
+      "columns": [
+        {
+          "name": "CustomerID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "CustomerName",
+          "sqlServerType": "nvarchar(100)"
+        },
+        {
+          "name": "CustomerCategoryName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PrimaryContact",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AlternateContact",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PhoneNumber",
+          "sqlServerType": "nvarchar(20)"
+        },
+        {
+          "name": "FaxNumber",
+          "sqlServerType": "nvarchar(20)"
+        },
+        {
+          "name": "BuyingGroupName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "WebsiteURL",
+          "sqlServerType": "nvarchar(256)"
+        },
+        {
+          "name": "DeliveryMethod",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "CityName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "DeliveryLocation",
+          "sqlServerType": "nvarchar(max)"
+        },
+        {
+          "name": "DeliveryRun",
+          "sqlServerType": "nvarchar(5)"
+        },
+        {
+          "name": "RunPosition",
+          "sqlServerType": "nvarchar(5)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:Customer 1",
+          "s:Novelty Shop",
+          "s:Ann Lee",
+          "s:Bo Ng",
+          "s:(206) 555-0100",
+          "s:(206) 555-0101",
+          "∅",
+          "s:http://c1.example.com",
+          "s:Delivery Van",
+          "s:Seattle",
+          "g:POINT(-122.25 47.5)",
+          "s:",
+          "∅"
+        ],
+        [
+          "n:2",
+          "s:Customer 2",
+          "∅",
+          "∅",
+          "∅",
+          "s:(206) 555-0100",
+          "s:(206) 555-0101",
+          "∅",
+          "s:http://c2.example.com",
+          "∅",
+          "∅",
+          "∅",
+          "∅",
+          "∅"
+        ],
+        [
+          "n:3",
+          "s:Customer 3 ",
+          "s:Novelty Shop",
+          "s:Ann Lee",
+          "s:Ann Lee",
+          "s:(206) 555-0100",
+          "s:(206) 555-0101",
+          "s:Tailspin Toys",
+          "s:http://c3.example.com",
+          "s:Delivery Van",
+          "s:Seattle",
+          "g:POINT(0.5 -1.75)",
+          "∅",
+          "s:7"
+        ]
+      ]
+    }
+  ]
+}

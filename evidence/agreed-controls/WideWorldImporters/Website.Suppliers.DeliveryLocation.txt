@@ -1,0 +1,11 @@
+negative control for Website.Suppliers (step 2), 2026-11-18T06:10:29.524Z
+corruption: case 1 expected value row 1, column DeliveryLocation: g:POINT(-0.25 51.5) -> g:POINT(0.75 51.5)
+SQL Server: test 01 LEFT JOINs keep every supplier: missing category, contacts or city, and a NULL delivery method, give…: FAIL — Failure: Unexpected/missing resultset rows!
+|_m_|SupplierID|SupplierName|SupplierCategoryName|PrimaryContact|AlternateContact|PhoneNumber   |FaxNumber     |WebsiteURL           |DeliveryMethod|CityName|DeliveryLocation     |SupplierReference|
++---+----------+------------+--------------------+--------------+----------------+--------------+--------------+---------------------+--------------+--------+---------------------+-----------------+
+|<  |1         |Supplier 1  |Toy Supplier        |Ann Lee       |Bo Ng           |(415) 555-0100|(415) 555-0101|http://s1.example.com|!NULL!        |Auckland|POINT (0.75 51.5)    |                 |
+|=  |2         |Supplier 2  |!NULL!              |!NULL!        |!NULL!          |(415) 555-0100|(415) 555-0101|http://s2.example.com|!NULL!        |!NULL!  |!NULL!               |!NULL!           |
+|=  |3         |Supplier 3  |Toy Supplier        |Ann Lee       |Ann Lee         |(415) 555-0100|(415) 555-0101|http://s3.example.com|Air Freight   |Auckland|POINT (174.75 -36.75)|REF-3            |
+|>  |1         |Supplier 1  |Toy Supplier        |Ann Lee       |Bo Ng           |(415) 555-0100|(415) 555-0101|http://s1.example.com|!NULL!        |Auckland|POINT (-0.25 51.5)   |                 |
+PostgreSQL: test 01 LEFT JOINs keep every supplier: missing category, contacts or city, and a NULL delivery method, give…: FAIL — agreed test failed (test 01 LEFT JOINs keep every supplier: missing category, contacts or city, and a NULL delivery method, give…): 1 expected row(s) missing, 1 unexpected row(s) in the result
+RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed

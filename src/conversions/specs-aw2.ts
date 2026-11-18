@@ -6,6 +6,7 @@
 
 import type { ColSpec, FixedCase, ObjectSpec, Row } from "../harness/generic/spec.js";
 import { specFromCatalog, type CatalogOptions } from "./catalog.js";
+import { ciJoinFix, countryCodeVariants, EMAIL_LEFT_JOIN } from "./specs-aw.js";
 
 const DB = "AdventureWorks2025";
 const ref = (name: string, nullable = false): ColSpec => ({ name, type: { kind: "int" }, role: "ref", nullable });
@@ -188,8 +189,59 @@ function contactInformationCases(): FixedCase[] {
   ];
 }
 
+/**
+ * HumanResources.vEmployee (hand-derived). Case 1, expected 3 rows:
+ *  - employee 1: two phones (two rows; phone type 9 has no PhoneNumberType row, so PhoneNumberType is NULL), no email
+ *    (NULL), AdditionalContactInfo with an empty element (SQL Server serialises it as <fax/>)
+ *  - employee 2: no phone (NULL phone columns), an email, AddressLine2 '' and Title '' (kept, not NULL), xml NULL
+ *  - employee 3 has no address, employee 4 no Person row, employee 5 an address in a country with no row: all dropped
+ * The CountryRegionCode join is under CI_AS (see Person.vStateProvinceCountryRegion): cases 2 and 3.
+ */
+function employeeCases(): FixedCase[] {
+  const person = (id: number, over: Row = {}): Row =>
+    ({ BusinessEntityID: id, Title: null, FirstName: `First${id}`, MiddleName: null, LastName: `Last${id}`, Suffix: null, EmailPromotion: 0, AdditionalContactInfo: null, ...over });
+  const addr = (id: number, line2: string | null, sp: number): Row => ({ AddressID: id, AddressLine1: `${id} Main St`, AddressLine2: line2, City: "Bothell", StateProvinceID: sp, PostalCode: "98011" });
+  const one = (code: string, label: string): FixedCase => ({
+    label,
+    tables: {
+      "HumanResources.Employee": [{ BusinessEntityID: 1, JobTitle: "Engineer" }],
+      "Person.Person": [person(1)],
+      "Person.BusinessEntityAddress": [{ BusinessEntityID: 1, AddressID: 1 }],
+      "Person.Address": [addr(1, null, 1)],
+      "Person.StateProvince": [{ StateProvinceID: 1, CountryRegionCode: code, Name: "Washington" }],
+      "Person.CountryRegion": [{ CountryRegionCode: "US", Name: "United States" }],
+    },
+  });
+  return [
+    {
+      label: "two phones give two rows (unknown phone type NULL); no email NULL; '' kept, not NULL; xml passed through (empty element <fax/>); missing address, person or country drops the employee",
+      tables: {
+        "HumanResources.Employee": [1, 2, 3, 4, 5].map((id) => ({ BusinessEntityID: id, JobTitle: `Job ${id}` })),
+        "Person.Person": [
+          person(1, { AdditionalContactInfo: "<info><phone>555-0100</phone><fax/></info>" }),
+          person(2, { Title: "", MiddleName: "B", Suffix: "Jr.", EmailPromotion: 1 }),
+          person(3), person(5),
+        ],
+        "Person.BusinessEntityAddress": [{ BusinessEntityID: 1, AddressID: 1 }, { BusinessEntityID: 2, AddressID: 2 }, { BusinessEntityID: 4, AddressID: 1 }, { BusinessEntityID: 5, AddressID: 3 }],
+        "Person.Address": [addr(1, null, 1), addr(2, "", 1), addr(3, null, 2)],
+        "Person.StateProvince": [{ StateProvinceID: 1, CountryRegionCode: "US", Name: "Washington" }, { StateProvinceID: 2, CountryRegionCode: "FR", Name: "Ile-de-France" }],
+        "Person.CountryRegion": [{ CountryRegionCode: "US", Name: "United States" }],
+        "Person.PersonPhone": [{ BusinessEntityID: 1, PhoneNumber: "555-0100", PhoneNumberTypeID: 1 }, { BusinessEntityID: 1, PhoneNumber: "555-0199", PhoneNumberTypeID: 9 }],
+        "Person.PhoneNumberType": [{ PhoneNumberTypeID: 1, Name: "Cell" }],
+        "Person.EmailAddress": [{ BusinessEntityID: 2, EmailAddress: "b@example.com" }],
+      },
+    },
+    one("us", "collation: province code 'us' joins country 'US' (case-insensitive CI_AS), so the employee is listed"),
+    one("US ", "trailing space: province code 'US ' joins country 'US' (SQL Server equality ignores trailing spaces), so the employee is listed"),
+  ];
+}
+
 export const AW2_SPECS: ObjectSpec[] = [
-  view("HumanResources.vEmployee", "humanresources.v_employee", [XML_NOTE]),
+  {
+    ...view("HumanResources.vEmployee", "humanresources.v_employee", [XML_NOTE]), fixedCases: employeeCases(),
+    mutants: ciJoinFix("HumanResources.vEmployee", EMAIL_LEFT_JOIN).mutants,
+    notes: [XML_NOTE, ...(ciJoinFix("HumanResources.vEmployee").notes ?? [])],
+  },
   // the view keeps only customers without a store (StoreID IS NULL), so that must be the common case
   {
     ...view("Sales.vIndividualCustomer", "sales.v_individual_customer", [XML_NOTE],   // ten joined tables: none is generated empty, or most samples would join to nothing (empty joins are covered elsewhere)
@@ -197,7 +249,9 @@ export const AW2_SPECS: ObjectSpec[] = [
     // Generated email/phone tables are keyed like Person, so a person without either is rare once seven inner joins and
     // the StoreID filter have applied (seed 1787570662 produced none in 300 samples, and the planted LEFT -> INNER JOIN
     // defect passed). This hand-derived case makes those rows certain on every seed.
-    fixedCases: [individualCustomerCase()],
+    fixedCases: [individualCustomerCase(), ...countryCodeVariants(individualCustomerCase())],
+    mutants: ciJoinFix("Sales.vIndividualCustomer", EMAIL_LEFT_JOIN).mutants,
+    notes: [XML_NOTE, ...(ciJoinFix("Sales.vIndividualCustomer").notes ?? [])],
   },
   contactInformation,
   bom("uspGetBillOfMaterials", "usp_get_bill_of_materials", "down"),

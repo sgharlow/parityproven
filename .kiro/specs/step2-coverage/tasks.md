@@ -20,7 +20,8 @@ Requirements: `requirements.md`. Design: `design.md`. Dates (owner, T1): A by 20
 ## Tranche B — generator support (9 pending objects)
 - [ ] JSON results: `Website.SearchForPeople`, `SearchForStockItems`, `SearchForStockItemsByTags` (and, failing step 4, `SearchForCustomers`, `SearchForSuppliers`)
 - [x] Declared result errors: `dbo.uspGetBillOfMaterials`, `dbo.uspGetWhereUsedProductID` — generator support (`ExpectedCase.raised`, outcome assertion on both engines, unit tests in `generate.test.ts`); step 2 pass on both engines (cases 1 and 3 raise MAXRECURSION, 2/4/5 complete), 4 of 4 planted defects caught by the agreed tests, negative controls (raised -> completed) seen failing, review packets
-- [ ] Geography / xml columns: `Sales.vIndividualCustomer`, `HumanResources.vEmployee`, `Website.Customers`, `Website.Suppliers`
+- [x] Geography / xml columns: `Sales.vIndividualCustomer`, `HumanResources.vEmployee`, `Website.Customers`, `Website.Suppliers` — generator support (WKT per engine; xml as text, explicit CONVERT on SQL Server; unit tests), fixed cases written for the three that had none, step 2 pass on both engines, negative controls seen failing, review packets
+  - [x] Finding (CI_AS CountryRegionCode join) in `HumanResources.vEmployee`, `Sales.vIndividualCustomer` and the verified `Sales.vSalesPerson`: regression cases (`countryCodeVariants()`), conversions corrected (drafts kept), step 3 re-run; `Sales.vSalesPerson` step 5 reset (its review covered the previous code)
 - [ ] A negative control seen failing for each new feature before a pass is trusted
 
 ## Tranche C — data-changing procedures (only if A and B are done by 2026-11-26)

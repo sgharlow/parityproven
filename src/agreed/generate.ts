@@ -78,13 +78,28 @@ export function inputCell(value: unknown, type: ColType): string {
       break;
     case "varbinary":
       break;   // only bytes (handled above) are valid
-    case "geography": case "xml":
-      throw new Error(`agreed tests: ${type.kind} values are not supported yet`);
+    case "geography":
+      // points only, as in step 3: well-known text, compared as text in each engine's own spelling (see ssLiteral)
+      if (typeof value === "string") {
+        const pt = value.match(/^POINT\s*\(\s*(-?[\d.]+)\s+(-?[\d.]+)\s*\)$/i);
+        if (pt) return `g:POINT(${Number(pt[1])} ${Number(pt[2])})`;
+      }
+      break;
+    case "xml":
+      // a document in SQL Server's serialised form (as step 3 generates them), so both engines store the same text
+      if (typeof value === "string") return `s:${value}`;
+      break;
   }
   throw new Error(`agreed tests: cannot use ${JSON.stringify(value)} as a ${type.kind} value`);
 }
 
-const SUPPORTED_OUTPUT = /^(∅|[nbsdtx]:)/;
+const SUPPORTED_OUTPUT = /^(∅|[nbsdtxg]:)/;
+/** "POINT(x y)" -> [x, y] as written. */
+const pointXY = (wkt: string): [string, string] => {
+  const m = wkt.match(/^POINT\((\S+) (\S+)\)$/);
+  if (!m) throw new Error(`agreed tests: unsupported geography ${wkt}`);
+  return [m[1], m[2]];
+};
 
 /** A canonical cell as a SQL Server literal. */
 export function ssLiteral(cell: string): string {
@@ -94,6 +109,8 @@ export function ssLiteral(cell: string): string {
   switch (cell[0]) {
     case "n": return v;
     case "b": return v;
+    // SQL Server's WKT spelling (STAsText: "POINT (x y)"); a string converts implicitly to geography (SRID 4326) on insert
+    case "g": { const [x, y] = pointXY(v); return `N'POINT (${x} ${y})'`; }
     case "s": return `N'${v.replace(/'/g, "''")}'`;
     case "d": return `CAST('${v}' AS date)`;
     // via datetime2(7) so that 6 fractional digits are accepted for datetime columns too (the value converts on insert)
@@ -120,6 +137,8 @@ export function pgLiteral(cell: string): string {
   if (!SUPPORTED_OUTPUT.test(cell)) throw new Error(`agreed tests: unsupported value ${cell}`);
   const v = cell.slice(2);
   switch (cell[0]) {
+    // PostGIS's WKT spelling (ST_AsText: "POINT(x y)"); a quoted literal takes the geography column's type on insert
+    case "g": { const [x, y] = pointXY(v); return `'POINT(${x} ${y})'`; }
     case "n": case "b": case "d": return `'${v}'`;
     case "s": return `'${v.replace(/'/g, "''")}'`;
     case "t": return `'${v.replace("T", " ")}'`;
@@ -147,7 +166,7 @@ export function unsupportedFeatures(spec: ObjectSpec): string[] {
   if (spec.stateCheck?.queries?.length) out.push("state observation queries");
   if (spec.tables.some((t) => t.columns.some((c) => c.identity))) out.push("identity columns");
   if (spec.tables.some((t) => t.memoryOptimized) || spec.memoryOptimizedFilegroup) out.push("memory-optimized tables");
-  if (spec.tables.some((t) => t.columns.some((c) => c.type.kind === "geography" || c.type.kind === "xml"))) out.push("geography or xml columns");
+  // geography (points, as WKT) and xml (as text) are supported (2026-11-18)
   return out;
 }
 
@@ -337,7 +356,8 @@ export function tsqltScript(spec: ObjectSpec, expected: ExpectedFile, options: T
     } else {
       const cols = exp.columns ?? [];
       if (!cols.length) throw new Error(`${spec.name}: expected columns missing in case "${fc.label}"`);
-      const ddl = cols.map((c) => `  ${ssName(c.name)} ${c.sqlServerType} NULL`).join(",\n");
+      // xml cannot be compared by tSQLt.AssertEqualsTable: xml result columns are held (and compared) as text
+      const ddl = cols.map((c) => `  ${ssName(c.name)} ${/^xml/i.test(c.sqlServerType) ? "nvarchar(max)" : c.sqlServerType} NULL`).join(",\n");
       body.push(`CREATE TABLE #Expected (\n${ddl}\n);`);
       body.push(`CREATE TABLE #Actual (\n${ddl}\n);`);
       const rows = exp.rows ?? [];
@@ -351,7 +371,7 @@ export function tsqltScript(spec: ObjectSpec, expected: ExpectedFile, options: T
         body.push(
           "DECLARE @outcome nvarchar(4000) = N'completed';",
           "BEGIN TRY",
-          `  INSERT INTO #Actual\n  ${call};`,
+          `  INSERT INTO #Actual\n  ${ssActual(spec, call, cols)};`,
           "END TRY",
           "BEGIN CATCH",
           `  SET @outcome = CASE ${whens.join(" ")} ELSE N'unexpected error ' + CAST(ERROR_NUMBER() AS nvarchar(20)) + N': ' + ERROR_MESSAGE() END;`,
@@ -360,7 +380,7 @@ export function tsqltScript(spec: ObjectSpec, expected: ExpectedFile, options: T
         );
         if (!exp.raised) body.push(`EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';`);
       } else {
-        body.push(`INSERT INTO #Actual\n${call};`);
+        body.push(`INSERT INTO #Actual\n${ssActual(spec, call, cols)};`);
         body.push(`EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';`);
       }
     }
@@ -377,6 +397,25 @@ export function tsqltScript(spec: ObjectSpec, expected: ExpectedFile, options: T
 
 export const PG_CASE_MARKER = "-- @case ";
 
+/**
+ * The call as the actual relation: xml result columns become text (PostgreSQL cannot compare xml with EXCEPT ALL); every
+ * other column is passed through by name, in the expected order.
+ */
+function pgActual(call: string, cols: ExpectedColumn[]): string {
+  if (!cols.some((c) => /^xml/i.test(c.sqlServerType))) return call;
+  const list = cols.map((c) => (/^xml/i.test(c.sqlServerType) ? `${pgName(c.name)}::text AS ${pgName(c.name)}` : pgName(c.name))).join(", ");
+  return `SELECT ${list} FROM (${call}) AS pp_q`;
+}
+/**
+ * The SQL Server call as inserted into #Actual: xml result columns are converted to text explicitly (xml does not convert
+ * to nvarchar implicitly, and AssertEqualsTable cannot compare xml). Only a SELECT can be wrapped this way.
+ */
+function ssActual(spec: ObjectSpec, call: string, cols: ExpectedColumn[]): string {
+  if (!cols.some((c) => /^xml/i.test(c.sqlServerType))) return call;
+  if (!/^\s*SELECT\b/i.test(call)) throw new Error(`${spec.name}: an xml result column from a procedure call (EXEC) is not supported`);
+  const list = cols.map((c) => (/^xml/i.test(c.sqlServerType) ? `CONVERT(nvarchar(max), ${ssName(c.name)}) AS ${ssName(c.name)}` : ssName(c.name))).join(", ");
+  return `SELECT ${list} FROM (${call}) AS pp_q`;
+}
 /** Raise unless two relations hold the same multiset of rows. Both are queries; the message names the case. */
 function pgAssertSame(caseLabel: string, what: string, expectedSql: string, actualSql: string): string {
   return [
@@ -454,12 +493,12 @@ export function pgScript(spec: ObjectSpec, expected: ExpectedFile): string {
       const cols = exp.columns ?? [];
       const handlers = spec.resultErrorClasses.map((c) =>
         `  WHEN ${c.postgres.map((code) => `SQLSTATE '${code}'`).join(" OR ")} THEN INSERT INTO pp_outcome VALUES (${pgString(`raised: ${c.label}`)});`);
-      lines.push(`CREATE TEMP TABLE pp_actual ON COMMIT DROP AS\n${call}\nWITH NO DATA;`);
+      lines.push(`CREATE TEMP TABLE pp_actual ON COMMIT DROP AS\n${pgActual(call, cols)}\nWITH NO DATA;`);
       lines.push("CREATE TEMP TABLE pp_outcome (outcome text) ON COMMIT DROP;");
       lines.push([
         "DO $pp$",
         "BEGIN",
-        `  INSERT INTO pp_actual ${call};`,
+        `  INSERT INTO pp_actual ${pgActual(call, cols)};`,
         "  INSERT INTO pp_outcome VALUES ('completed');",
         "EXCEPTION",
         ...handlers,
@@ -475,7 +514,7 @@ export function pgScript(spec: ObjectSpec, expected: ExpectedFile): string {
       }
     } else {
       const cols = exp.columns ?? [];
-      lines.push(`CREATE TEMP TABLE pp_actual ON COMMIT DROP AS\n${call};`);
+      lines.push(`CREATE TEMP TABLE pp_actual ON COMMIT DROP AS\n${pgActual(call, cols)};`);
       lines.push(pgAssertColumns(name, "pp_actual", cols.map((c) => c.name)));
       lines.push("CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;");
       const rows = exp.rows ?? [];

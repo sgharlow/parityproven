@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { pgCases, pgScript, splitBatches, tsqltScript, unsupportedFeatures, type ExpectedFile } from "./generate.js";
+import { inputCell, pgCases, pgLiteral, pgScript, splitBatches, ssLiteral, tsqltScript, unsupportedFeatures, type ExpectedFile } from "./generate.js";
 import { specByName } from "../conversions/specs.js";
 import type { ObjectSpec } from "../harness/generic/spec.js";
 
@@ -75,5 +75,39 @@ describe("declared result errors (spec.resultErrorClasses)", () => {
     expect(cases[0].sql).not.toContain("SELECT * FROM pp_expected");
     expect(cases[1].sql).toContain("SELECT 'completed'::text AS outcome");
     expect(cases[1].sql).toContain("SELECT * FROM pp_expected");
+  });
+});
+describe("geography and xml", () => {
+  it("geography points are canonical WKT, written in each engine's own spelling", () => {
+    expect(inputCell("POINT(-122.3 47.6)", { kind: "geography" })).toBe("g:POINT(-122.3 47.6)");
+    expect(inputCell("POINT (-122.30 47.60)", { kind: "geography" })).toBe("g:POINT(-122.3 47.6)");
+    expect(ssLiteral("g:POINT(-122.3 47.6)")).toBe("N'POINT (-122.3 47.6)'");   // STAsText spelling
+    expect(pgLiteral("g:POINT(-122.3 47.6)")).toBe("'POINT(-122.3 47.6)'");     // ST_AsText spelling
+    expect(() => inputCell("LINESTRING(0 0, 1 1)", { kind: "geography" })).toThrow();
+  });
+
+  it("xml values travel as text", () => {
+    expect(inputCell("<a b=\"1\"/>", { kind: "xml" })).toBe("s:<a b=\"1\"/>");
+  });
+
+  const vic = specByName("Sales.vIndividualCustomer")!;
+  const xmlCols = [{ name: "BusinessEntityID", sqlServerType: "int" }, { name: "Demographics", sqlServerType: "xml" }];
+  const exp: ExpectedFile = {
+    object: "Sales.vIndividualCustomer", database: vic.database, capturedFrom: "", capturedAt: "", review: "",
+    cases: (vic.fixedCases ?? []).map((fc) => ({ label: fc.label, columns: xmlCols, rows: [["n:1", "s:<x/>"]] })),
+  } as ExpectedFile;
+
+  it("a view with an xml column is no longer unsupported", () => {
+    expect(unsupportedFeatures(vic)).toEqual([]);
+  });
+
+  it("xml result columns are compared as text: nvarchar(max) in tSQLt, ::text on PostgreSQL", () => {
+    const ss = tsqltScript(vic, exp);
+    expect(ss).toContain("[Demographics] nvarchar(max) NULL");
+    expect(ss).not.toMatch(/\[Demographics\] xml NULL/);
+    // xml does not convert to nvarchar implicitly on SQL Server (seen 2026-11-18): the insert converts it explicitly
+    expect(ss).toContain("SELECT [BusinessEntityID], CONVERT(nvarchar(max), [Demographics]) AS [Demographics] FROM (SELECT * FROM Sales.vIndividualCustomer) AS pp_q");
+    const pg = pgCases(pgScript(vic, exp))[0].sql;
+    expect(pg).toContain('SELECT "BusinessEntityID", "Demographics"::text AS "Demographics" FROM (');
   });
 });
