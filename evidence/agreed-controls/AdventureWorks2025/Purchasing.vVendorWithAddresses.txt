@@ -1,0 +1,15 @@
+negative control for Purchasing.vVendorWithAddresses (step 2), 2026-11-18T05:28:12.754Z
+corruption: case 1 expected value row 1, column BusinessEntityID: n:1 -> n:2
+SQL Server: test 01 a vendor with two address types gives two rows (AddressLine2 NULL on one, on the other; trailing spac…: FAIL — Failure: Unexpected/missing resultset rows!
+|_m_|BusinessEntityID|Name    |AddressType|AddressLine1|AddressLine2|City    |StateProvinceName|PostalCode|CountryRegionName|
++---+----------------+--------+-----------+------------+------------+--------+-----------------+----------+-----------------+
+|<  |2               |vendor 1|Main Office|1 Main St   |!NULL!      |Bothell |Washington       |98001     |United States    |
+|=  |5               |vendor 5|Shipping   |6 Main St   |Suite 5     |Calgary |Alberta          |98006     |Canada           |
+|=  |1               |vendor 1|Shipping   |2 Main St   |            |Seattle |Washington       |98002     |United States    |
+|>  |1               |vendor 1|Main Office|1 Main St   |!NULL!      |Bothell |Washington       |98001     |United States    |
+SQL Server: test 02 collation: province code us joins country US (case-insensitive CI_AS), so the address is listed: pass
+SQL Server: test 03 trailing space: province code US joins country US (SQL Server equality ignores trailing spaces), so t…: pass
+PostgreSQL: test 01 a vendor with two address types gives two rows (AddressLine2 NULL on one, on the other; trailing spac…: FAIL — agreed test failed (test 01 a vendor with two address types gives two rows (AddressLine2 NULL on one, on the other; trailing spac…): 1 expected row(s) missing, 1 unexpected row(s) in the result
+PostgreSQL: test 02 collation: province code us joins country US (case-insensitive CI_AS), so the address is listed: pass
+PostgreSQL: test 03 trailing space: province code US joins country US (SQL Server equality ignores trailing spaces), so t…: pass
+RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed

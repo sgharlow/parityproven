@@ -1,0 +1,62 @@
+{
+  "object": "Sales.vSalesPersonSalesByFiscalYears",
+  "database": "AdventureWorks2025",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-18T05:21:24.907Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "fiscal year = order year + 6 months: 07-01 starts the next year, 06-30 23:59:59.997 does not, 08-31 clamps to 02-28; money sums kept to 4 places; out-of-range years give NULLs; MiddleName NULL leaves two spaces; missing territory, employee or sales person drops the row",
+      "columns": [
+        {
+          "name": "SalesPersonID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "FullName",
+          "sqlServerType": "nvarchar(152)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "SalesTerritory",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "2002",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "2003",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "2004",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:Ann  Lee",
+          "s:Sales Representative",
+          "s:Northwest",
+          "n:1234567.8913",
+          "n:10.5",
+          "n:-2.25"
+        ],
+        [
+          "n:2",
+          "s:Bo J Ng",
+          "s:Sales Manager",
+          "s:Northwest",
+          "∅",
+          "∅",
+          "∅"
+        ]
+      ]
+    }
+  ]
+}

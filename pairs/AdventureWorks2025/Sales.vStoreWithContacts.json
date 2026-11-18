@@ -47,7 +47,7 @@
   ],
   "evidence": {
     "step1": "pass",
-    "step2": "not-run",
+    "step2": "pass",
     "step3": "pass",
     "step4": "pass",
     "step5": "not-run",
@@ -80,7 +80,13 @@
       "auto: LEFT JOIN becomes INNER JOIN",
       "auto: two output columns swap values"
     ],
-    "harnessVersion": "harness-generic-0.3.0"
+    "harnessVersion": "harness-generic-0.3.0",
+    "testsRun": [
+      "tSQLt V1.0.8083.3529 on SQL Server (tests/AdventureWorks2025/Sales.vStoreWithContacts.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/AdventureWorks2025/Sales.vStoreWithContacts.pg.sql); expected results tests/AdventureWorks2025/Sales.vStoreWithContacts.expected.json",
+      "SQL Server: AgreedTests.[test 01 two phones give two rows (unknown phone type is NULL); no email or a NULL email is NULL; Title kept;…]: pass",
+      "PostgreSQL: AgreedTests.[test 01 two phones give two rows (unknown phone type is NULL); no email or a NULL email is NULL; Title kept;…]: pass",
+      "planted defects caught by the agreed tests: 2 of 2"
+    ]
   },
   "effort": {
     "humanMinutes": 0,

@@ -12,7 +12,8 @@ Requirements: `requirements.md`. Design: `design.md`. Dates (owner, T1): A by 20
   - [x] Finding: `Person.vStateProvinceCountryRegion` joined case-sensitively and counted trailing spaces; conversion fixed (draft kept), regression cases kept, step 3 re-run (three targeted planted defects caught), see design.md
   - [x] `ufnGetContactInformation`: a person who is also a store's customer added, so the agreed tests catch the planted defect "consumer rows include store customers" (3 of 3)
 - [ ] Follow-up (not in this tranche): step 3 generator producing text keys that differ only in case or trailing spaces, so CI-collation joins are tested on random data too
-- [ ] Batch 3: AdventureWorks views (`Purchasing.vVendorWithAddresses`, `vVendorWithContacts`, `Sales.vSalesPersonSalesByFiscalYears`, `vStoreWithAddresses`, `vStoreWithContacts`)
+- [x] Batch 3: AdventureWorks views (`Purchasing.vVendorWithAddresses`, `vVendorWithContacts`, `Sales.vSalesPersonSalesByFiscalYears`, `vStoreWithAddresses`, `vStoreWithContacts`) — step 2 pass on both engines, labels and row counts checked against the captured values, negative controls seen failing, review packets
+  - [x] Finding (same as batch 2): `Purchasing.vVendorWithAddresses` and `Sales.vStoreWithAddresses` joined CountryRegionCode case-sensitively and counted trailing spaces; both conversions corrected the same way (drafts kept), regression cases kept, step 3 re-run (three targeted planted defects caught each)
 - [ ] Batch 4: WideWorldImporters `Integration.GetPurchaseUpdates`, `GetSaleUpdates`, `GetStockHoldingUpdates`, `GetTransactionUpdates`
 - [ ] Optional (fail step 4 whatever step 2 says): `dbo.ufnGetProductDealerPrice`, `ufnGetProductListPrice`, `ufnGetProductStandardCost`, `ufnGetStock`
 

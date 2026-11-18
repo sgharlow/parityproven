@@ -1,0 +1,120 @@
+{
+  "object": "Purchasing.vVendorWithContacts",
+  "database": "AdventureWorks2025",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-18T05:21:15.862Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "two phones give two rows (unknown phone type is NULL); no email or a NULL email is NULL; Title '' kept; a missing contact type or person drops the contact; a vendor without contacts is not listed",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Name",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "ContactType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Title",
+          "sqlServerType": "nvarchar(8)"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "MiddleName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Suffix",
+          "sqlServerType": "nvarchar(10)"
+        },
+        {
+          "name": "PhoneNumber",
+          "sqlServerType": "nvarchar(25)"
+        },
+        {
+          "name": "PhoneNumberType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailAddress",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailPromotion",
+          "sqlServerType": "int"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:First vendor",
+          "s:Owner",
+          "∅",
+          "s:First1",
+          "∅",
+          "s:Last1",
+          "∅",
+          "s:555-0100",
+          "s:Cell",
+          "∅",
+          "n:0"
+        ],
+        [
+          "n:1",
+          "s:First vendor",
+          "s:Owner",
+          "∅",
+          "s:First1",
+          "∅",
+          "s:Last1",
+          "∅",
+          "s:555-0199",
+          "∅",
+          "∅",
+          "n:0"
+        ],
+        [
+          "n:1",
+          "s:First vendor",
+          "s:Purchasing Agent",
+          "s:",
+          "s:Ann ",
+          "s:B",
+          "s:Last2",
+          "s:Jr.",
+          "∅",
+          "∅",
+          "s:ann@example.com",
+          "n:0"
+        ],
+        [
+          "n:1",
+          "s:First vendor",
+          "s:Purchasing Agent",
+          "∅",
+          "s:First3",
+          "∅",
+          "s:Last3",
+          "∅",
+          "s:555-0300",
+          "s:Cell",
+          "∅",
+          "n:2"
+        ]
+      ]
+    }
+  ]
+}

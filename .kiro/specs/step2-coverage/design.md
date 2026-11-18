@@ -21,6 +21,8 @@ Checked on two pilot objects before use (2026-11-18): `Sales.vSalesPerson` (valu
 ## Finding: Person.vStateProvinceCountryRegion (batch 2, REQ-4.3)
 Step 2 found a real difference that step 3 had passed. The view joins `CountryRegionCode` under the source collation `SQL_Latin1_General_CP1_CI_AS`: case-insensitive and blind to trailing spaces, so `'us'` joins `'US'` and `'CA '` joins `'CA'`. Kiro's draft used PostgreSQL `=`, which is neither; the generated data never produced codes that differ only in case or trailing spaces, so step 3 passed. The draft is kept as `conversions/AdventureWorks2025/Person.vStateProvinceCountryRegion.draft.sql` (the receipt shows it failing), the conversion now compares `rtrim(code)` under a nondeterministic case-insensitive ICU collation (`tsql_compat.ci_as_equal`), and the two failing cases stay as regression cases. Planted defects for each part of the fix (collation dropped from both sides, rtrim dropped, inner join made left) are caught by step 3 and by the agreed tests. A first version of the collation defect removed it from one side only, which is unobservable (an explicit collation on either side applies) and was replaced.
 
+Batch 3 found the same difference in `Purchasing.vVendorWithAddresses` and `Sales.vStoreWithAddresses` (the same StateProvince–CountryRegion join), fixed the same way (`ciJoinFix()` in `specs-aw.ts` holds their planted defects and note).
+
 Other objects may share the pattern: any join or comparison on text under a CI collation. The step 3 generator does not yet produce keys that differ only in case or trailing spaces; that is noted here, not fixed in this tranche.
 
 ## Tranches B and C

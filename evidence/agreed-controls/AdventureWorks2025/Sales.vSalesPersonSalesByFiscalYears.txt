@@ -1,0 +1,10 @@
+negative control for Sales.vSalesPersonSalesByFiscalYears (step 2), 2026-11-18T05:28:27.133Z
+corruption: case 1 expected value row 1, column SalesPersonID: n:1 -> n:2
+SQL Server: test 01 fiscal year = order year + 6 months: 07-01 starts the next year, 06-30 23:59:59.997 does not, 08-31 c…: FAIL — Failure: Unexpected/missing resultset rows!
+|_m_|SalesPersonID|FullName|JobTitle            |SalesTerritory|2002        |2003   |2004   |
++---+-------------+--------+--------------------+--------------+------------+-------+-------+
+|<  |2            |Ann  Lee|Sales Representative|Northwest     |1234567.8913|10.5000|-2.2500|
+|=  |2            |Bo J Ng |Sales Manager       |Northwest     |!NULL!      |!NULL! |!NULL! |
+|>  |1            |Ann  Lee|Sales Representative|Northwest     |1234567.8913|10.5000|-2.2500|
+PostgreSQL: test 01 fiscal year = order year + 6 months: 07-01 starts the next year, 06-30 23:59:59.997 does not, 08-31 c…: FAIL — agreed test failed (test 01 fiscal year = order year + 6 months: 07-01 starts the next year, 06-30 23:59:59.997 does not, 08-31 c…): 1 expected row(s) missing, 1 unexpected row(s) in the result
+RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed

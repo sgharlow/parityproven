@@ -98,6 +98,22 @@ const statusFn = (name: string, pgName: string, special: number[], texts: string
 const view = (qualified: string, pgName: string, opts: CatalogOptions = {}): ObjectSpec =>
   specFromCatalog(DB, qualified, { orderKey: [], mutants: [], pgFunction: pgName }, opts);
 
+/**
+ * The address views join StateProvince to CountryRegion on CountryRegionCode under CI_AS, as
+ * Person.vStateProvinceCountryRegion does (finding of 2026-11-18). Planted defects for each part of the fix, and the note.
+ */
+const ciJoinFix = (qualified: string): Pick<ObjectSpec, "mutants" | "notes"> => ({
+  mutants: [
+    // both sides: an explicit collation on either side of '=' applies to the comparison
+    { name: "join is case-sensitive (collation dropped)", from: " COLLATE tsql_compat.ci_as_equal = rtrim(sp.\"CountryRegionCode\", ' ') COLLATE tsql_compat.ci_as_equal", to: " = rtrim(sp.\"CountryRegionCode\", ' ')" },
+    { name: "trailing spaces count in the join (rtrim dropped)", from: "rtrim(sp.\"CountryRegionCode\", ' ') COLLATE", to: "sp.\"CountryRegionCode\" COLLATE" },
+    { name: "inner join to address type made a left join (unknown address types kept)", from: "INNER JOIN person.address_type at", to: "LEFT JOIN person.address_type at" },
+  ],
+  notes: [
+    `Finding (step 2, 2026-11-18): Kiro's draft of ${qualified} joined CountryRegionCode with PostgreSQL '=', which is case-sensitive and counts trailing spaces. Under the source collation (SQL_Latin1_General_CP1_CI_AS) 'us' joins 'US' and 'US ' joins 'US'. Step 3 passed because the generated codes never differed only in case or trailing spaces; the fixed cases 'collation' and 'trailing space' failed on PostgreSQL. Fixed in the conversion as for Person.vStateProvinceCountryRegion (rtrim + a case-insensitive ICU collation in the join); both cases are kept as regression cases.`,
+  ],
+});
+
 export const AW_VIEWS: ObjectSpec[] = [
   {
     ...view("Person.vStateProvinceCountryRegion", "person.v_state_province_country_region"),
@@ -115,14 +131,17 @@ export const AW_VIEWS: ObjectSpec[] = [
   { ...view("HumanResources.vEmployeeDepartment", "humanresources.v_employee_department"), fixedCases: [employeeDepartmentCase()] },
   { ...view("HumanResources.vEmployeeDepartmentHistory", "humanresources.v_employee_department_history"), fixedCases: [employeeDepartmentHistoryCase()] },
   { ...view("Production.vProductAndDescription", "production.v_product_and_description"), fixedCases: [productAndDescriptionCase()] },
-  view("Purchasing.vVendorWithAddresses", "purchasing.v_vendor_with_addresses"),
-  view("Purchasing.vVendorWithContacts", "purchasing.v_vendor_with_contacts"),
+  { ...view("Purchasing.vVendorWithAddresses", "purchasing.v_vendor_with_addresses"), fixedCases: addressCases("Purchasing.Vendor", "vendor"), ...ciJoinFix("Purchasing.vVendorWithAddresses") },
+  { ...view("Purchasing.vVendorWithContacts", "purchasing.v_vendor_with_contacts"), fixedCases: [contactsCase("Purchasing.Vendor", "vendor")] },
   { ...view("Sales.vSalesPerson", "sales.v_sales_person"), fixedCases: [salesPersonCase()] },
-  view("Sales.vStoreWithAddresses", "sales.v_store_with_addresses"),
-  view("Sales.vStoreWithContacts", "sales.v_store_with_contacts"),
-  view("Sales.vSalesPersonSalesByFiscalYears", "sales.v_sales_person_sales_by_fiscal_years", {
-    columns: { "Sales.SalesOrderHeader.OrderDate": { special: [] } },
-  }),
+  { ...view("Sales.vStoreWithAddresses", "sales.v_store_with_addresses"), fixedCases: addressCases("Sales.Store", "store"), ...ciJoinFix("Sales.vStoreWithAddresses") },
+  { ...view("Sales.vStoreWithContacts", "sales.v_store_with_contacts"), fixedCases: [contactsCase("Sales.Store", "store")] },
+  {
+    ...view("Sales.vSalesPersonSalesByFiscalYears", "sales.v_sales_person_sales_by_fiscal_years", {
+      columns: { "Sales.SalesOrderHeader.OrderDate": { special: [] } },
+    }),
+    fixedCases: [fiscalYearsCase()],
+  },
 ];
 
 export const AW_SPECS: ObjectSpec[] = [
@@ -359,6 +378,130 @@ function productAndDescriptionCase(): FixedCase {
         { ProductModelID: 1, ProductDescriptionID: 11, CultureID: "zh-cht" },
         { ProductModelID: 1, ProductDescriptionID: 99, CultureID: "de" },
         { ProductModelID: 3, ProductDescriptionID: 13, CultureID: "ar" },
+      ],
+    },
+  };
+}
+
+/**
+ * Purchasing.vVendorWithAddresses / Sales.vStoreWithAddresses (hand-derived; same shape, entity table differs).
+ * Case 1, expected 3 rows: entity 1 has a main office and a shipping address (two rows; AddressLine2 NULL on one, '' on
+ * the other, a trailing space in a city kept); entity 2's only address points at a missing state province, and entity
+ * 3's at a missing address type (both dropped); entity 4's address is in a country with no CountryRegion row (dropped);
+ * entity 5 has an address (third row). The join on CountryRegionCode is under CI_AS (see Person.vStateProvinceCountryRegion),
+ * so case-only and trailing-space differences in the code get their own cases.
+ */
+function addressCases(entityTable: string, what: string): FixedCase[] {
+  const addr = (id: number, line2: string | null, city: string, sp: number): Row =>
+    ({ AddressID: id, AddressLine1: `${id} Main St`, AddressLine2: line2, City: city, StateProvinceID: sp, PostalCode: `9800${id}` });
+  const one = (code: string, label: string): FixedCase => ({
+    label,
+    tables: {
+      [entityTable]: [{ BusinessEntityID: 1, Name: `First ${what}` }],
+      "Person.BusinessEntityAddress": [{ BusinessEntityID: 1, AddressID: 1, AddressTypeID: 1 }],
+      "Person.Address": [addr(1, null, "Bothell", 1)],
+      "Person.AddressType": [{ AddressTypeID: 1, Name: "Main Office" }],
+      "Person.StateProvince": [{ StateProvinceID: 1, CountryRegionCode: code, Name: "Washington" }],
+      "Person.CountryRegion": [{ CountryRegionCode: "US", Name: "United States" }],
+    },
+  });
+  return [
+    {
+      label: `a ${what} with two address types gives two rows (AddressLine2 NULL on one, '' on the other; trailing space in a city kept); a missing state province, address type or country drops the row`,
+      tables: {
+        [entityTable]: [1, 2, 3, 4, 5].map((id) => ({ BusinessEntityID: id, Name: `${what} ${id}` })),
+        "Person.BusinessEntityAddress": [
+          { BusinessEntityID: 1, AddressID: 1, AddressTypeID: 1 }, { BusinessEntityID: 1, AddressID: 2, AddressTypeID: 2 },
+          { BusinessEntityID: 2, AddressID: 3, AddressTypeID: 1 }, { BusinessEntityID: 3, AddressID: 4, AddressTypeID: 9 },
+          { BusinessEntityID: 4, AddressID: 5, AddressTypeID: 1 }, { BusinessEntityID: 5, AddressID: 6, AddressTypeID: 2 },
+        ],
+        "Person.Address": [addr(1, null, "Bothell", 1), addr(2, "", "Seattle ", 1), addr(3, null, "Nowhere", 99), addr(4, null, "Redmond", 1),
+          addr(5, null, "Paris", 3), addr(6, "Suite 5", "Calgary", 2)],
+        "Person.AddressType": [{ AddressTypeID: 1, Name: "Main Office" }, { AddressTypeID: 2, Name: "Shipping" }],
+        "Person.StateProvince": [
+          { StateProvinceID: 1, CountryRegionCode: "US", Name: "Washington" }, { StateProvinceID: 2, CountryRegionCode: "CA", Name: "Alberta" },
+          { StateProvinceID: 3, CountryRegionCode: "FR", Name: "Ile-de-France" },
+        ],
+        "Person.CountryRegion": [{ CountryRegionCode: "US", Name: "United States" }, { CountryRegionCode: "CA", Name: "Canada" }],
+      },
+    },
+    one("us", "collation: province code 'us' joins country 'US' (case-insensitive CI_AS), so the address is listed"),
+    one("US ", "trailing space: province code 'US ' joins country 'US' (SQL Server equality ignores trailing spaces), so the address is listed"),
+  ];
+}
+
+/**
+ * Purchasing.vVendorWithContacts / Sales.vStoreWithContacts (hand-derived). Expected: 4 rows.
+ *  - contact person 1: two phones (two rows; one phone type 9 has no PhoneNumberType row, so PhoneNumberType is NULL),
+ *    no email (LEFT JOIN: NULL), Title NULL
+ *  - contact person 2: email, no phone (NULL phone columns), Title '' (kept, not NULL), a trailing space in the first name
+ *  - contact person 3: an email row whose EmailAddress is NULL (same NULL as no row), EmailPromotion 2
+ *  - a contact whose contact type does not exist, and one whose person does not exist, are dropped (inner joins)
+ *  - entity 2 has no contacts (not listed)
+ */
+function contactsCase(entityTable: string, what: string): FixedCase {
+  const person = (id: number, over: Row = {}): Row =>
+    ({ BusinessEntityID: id, Title: null, FirstName: `First${id}`, MiddleName: null, LastName: `Last${id}`, Suffix: null, EmailPromotion: 0, ...over });
+  return {
+    label: `two phones give two rows (unknown phone type is NULL); no email or a NULL email is NULL; Title '' kept; a missing contact type or person drops the contact; a ${what} without contacts is not listed`,
+    tables: {
+      [entityTable]: [{ BusinessEntityID: 1, Name: `First ${what}` }, { BusinessEntityID: 2, Name: `Lonely ${what}` }],
+      "Person.ContactType": [{ ContactTypeID: 1, Name: "Owner" }, { ContactTypeID: 2, Name: "Purchasing Agent" }],
+      "Person.BusinessEntityContact": [
+        { BusinessEntityID: 1, PersonID: 1, ContactTypeID: 1 }, { BusinessEntityID: 1, PersonID: 2, ContactTypeID: 2 },
+        { BusinessEntityID: 1, PersonID: 3, ContactTypeID: 2 }, { BusinessEntityID: 1, PersonID: 4, ContactTypeID: 99 },
+        { BusinessEntityID: 1, PersonID: 5, ContactTypeID: 1 },
+      ],
+      "Person.Person": [person(1), person(2, { Title: "", FirstName: "Ann ", MiddleName: "B", Suffix: "Jr." }), person(3, { EmailPromotion: 2 }), person(4)],
+      "Person.EmailAddress": [{ BusinessEntityID: 2, EmailAddress: "ann@example.com" }, { BusinessEntityID: 3, EmailAddress: null }],
+      "Person.PersonPhone": [
+        { BusinessEntityID: 1, PhoneNumber: "555-0100", PhoneNumberTypeID: 1 },
+        { BusinessEntityID: 1, PhoneNumber: "555-0199", PhoneNumberTypeID: 9 },
+        { BusinessEntityID: 3, PhoneNumber: "555-0300", PhoneNumberTypeID: 1 },
+      ],
+      "Person.PhoneNumberType": [{ PhoneNumberTypeID: 1, Name: "Cell" }],
+    },
+  };
+}
+
+/**
+ * Sales.vSalesPersonSalesByFiscalYears (hand-derived). FiscalYear = YEAR(DATEADD(month, 6, OrderDate)); the pivot sums
+ * SubTotal (money) into [2002], [2003], [2004] per sales person.
+ *  - person 1 (MiddleName NULL, so FullName has two spaces: 'Ann  Lee'):
+ *      2001-07-01 00:00:00.000 -> FY 2002;  2001-08-31 -> +6 months clamps to 2002-02-28 -> FY 2002 (sum 0.0001 + 1234567.8912)
+ *      2003-06-30 23:59:59.997 -> 2003-12-30 -> FY 2003;  2003-07-01 00:00:00.000 -> FY 2004
+ *      2001-06-30 23:59:59.997 -> FY 2001, not a pivot column: adds nothing
+ *  - person 2 (MiddleName 'J'): only an FY 2001 order, so a row with NULL in all three year columns
+ *  - person 3: TerritoryID NULL (dropped by the inner join); person 4: no Employee row (dropped);
+ *    an order with SalesPersonID NULL is dropped
+ */
+function fiscalYearsCase(): FixedCase {
+  const order = (person: number | null, date: string, total: string): Row => ({ SalesPersonID: person, OrderDate: date, SubTotal: total });
+  return {
+    label: "fiscal year = order year + 6 months: 07-01 starts the next year, 06-30 23:59:59.997 does not, 08-31 clamps to 02-28; money sums kept to 4 places; out-of-range years give NULLs; MiddleName NULL leaves two spaces; missing territory, employee or sales person drops the row",
+    tables: {
+      "Sales.SalesPerson": [
+        { BusinessEntityID: 1, TerritoryID: 1 }, { BusinessEntityID: 2, TerritoryID: 1 },
+        { BusinessEntityID: 3, TerritoryID: null }, { BusinessEntityID: 4, TerritoryID: 1 },
+      ],
+      "Sales.SalesTerritory": [{ TerritoryID: 1, Name: "Northwest" }],
+      "HumanResources.Employee": [{ BusinessEntityID: 1, JobTitle: "Sales Representative" }, { BusinessEntityID: 2, JobTitle: "Sales Manager" }, { BusinessEntityID: 3, JobTitle: "Sales Representative" }],
+      "Person.Person": [
+        { BusinessEntityID: 1, FirstName: "Ann", MiddleName: null, LastName: "Lee" },
+        { BusinessEntityID: 2, FirstName: "Bo", MiddleName: "J", LastName: "Ng" },
+        { BusinessEntityID: 3, FirstName: "Cy", MiddleName: null, LastName: "Oh" },
+        { BusinessEntityID: 4, FirstName: "Di", MiddleName: null, LastName: "Pi" },
+      ],
+      "Sales.SalesOrderHeader": [
+        order(1, "2001-07-01T00:00:00.000", "0.0001"),
+        order(1, "2001-08-31T12:00:00.000", "1234567.8912"),
+        order(1, "2003-06-30T23:59:59.997", "10.5000"),
+        order(1, "2003-07-01T00:00:00.000", "-2.2500"),
+        order(1, "2001-06-30T23:59:59.997", "999.0000"),
+        order(2, "2000-12-31T00:00:00.000", "5.0000"),
+        order(3, "2002-01-01T00:00:00.000", "7.0000"),
+        order(4, "2002-01-01T00:00:00.000", "8.0000"),
+        order(null, "2002-01-01T00:00:00.000", "9.0000"),
       ],
     },
   };

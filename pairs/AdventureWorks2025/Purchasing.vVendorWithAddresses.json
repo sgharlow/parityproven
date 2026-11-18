@@ -11,11 +11,12 @@
   "tier": "simple",
   "code": {
     "source": "\r\nCREATE VIEW [Purchasing].[vVendorWithAddresses] AS\r\nSELECT\r\n    v.[BusinessEntityID]\r\n    ,v.[Name]\r\n    ,at.[Name] AS [AddressType]\r\n    ,a.[AddressLine1]\r\n    ,a.[AddressLine2]\r\n    ,a.[City]\r\n    ,sp.[Name] AS [StateProvinceName]\r\n    ,a.[PostalCode]\r\n    ,cr.[Name] AS [CountryRegionName]\r\nFROM [Purchasing].[Vendor] v\r\n    INNER JOIN [Person].[BusinessEntityAddress] bea\r\n    ON bea.[BusinessEntityID] = v.[BusinessEntityID]\r\n    INNER JOIN [Person].[Address] a\r\n    ON a.[AddressID] = bea.[AddressID]\r\n    INNER JOIN [Person].[StateProvince] sp\r\n    ON sp.[StateProvinceID] = a.[StateProvinceID]\r\n    INNER JOIN [Person].[CountryRegion] cr\r\n    ON cr.[CountryRegionCode] = sp.[CountryRegionCode]\r\n    INNER JOIN [Person].[AddressType] at\r\n    ON at.[AddressTypeID] = bea.[AddressTypeID];\r\n",
-    "engineOutput": "-- PostgreSQL conversion of the view Purchasing.vVendorWithAddresses (AdventureWorks2025).\n-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case).\n-- Verified by the property-based harness, not by this script.\n\nCREATE OR REPLACE VIEW purchasing.v_vendor_with_addresses AS\nSELECT\r\n    v.\"BusinessEntityID\" AS \"BusinessEntityID\"\r\n    ,v.\"Name\" AS \"Name\"\r\n    ,at.\"Name\" AS \"AddressType\"\r\n    ,a.\"AddressLine1\" AS \"AddressLine1\"\r\n    ,a.\"AddressLine2\" AS \"AddressLine2\"\r\n    ,a.\"City\" AS \"City\"\r\n    ,sp.\"Name\" AS \"StateProvinceName\"\r\n    ,a.\"PostalCode\" AS \"PostalCode\"\r\n    ,cr.\"Name\" AS \"CountryRegionName\"\r\nFROM purchasing.vendor v\r\n    INNER JOIN person.business_entity_address bea\r\n    ON bea.\"BusinessEntityID\" = v.\"BusinessEntityID\"\r\n    INNER JOIN person.address a\r\n    ON a.\"AddressID\" = bea.\"AddressID\"\r\n    INNER JOIN person.state_province sp\r\n    ON sp.\"StateProvinceID\" = a.\"StateProvinceID\"\r\n    INNER JOIN person.country_region cr\r\n    ON cr.\"CountryRegionCode\" = sp.\"CountryRegionCode\"\r\n    INNER JOIN person.address_type at\r\n    ON at.\"AddressTypeID\" = bea.\"AddressTypeID\";\n",
-    "final": "-- PostgreSQL conversion of the view Purchasing.vVendorWithAddresses (AdventureWorks2025).\n-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case).\n-- Verified by the property-based harness, not by this script.\n\nCREATE OR REPLACE VIEW purchasing.v_vendor_with_addresses AS\nSELECT\r\n    v.\"BusinessEntityID\" AS \"BusinessEntityID\"\r\n    ,v.\"Name\" AS \"Name\"\r\n    ,at.\"Name\" AS \"AddressType\"\r\n    ,a.\"AddressLine1\" AS \"AddressLine1\"\r\n    ,a.\"AddressLine2\" AS \"AddressLine2\"\r\n    ,a.\"City\" AS \"City\"\r\n    ,sp.\"Name\" AS \"StateProvinceName\"\r\n    ,a.\"PostalCode\" AS \"PostalCode\"\r\n    ,cr.\"Name\" AS \"CountryRegionName\"\r\nFROM purchasing.vendor v\r\n    INNER JOIN person.business_entity_address bea\r\n    ON bea.\"BusinessEntityID\" = v.\"BusinessEntityID\"\r\n    INNER JOIN person.address a\r\n    ON a.\"AddressID\" = bea.\"AddressID\"\r\n    INNER JOIN person.state_province sp\r\n    ON sp.\"StateProvinceID\" = a.\"StateProvinceID\"\r\n    INNER JOIN person.country_region cr\r\n    ON cr.\"CountryRegionCode\" = sp.\"CountryRegionCode\"\r\n    INNER JOIN person.address_type at\r\n    ON at.\"AddressTypeID\" = bea.\"AddressTypeID\";\n",
-    "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
+    "engineOutput": "-- PostgreSQL conversion of the view Purchasing.vVendorWithAddresses (AdventureWorks2025).\n-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case).\n-- Verified by the property-based harness, not by this script.\n\nCREATE OR REPLACE VIEW purchasing.v_vendor_with_addresses AS\nSELECT\n    v.\"BusinessEntityID\" AS \"BusinessEntityID\"\n    ,v.\"Name\" AS \"Name\"\n    ,at.\"Name\" AS \"AddressType\"\n    ,a.\"AddressLine1\" AS \"AddressLine1\"\n    ,a.\"AddressLine2\" AS \"AddressLine2\"\n    ,a.\"City\" AS \"City\"\n    ,sp.\"Name\" AS \"StateProvinceName\"\n    ,a.\"PostalCode\" AS \"PostalCode\"\n    ,cr.\"Name\" AS \"CountryRegionName\"\nFROM purchasing.vendor v\n    INNER JOIN person.business_entity_address bea\n    ON bea.\"BusinessEntityID\" = v.\"BusinessEntityID\"\n    INNER JOIN person.address a\n    ON a.\"AddressID\" = bea.\"AddressID\"\n    INNER JOIN person.state_province sp\n    ON sp.\"StateProvinceID\" = a.\"StateProvinceID\"\n    INNER JOIN person.country_region cr\n    ON cr.\"CountryRegionCode\" = sp.\"CountryRegionCode\"\n    INNER JOIN person.address_type at\n    ON at.\"AddressTypeID\" = bea.\"AddressTypeID\";\n",
+    "final": "-- PostgreSQL conversion of the view Purchasing.vVendorWithAddresses (AdventureWorks2025).\n-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case; kept as the .draft.sql),\n-- corrected by Kiro on 2026-11-18 after step 2 found a difference that step 3's generated data had not produced.\n-- No human edit; the owner's step 5 review is still to come.\n--\n-- The source database's collation is SQL_Latin1_General_CP1_CI_AS, so the join on CountryRegionCode is case-insensitive\n-- ('us' joins 'US'), accent-sensitive, and ignores trailing spaces ('US ' joins 'US'); PostgreSQL '=' is none of those.\n-- Same fix as Person.vStateProvinceCountryRegion: rtrim under a nondeterministic case-insensitive ICU collation.\n-- Checked for the text the harness and the fixed cases use (ASCII codes), not for every collation rule.\nCREATE SCHEMA IF NOT EXISTS tsql_compat;\nCREATE COLLATION IF NOT EXISTS tsql_compat.ci_as_equal (\n    provider = icu, locale = 'und-u-ks-level2', deterministic = false\n);\n\nCREATE OR REPLACE VIEW purchasing.v_vendor_with_addresses AS\nSELECT\n    v.\"BusinessEntityID\" AS \"BusinessEntityID\"\n    ,v.\"Name\" AS \"Name\"\n    ,at.\"Name\" AS \"AddressType\"\n    ,a.\"AddressLine1\" AS \"AddressLine1\"\n    ,a.\"AddressLine2\" AS \"AddressLine2\"\n    ,a.\"City\" AS \"City\"\n    ,sp.\"Name\" AS \"StateProvinceName\"\n    ,a.\"PostalCode\" AS \"PostalCode\"\n    ,cr.\"Name\" AS \"CountryRegionName\"\nFROM purchasing.vendor v\n    INNER JOIN person.business_entity_address bea\n    ON bea.\"BusinessEntityID\" = v.\"BusinessEntityID\"\n    INNER JOIN person.address a\n    ON a.\"AddressID\" = bea.\"AddressID\"\n    INNER JOIN person.state_province sp\n    ON sp.\"StateProvinceID\" = a.\"StateProvinceID\"\n    INNER JOIN person.country_region cr\n    ON rtrim(cr.\"CountryRegionCode\", ' ') COLLATE tsql_compat.ci_as_equal = rtrim(sp.\"CountryRegionCode\", ' ') COLLATE tsql_compat.ci_as_equal\n    INNER JOIN person.address_type at\n    ON at.\"AddressTypeID\" = bea.\"AddressTypeID\";\n",
+    "diff": "--- engineOutput\n+++ final\n@@ engineOutput line 2 / final line 2 @@\n+-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case; kept as the .draft.sql),\n+-- corrected by Kiro on 2026-11-18 after step 2 found a difference that step 3's generated data had not produced.\n+-- No human edit; the owner's step 5 review is still to come.\n+--\n+-- The source database's collation is SQL_Latin1_General_CP1_CI_AS, so the join on CountryRegionCode is case-insensitive\n+-- ('us' joins 'US'), accent-sensitive, and ignores trailing spaces ('US ' joins 'US'); PostgreSQL '=' is none of those.\n+-- Same fix as Person.vStateProvinceCountryRegion: rtrim under a nondeterministic case-insensitive ICU collation.\n+-- Checked for the text the harness and the fixed cases use (ASCII codes), not for every collation rule.\n+CREATE SCHEMA IF NOT EXISTS tsql_compat;\n+CREATE COLLATION IF NOT EXISTS tsql_compat.ci_as_equal (\n+    provider = icu, locale = 'und-u-ks-level2', deterministic = false\n+);\n--- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case).\n--- Verified by the property-based harness, not by this script.\n@@ engineOutput line 24 / final line 34 @@\n+    ON rtrim(cr.\"CountryRegionCode\", ' ') COLLATE tsql_compat.ci_as_equal = rtrim(sp.\"CountryRegionCode\", ' ') COLLATE tsql_compat.ci_as_equal\n-    ON cr.\"CountryRegionCode\" = sp.\"CountryRegionCode\"",
     "engine": "kiro",
     "notes": [
+      "Finding (step 2, 2026-11-18): Kiro's draft of Purchasing.vVendorWithAddresses joined CountryRegionCode with PostgreSQL '=', which is case-sensitive and counts trailing spaces. Under the source collation (SQL_Latin1_General_CP1_CI_AS) 'us' joins 'US' and 'US ' joins 'US'. Step 3 passed because the generated codes never differed only in case or trailing spaces; the fixed cases 'collation' and 'trailing space' failed on PostgreSQL. Fixed in the conversion as for Person.vStateProvinceCountryRegion (rtrim + a case-insensitive ICU collation in the join); both cases are kept as regression cases.",
       "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
     ]
   },
@@ -51,38 +52,54 @@
   ],
   "evidence": {
     "step1": "pass",
-    "step2": "not-run",
+    "step2": "pass",
     "step3": "pass",
     "step4": "pass",
     "step5": "not-run",
     "step6": "n/a",
-    "runtimeRatio": 0.4,
+    "testsRun": [
+      "tSQLt V1.0.8083.3529 on SQL Server (tests/AdventureWorks2025/Purchasing.vVendorWithAddresses.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/AdventureWorks2025/Purchasing.vVendorWithAddresses.pg.sql); expected results tests/AdventureWorks2025/Purchasing.vVendorWithAddresses.expected.json",
+      "SQL Server: AgreedTests.[test 01 a vendor with two address types gives two rows (AddressLine2 NULL on one, on the other; trailing spac…]: pass",
+      "SQL Server: AgreedTests.[test 02 collation: province code us joins country US (case-insensitive CI_AS), so the address is listed]: pass",
+      "SQL Server: AgreedTests.[test 03 trailing space: province code US joins country US (SQL Server equality ignores trailing spaces), so t…]: pass",
+      "PostgreSQL: AgreedTests.[test 01 a vendor with two address types gives two rows (AddressLine2 NULL on one, on the other; trailing spac…]: pass",
+      "PostgreSQL: AgreedTests.[test 02 collation: province code us joins country US (case-insensitive CI_AS), so the address is listed]: pass",
+      "PostgreSQL: AgreedTests.[test 03 trailing space: province code US joins country US (SQL Server equality ignores trailing spaces), so t…]: pass",
+      "planted defects caught by the agreed tests: 3 of 3"
+    ],
+    "runtimeRatio": 0.78,
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
-      "sqlServerMs": 31,
-      "postgresMs": 12.36,
-      "ratio": 0.4,
+      "sqlServerMs": 29,
+      "postgresMs": 22.54,
+      "ratio": 0.78,
       "threshold": 1.5,
       "passed": true,
       "belowResolution": false,
       "resultRows": 5000,
       "volumeMismatch": null
     },
-    "rowsCompared": 190,
+    "rowsCompared": 191,
     "trapsCovered": [
       "NULL in every nullable column",
       "empty string and trailing spaces"
     ],
     "pbtSeeds": [
-      1221632823
+      926026867
     ],
+    "engineOutputCheck": {
+      "step3": "fail",
+      "seed": 926026867,
+      "detail": "fixed case \"collation: province code 'us' joins country 'US' (case-insensitive CI_AS), so the address is listed\": row count differs: SQL Server 1, PostgreSQL 0"
+    },
     "samples": 200,
-    "samplesWithRows": 112,
+    "samplesWithRows": 104,
     "subMicrosecondNormalised": 0,
     "mutantsDetected": [
-      "auto: two output columns swap values",
-      "auto: join condition uses a different key"
+      "join is case-sensitive (collation dropped)",
+      "trailing spaces count in the join (rtrim dropped)",
+      "inner join to address type made a left join (unknown address types kept)"
     ],
     "harnessVersion": "harness-generic-0.3.0"
   },

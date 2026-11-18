@@ -1,0 +1,12 @@
+negative control for Sales.vStoreWithContacts (step 2), 2026-11-18T05:28:41.690Z
+corruption: case 1 expected value row 1, column BusinessEntityID: n:1 -> n:2
+SQL Server: test 01 two phones give two rows (unknown phone type is NULL); no email or a NULL email is NULL; Title kept;…: FAIL — Failure: Unexpected/missing resultset rows!
+|_m_|BusinessEntityID|Name       |ContactType     |Title |FirstName|MiddleName|LastName|Suffix|PhoneNumber|PhoneNumberType|EmailAddress   |EmailPromotion|
++---+----------------+-----------+----------------+------+---------+----------+--------+------+-----------+---------------+---------------+--------------+
+|<  |2               |First store|Owner           |!NULL!|First1   |!NULL!    |Last1   |!NULL!|555-0100   |Cell           |!NULL!         |0             |
+|=  |1               |First store|Owner           |!NULL!|First1   |!NULL!    |Last1   |!NULL!|555-0199   |!NULL!         |!NULL!         |0             |
+|=  |1               |First store|Purchasing Agent|!NULL!|First3   |!NULL!    |Last3   |!NULL!|555-0300   |Cell           |!NULL!         |2             |
+|=  |1               |First store|Purchasing Agent|      |Ann      |B         |Last2   |Jr.   |!NULL!     |!NULL!         |ann@example.com|0             |
+|>  |1               |First store|Owner           |!NULL!|First1   |!NULL!    |Last1   |!NULL!|555-0100   |Cell           |!NULL!         |0             |
+PostgreSQL: test 01 two phones give two rows (unknown phone type is NULL); no email or a NULL email is NULL; Title kept;…: FAIL — agreed test failed (test 01 two phones give two rows (unknown phone type is NULL); no email or a NULL email is NULL; Title kept;…): 1 expected row(s) missing, 1 unexpected row(s) in the result
+RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed

@@ -53,7 +53,7 @@
     {
       "step": 2,
       "label": "Agreed tests pass (tSQLt on SQL Server, plain-SQL assertions on PostgreSQL)",
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "step": 3,
@@ -104,7 +104,13 @@
       "volumeMismatch": null
     },
     "subMicrosecondNormalised": 0,
-    "harnessVersion": "harness-generic-0.3.0"
+    "harnessVersion": "harness-generic-0.3.0",
+    "testsRun": [
+      "tSQLt V1.0.8083.3529 on SQL Server (tests/AdventureWorks2025/Sales.vSalesPersonSalesByFiscalYears.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/AdventureWorks2025/Sales.vSalesPersonSalesByFiscalYears.pg.sql); expected results tests/AdventureWorks2025/Sales.vSalesPersonSalesByFiscalYears.expected.json",
+      "SQL Server: AgreedTests.[test 01 fiscal year = order year + 6 months: 07-01 starts the next year, 06-30 23:59:59.997 does not, 08-31 c…]: pass",
+      "PostgreSQL: AgreedTests.[test 01 fiscal year = order year + 6 months: 07-01 starts the next year, 06-30 23:59:59.997 does not, 08-31 c…]: pass",
+      "planted defects caught by the agreed tests: 2 of 2"
+    ]
   },
   "effort": {
     "humanMinutes": 0,
@@ -115,5 +121,5 @@
     "p50Hours": 0.75,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-17T03:55:18.198Z"
+  "builtAt": "2026-11-18T05:28:45.323Z"
 }

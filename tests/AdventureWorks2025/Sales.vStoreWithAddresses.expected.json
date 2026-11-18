@@ -1,0 +1,193 @@
+{
+  "object": "Sales.vStoreWithAddresses",
+  "database": "AdventureWorks2025",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-18T05:21:33.762Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "a store with two address types gives two rows (AddressLine2 NULL on one, '' on the other; trailing space in a city kept); a missing state province, address type or country drops the row",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Name",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AddressType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AddressLine1",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "AddressLine2",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "City",
+          "sqlServerType": "nvarchar(30)"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PostalCode",
+          "sqlServerType": "nvarchar(15)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:store 1",
+          "s:Main Office",
+          "s:1 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Washington",
+          "s:98001",
+          "s:United States"
+        ],
+        [
+          "n:1",
+          "s:store 1",
+          "s:Shipping",
+          "s:2 Main St",
+          "s:",
+          "s:Seattle ",
+          "s:Washington",
+          "s:98002",
+          "s:United States"
+        ],
+        [
+          "n:5",
+          "s:store 5",
+          "s:Shipping",
+          "s:6 Main St",
+          "s:Suite 5",
+          "s:Calgary",
+          "s:Alberta",
+          "s:98006",
+          "s:Canada"
+        ]
+      ]
+    },
+    {
+      "label": "collation: province code 'us' joins country 'US' (case-insensitive CI_AS), so the address is listed",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Name",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AddressType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AddressLine1",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "AddressLine2",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "City",
+          "sqlServerType": "nvarchar(30)"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PostalCode",
+          "sqlServerType": "nvarchar(15)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:First store",
+          "s:Main Office",
+          "s:1 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Washington",
+          "s:98001",
+          "s:United States"
+        ]
+      ]
+    },
+    {
+      "label": "trailing space: province code 'US ' joins country 'US' (SQL Server equality ignores trailing spaces), so the address is listed",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Name",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AddressType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AddressLine1",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "AddressLine2",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "City",
+          "sqlServerType": "nvarchar(30)"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PostalCode",
+          "sqlServerType": "nvarchar(15)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:First store",
+          "s:Main Office",
+          "s:1 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Washington",
+          "s:98001",
+          "s:United States"
+        ]
+      ]
+    }
+  ]
+}
