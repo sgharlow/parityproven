@@ -95,6 +95,18 @@ export function corruptExpected(expected: ExpectedFile, column?: string): Corrup
   const file = JSON.parse(JSON.stringify(expected)) as ExpectedFile;
   const c = file.cases[0];
   if (!c) throw new Error("no cases to corrupt");
+  // a state object with observation queries: the first query value is corrupted, so the new feature itself is seen failing
+  for (const q of c.queries ?? []) {
+    for (const [r, row] of q.rows.entries()) {
+      for (const [i, cell] of row.entries()) {
+        const bad = corruptCell(cell);
+        if (bad && bad !== cell) {
+          row[i] = bad;
+          return { file, caseIndex: 0, what: `case 1 expected state query "${q.label}" row ${r + 1}, column ${q.columns[i]?.name ?? i + 1}: ${cell} -> ${bad}` };
+        }
+      }
+    }
+  }
   if (c.outcome !== undefined) {
     const was = c.outcome;
     c.outcome = was === "completed" ? "raised" : "completed";

@@ -35,7 +35,7 @@ import { tableKey, type ObjectSpec } from "../harness/generic/spec.js";
 import { specByName } from "../conversions/specs.js";
 import { autoMutants } from "../conversions/automutants.js";
 import {
-  pgCases, pgScript, splitBatches, ssCallText, ssClientScript, ssInserts, TEST_CLASS, testName, tsqltScript, unsupportedFeatures,
+  caseSetup, caseTeardown, pgCases, pgScript, splitBatches, ssCallText, ssClientScript, ssInserts, TEST_CLASS, testName, tsqltScript, unsupportedFeatures,
   type ExpectedCase, type ExpectedFile,
 } from "../agreed/generate.js";
 import { corruptExpected } from "../agreed/controls.js";
@@ -95,6 +95,7 @@ async function capture(scratch: MssqlClient, spec: ObjectSpec): Promise<Expected
   for (const fc of spec.fixedCases ?? []) {
     await clearSs(scratch, spec);
     for (const ins of ssInserts(spec, fc)) await scratch.query(ins, []);
+    for (const s of caseSetup(spec, fc).sqlServer) await scratch.query(s, []);
     const call = ssCallText(spec, fc);
     if (spec.stateCheck) {
       const sc = spec.stateCheck;
@@ -116,7 +117,22 @@ async function capture(scratch: MssqlClient, spec: ObjectSpec): Promise<Expected
         const rs = await scratch.query(`SELECT ${cols.map((c) => `[${c}]`).join(", ")} FROM [${t.schema}].[${t.name}]${pk.length ? ` ORDER BY ${pk.join(", ")}` : ""}`, []);
         tables[key] = { columns: cols, rows: rs.rows.map((r) => r.map((v, i) => canonicalCell(v, rs.columns[i].declaredType))) };
       }
-      cases.push({ label: fc.label, outcome, tables });
+      const queries: NonNullable<ExpectedCase["queries"]> = [];
+      for (const q of sc.queries ?? []) {
+        const d = await scratch.query(
+          `SELECT name, system_type_name, error_message FROM sys.dm_exec_describe_first_result_set(N'${q.sqlServer.replace(/'/g, "''")}', NULL, 0) WHERE ISNULL(is_hidden, 0) = 0 ORDER BY column_ordinal`, []
+        );
+        const describeError = d.rows.find((r) => r[2] !== null)?.[2];
+        if (describeError || !d.rows.length) throw new Error(`${spec.name}: SQL Server could not describe the state query "${q.label}"${describeError ? ` (${String(describeError)})` : ""}`);
+        const rs = await scratch.query(q.sqlServer, []);
+        queries.push({
+          label: q.label,
+          columns: d.rows.map((r) => ({ name: String(r[0]), sqlServerType: String(r[1]) })),
+          rows: rs.rows.map((r) => r.map((v, i) => canonicalCell(v, rs.columns[i].declaredType))),
+        });
+      }
+      for (const s of caseTeardown(spec, fc)) await scratch.query(s, []);
+      cases.push({ label: fc.label, outcome, tables, ...(queries.length ? { queries } : {}) });
     } else {
       const d = await scratch.query(
         `SELECT name, system_type_name, error_message FROM sys.dm_exec_describe_first_result_set(N'${call.replace(/'/g, "''")}', NULL, 0) WHERE ISNULL(is_hidden, 0) = 0 ORDER BY column_ordinal`, []

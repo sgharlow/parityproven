@@ -132,3 +132,31 @@ describe("FOR JSON procedures (ruling J1)", () => {
     expect(pg[1].sql).toContain("agreed test failed (%): the JSON document differs");
   });
 });
+describe("per-case setup and state observation queries (tranche C)", () => {
+  const s = specByName("Sequences.ReseedSequenceBeyondTableValues")!;
+  const exp: ExpectedFile = {
+    object: "Sequences.ReseedSequenceBeyondTableValues", database: s.database, capturedFrom: "", capturedAt: "", review: "",
+    cases: (s.fixedCases ?? []).map((fc) => ({
+      label: fc.label, outcome: "completed", tables: {},
+      queries: [{ label: "next value of each sequence after the call", columns: [{ name: "OrderID", sqlServerType: "int" }, { name: "StockItemID", sqlServerType: "int" }], rows: [["n:11", "n:1"]] }],
+    })),
+  } as ExpectedFile;
+  it("is supported, and each test sets up, calls, observes, undoes the setup and only then asserts", () => {
+    expect(unsupportedFeatures(s)).toEqual([]);
+    const ss = tsqltScript(s, exp);
+    const body = ss.split("-- case 1:")[1].split("\nGO\n")[0];
+    const at = (x: string): number => { const i = body.indexOf(x); expect(i, x).toBeGreaterThan(-1); return i; };
+    const teardown = body.lastIndexOf("DROP SEQUENCE Sequences.[OrderID]");   // the setup drops first, the teardown last
+    expect(at("CREATE SEQUENCE Sequences.[OrderID]")).toBeLessThan(at("EXEC Sequences.ReseedSequenceBeyondTableValues"));
+    expect(at("EXEC Sequences.ReseedSequenceBeyondTableValues")).toBeLessThan(at("INSERT INTO #ActualQuery1"));
+    expect(at("INSERT INTO #ActualQuery1")).toBeLessThan(teardown);
+    expect(teardown).toBeLessThan(at("tSQLt.AssertEqualsString"));
+    expect(teardown).toBeLessThan(at("tSQLt.AssertEqualsTable @Expected = N'#ExpectedQuery1'"));
+    // no declared errors: the outcome is "completed" or an unexpected error, never an empty CASE
+    expect(body).not.toMatch(/CASE\s+ELSE/);
+    const pg = pgCases(pgScript(s, exp))[0].sql;
+    expect(pg).toContain("CREATE SEQUENCE sequences.\"OrderID\"");
+    expect(pg).toContain("CREATE TEMP TABLE pp_actual_query_1 ON COMMIT DROP AS");
+    expect(pg).toContain("in next value of each sequence after the call");
+  });
+});

@@ -33,8 +33,8 @@ BEGIN
     -- tSQLt's transaction (NoTransaction), so this undoes only the procedure's work, as SQL Server does at batch end
     IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
   END CATCH;
-  EXEC tSQLt.AssertEqualsString @Expected = N'completed', @Actual = @outcome, @Message = N'outcome';
   SELECT [PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences] INTO #ActualState1 FROM [Application].[People];
+  EXEC tSQLt.AssertEqualsString @Expected = N'completed', @Actual = @outcome, @Message = N'outcome';
   EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedState1', @Actual = N'#ActualState1', @Message = N'Application.People after the call';
 END;
 GO
@@ -61,8 +61,8 @@ BEGIN
     -- tSQLt's transaction (NoTransaction), so this undoes only the procedure's work, as SQL Server does at batch end
     IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
   END CATCH;
-  EXEC tSQLt.AssertEqualsString @Expected = N'raised', @Actual = @outcome, @Message = N'outcome';
   SELECT [PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences] INTO #ActualState1 FROM [Application].[People];
+  EXEC tSQLt.AssertEqualsString @Expected = N'raised', @Actual = @outcome, @Message = N'outcome';
   EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedState1', @Actual = N'#ActualState1', @Message = N'Application.People after the call';
 END;
 GO
@@ -89,8 +89,8 @@ BEGIN
     -- tSQLt's transaction (NoTransaction), so this undoes only the procedure's work, as SQL Server does at batch end
     IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
   END CATCH;
-  EXEC tSQLt.AssertEqualsString @Expected = N'raised', @Actual = @outcome, @Message = N'outcome';
   SELECT [PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences] INTO #ActualState1 FROM [Application].[People];
+  EXEC tSQLt.AssertEqualsString @Expected = N'raised', @Actual = @outcome, @Message = N'outcome';
   EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedState1', @Actual = N'#ActualState1', @Message = N'Application.People after the call';
 END;
 GO
@@ -117,8 +117,8 @@ BEGIN
     -- tSQLt's transaction (NoTransaction), so this undoes only the procedure's work, as SQL Server does at batch end
     IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
   END CATCH;
-  EXEC tSQLt.AssertEqualsString @Expected = N'completed', @Actual = @outcome, @Message = N'outcome';
   SELECT [PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences] INTO #ActualState1 FROM [Application].[People];
+  EXEC tSQLt.AssertEqualsString @Expected = N'completed', @Actual = @outcome, @Message = N'outcome';
   EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedState1', @Actual = N'#ActualState1', @Message = N'Application.People after the call';
 END;
 GO
@@ -145,8 +145,8 @@ BEGIN
     -- tSQLt's transaction (NoTransaction), so this undoes only the procedure's work, as SQL Server does at batch end
     IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
   END CATCH;
-  EXEC tSQLt.AssertEqualsString @Expected = N'raised', @Actual = @outcome, @Message = N'outcome';
   SELECT [PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences] INTO #ActualState1 FROM [Application].[People];
+  EXEC tSQLt.AssertEqualsString @Expected = N'raised', @Actual = @outcome, @Message = N'outcome';
   EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedState1', @Actual = N'#ActualState1', @Message = N'Application.People after the call';
 END;
 GO

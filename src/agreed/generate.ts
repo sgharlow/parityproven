@@ -38,6 +38,8 @@ export interface ExpectedCase {
    */
   raised?: string;
   tables?: Record<string, { columns: string[]; rows: string[][] }>;
+  /** State objects with observation queries (spec.stateCheck.queries): each query's result after the call. */
+  queries?: Array<{ label: string; columns: ExpectedColumn[]; rows: string[][] }>;
 }
 
 export interface ExpectedFile {
@@ -165,9 +167,9 @@ export function unsupportedFeatures(spec: ObjectSpec): string[] {
   if (spec.jsonColumns?.length && !spec.forJsonChunks) out.push("JSON columns in an ordinary result set");
   // declared result errors are supported (2026-11-18): each case asserts its outcome, and its rows when it completed
   if (spec.resultErrorClasses?.length && spec.stateCheck) out.push("declared result errors together with state checks");
-  if (spec.sampleSetup || spec.setup) out.push("per-sample or one-off setup statements");
+  // per-case setup (spec.sampleSetup, called with the fixed case) and state observation queries are supported (2026-11-18)
+  if (spec.setup) out.push("one-off setup statements");
   if (spec.dependencies?.length) out.push("dependencies on other converted objects");
-  if (spec.stateCheck?.queries?.length) out.push("state observation queries");
   if (spec.tables.some((t) => t.columns.some((c) => c.identity))) out.push("identity columns");
   if (spec.tables.some((t) => t.memoryOptimized) || spec.memoryOptimizedFilegroup) out.push("memory-optimized tables");
   // geography (points, as WKT) and xml (as text) are supported (2026-11-18)
@@ -184,6 +186,16 @@ function caseArgs(spec: ObjectSpec, fc: FixedCase): string[] {
   const args = fc.args ?? [];
   if (args.length !== params.length) throw new Error(`${spec.name}: fixed case "${fc.label}" has ${args.length} arguments, the spec declares ${params.length}`);
   return args.map((a, i) => inputCell(a, params[i].type));
+}
+
+/** Setup statements for a fixed case (per-case DDL such as sequences), as the step 3 harness runs them per sample. */
+export function caseSetup(spec: ObjectSpec, fc: FixedCase): { sqlServer: string[]; postgres: string[] } {
+  return spec.sampleSetup ? spec.sampleSetup({ args: fc.args, tables: fc.tables }) : { sqlServer: [], postgres: [] };
+}
+
+/** The statements that undo a fixed case's setup (SQL Server only; PostgreSQL cases roll back). */
+export function caseTeardown(spec: ObjectSpec, fc: FixedCase): string[] {
+  return spec.sampleTeardown ? spec.sampleTeardown({ args: fc.args, tables: fc.tables }).sqlServer : [];
 }
 
 /** The SQL Server call with literal arguments. */
@@ -325,6 +337,7 @@ export function tsqltScript(spec: ObjectSpec, expected: ExpectedFile, options: T
         : `EXEC tSQLt.FakeTable @TableName = N'${ssName(t.schema)}.${ssName(t.name)}';`);
     }
     body.push(...ssInserts(spec, fc));
+    body.push(...caseSetup(spec, fc).sqlServer.map((s) => `${s};`));
     const call = ssCallText(spec, fc);
     if (spec.stateCheck) {
       const outcome = exp.outcome ?? "";
@@ -347,18 +360,30 @@ export function tsqltScript(spec: ObjectSpec, expected: ExpectedFile, options: T
         `  ${call};`,
         "END TRY",
         "BEGIN CATCH",
-        `  SET @outcome = CASE ${whens.join(" ")} ELSE N'unexpected error ' + CAST(ERROR_NUMBER() AS nvarchar(20)) + N': ' + ERROR_MESSAGE() END;`,
+        `  SET @outcome = ${whens.length ? `CASE ${whens.join(" ")} ELSE ` : ""}N'unexpected error ' + CAST(ERROR_NUMBER() AS nvarchar(20)) + N': ' + ERROR_MESSAGE()${whens.length ? " END" : ""};`,
         "  -- a procedure that fails inside its own transaction can leave it open (and uncommittable); the test is outside",
         "  -- tSQLt's transaction (NoTransaction), so this undoes only the procedure's work, as SQL Server does at batch end",
         "  IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;",
         "END CATCH;",
-        `EXEC tSQLt.AssertEqualsString @Expected = N'${outcome.replace(/'/g, "''")}', @Actual = @outcome, @Message = N'outcome';`,
       );
+      // everything is observed first and the setup undone before any assertion, so a failing assertion cannot leave a
+      // persistent object (a sequence) behind for tSQLt to report against the next test
+      const asserts: string[] = [`EXEC tSQLt.AssertEqualsString @Expected = N'${outcome.replace(/'/g, "''")}', @Actual = @outcome, @Message = N'outcome';`];
       stateTables(spec).forEach((t, k) => {
         const st = exp.tables![tableKey(t)];
         body.push(`SELECT ${st.columns.map(ssName).join(", ")} INTO #ActualState${k + 1} FROM ${ssName(t.schema)}.${ssName(t.name)};`);
-        body.push(`EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedState${k + 1}', @Actual = N'#ActualState${k + 1}', @Message = N'${tableKey(t)} after the call';`);
+        asserts.push(`EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedState${k + 1}', @Actual = N'#ActualState${k + 1}', @Message = N'${tableKey(t)} after the call';`);
       });
+      (spec.stateCheck.queries ?? []).forEach((q, k) => {
+        const eq = exp.queries?.[k];
+        if (!eq) throw new Error(`${spec.name}: expected result of state query "${q.label}" missing in case "${fc.label}"`);
+        const ddl = eq.columns.map((c) => `  ${ssName(c.name)} ${c.sqlServerType} NULL`).join(",\n");
+        body.push(`CREATE TABLE #ExpectedQuery${k + 1} (\n${ddl}\n);`, `CREATE TABLE #ActualQuery${k + 1} (\n${ddl}\n);`);
+        if (eq.rows.length) body.push(`INSERT INTO #ExpectedQuery${k + 1} (${eq.columns.map((c) => ssName(c.name)).join(", ")}) VALUES\n  ${eq.rows.map((r) => `(${r.map(ssLiteral).join(", ")})`).join(",\n  ")};`);
+        body.push(`INSERT INTO #ActualQuery${k + 1}\n${q.sqlServer};`);
+        asserts.push(`EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedQuery${k + 1}', @Actual = N'#ActualQuery${k + 1}', @Message = N'${q.label.replace(/'/g, "''")}';`);
+      });
+      body.push(...caseTeardown(spec, fc).map((s) => `${s};`), ...asserts);
     } else {
       const cols = exp.columns ?? [];
       if (!cols.length) throw new Error(`${spec.name}: expected columns missing in case "${fc.label}"`);
@@ -493,6 +518,7 @@ export function pgScript(spec: ObjectSpec, expected: ExpectedFile): string {
     const lines: string[] = [`${PG_CASE_MARKER}${i + 1}: ${fc.label}`, "BEGIN;"];
     for (const t of spec.tables) lines.push(`DELETE FROM ${pgTableName(t)};`);
     lines.push(...inserts(spec, fc, "pg"));
+    lines.push(...caseSetup(spec, fc).postgres.map((s) => `${s};`));
     const call = pgCallText(spec, fc);
     if (spec.stateCheck) {
       lines.push("CREATE TEMP TABLE pp_outcome (outcome text) ON COMMIT DROP;");
@@ -517,6 +543,15 @@ export function pgScript(spec: ObjectSpec, expected: ExpectedFile): string {
         lines.push(`CREATE TEMP TABLE ${ex} ON COMMIT DROP AS SELECT ${cols} FROM ${pgTableName(t)} WITH NO DATA;`);
         if (st.rows.length) lines.push(`INSERT INTO ${ex} (${cols}) VALUES\n  ${st.rows.map((r) => `(${r.map(pgLiteral).join(", ")})`).join(",\n  ")};`);
         lines.push(pgAssertSame(name, `${tableKey(t)} after the call`, `SELECT ${cols} FROM ${ex}`, `SELECT ${cols} FROM ${pgTableName(t)}`));
+      });
+      (spec.stateCheck.queries ?? []).forEach((q, k) => {
+        const eq = exp.queries?.[k];
+        if (!eq) throw new Error(`${spec.name}: expected result of state query "${q.label}" missing in case "${fc.label}"`);
+        lines.push(`CREATE TEMP TABLE pp_actual_query_${k + 1} ON COMMIT DROP AS\n${q.postgres};`);
+        lines.push(pgAssertColumns(name, `pp_actual_query_${k + 1}`, eq.columns.map((c) => c.name)));
+        lines.push(`CREATE TEMP TABLE pp_expected_query_${k + 1} (LIKE pp_actual_query_${k + 1}) ON COMMIT DROP;`);
+        if (eq.rows.length) lines.push(`INSERT INTO pp_expected_query_${k + 1} VALUES\n  ${eq.rows.map((r) => `(${r.map(pgLiteral).join(", ")})`).join(",\n  ")};`);
+        lines.push(pgAssertSame(name, q.label, `SELECT * FROM pp_expected_query_${k + 1}`, `SELECT * FROM pp_actual_query_${k + 1}`));
       });
     } else if (spec.forJsonChunks) {
       // compared as jsonb: whitespace, escaping and object key order are not compared here (step 3 compares key order),

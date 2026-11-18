@@ -45,7 +45,7 @@
     {
       "step": 2,
       "label": "Agreed tests pass (tSQLt on SQL Server, plain-SQL assertions on PostgreSQL)",
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "step": 3,
@@ -92,7 +92,25 @@
       "detail": "relation \"Sales.Orders\" does not exist"
     },
     "subMicrosecondNormalised": 0,
-    "harnessVersion": "harness-generic-0.3.0"
+    "harnessVersion": "harness-generic-0.3.0",
+    "testsRun": [
+      "tSQLt V1.0.8083.3529 on SQL Server (tests/WideWorldImporters/Sequences.ReseedSequenceBeyondTableValues.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/WideWorldImporters/Sequences.ReseedSequenceBeyondTableValues.pg.sql); expected results tests/WideWorldImporters/Sequences.ReseedSequenceBeyondTableValues.expected.json",
+      "SQL Server: AgreedTests.[test 01 table maximum equals the unused sequences start value: restart at maximum + 1]: pass",
+      "SQL Server: AgreedTests.[test 02 table maximum below the current value: no change]: pass",
+      "SQL Server: AgreedTests.[test 03 sequence used twice (current value = start + 1)]: pass",
+      "SQL Server: AgreedTests.[test 04 empty table: MAX is NULL, COALESCE gives 0]: pass",
+      "SQL Server: AgreedTests.[test 05 only NULL values: MAX ignores NULLs]: pass",
+      "SQL Server: AgreedTests.[test 06 negative values and a negative start]: pass",
+      "SQL Server: AgreedTests.[test 07 unknown sequence: nothing changes]: pass",
+      "PostgreSQL: AgreedTests.[test 01 table maximum equals the unused sequences start value: restart at maximum + 1]: pass",
+      "PostgreSQL: AgreedTests.[test 02 table maximum below the current value: no change]: pass",
+      "PostgreSQL: AgreedTests.[test 03 sequence used twice (current value = start + 1)]: pass",
+      "PostgreSQL: AgreedTests.[test 04 empty table: MAX is NULL, COALESCE gives 0]: pass",
+      "PostgreSQL: AgreedTests.[test 05 only NULL values: MAX ignores NULLs]: pass",
+      "PostgreSQL: AgreedTests.[test 06 negative values and a negative start]: pass",
+      "PostgreSQL: AgreedTests.[test 07 unknown sequence: nothing changes]: pass",
+      "planted defects caught by the agreed tests: 4 of 4"
+    ]
   },
   "effort": {
     "humanMinutes": 0,
@@ -103,5 +121,5 @@
     "p50Hours": 3,
     "p90Hours": 6
   },
-  "builtAt": "2026-11-18T20:21:49.044Z"
+  "builtAt": "2026-11-18T20:31:48.102Z"
 }

@@ -189,6 +189,11 @@ export interface ObjectSpec {
   /** Per-sample setup that is not table rows. Generated values reach it through data.tables (harness-only tables) or args. */
   sampleSetup?: SampleSetup;
   /**
+   * Agreed tests only: statements that undo what `sampleSetup` created for a fixed case, run at the end of the SQL Server
+   * test and after the capture. tSQLt fails a test that leaves a persistent object (a sequence) behind.
+   */
+  sampleTeardown?: SampleSetup;
+  /**
    * Coverage rule for state checks: does this sample exercise the object's main path? Default: the call completed.
    * Used only to count coverage (the vacuity guard), never to decide equivalence.
    */

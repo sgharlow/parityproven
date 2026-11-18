@@ -1,0 +1,22 @@
+negative control for Sequences.ReseedSequenceBeyondTableValues (step 2), 2026-11-18T20:27:42.402Z
+corruption: case 1 expected state query "next value of each sequence after the call" row 1, column OrderID: n:11 -> n:12
+SQL Server: test 01 table maximum equals the unused sequences start value: restart at maximum + 1: FAIL — Failure: next value of each sequence after the call
+Unexpected/missing resultset rows!
+|_m_|OrderID|StockItemID|
++---+-------+-----------+
+|<  |12     |1          |
+|>  |11     |1          |
+SQL Server: test 02 table maximum below the current value: no change: pass
+SQL Server: test 03 sequence used twice (current value = start + 1): pass
+SQL Server: test 04 empty table: MAX is NULL, COALESCE gives 0: pass
+SQL Server: test 05 only NULL values: MAX ignores NULLs: pass
+SQL Server: test 06 negative values and a negative start: pass
+SQL Server: test 07 unknown sequence: nothing changes: pass
+PostgreSQL: test 01 table maximum equals the unused sequences start value: restart at maximum + 1: FAIL — agreed test failed (test 01 table maximum equals the unused sequences start value: restart at maximum + 1): 1 expected row(s) missing, 1 unexpected row(s) in next value of each sequence after the call
+PostgreSQL: test 02 table maximum below the current value: no change: pass
+PostgreSQL: test 03 sequence used twice (current value = start + 1): pass
+PostgreSQL: test 04 empty table: MAX is NULL, COALESCE gives 0: pass
+PostgreSQL: test 05 only NULL values: MAX ignores NULLs: pass
+PostgreSQL: test 06 negative values and a negative start: pass
+PostgreSQL: test 07 unknown sequence: nothing changes: pass
+RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed

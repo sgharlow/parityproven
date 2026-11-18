@@ -97,12 +97,17 @@ export const SEQUENCE_SPECS: ObjectSpec[] = [
         pg.push(`DROP SEQUENCE IF EXISTS sequences."${name}"`);
         pg.push(`CREATE SEQUENCE sequences."${name}" AS integer START WITH ${start} MINVALUE -2147483648`);
         for (let i = 0; i < used; i++) {
-          ss.push(`DECLARE @v int = NEXT VALUE FOR Sequences.[${name}]`);
+          ss.push(`DECLARE @v${name}${i} int = NEXT VALUE FOR Sequences.[${name}]`);
           pg.push(`SELECT nextval('sequences."${name}"')`);
         }
       }
       return { sqlServer: ss, postgres: pg };
     },
+    // agreed tests: leave no sequence behind (tSQLt fails a test that adds or drops a persistent object)
+    sampleTeardown: () => ({
+      sqlServer: SEQUENCES.map((n) => `IF OBJECT_ID(N'Sequences.${n}', N'SO') IS NOT NULL DROP SEQUENCE Sequences.[${n}]`),
+      postgres: [],
+    }),
     stateCheck: {
       tables: [],
       sqlServerErrors: [],
