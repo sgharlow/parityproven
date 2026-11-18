@@ -19,9 +19,29 @@ if (!/^https?:\/\//.test(base)) {
 const failures = [];
 const fail = (msg) => failures.push(msg);
 
+/**
+ * fetch with up to 3 attempts on NETWORK errors only (a connect timeout was seen 2026-11-18 midway through ~250 requests).
+ * An HTTP status, 404 included, is never retried, so a retry cannot hide a site defect.
+ */
+async function fetchRetry(url, options) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await fetch(url, options);
+    } catch (e) {
+      if (attempt >= 3) throw new Error(`network error after ${attempt} attempts: ${url}: ${e.cause?.code ?? e.message}`);
+      await new Promise((r) => setTimeout(r, 1000 * attempt));
+    }
+  }
+}
+
 async function get(url) {
-  const res = await fetch(url, { redirect: "follow" });
-  return { status: res.status, url: res.url, text: res.ok ? await res.text() : "" };
+  try {
+    const res = await fetchRetry(url, { redirect: "follow" });
+    return { status: res.status, url: res.url, text: res.ok ? await res.text() : "" };
+  } catch (e) {
+    fail(e.message);
+    return { status: 0, url, text: "" };
+  }
 }
 
 /**
@@ -49,7 +69,7 @@ async function render(html, pageUrl, rootId) {
   const context = vm.createContext({
     document,
     location: { href: loc.href, search: loc.search, pathname: loc.pathname, origin: loc.origin },
-    fetch: (u, o) => fetch(new URL(u, pageUrl), o),
+    fetch: (u, o) => fetchRetry(new URL(u, pageUrl), o),
     URL, URLSearchParams, console, setTimeout, clearTimeout, encodeURIComponent, decodeURIComponent, Date,
   });
   for (const src of scriptSrcs(html, pageUrl)) {
@@ -122,11 +142,11 @@ const mustServe = ["/", "/receipt", "/about", "/questionnaire", "/receipts/index
 const mustNotServe = ["/src/cli/convert.ts", "/package.json", "/README.md", "/scripts/predeploy-check.mjs",
   "/sources/manifest.json", "/.kiro/steering/product.md", "/pairs/WideWorldImporters/Integration.GetMovementUpdates.json", "/.env"];
 for (const p of mustServe) {
-  const r = await fetch(base + p);
+  const r = await fetchRetry(base + p).catch((e) => ({ status: e.message }));
   if (r.status !== 200) fail(`${p} returned ${r.status}, expected 200`);
 }
 for (const p of mustNotServe) {
-  const r = await fetch(base + p);
+  const r = await fetchRetry(base + p).catch((e) => ({ status: e.message }));
   if (r.status !== 404) fail(`${p} returned ${r.status}, expected 404 (only the site should be published)`);
 }
 
