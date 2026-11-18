@@ -124,7 +124,17 @@ async function capture(scratch: MssqlClient, spec: ObjectSpec): Promise<Expected
       const describeError = d.rows.find((r) => r[2] !== null)?.[2];
       if (describeError || !d.rows.length) throw new Error(`${spec.name}: SQL Server could not describe the result of: ${call}${describeError ? ` (${String(describeError)})` : ""}`);
       const columns = d.rows.map((r) => ({ name: String(r[0]), sqlServerType: String(r[1]) }));
-      const rs = await scratch.query(call, []);
+      let rs;
+      try {
+        rs = await scratch.query(call, []);
+      } catch (e) {
+        // a declared result error is this case's outcome (as in step 3); any other error stops the capture
+        const num = errorNumber(e);
+        const cls = spec.resultErrorClasses?.find((c) => num !== undefined && c.sqlServer.includes(num));
+        if (!cls) throw e;
+        cases.push({ label: fc.label, columns, raised: `raised: ${cls.label}` });
+        continue;
+      }
       const names = rs.columns.map((c) => c.name);
       if (names.join("\u0001") !== columns.map((c) => c.name).join("\u0001")) {
         throw new Error(`${spec.name}: described columns ${JSON.stringify(columns.map((c) => c.name))} differ from returned ${JSON.stringify(names)}`);

@@ -32,6 +32,11 @@ export interface ExpectedCase {
   rows?: string[][];
   /** State objects: "completed", "raised" or "raised: <class>", and every row of each stateCheck table afterwards. */
   outcome?: string;
+  /**
+   * Result-set objects with declared result errors (spec.resultErrorClasses): "raised: <class>" when the original T-SQL
+   * raised one of them for this case (no rows are then expected); absent when it completed and returned `rows`.
+   */
+  raised?: string;
   tables?: Record<string, { columns: string[]; rows: string[][] }>;
 }
 
@@ -135,7 +140,8 @@ export function unsupportedFeatures(spec: ObjectSpec): string[] {
   if (!spec.fixedCases?.length) out.push("no fixed cases (the agreed tests are the fixed cases)");
   if (spec.tables.some((t) => t.tvp)) out.push("table-valued parameters");
   if (spec.forJsonChunks || spec.jsonColumns?.length) out.push("JSON results");
-  if (spec.resultErrorClasses?.length) out.push("declared result errors");
+  // declared result errors are supported (2026-11-18): each case asserts its outcome, and its rows when it completed
+  if (spec.resultErrorClasses?.length && spec.stateCheck) out.push("declared result errors together with state checks");
   if (spec.sampleSetup || spec.setup) out.push("per-sample or one-off setup statements");
   if (spec.dependencies?.length) out.push("dependencies on other converted objects");
   if (spec.stateCheck?.queries?.length) out.push("state observation queries");
@@ -338,8 +344,25 @@ export function tsqltScript(spec: ObjectSpec, expected: ExpectedFile, options: T
       if (rows.length) {
         body.push(`INSERT INTO #Expected (${cols.map((c) => ssName(c.name)).join(", ")}) VALUES\n  ${rows.map((r) => `(${r.map(ssLiteral).join(", ")})`).join(",\n  ")};`);
       }
-      body.push(`INSERT INTO #Actual\n${call};`);
-      body.push(`EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';`);
+      if (spec.resultErrorClasses?.length) {
+        // a declared error is an outcome, as in step 3: only the declared numbers count; any other error is reported
+        const whens = spec.resultErrorClasses.map((c) => `WHEN ERROR_NUMBER() IN (${c.sqlServer.join(", ")}) THEN N'${`raised: ${c.label}`.replace(/'/g, "''")}'`);
+        const expectedOutcome = exp.raised ?? "completed";
+        body.push(
+          "DECLARE @outcome nvarchar(4000) = N'completed';",
+          "BEGIN TRY",
+          `  INSERT INTO #Actual\n  ${call};`,
+          "END TRY",
+          "BEGIN CATCH",
+          `  SET @outcome = CASE ${whens.join(" ")} ELSE N'unexpected error ' + CAST(ERROR_NUMBER() AS nvarchar(20)) + N': ' + ERROR_MESSAGE() END;`,
+          "END CATCH;",
+          `EXEC tSQLt.AssertEqualsString @Expected = N'${expectedOutcome.replace(/'/g, "''")}', @Actual = @outcome, @Message = N'outcome';`,
+        );
+        if (!exp.raised) body.push(`EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';`);
+      } else {
+        body.push(`INSERT INTO #Actual\n${call};`);
+        body.push(`EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';`);
+      }
     }
     batches.push(
       `-- case ${i + 1}: ${fc.label}\n${noTransaction ? "--[@tSQLt:NoTransaction](DEFAULT)\n" : ""}CREATE PROCEDURE ${ssName(TEST_CLASS)}.${ssName(testName(i, fc.label))}\nAS\nBEGIN\n` +
@@ -425,6 +448,31 @@ export function pgScript(spec: ObjectSpec, expected: ExpectedFile): string {
         if (st.rows.length) lines.push(`INSERT INTO ${ex} (${cols}) VALUES\n  ${st.rows.map((r) => `(${r.map(pgLiteral).join(", ")})`).join(",\n  ")};`);
         lines.push(pgAssertSame(name, `${tableKey(t)} after the call`, `SELECT ${cols} FROM ${ex}`, `SELECT ${cols} FROM ${pgTableName(t)}`));
       });
+    } else if (spec.resultErrorClasses?.length) {
+      // the call runs inside a block that catches only the declared SQLSTATEs (its insert is undone when it raises);
+      // the table is created first WITH NO DATA, which does not run the call
+      const cols = exp.columns ?? [];
+      const handlers = spec.resultErrorClasses.map((c) =>
+        `  WHEN ${c.postgres.map((code) => `SQLSTATE '${code}'`).join(" OR ")} THEN INSERT INTO pp_outcome VALUES (${pgString(`raised: ${c.label}`)});`);
+      lines.push(`CREATE TEMP TABLE pp_actual ON COMMIT DROP AS\n${call}\nWITH NO DATA;`);
+      lines.push("CREATE TEMP TABLE pp_outcome (outcome text) ON COMMIT DROP;");
+      lines.push([
+        "DO $pp$",
+        "BEGIN",
+        `  INSERT INTO pp_actual ${call};`,
+        "  INSERT INTO pp_outcome VALUES ('completed');",
+        "EXCEPTION",
+        ...handlers,
+        "END $pp$;",
+      ].join("\n"));
+      lines.push(pgAssertSame(name, "the outcome", `SELECT ${pgString(exp.raised ?? "completed")}::text AS outcome`, "SELECT outcome FROM pp_outcome"));
+      if (!exp.raised) {
+        lines.push(pgAssertColumns(name, "pp_actual", cols.map((c) => c.name)));
+        lines.push("CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;");
+        const rows = exp.rows ?? [];
+        if (rows.length) lines.push(`INSERT INTO pp_expected VALUES\n  ${rows.map((r) => `(${r.map(pgLiteral).join(", ")})`).join(",\n  ")};`);
+        lines.push(pgAssertSame(name, "the result", "SELECT * FROM pp_expected", "SELECT * FROM pp_actual"));
+      }
     } else {
       const cols = exp.columns ?? [];
       lines.push(`CREATE TEMP TABLE pp_actual ON COMMIT DROP AS\n${call};`);

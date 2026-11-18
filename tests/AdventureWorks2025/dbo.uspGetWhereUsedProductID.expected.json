@@ -1,0 +1,482 @@
+{
+  "object": "dbo.uspGetWhereUsedProductID",
+  "database": "AdventureWorks2025",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-18T05:37:17.620Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "a cycle (1 -> 2 -> 1): both engines stop at MAXRECURSION 25",
+      "columns": [
+        {
+          "name": "ProductAssemblyID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "ComponentID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "ComponentDesc",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TotalQuantity",
+          "sqlServerType": "decimal(38,2)"
+        },
+        {
+          "name": "StandardCost",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "ListPrice",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "BOMLevel",
+          "sqlServerType": "smallint"
+        },
+        {
+          "name": "RecursionLevel",
+          "sqlServerType": "int"
+        }
+      ],
+      "raised": "raised: maximum recursion (25) exhausted"
+    },
+    {
+      "label": "a chain needing exactly 25 recursions is allowed",
+      "columns": [
+        {
+          "name": "ProductAssemblyID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "ComponentID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "ComponentDesc",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TotalQuantity",
+          "sqlServerType": "decimal(38,2)"
+        },
+        {
+          "name": "StandardCost",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "ListPrice",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "BOMLevel",
+          "sqlServerType": "smallint"
+        },
+        {
+          "name": "RecursionLevel",
+          "sqlServerType": "int"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "n:2",
+          "s:P1",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:1",
+          "n:25"
+        ],
+        [
+          "n:2",
+          "n:3",
+          "s:P2",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:2",
+          "n:24"
+        ],
+        [
+          "n:3",
+          "n:4",
+          "s:P3",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:3",
+          "n:23"
+        ],
+        [
+          "n:4",
+          "n:5",
+          "s:P4",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:4",
+          "n:22"
+        ],
+        [
+          "n:5",
+          "n:6",
+          "s:P5",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:5",
+          "n:21"
+        ],
+        [
+          "n:6",
+          "n:7",
+          "s:P6",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:6",
+          "n:20"
+        ],
+        [
+          "n:7",
+          "n:8",
+          "s:P7",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:7",
+          "n:19"
+        ],
+        [
+          "n:8",
+          "n:9",
+          "s:P8",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:8",
+          "n:18"
+        ],
+        [
+          "n:9",
+          "n:10",
+          "s:P9",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:9",
+          "n:17"
+        ],
+        [
+          "n:10",
+          "n:11",
+          "s:P10",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:10",
+          "n:16"
+        ],
+        [
+          "n:11",
+          "n:12",
+          "s:P11",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:11",
+          "n:15"
+        ],
+        [
+          "n:12",
+          "n:13",
+          "s:P12",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:12",
+          "n:14"
+        ],
+        [
+          "n:13",
+          "n:14",
+          "s:P13",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:13",
+          "n:13"
+        ],
+        [
+          "n:14",
+          "n:15",
+          "s:P14",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:14",
+          "n:12"
+        ],
+        [
+          "n:15",
+          "n:16",
+          "s:P15",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:15",
+          "n:11"
+        ],
+        [
+          "n:16",
+          "n:17",
+          "s:P16",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:16",
+          "n:10"
+        ],
+        [
+          "n:17",
+          "n:18",
+          "s:P17",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:17",
+          "n:9"
+        ],
+        [
+          "n:18",
+          "n:19",
+          "s:P18",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:18",
+          "n:8"
+        ],
+        [
+          "n:19",
+          "n:20",
+          "s:P19",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:19",
+          "n:7"
+        ],
+        [
+          "n:20",
+          "n:21",
+          "s:P20",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:20",
+          "n:6"
+        ],
+        [
+          "n:21",
+          "n:22",
+          "s:P21",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:21",
+          "n:5"
+        ],
+        [
+          "n:22",
+          "n:23",
+          "s:P22",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:22",
+          "n:4"
+        ],
+        [
+          "n:23",
+          "n:24",
+          "s:P23",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:23",
+          "n:3"
+        ],
+        [
+          "n:24",
+          "n:25",
+          "s:P24",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:24",
+          "n:2"
+        ],
+        [
+          "n:25",
+          "n:26",
+          "s:P25",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:25",
+          "n:1"
+        ],
+        [
+          "n:26",
+          "n:27",
+          "s:P26",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:26",
+          "n:0"
+        ]
+      ]
+    },
+    {
+      "label": "a chain needing 26 recursions fails",
+      "columns": [
+        {
+          "name": "ProductAssemblyID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "ComponentID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "ComponentDesc",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TotalQuantity",
+          "sqlServerType": "decimal(38,2)"
+        },
+        {
+          "name": "StandardCost",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "ListPrice",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "BOMLevel",
+          "sqlServerType": "smallint"
+        },
+        {
+          "name": "RecursionLevel",
+          "sqlServerType": "int"
+        }
+      ],
+      "raised": "raised: maximum recursion (25) exhausted"
+    },
+    {
+      "label": "the same component twice under one assembly: quantities are summed",
+      "columns": [
+        {
+          "name": "ProductAssemblyID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "ComponentID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "ComponentDesc",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TotalQuantity",
+          "sqlServerType": "decimal(38,2)"
+        },
+        {
+          "name": "StandardCost",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "ListPrice",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "BOMLevel",
+          "sqlServerType": "smallint"
+        },
+        {
+          "name": "RecursionLevel",
+          "sqlServerType": "int"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "n:3",
+          "s:P1",
+          "n:3.5",
+          "n:1.5",
+          "n:2.25",
+          "n:1",
+          "n:0"
+        ]
+      ]
+    },
+    {
+      "label": "check date on the end date is included; after it is excluded",
+      "columns": [
+        {
+          "name": "ProductAssemblyID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "ComponentID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "ComponentDesc",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TotalQuantity",
+          "sqlServerType": "decimal(38,2)"
+        },
+        {
+          "name": "StandardCost",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "ListPrice",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "BOMLevel",
+          "sqlServerType": "smallint"
+        },
+        {
+          "name": "RecursionLevel",
+          "sqlServerType": "int"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "n:2",
+          "s:P1",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:1",
+          "n:0"
+        ]
+      ]
+    }
+  ]
+}

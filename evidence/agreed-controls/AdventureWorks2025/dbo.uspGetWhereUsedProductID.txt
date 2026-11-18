@@ -1,0 +1,16 @@
+negative control for dbo.uspGetWhereUsedProductID (step 2), 2026-11-18T05:38:12.933Z
+corruption: case 1 expected outcome "raised: maximum recursion (25) exhausted" -> "completed" with no rows
+SQL Server: test 01 a cycle (1 -> 2 -> 1): both engines stop at MAXRECURSION 25: FAIL — Failure: outcome
+Expected: <completed>
+but was : <raised: maximum recursion (25) exhausted>
+Warning: Uncommitable transaction detected!
+SQL Server: test 02 a chain needing exactly 25 recursions is allowed: pass
+SQL Server: test 03 a chain needing 26 recursions fails: pass
+SQL Server: test 04 the same component twice under one assembly: quantities are summed: pass
+SQL Server: test 05 check date on the end date is included; after it is excluded: pass
+PostgreSQL: test 01 a cycle (1 -> 2 -> 1): both engines stop at MAXRECURSION 25: FAIL — agreed test failed (test 01 a cycle (1 -> 2 -> 1): both engines stop at MAXRECURSION 25): 1 expected row(s) missing, 1 unexpected row(s) in the outcome
+PostgreSQL: test 02 a chain needing exactly 25 recursions is allowed: pass
+PostgreSQL: test 03 a chain needing 26 recursions fails: pass
+PostgreSQL: test 04 the same component twice under one assembly: quantities are summed: pass
+PostgreSQL: test 05 check date on the end date is included; after it is excluded: pass
+RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { tsqltScript, type ExpectedFile } from "./generate.js";
+import { pgCases, pgScript, splitBatches, tsqltScript, unsupportedFeatures, type ExpectedFile } from "./generate.js";
 import { specByName } from "../conversions/specs.js";
 import type { ObjectSpec } from "../harness/generic/spec.js";
 
@@ -33,5 +33,47 @@ describe("tsqltScript: schema-bound objects", () => {
   it("refuses a schema-bound object with state tests (outside tSQLt's transaction a DELETE would not be rolled back)", () => {
     const stateSpec = { ...spec, stateCheck: { tables: [], sqlServerErrors: [], postgresCodes: [] } } as unknown as ObjectSpec;
     expect(() => tsqltScript(stateSpec, expected, { schemaBound: true })).toThrow(/schema-bound object with state tests/);
+  });
+});
+
+describe("declared result errors (spec.resultErrorClasses)", () => {
+  const bom = specByName("dbo.uspGetBillOfMaterials")!;
+  const cols = [{ name: "ProductAssemblyID", sqlServerType: "int" }];
+  // case 1 raised the declared error on SQL Server; the others completed
+  const exp: ExpectedFile = {
+    object: "dbo.uspGetBillOfMaterials", database: bom.database, capturedFrom: "", capturedAt: "", review: "",
+    cases: (bom.fixedCases ?? []).map((fc, i) => (i === 0
+      ? { label: fc.label, columns: cols, raised: "raised: maximum recursion (25) exhausted" }
+      : { label: fc.label, columns: cols, rows: [["n:1"]] })),
+  } as ExpectedFile;
+
+  it("is no longer an unsupported feature", () => {
+    expect(unsupportedFeatures(bom)).toEqual([]);
+  });
+
+  it("tSQLt: each case asserts its outcome; only the declared error numbers count; rows only when it completed", () => {
+    const tests = splitBatches(tsqltScript(bom, exp)).filter((b) => b.includes("CREATE PROCEDURE"));
+    expect(tests).toHaveLength((bom.fixedCases ?? []).length);
+    for (const t of tests) {
+      expect(t).toContain("WHEN ERROR_NUMBER() IN (530) THEN N'raised: maximum recursion (25) exhausted'");
+      expect(t).toContain("ELSE N'unexpected error '");
+    }
+    expect(tests[0]).toContain("@Expected = N'raised: maximum recursion (25) exhausted', @Actual = @outcome");
+    expect(tests[0]).not.toContain("AssertEqualsTable");
+    expect(tests[1]).toContain("@Expected = N'completed', @Actual = @outcome");
+    expect(tests[1]).toContain("AssertEqualsTable");
+  });
+
+  it("PostgreSQL: the call is caught only for the declared SQLSTATE; rows compared only when it completed", () => {
+    const cases = pgCases(pgScript(bom, exp));
+    expect(cases).toHaveLength((bom.fixedCases ?? []).length);
+    for (const c of cases) {
+      expect(c.sql).toContain("WHEN SQLSTATE '54001' THEN INSERT INTO pp_outcome VALUES ('raised: maximum recursion (25) exhausted')");
+      expect(c.sql).toContain("WITH NO DATA;");
+    }
+    expect(cases[0].sql).toContain("SELECT 'raised: maximum recursion (25) exhausted'::text AS outcome");
+    expect(cases[0].sql).not.toContain("SELECT * FROM pp_expected");
+    expect(cases[1].sql).toContain("SELECT 'completed'::text AS outcome");
+    expect(cases[1].sql).toContain("SELECT * FROM pp_expected");
   });
 });

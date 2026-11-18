@@ -19,7 +19,7 @@ Requirements: `requirements.md`. Design: `design.md`. Dates (owner, T1): A by 20
 
 ## Tranche B — generator support (9 pending objects)
 - [ ] JSON results: `Website.SearchForPeople`, `SearchForStockItems`, `SearchForStockItemsByTags` (and, failing step 4, `SearchForCustomers`, `SearchForSuppliers`)
-- [ ] Declared result errors: `dbo.uspGetBillOfMaterials`, `dbo.uspGetWhereUsedProductID`
+- [x] Declared result errors: `dbo.uspGetBillOfMaterials`, `dbo.uspGetWhereUsedProductID` — generator support (`ExpectedCase.raised`, outcome assertion on both engines, unit tests in `generate.test.ts`); step 2 pass on both engines (cases 1 and 3 raise MAXRECURSION, 2/4/5 complete), 4 of 4 planted defects caught by the agreed tests, negative controls (raised -> completed) seen failing, review packets
 - [ ] Geography / xml columns: `Sales.vIndividualCustomer`, `HumanResources.vEmployee`, `Website.Customers`, `Website.Suppliers`
 - [ ] A negative control seen failing for each new feature before a pass is trusted
 

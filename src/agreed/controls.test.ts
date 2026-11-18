@@ -42,6 +42,14 @@ describe("corruptExpected", () => {
     expect(corruptExpected(file([{ label: "a", outcome: "completed", tables: {} }])).file.cases[0].outcome).toBe("raised");
     expect(corruptExpected(file([{ label: "a", outcome: "raised: x", tables: {} }])).file.cases[0].outcome).toBe("completed");
   });
+  it("turns an expected declared result error into an expected completion with no rows", () => {
+    const raised = file([{ label: "a", columns: [{ name: "x", sqlServerType: "int" }], raised: "raised: maximum recursion" }]);
+    const { file: bad, what } = corruptExpected(raised);
+    expect(bad.cases[0].raised).toBeUndefined();
+    expect(bad.cases[0].rows).toEqual([]);
+    expect(raised.cases[0].raised).toBe("raised: maximum recursion");
+    expect(what).toContain('"raised: maximum recursion" -> "completed"');
+  });
   it("adds an all-NULL row when there is no value to change", () => {
     const empty = file([{ label: "a", columns: [{ name: "x", sqlServerType: "int" }, { name: "y", sqlServerType: "int" }], rows: [] }]);
     expect(corruptExpected(empty).file.cases[0].rows).toEqual([["∅", "∅"]]);

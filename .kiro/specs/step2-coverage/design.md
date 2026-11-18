@@ -25,5 +25,11 @@ Batch 3 found the same difference in `Purchasing.vVendorWithAddresses` and `Sale
 
 Other objects may share the pattern: any join or comparison on text under a CI collation. The step 3 generator does not yet produce keys that differ only in case or trailing spaces; that is noted here, not fixed in this tranche.
 
-## Tranches B and C
-Not designed yet: JSON results, declared result errors and geography/xml columns (B); setup statements, state observation queries, table-valued parameters, identity columns, dependencies and memory-optimized tables (C). Each new feature gets unit tests in `src/agreed/` and its own negative control before a pass is trusted.
+## Tranche B: declared result errors
+A spec's `resultErrorClasses` make a declared error an outcome, as in step 3 (`raisedAs` in `run.ts`). The capture records `raised: "raised: <class>"` for a case whose original T-SQL raised a declared error number (any other error stops the capture). Each generated test then asserts the outcome ("completed" or "raised: <class>"), and the rows only when it completed:
+- tSQLt: `INSERT INTO #Actual EXEC ...` inside TRY/CATCH; only the declared numbers map to the class, any other error becomes "unexpected error N: ..." and fails the outcome assertion. The declared error dooms tSQLt's test transaction (tSQLt prints "Uncommitable transaction detected!" and rolls it back); the outcome assertion has already run and is what tSQLt reports (pass normally, "Failure: outcome" in the negative control).
+- PostgreSQL: `pp_actual` is created `WITH NO DATA` (the call does not run), then a block inserts the call's rows and records "completed", with an exception handler for the declared SQLSTATEs only.
+- Negative control: a raised case is corrupted to "completed with no rows". Seen failing for both bill-of-materials procedures (2026-11-18).
+
+## Tranches B (rest) and C
+Not designed yet: JSON results and geography/xml columns (B); setup statements, state observation queries, table-valued parameters, identity columns, dependencies and memory-optimized tables (C). Each new feature gets unit tests in `src/agreed/` and its own negative control before a pass is trusted.

@@ -62,7 +62,7 @@
   ],
   "evidence": {
     "step1": "pass",
-    "step2": "not-run",
+    "step2": "pass",
     "step3": "pass",
     "step4": "pass",
     "step5": "not-run",
@@ -99,7 +99,21 @@
       "open-ended components excluded (ISNULL(EndDate, @CheckDate) dropped)",
       "quantities not summed"
     ],
-    "harnessVersion": "harness-generic-0.3.0"
+    "harnessVersion": "harness-generic-0.3.0",
+    "testsRun": [
+      "tSQLt V1.0.8083.3529 on SQL Server (tests/AdventureWorks2025/dbo.uspGetWhereUsedProductID.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/AdventureWorks2025/dbo.uspGetWhereUsedProductID.pg.sql); expected results tests/AdventureWorks2025/dbo.uspGetWhereUsedProductID.expected.json",
+      "SQL Server: AgreedTests.[test 01 a cycle (1 -> 2 -> 1): both engines stop at MAXRECURSION 25]: pass",
+      "SQL Server: AgreedTests.[test 02 a chain needing exactly 25 recursions is allowed]: pass",
+      "SQL Server: AgreedTests.[test 03 a chain needing 26 recursions fails]: pass",
+      "SQL Server: AgreedTests.[test 04 the same component twice under one assembly: quantities are summed]: pass",
+      "SQL Server: AgreedTests.[test 05 check date on the end date is included; after it is excluded]: pass",
+      "PostgreSQL: AgreedTests.[test 01 a cycle (1 -> 2 -> 1): both engines stop at MAXRECURSION 25]: pass",
+      "PostgreSQL: AgreedTests.[test 02 a chain needing exactly 25 recursions is allowed]: pass",
+      "PostgreSQL: AgreedTests.[test 03 a chain needing 26 recursions fails]: pass",
+      "PostgreSQL: AgreedTests.[test 04 the same component twice under one assembly: quantities are summed]: pass",
+      "PostgreSQL: AgreedTests.[test 05 check date on the end date is included; after it is excluded]: pass",
+      "planted defects caught by the agreed tests: 4 of 4"
+    ]
   },
   "effort": {
     "humanMinutes": 0,

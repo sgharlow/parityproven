@@ -34,6 +34,13 @@ export function corruptExpected(expected: ExpectedFile): { file: ExpectedFile; w
     c.outcome = was === "completed" ? "raised" : "completed";
     return { file, what: `case 1 expected outcome "${was}" -> "${c.outcome}"` };
   }
+  if (c.raised !== undefined) {
+    // a declared result error expected: expect completion with no rows instead
+    const was = c.raised;
+    delete c.raised;
+    c.rows = [];
+    return { file, what: `case 1 expected outcome "${was}" -> "completed" with no rows` };
+  }
   for (const [r, row] of (c.rows ?? []).entries()) {
     for (const [i, cell] of row.entries()) {
       const bad = corruptCell(cell);
