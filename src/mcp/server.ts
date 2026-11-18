@@ -6,7 +6,7 @@
  *
  * Read-only by construction: it connects as pp_mcp_reader, whose only permissions are SELECT on the views in the access
  * map, and every tool runs one fixed parameterised query (src/mcp/tools.ts). Each call is appended to
- * evidence/mcp/tool-calls.log (time, tool, arguments, row count; never row data). Nothing is written to stdout except the
+ * evidence/mcp/tool-calls.jsonl (time, tool, arguments, row count; never row data). Nothing is written to stdout except the
  * MCP protocol.
  */
 import { appendFileSync, existsSync, mkdirSync, readFileSync } from "fs";
@@ -30,7 +30,7 @@ if (existsSync(envFile)) {
 }
 
 export const READER_LOGIN = "pp_mcp_reader";
-const LOG = resolve(ROOT, "evidence", "mcp", "tool-calls.log");
+const LOG = resolve(ROOT, "evidence", "mcp", "tool-calls.jsonl");
 const map = loadAccessMap(resolve(ROOT, "web", "data", "agent-access-map.json"));
 
 function audit(entry: Record<string, unknown>): void {

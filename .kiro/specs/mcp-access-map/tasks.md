@@ -8,4 +8,4 @@
 - [x] Live page `/access-map` rendered from the map; nav link on every page; `site:check` covers it
 - [x] Pinned dependencies and notices; npm 11.5.2 dropped rolldown's optional platform entries from the lockfile when packages were added, re-added unchanged from the committed lock (`npm ci` verified)
 - [ ] Register in the workspace Kiro MCP configuration (`.kiro/settings/mcp.json`) — the agent may not write `.kiro/settings/`; the owner adds it
-- [ ] One real use by Kiro, visible in `evidence/mcp/tool-calls.log` with Kiro as the client; then `product.md` and `kiroween-submission.md` say MCP was used, and how
+- [ ] One real use by Kiro, visible in `evidence/mcp/tool-calls.jsonl` with Kiro as the client; then `product.md` and `kiroween-submission.md` say MCP was used, and how

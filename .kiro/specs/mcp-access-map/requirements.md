@@ -16,7 +16,7 @@
 2. The server's tools and the live `/access-map` page both read that file. The page says the server is a local prototype over public sample data and recommends no vendor.
 
 ### REQ-4 Evidence of use
-1. Each tool call is logged (time, MCP client, tool, arguments, row count; never row data) to `evidence/mcp/tool-calls.log`.
+1. Each tool call is logged (time, MCP client, tool, arguments, row count; never row data) to `evidence/mcp/tool-calls.jsonl`.
 2. The server is registered in the workspace's Kiro MCP configuration. Nothing says Kiro used MCP until a call whose client is Kiro is in the log.
 
 ### REQ-5 Data and dependencies

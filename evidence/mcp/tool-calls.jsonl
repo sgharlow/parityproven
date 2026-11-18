@@ -1,0 +1,4 @@
+{"at":"2026-11-18T18:41:53.048Z","client":"parityproven-smoke-test 0.1.0","tool":"list_customers","args":{"limit":2},"rowCount":2}
+{"at":"2026-11-18T18:41:53.060Z","client":"parityproven-smoke-test 0.1.0","tool":"list_customers","args":{"limit":2},"rowCount":2}
+{"at":"2026-11-18T18:42:18.229Z","client":"parityproven-smoke-test 0.1.0","tool":"list_customers","args":{"limit":2},"rowCount":2}
+{"at":"2026-11-18T18:42:22.211Z","client":"parityproven-smoke-test 0.1.0","tool":"list_customers","args":{"limit":2},"rowCount":2}

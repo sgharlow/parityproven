@@ -48,7 +48,7 @@
     "readOnlyBy": "Construction: the login cannot write (no INSERT, UPDATE, DELETE or DDL permission), and no tool accepts SQL text. Each tool runs one fixed, parameterised query against one view. The negative test (npm run mcp:check) runs as this login and records that every write is refused.",
     "rowLimits": "Every tool returns at most maxRows rows per call. Customer rows are also limited by the database's own row-level security policy (Application.FilterCustomersBySalesTerritoryRole on Sales.Customers): a login sees only the customers of the sales-territory roles it belongs to. The prototype's login belongs to one territory role, which carries no permissions of its own, so it sees that territory's customers only. The visible row counts are measured by npm run mcp:check (evidence/mcp/readonly-check.txt), not stated here.",
     "rowLevelRoles": ["Far West Sales"],
-    "audit": "Each tool call is appended to evidence/mcp/tool-calls.log with its time, tool, arguments and row count, and no row data. A production deployment would add SQL Server Audit on the login."
+    "audit": "Each tool call is appended to evidence/mcp/tool-calls.jsonl with its time, tool, arguments and row count, and no row data. A production deployment would add SQL Server Audit on the login."
   },
   "firstUseCase": {
     "title": "Customer lookup for an order-support agent",

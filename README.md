@@ -104,7 +104,7 @@ npm run mcp:server    # stdio; an MCP client starts this (Kiro: .kiro/settings/m
 ```
 
 - Read-only by construction: the login has no write or DDL permission, and every tool runs one fixed parameterised query against one view (`src/mcp/tools.ts`); undeclared arguments are rejected.
-- Each call is appended to `evidence/mcp/tool-calls.log` (time, client, tool, arguments, row count; no row data).
+- Each call is appended to `evidence/mcp/tool-calls.jsonl` (time, client, tool, arguments, row count; no row data).
 - Data is the public sample, restored at run time. Nothing is hosted; the live page only displays the map.
 
 ### Known limits

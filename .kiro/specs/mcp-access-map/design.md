@@ -21,4 +21,4 @@ Each attempt runs in a transaction that is always rolled back. A refusal counts 
 `web/access-map.html` + `web/access-map.js` render `web/data/agent-access-map.json`; counts on the page are computed from the file. `site:check` follows the scorecard's nav link to the page, renders it with its script and requires every tool in the map to appear.
 
 ## Evidence of use
-`evidence/mcp/tool-calls.log` records the MCP client from the handshake (`server.getClientVersion()`), so the smoke test (`scripts/mcp-smoke.mjs`, client "parityproven-smoke-test") and a call from Kiro are told apart.
+`evidence/mcp/tool-calls.jsonl` records the MCP client from the handshake (`server.getClientVersion()`), so the smoke test (`scripts/mcp-smoke.mjs`, client "parityproven-smoke-test") and a call from Kiro are told apart.
