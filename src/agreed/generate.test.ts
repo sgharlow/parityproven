@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { inputCell, pgCases, pgLiteral, pgScript, splitBatches, ssLiteral, tsqltScript, unsupportedFeatures, type ExpectedFile } from "./generate.js";
+import { inputCell, pgCases, pgLiteral, pgScript, splitBatches, ssClientScript, ssLiteral, tsqltScript, unsupportedFeatures, type ExpectedFile } from "./generate.js";
 import { specByName } from "../conversions/specs.js";
 import type { ObjectSpec } from "../harness/generic/spec.js";
 
@@ -111,9 +111,24 @@ describe("geography and xml", () => {
     expect(pg).toContain('SELECT "BusinessEntityID", "Demographics"::text AS "Demographics" FROM (');
   });
 });
-describe("FOR JSON procedures", () => {
-  it("are refused, with the measured reason, until the owner rules how step 2 applies to them", () => {
-    const s = specByName("Website.SearchForStockItems")!;
-    expect(unsupportedFeatures(s).join(" ")).toMatch(/FOR JSON procedure .*INSERT \.\.\. EXEC is refused.*ResultSetFilter, error 6549/);
+describe("FOR JSON procedures (ruling J1)", () => {
+  const s = specByName("Website.SearchForStockItems")!;
+  const exp: ExpectedFile = {
+    object: "Website.SearchForStockItems", database: s.database, capturedFrom: "", capturedAt: "", review: "",
+    cases: (s.fixedCases ?? []).map((fc, i) => ({ label: fc.label, columns: [{ name: "result", sqlServerType: "nvarchar(max)" }], rows: [[i === 0 ? "∅" : 's:{"StockItems":[{"StockItemID":1}]}']] })),
+  } as ExpectedFile;
+
+  it("are supported: no tSQLt script, a client re-run script that says so, and jsonb comparison on PostgreSQL", () => {
+    expect(unsupportedFeatures(s)).toEqual([]);
+    expect(() => tsqltScript(s, exp)).toThrow(/no tSQLt script \(ruling J1\)/);
+    const ss = ssClientScript(s, exp);
+    expect(ss).toContain("not tSQLt (ruling J1)");
+    expect(ss).toContain("EXEC Website.SearchForStockItems @SearchText = ");
+    expect(ss).toContain('-- expected document: {"StockItems":[{"StockItemID":1}]}');
+    expect(ss).toContain("-- expected document: (no rows)");
+    const pg = pgCases(pgScript(s, exp));
+    expect(pg[0].sql).toContain("IS DISTINCT FROM NULL::jsonb");
+    expect(pg[1].sql).toContain(`IS DISTINCT FROM '{"StockItems":[{"StockItemID":1}]}'::jsonb`);
+    expect(pg[1].sql).toContain("agreed test failed (%): the JSON document differs");
   });
 });

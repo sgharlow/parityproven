@@ -45,7 +45,7 @@
     {
       "step": 2,
       "label": "Agreed tests pass (tSQLt on SQL Server, plain-SQL assertions on PostgreSQL)",
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "step": 3,
@@ -100,7 +100,25 @@
       "volumeMismatch": null
     },
     "subMicrosecondNormalised": 0,
-    "harnessVersion": "harness-generic-0.3.0"
+    "harnessVersion": "harness-generic-0.3.0",
+    "testsRun": [
+      "SQL Server: NOT tSQLt (ruling J1, 2026-11-18: no tSQLt test can observe a FOR JSON procedure's result) — each fixed case loaded and the original procedure re-run through the client, its document compared exactly with the expected one (tests/WideWorldImporters/Website.SearchForStockItemsByTags.sqlserver.sql); plain-SQL assertions on PostgreSQL, compared as jsonb (tests/WideWorldImporters/Website.SearchForStockItemsByTags.pg.sql); expected results tests/WideWorldImporters/Website.SearchForStockItemsByTags.expected.json",
+      "SQL Server (client re-run, not tSQLt): AgreedTests.[test 01 Tags: LIKE a_]: pass",
+      "SQL Server (client re-run, not tSQLt): AgreedTests.[test 02 Tags: LIKE [a-c]: pass",
+      "SQL Server (client re-run, not tSQLt): AgreedTests.[test 03 Tags: LIKE _]: pass",
+      "SQL Server (client re-run, not tSQLt): AgreedTests.[test 04 Tags: LIKE café]: pass",
+      "SQL Server (client re-run, not tSQLt): AgreedTests.[test 05 Tags: LIKE [^a]: pass",
+      "SQL Server (client re-run, not tSQLt): AgreedTests.[test 06 Tags: LIKE a\\\\b]: pass",
+      "SQL Server (client re-run, not tSQLt): AgreedTests.[test 07 Tags: LIKE [a _]: pass",
+      "PostgreSQL: AgreedTests.[test 01 Tags: LIKE a_]: pass",
+      "PostgreSQL: AgreedTests.[test 02 Tags: LIKE [a-c]: pass",
+      "PostgreSQL: AgreedTests.[test 03 Tags: LIKE _]: pass",
+      "PostgreSQL: AgreedTests.[test 04 Tags: LIKE café]: pass",
+      "PostgreSQL: AgreedTests.[test 05 Tags: LIKE [^a]: pass",
+      "PostgreSQL: AgreedTests.[test 06 Tags: LIKE a\\\\b]: pass",
+      "PostgreSQL: AgreedTests.[test 07 Tags: LIKE [a _]: pass",
+      "planted defects caught by the agreed tests: 5 of 6"
+    ]
   },
   "effort": {
     "humanMinutes": 0,
@@ -111,5 +129,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-17T03:55:18.292Z"
+  "builtAt": "2026-11-18T18:29:25.546Z"
 }

@@ -19,6 +19,9 @@ An object counts as **verified** only when steps 1–4 pass and steps 5–6 are 
 - **Step 2 is tSQLt on SQL Server and plain-SQL assertions on PostgreSQL** (pgTAP is not in the pinned PostgreSQL image). The agreed tests are the object's hand-derived fixed cases, with their expected results committed, so they can be read and reviewed.
 - The status rule lives in one place: `src/pairs/status.ts`.
 
+**Ruling (project owner, 2026-11-18, J1)**
+- **Step 2 for FOR JSON procedures is not tSQLt on SQL Server.** No tSQLt test can observe such a procedure's result (`INSERT ... EXEC` is refused for it, also through `tSQLt.ResultSetFilter`, error 6549). Their SQL Server side loads each fixed case and calls the original procedure through the client, joins the streamed chunks, and compares the document exactly with the committed expected one; PostgreSQL compares it as `jsonb` (step 3 still compares key order). The pair record and receipt say "not tSQLt"; the run is recorded in `tests/<db>/<Object>.sqlserver.sql`.
+
 ## Traps every generator must cover
 - NULL versus empty string (`''`), including concatenation and `ISNULL`/`COALESCE` behaviour
 - Collation and case sensitivity in comparisons, `ORDER BY` and `GROUP BY`

@@ -158,10 +158,10 @@ export function unsupportedFeatures(spec: ObjectSpec): string[] {
   const out: string[] = [];
   if (!spec.fixedCases?.length) out.push("no fixed cases (the agreed tests are the fixed cases)");
   if (spec.tables.some((t) => t.tvp)) out.push("table-valued parameters");
-  // FOR JSON procedures: the PostgreSQL side works (compared as jsonb), but no tSQLt test can observe the result on SQL
-  // Server: INSERT ... EXEC is refused for a procedure that uses FOR JSON, directly and through tSQLt.ResultSetFilter
-  // (error 6549, measured 2026-11-18). Blocked until the owner rules how step 2 applies to them.
-  if (spec.forJsonChunks) out.push("JSON results from a FOR JSON procedure (tSQLt cannot capture them: INSERT ... EXEC is refused, also via ResultSetFilter, error 6549)");
+  // FOR JSON procedures: no tSQLt test can observe the result (INSERT ... EXEC is refused, also via tSQLt.ResultSetFilter,
+  // error 6549, measured 2026-11-18). Ruling J1 (owner, 2026-11-18): their SQL Server side is a client re-run of the
+  // original procedure (ssClientScript), not tSQLt; PostgreSQL compares as jsonb.
+  if (spec.forJsonChunks && spec.stateCheck) out.push("FOR JSON results together with state checks");
   if (spec.jsonColumns?.length && !spec.forJsonChunks) out.push("JSON columns in an ordinary result set");
   // declared result errors are supported (2026-11-18): each case asserts its outcome, and its rows when it completed
   if (spec.resultErrorClasses?.length && spec.stateCheck) out.push("declared result errors together with state checks");
@@ -292,6 +292,8 @@ export interface TsqltOptions {
 
 export function tsqltScript(spec: ObjectSpec, expected: ExpectedFile, options: TsqltOptions = {}): string {
   const cases = checkExpected(spec, expected);
+  // ruling J1: a FOR JSON procedure's SQL Server side is a client re-run (ssClientScript), never a tSQLt script
+  if (spec.forJsonChunks) throw new Error(`${spec.name}: FOR JSON procedures have no tSQLt script (ruling J1): use ssClientScript`);
   if (options.schemaBound && spec.stateCheck) {
     // a state test runs outside tSQLt's transaction (NoTransaction), so a DELETE would not be rolled back
     throw new Error(`${spec.name}: schema-bound object with state tests is not supported (FakeTable cannot rename its tables, and DELETE would not be rolled back)`);
@@ -357,15 +359,6 @@ export function tsqltScript(spec: ObjectSpec, expected: ExpectedFile, options: T
         body.push(`SELECT ${st.columns.map(ssName).join(", ")} INTO #ActualState${k + 1} FROM ${ssName(t.schema)}.${ssName(t.name)};`);
         body.push(`EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedState${k + 1}', @Actual = N'#ActualState${k + 1}', @Message = N'${tableKey(t)} after the call';`);
       });
-    } else if (spec.forJsonChunks) {
-      // SQL Server refuses INSERT ... EXEC on a procedure that uses FOR JSON; tSQLt.ResultSetFilter runs the call and
-      // re-emits its first result set, which can be inserted. The chunks are joined in arrival order, as the harness does.
-      const doc = exp.rows?.[0]?.[0] ?? "∅";
-      body.push("CREATE TABLE #Chunks (pp_id int IDENTITY(1,1) PRIMARY KEY, chunk nvarchar(max) NULL);");
-      body.push(`INSERT INTO #Chunks (chunk)\nEXEC tSQLt.ResultSetFilter 1, N'${call.replace(/'/g, "''")}';`);
-      body.push("DECLARE @actual nvarchar(max) = (SELECT STRING_AGG(chunk, N'') WITHIN GROUP (ORDER BY pp_id) FROM #Chunks);");
-      body.push(`DECLARE @expected nvarchar(max) = ${ssLiteral(doc)};`);
-      body.push("EXEC tSQLt.AssertEqualsString @Expected = @expected, @Actual = @actual, @Message = N'JSON document';");
     } else {
       const cols = exp.columns ?? [];
       if (!cols.length) throw new Error(`${spec.name}: expected columns missing in case "${fc.label}"`);
@@ -404,6 +397,31 @@ export function tsqltScript(spec: ObjectSpec, expected: ExpectedFile, options: T
     );
   });
   return batches.join("\nGO\n") + "\nGO\n";
+}
+
+/**
+ * Ruling J1 (2026-11-18): the SQL Server side of step 2 for a FOR JSON procedure is NOT tSQLt. agreed-tests loads each
+ * case and calls the original procedure through the client; this script is the readable record of what it runs (the
+ * same inserts and call) and of the document each case must return. It can be run by hand in the scratch database.
+ */
+export function ssClientScript(spec: ObjectSpec, expected: ExpectedFile): string {
+  const cases = checkExpected(spec, expected);
+  const parts: string[] = [header(spec, "SQL Server client re-run, not tSQLt (ruling J1)", [
+    "No tSQLt test can observe a FOR JSON procedure's result: INSERT ... EXEC is refused for it, also through",
+    "tSQLt.ResultSetFilter (error 6549). agreed-tests runs each case below through the client, joins the chunk rows the",
+    "procedure streams back in arrival order, and compares the document exactly with the expected one.",
+  ])];
+  cases.forEach((fc, i) => {
+    const doc = expected.cases[i]?.rows?.[0]?.[0] ?? "∅";
+    parts.push([
+      `-- case ${i + 1}: ${fc.label}`,
+      ...spec.tables.map((t) => `DELETE FROM ${ssName(t.schema)}.${ssName(t.name)};`),
+      ...ssInserts(spec, fc),
+      `${ssCallText(spec, fc)};`,
+      `-- expected document: ${doc === "∅" ? "(no rows)" : doc.slice(2)}`,
+    ].join("\n"));
+  });
+  return parts.join("\nGO\n") + "\nGO\n";
 }
 
 // ── PostgreSQL ──────────────────────────────────────────────────────────────────────────────────

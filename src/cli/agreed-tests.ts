@@ -35,7 +35,7 @@ import { tableKey, type ObjectSpec } from "../harness/generic/spec.js";
 import { specByName } from "../conversions/specs.js";
 import { autoMutants } from "../conversions/automutants.js";
 import {
-  pgCases, pgScript, splitBatches, ssCallText, ssInserts, TEST_CLASS, testName, tsqltScript, unsupportedFeatures,
+  pgCases, pgScript, splitBatches, ssCallText, ssClientScript, ssInserts, TEST_CLASS, testName, tsqltScript, unsupportedFeatures,
   type ExpectedCase, type ExpectedFile,
 } from "../agreed/generate.js";
 import { corruptExpected } from "../agreed/controls.js";
@@ -203,8 +203,31 @@ async function runOne(conn: Connections, spec: ObjectSpec, recapture: boolean, c
       expected = JSON.parse(readFileSync(expectedPath, "utf-8")) as ExpectedFile;
       console.log(`expected results: tests/${spec.database}/${label}.expected.json (committed)`);
     }
-    const tsqlt = tsqltScript(spec, expected, { schemaBound: /\bWITH\s+SCHEMABINDING\b/i.test(definition) });
     const pgSql = pgScript(spec, expected);
+    if (spec.forJsonChunks) {
+      // ── SQL Server: client re-run (ruling J1, 2026-11-18; not tSQLt) ──
+      // No tSQLt test can observe a FOR JSON procedure's result (INSERT ... EXEC is refused, also via ResultSetFilter,
+      // error 6549). Each fixed case is loaded and the ORIGINAL procedure called through the client, its chunks joined,
+      // and the document compared exactly with the committed expected one.
+      if (!control) {
+        writeFileSync(resolve(testsDir, `${label}.sqlserver.sql`), ssClientScript(spec, expected), "utf-8");
+        writeFileSync(resolve(testsDir, `${label}.pg.sql`), pgSql, "utf-8");
+      }
+      for (const [i, fc] of (spec.fixedCases ?? []).entries()) {
+        await clearSs(scratch, spec);
+        for (const ins of ssInserts(spec, fc)) await scratch.query(ins, []);
+        const rs = await scratch.query(ssCallText(spec, fc), []);
+        const got = rs.rows.length ? `s:${rs.rows.map((r) => String(r[0] ?? "")).join("")}` : "∅";
+        const want = expected.cases[i]?.rows?.[0]?.[0] ?? "∅";
+        const passed = got === want;
+        out.tests.push({
+          engine: "SQL Server", name: testName(i, fc.label), passed,
+          message: passed ? undefined : `Failure: the JSON document differs (client re-run, not tSQLt): expected ${want.slice(0, 120)}, got ${got.slice(0, 120)}`,
+        });
+      }
+      await clearSs(scratch, spec);
+    } else {
+    const tsqlt = tsqltScript(spec, expected, { schemaBound: /\bWITH\s+SCHEMABINDING\b/i.test(definition) });
     if (!control) {
       writeFileSync(resolve(testsDir, `${label}.tsqlt.sql`), tsqlt, "utf-8");
       writeFileSync(resolve(testsDir, `${label}.pg.sql`), pgSql, "utf-8");
@@ -224,6 +247,7 @@ async function runOne(conn: Connections, spec: ObjectSpec, recapture: boolean, c
       const row = rs.rows.find((r) => r[0] === n);
       const passed = row?.[1] === "Success";
       out.tests.push({ engine: "SQL Server", name: n, passed, message: passed ? undefined : row ? `${row[1]}: ${String(row[2] ?? "")}` : "did not run" });
+    }
     }
 
     // ── PostgreSQL: plain SQL ──
@@ -283,8 +307,10 @@ function recordStep2(spec: ObjectSpec, out: Outcome): void {
   const total = out.defects.caught.length + out.defects.missed.length;
   record.evidence.step2 = passed ? "pass" : "fail";
   record.evidence.testsRun = [
-    `tSQLt ${TSQLT.version} on SQL Server (tests/${spec.database}/${label}.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/${spec.database}/${label}.pg.sql); expected results tests/${spec.database}/${label}.expected.json`,
-    ...out.tests.map((t) => `${t.engine}: ${TEST_CLASS}.[${t.name}]: ${t.passed ? "pass" : "fail"}`),
+    spec.forJsonChunks
+      ? `SQL Server: NOT tSQLt (ruling J1, 2026-11-18: no tSQLt test can observe a FOR JSON procedure's result) — each fixed case loaded and the original procedure re-run through the client, its document compared exactly with the expected one (tests/${spec.database}/${label}.sqlserver.sql); plain-SQL assertions on PostgreSQL, compared as jsonb (tests/${spec.database}/${label}.pg.sql); expected results tests/${spec.database}/${label}.expected.json`
+      : `tSQLt ${TSQLT.version} on SQL Server (tests/${spec.database}/${label}.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/${spec.database}/${label}.pg.sql); expected results tests/${spec.database}/${label}.expected.json`,
+    ...out.tests.map((t) => `${spec.forJsonChunks && t.engine === "SQL Server" ? "SQL Server (client re-run, not tSQLt)" : t.engine}: ${TEST_CLASS}.[${t.name}]: ${t.passed ? "pass" : "fail"}`),
     `planted defects caught by the agreed tests: ${out.defects.caught.length} of ${total}`,
   ];
   record.status = computeStatus(record.evidence);

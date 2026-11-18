@@ -1,0 +1,107 @@
+{
+  "object": "Website.SearchForPeople",
+  "database": "WideWorldImporters",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-18T18:28:13.441Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "search name: LIKE \"a_\"",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"People\":[{\"PersonID\":1,\"FullName\":\"Q0001\",\"PreferredName\":\"Q\",\"Relationship\":\"Employee\",\"Company\":\"WWI\"},{\"PersonID\":2,\"FullName\":\"Q0002\",\"PreferredName\":\"Q\",\"Company\":\"WWI\"},{\"PersonID\":4,\"FullName\":\"Q0004\",\"PreferredName\":\"Q\",\"Company\":\"WWI\"}]}"
+        ]
+      ]
+    },
+    {
+      "label": "search name: LIKE \"[a-c]\"",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"People\":[{\"PersonID\":1,\"FullName\":\"Q0001\",\"PreferredName\":\"Q\",\"Relationship\":\"Employee\",\"Company\":\"WWI\"},{\"PersonID\":4,\"FullName\":\"Q0004\",\"PreferredName\":\"Q\",\"Company\":\"WWI\"},{\"PersonID\":5,\"FullName\":\"Q0005\",\"PreferredName\":\"Q\",\"Relationship\":\"Employee\",\"Company\":\"WWI\"}]}"
+        ]
+      ]
+    },
+    {
+      "label": "search name: LIKE \"_\"",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"People\":[{\"PersonID\":2,\"FullName\":\"Q0002\",\"PreferredName\":\"Q\",\"Company\":\"WWI\"},{\"PersonID\":3,\"FullName\":\"Q0003\",\"PreferredName\":\"Q\",\"Relationship\":\"Employee\",\"Company\":\"WWI\"}]}"
+        ]
+      ]
+    },
+    {
+      "label": "search name: LIKE \"café\"",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"People\":[{\"PersonID\":1,\"FullName\":\"Q0001\",\"PreferredName\":\"Q\",\"Relationship\":\"Employee\",\"Company\":\"WWI\"},{\"PersonID\":3,\"FullName\":\"Q0003\",\"PreferredName\":\"Q\",\"Relationship\":\"Employee\",\"Company\":\"WWI\"}]}"
+        ]
+      ]
+    },
+    {
+      "label": "search name: LIKE \"[^a]\"",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"People\":[{\"PersonID\":3,\"FullName\":\"Q0003\",\"PreferredName\":\"Q\",\"Relationship\":\"Employee\",\"Company\":\"WWI\"}]}"
+        ]
+      ]
+    },
+    {
+      "label": "search name: LIKE \"a\\\\b\"",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"People\":[{\"PersonID\":1,\"FullName\":\"Q0001\",\"PreferredName\":\"Q\",\"Relationship\":\"Employee\",\"Company\":\"WWI\"}]}"
+        ]
+      ]
+    },
+    {
+      "label": "search name: LIKE \"[a]_\"",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"People\":[{\"PersonID\":1,\"FullName\":\"Q0001\",\"PreferredName\":\"Q\",\"Relationship\":\"Employee\",\"Company\":\"WWI\"},{\"PersonID\":2,\"FullName\":\"Q0002\",\"PreferredName\":\"Q\",\"Company\":\"WWI\"},{\"PersonID\":4,\"FullName\":\"Q0004\",\"PreferredName\":\"Q\",\"Company\":\"WWI\"}]}"
+        ]
+      ]
+    }
+  ]
+}

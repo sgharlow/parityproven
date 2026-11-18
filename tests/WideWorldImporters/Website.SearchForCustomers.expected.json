@@ -1,0 +1,107 @@
+{
+  "object": "Website.SearchForCustomers",
+  "database": "WideWorldImporters",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-18T18:28:17.472Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "name: LIKE \"a_\"",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"Customers\":[{\"CustomerID\":1,\"CustomerName\":\"a_b0001\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"ct\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]},{\"CustomerID\":3,\"CustomerName\":\"a0003\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"ct\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]},{\"CustomerID\":4,\"CustomerName\":\"A-0004\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"ct\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]},{\"CustomerID\":2,\"CustomerName\":\"xay0002\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"ct\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]}]}"
+        ]
+      ]
+    },
+    {
+      "label": "name: LIKE \"[a-c]\"",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"Customers\":[{\"CustomerID\":4,\"CustomerName\":\"aaa0004\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"ct\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]},{\"CustomerID\":1,\"CustomerName\":\"B0001\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"ct\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]},{\"CustomerID\":5,\"CustomerName\":\"x[a-c]0005\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"ct\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]}]}"
+        ]
+      ]
+    },
+    {
+      "label": "name: LIKE \"_\"",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"Customers\":[{\"CustomerID\":2,\"CustomerName\":\" 0002\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"ct\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]},{\"CustomerID\":1,\"CustomerName\":\"0001\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"ct\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]},{\"CustomerID\":3,\"CustomerName\":\"x0003\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"ct\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]}]}"
+        ]
+      ]
+    },
+    {
+      "label": "name: LIKE \"café\"",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"Customers\":[{\"CustomerID\":1,\"CustomerName\":\"CAFÉ x0001\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"ct\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]},{\"CustomerID\":3,\"CustomerName\":\"un café0003\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"ct\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]}]}"
+        ]
+      ]
+    },
+    {
+      "label": "name: LIKE \"[^a]\"",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"Customers\":[{\"CustomerID\":4,\"CustomerName\":\"0004\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"ct\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]},{\"CustomerID\":1,\"CustomerName\":\"a0001\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"ct\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]},{\"CustomerID\":2,\"CustomerName\":\"A0002\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"ct\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]},{\"CustomerID\":3,\"CustomerName\":\"b0003\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"ct\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]}]}"
+        ]
+      ]
+    },
+    {
+      "label": "name: LIKE \"a\\\\b\"",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"Customers\":[{\"CustomerID\":1,\"CustomerName\":\"a\\\\b0001\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"ct\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]}]}"
+        ]
+      ]
+    },
+    {
+      "label": "name: LIKE \"[a]_\"",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"Customers\":[{\"CustomerID\":2,\"CustomerName\":\"A-0002\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"ct\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]},{\"CustomerID\":3,\"CustomerName\":\"a0003\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"ct\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]},{\"CustomerID\":1,\"CustomerName\":\"a10001\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"ct\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]},{\"CustomerID\":4,\"CustomerName\":\"ab c0004\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"ct\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]}]}"
+        ]
+      ]
+    }
+  ]
+}

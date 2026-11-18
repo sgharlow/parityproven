@@ -1,0 +1,17 @@
+negative control for Website.SearchForStockItemsByTags (step 2), 2026-11-18T18:29:11.473Z
+corruption: case 1 expected value row 1, column result: s:{"StockItems":[{"StockItemID":1,"StockItemName":"Item0001"},{"StockItemID":2,"StockItemName":"Item0002"},{"StockItemID":4,"StockItemName":"Item0004"}]} -> s:{"StockItems":[{"StockItemID":2,"StockItemName":"Item0001"},{"StockItemID":2,"StockItemName":"Item0002"},{"StockItemID":4,"StockItemName":"Item0004"}]}
+SQL Server: test 01 Tags: LIKE a_: FAIL — Failure: the JSON document differs (client re-run, not tSQLt): expected s:{"StockItems":[{"StockItemID":2,"StockItemName":"Item0001"},{"StockItemID":2,"StockItemName":"Item0002"},{"StockItemID, got s:{"StockItems":[{"StockItemID":1,"StockItemName":"Item0001"},{"StockItemID":2,"StockItemName":"Item0002"},{"StockItemID
+SQL Server: test 02 Tags: LIKE [a-c: pass
+SQL Server: test 03 Tags: LIKE _: pass
+SQL Server: test 04 Tags: LIKE café: pass
+SQL Server: test 05 Tags: LIKE [^a: pass
+SQL Server: test 06 Tags: LIKE a\\b: pass
+SQL Server: test 07 Tags: LIKE [a _: pass
+PostgreSQL: test 01 Tags: LIKE a_: FAIL — agreed test failed (test 01 Tags: LIKE a_): the JSON document differs: {"StockItems": [{"StockItemID": 1, "StockItemName": "Item0001"}, {"StockItemID": 2, "StockItemName": "Item0002"}, {"StockItemID": 4, "StockItemName": "Item0004"}]}
+PostgreSQL: test 02 Tags: LIKE [a-c: pass
+PostgreSQL: test 03 Tags: LIKE _: pass
+PostgreSQL: test 04 Tags: LIKE café: pass
+PostgreSQL: test 05 Tags: LIKE [^a: pass
+PostgreSQL: test 06 Tags: LIKE a\\b: pass
+PostgreSQL: test 07 Tags: LIKE [a _: pass
+RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed

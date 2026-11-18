@@ -1,0 +1,107 @@
+{
+  "object": "Website.SearchForStockItems",
+  "database": "WideWorldImporters",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-18T18:28:06.005Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "SearchDetails: LIKE \"a_\"",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"StockItems\":[{\"StockItemID\":1,\"StockItemName\":\"Item0001\"},{\"StockItemID\":2,\"StockItemName\":\"Item0002\"},{\"StockItemID\":4,\"StockItemName\":\"Item0004\"}]}"
+        ]
+      ]
+    },
+    {
+      "label": "SearchDetails: LIKE \"[a-c]\"",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"StockItems\":[{\"StockItemID\":1,\"StockItemName\":\"Item0001\"},{\"StockItemID\":4,\"StockItemName\":\"Item0004\"},{\"StockItemID\":5,\"StockItemName\":\"Item0005\"}]}"
+        ]
+      ]
+    },
+    {
+      "label": "SearchDetails: LIKE \"_\"",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"StockItems\":[{\"StockItemID\":2,\"StockItemName\":\"Item0002\"},{\"StockItemID\":3,\"StockItemName\":\"Item0003\"}]}"
+        ]
+      ]
+    },
+    {
+      "label": "SearchDetails: LIKE \"café\"",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"StockItems\":[{\"StockItemID\":1,\"StockItemName\":\"Item0001\"},{\"StockItemID\":3,\"StockItemName\":\"Item0003\"}]}"
+        ]
+      ]
+    },
+    {
+      "label": "SearchDetails: LIKE \"[^a]\"",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"StockItems\":[{\"StockItemID\":3,\"StockItemName\":\"Item0003\"}]}"
+        ]
+      ]
+    },
+    {
+      "label": "SearchDetails: LIKE \"a\\\\b\"",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"StockItems\":[{\"StockItemID\":1,\"StockItemName\":\"Item0001\"}]}"
+        ]
+      ]
+    },
+    {
+      "label": "SearchDetails: LIKE \"[a]_\"",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"StockItems\":[{\"StockItemID\":1,\"StockItemName\":\"Item0001\"},{\"StockItemID\":2,\"StockItemName\":\"Item0002\"},{\"StockItemID\":4,\"StockItemName\":\"Item0004\"}]}"
+        ]
+      ]
+    }
+  ]
+}

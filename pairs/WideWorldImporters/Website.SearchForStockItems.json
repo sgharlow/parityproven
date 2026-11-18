@@ -36,7 +36,7 @@
   ],
   "evidence": {
     "step1": "pass",
-    "step2": "not-run",
+    "step2": "pass",
     "step3": "pass",
     "step4": "pass",
     "step5": "not-run",
@@ -76,7 +76,25 @@
       "one row too many returned",
       "results in descending order"
     ],
-    "harnessVersion": "harness-generic-0.3.0"
+    "harnessVersion": "harness-generic-0.3.0",
+    "testsRun": [
+      "SQL Server: NOT tSQLt (ruling J1, 2026-11-18: no tSQLt test can observe a FOR JSON procedure's result) — each fixed case loaded and the original procedure re-run through the client, its document compared exactly with the expected one (tests/WideWorldImporters/Website.SearchForStockItems.sqlserver.sql); plain-SQL assertions on PostgreSQL, compared as jsonb (tests/WideWorldImporters/Website.SearchForStockItems.pg.sql); expected results tests/WideWorldImporters/Website.SearchForStockItems.expected.json",
+      "SQL Server (client re-run, not tSQLt): AgreedTests.[test 01 SearchDetails: LIKE a_]: pass",
+      "SQL Server (client re-run, not tSQLt): AgreedTests.[test 02 SearchDetails: LIKE [a-c]: pass",
+      "SQL Server (client re-run, not tSQLt): AgreedTests.[test 03 SearchDetails: LIKE _]: pass",
+      "SQL Server (client re-run, not tSQLt): AgreedTests.[test 04 SearchDetails: LIKE café]: pass",
+      "SQL Server (client re-run, not tSQLt): AgreedTests.[test 05 SearchDetails: LIKE [^a]: pass",
+      "SQL Server (client re-run, not tSQLt): AgreedTests.[test 06 SearchDetails: LIKE a\\\\b]: pass",
+      "SQL Server (client re-run, not tSQLt): AgreedTests.[test 07 SearchDetails: LIKE [a _]: pass",
+      "PostgreSQL: AgreedTests.[test 01 SearchDetails: LIKE a_]: pass",
+      "PostgreSQL: AgreedTests.[test 02 SearchDetails: LIKE [a-c]: pass",
+      "PostgreSQL: AgreedTests.[test 03 SearchDetails: LIKE _]: pass",
+      "PostgreSQL: AgreedTests.[test 04 SearchDetails: LIKE café]: pass",
+      "PostgreSQL: AgreedTests.[test 05 SearchDetails: LIKE [^a]: pass",
+      "PostgreSQL: AgreedTests.[test 06 SearchDetails: LIKE a\\\\b]: pass",
+      "PostgreSQL: AgreedTests.[test 07 SearchDetails: LIKE [a _]: pass",
+      "planted defects caught by the agreed tests: 4 of 5"
+    ]
   },
   "effort": {
     "humanMinutes": 0,

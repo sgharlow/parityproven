@@ -1,0 +1,107 @@
+{
+  "object": "Website.SearchForSuppliers",
+  "database": "WideWorldImporters",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-18T18:28:21.221Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "name: LIKE \"a_\"",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"Suppliers\":[{\"SupplierID\":1,\"SupplierName\":\"a_b0001\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"c\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]},{\"SupplierID\":3,\"SupplierName\":\"a0003\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"c\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]},{\"SupplierID\":4,\"SupplierName\":\"A-0004\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"c\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]},{\"SupplierID\":2,\"SupplierName\":\"xay0002\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"c\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]}]}"
+        ]
+      ]
+    },
+    {
+      "label": "name: LIKE \"[a-c]\"",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"Suppliers\":[{\"SupplierID\":4,\"SupplierName\":\"aaa0004\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"c\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]},{\"SupplierID\":1,\"SupplierName\":\"B0001\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"c\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]},{\"SupplierID\":5,\"SupplierName\":\"x[a-c]0005\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"c\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]}]}"
+        ]
+      ]
+    },
+    {
+      "label": "name: LIKE \"_\"",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"Suppliers\":[{\"SupplierID\":2,\"SupplierName\":\" 0002\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"c\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]},{\"SupplierID\":1,\"SupplierName\":\"0001\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"c\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]},{\"SupplierID\":3,\"SupplierName\":\"x0003\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"c\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]}]}"
+        ]
+      ]
+    },
+    {
+      "label": "name: LIKE \"café\"",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"Suppliers\":[{\"SupplierID\":1,\"SupplierName\":\"CAFÉ x0001\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"c\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]},{\"SupplierID\":3,\"SupplierName\":\"un café0003\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"c\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]}]}"
+        ]
+      ]
+    },
+    {
+      "label": "name: LIKE \"[^a]\"",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"Suppliers\":[{\"SupplierID\":4,\"SupplierName\":\"0004\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"c\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]},{\"SupplierID\":1,\"SupplierName\":\"a0001\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"c\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]},{\"SupplierID\":2,\"SupplierName\":\"A0002\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"c\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]},{\"SupplierID\":3,\"SupplierName\":\"b0003\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"c\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]}]}"
+        ]
+      ]
+    },
+    {
+      "label": "name: LIKE \"a\\\\b\"",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"Suppliers\":[{\"SupplierID\":1,\"SupplierName\":\"a\\\\b0001\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"c\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]}]}"
+        ]
+      ]
+    },
+    {
+      "label": "name: LIKE \"[a]_\"",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"Suppliers\":[{\"SupplierID\":2,\"SupplierName\":\"A-0002\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"c\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]},{\"SupplierID\":3,\"SupplierName\":\"a0003\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"c\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]},{\"SupplierID\":1,\"SupplierName\":\"a10001\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"c\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]},{\"SupplierID\":4,\"SupplierName\":\"ab c0004\",\"PhoneNumber\":\"(201) 555-0100\",\"FaxNumber\":\"\",\"c\":[{\"CityName\":\"Town\",\"p\":[{\"PrimaryContactFullName\":\"Mo Lo0001\",\"PrimaryContactPreferredName\":\"Mo\"}]}]}]}"
+        ]
+      ]
+    }
+  ]
+}
