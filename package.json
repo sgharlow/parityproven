@@ -24,6 +24,7 @@
     "agreed-tests": "node dist/cli/agreed-tests.js",
     "predeploy:check": "node scripts/predeploy-check.mjs",
     "site:build": "node scripts/build-site.mjs",
+    "readme:status": "node dist/cli/readme-status.js",
     "site:check": "node scripts/check-site.mjs",
     "test": "vitest run"
   },

@@ -23,7 +23,7 @@ A toolkit that **checks** a conversion, object by object, against the original, 
 
 ## Hackathon scope (Kiroween 2026, Resurrection category; due Dec 4, 2026)
 - In: T-SQL procedures, functions, views and triggers from public sample databases (WideWorldImporters, AdventureWorks) converted to PostgreSQL PL/pgSQL (triggers are inventoried and listed as not attempted; AdventureWorks work stopped 2026-11-12, decision G2); the verification harness; pair capture; the receipts UI; a questionnaire scan page.
-- Deferred (R18, confirmed M7B 2026-11-12): a read-only MCP server over synthetic data (the Agent Access Map). Not part of the Dec 4 entry.
+- In, as a stretch (ruling R23, 2026-11-17, reversing R18 and M7B): a read-only MCP server over synthetic data (the Agent Access Map). It is cut from the Dec 4 entry if it is not working by the stop date the owner rules.
 - Out: .NET application conversion, SSRS reports, VB6, any customer code, any hosted service that stores code.
 
 ## Principles

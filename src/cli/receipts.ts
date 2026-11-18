@@ -9,6 +9,7 @@ import { readFileSync, existsSync, mkdirSync, writeFileSync } from "fs";
 import { execFileSync } from "child_process";
 import { buildReceipts } from "../receipts/builder.js";
 import { DISPOSITIONS } from "../conversions/dispositions.js";
+import { updateReadmeStatus } from "./readme-status.js";
 
 /**
  * First commit that added each object's pair record or conversion file, keyed "<database>/<schema>.<object>".
@@ -82,6 +83,11 @@ async function main(): Promise<void> {
     `Built ${summary.total} receipt(s) — ${summary.verified} verified, ${summary.pending} pending, ${summary.failed} failed; ${summary.excluded ?? 0} excluded; ${summary.notAttempted ?? 0} not attempted; ${summary.inventory ?? 0} inventoried`
   );
   console.log(`Index: receipts/index.json`);
+
+  // the README's status figures come from the index just written, never typed by hand
+  const problems = updateReadmeStatus(false);
+  for (const p of problems) console.warn(`WARNING: README: ${p}`);
+  console.log(`README status block: ${problems.length ? `${problems.length} problem(s)` : "current"}`);
 }
 
 main().catch((err) => { console.error(err); process.exit(1); });

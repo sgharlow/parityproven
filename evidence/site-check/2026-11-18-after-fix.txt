@@ -1,0 +1,6 @@
+site check: https://parityproven.com  (2026-11-18T04:06:21.136Z)
+scorecard links followed: 55
+  AdventureWorks2025: 25 rendered a receipt, 0 did not
+  WideWorldImporters: 30 rendered a receipt, 0 did not
+pages that must return 200: 7; repository files that must return 404: 8
+PASS
