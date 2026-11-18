@@ -15,7 +15,7 @@ Source: the official rules at https://kiroween.devpost.com/rules and the overvie
 
 ## Repository
 - [x] A public **GitHub** repo with an open-source license visible in its About section (Apache-2.0). — public since 2026-11-13 after a full-history gitleaks scan (no leaks) and npm audit (0 vulnerabilities); GitHub API reports `Apache-2.0`; topics set; homepage set to the live URL.
-- [x] `/.kiro` at the repo root with specs, hooks and steering, and **not** listed in `.gitignore`. — 8 steering, 15 spec files (5 specs), 2 hooks tracked; `git check-ignore` finds none ignored (2026-11-13). `.netlifyignore` lists `.kiro/` for the website only.
+- [x] `/.kiro` at the repo root with specs, hooks and steering, and **not** listed in `.gitignore`. — 8 steering, 15 spec files (5 specs), 2 hooks tracked; `git check-ignore` finds none ignored (2026-11-13). The website publishes only `web/` and `receipts/` (`_site/`, built by `scripts/build-site.mjs`), so `.kiro/` is in the repo but not on the website.
 - [x] All source code, assets and instructions needed to run it. — README "Run it"; anonymous clone at 62bace8 passed `npm ci`, build and 122/122 tests (2026-11-13). Full Docker re-run from a clean clone: repeat after the last code change.
 
 ## Working app

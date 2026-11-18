@@ -67,7 +67,8 @@ async function initScorecard() {
     : '';
 
   const rows = index.receipts.map(r => {
-    const link = `receipt.html?db=${encodeURIComponent(r.database)}&obj=${encodeURIComponent(r.schemaName + '.' + r.objectName)}`;
+    // absolute clean URL: the scorecard is served at "/" by a rewrite, so a relative "receipt.html" resolved to /receipt.html (404)
+    const link = `/receipt?db=${encodeURIComponent(r.database)}&obj=${encodeURIComponent(r.schemaName + '.' + r.objectName)}`;
     return `<tr>
       <td><a href="${link}">${esc(r.schemaName)}.${esc(r.objectName)}</a></td>
       <td>${esc(r.database)}</td>

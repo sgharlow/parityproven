@@ -1,15 +1,15 @@
 # Netlify deployment config for ParityProven
-# Site root: web/ (HTML/CSS/JS)
-# Receipts JSON served as static assets from receipts/
-# Both are in the public repo and rebuilt locally with npm run receipts:build and committed.
+# The published site is web/ (HTML/CSS/JS) and receipts/ (committed receipt JSON), nothing else.
+# receipts/ is rebuilt locally with npm run receipts:build and committed.
 
 [build]
-  # Publish only, no build step: receipts/ is committed. receipts:build needs inventory/*.json, which is generated
-  # from the restored databases and not committed, so building on Netlify would fail.
-  # An explicit no-op command: without one, the command set in the Netlify dashboard (`npm run build:ci`) runs and
-  # fails, because receipts:build also needs full git history (Netlify clones shallow). Seen failing 2026-11-15 and 11-16.
-  command = "echo 'Publish only: receipts/ is committed; nothing to build'"
-  publish = "."        # serve from repo root so both web/ and receipts/ are reachable
+  # Copy web/ and receipts/ into _site/ and publish only that (scripts/build-site.mjs, no dependencies).
+  # Publishing the repository root served every repository file (seen 2026-11-17/18: /src/cli/convert.ts, /package.json
+  # returned 200; .netlifyignore is honoured only by CLI deploys, not by the git-linked build).
+  # receipts:build is NOT run here: it needs inventory/*.json, generated from the restored databases and not committed,
+  # and full git history (Netlify clones shallow). This command overrides the dashboard's `npm run build:ci`.
+  command = "node scripts/build-site.mjs"
+  publish = "_site"
 
 [build.environment]
   NODE_VERSION = "22"

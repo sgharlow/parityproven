@@ -23,6 +23,8 @@
     "review-packet": "node dist/cli/review-packet.js",
     "agreed-tests": "node dist/cli/agreed-tests.js",
     "predeploy:check": "node scripts/predeploy-check.mjs",
+    "site:build": "node scripts/build-site.mjs",
+    "site:check": "node scripts/check-site.mjs",
     "test": "vitest run"
   },
   "dependencies": {

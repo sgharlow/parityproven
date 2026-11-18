@@ -1,0 +1,67 @@
+site check: https://parityproven.com  (2026-11-18T04:01:49.119Z)
+scorecard links followed: 55
+  AdventureWorks2025: 0 rendered a receipt, 25 did not
+  WideWorldImporters: 0 rendered a receipt, 30 did not
+pages that must return 200: 7; repository files that must return 404: 8
+FAIL: 61 problem(s)
+  - link "receipt.html?db=AdventureWorks2025&obj=dbo.ufnGetAccountingEndDate" -> /receipt.html?db=AdventureWorks2025&obj=dbo.ufnGetAccountingEndDate: 404
+  - link "receipt.html?db=AdventureWorks2025&obj=dbo.ufnGetAccountingStartDate" -> /receipt.html?db=AdventureWorks2025&obj=dbo.ufnGetAccountingStartDate: 404
+  - link "receipt.html?db=AdventureWorks2025&obj=dbo.ufnGetContactInformation" -> /receipt.html?db=AdventureWorks2025&obj=dbo.ufnGetContactInformation: 404
+  - link "receipt.html?db=AdventureWorks2025&obj=dbo.ufnGetDocumentStatusText" -> /receipt.html?db=AdventureWorks2025&obj=dbo.ufnGetDocumentStatusText: 404
+  - link "receipt.html?db=AdventureWorks2025&obj=dbo.ufnGetProductDealerPrice" -> /receipt.html?db=AdventureWorks2025&obj=dbo.ufnGetProductDealerPrice: 404
+  - link "receipt.html?db=AdventureWorks2025&obj=dbo.ufnGetProductListPrice" -> /receipt.html?db=AdventureWorks2025&obj=dbo.ufnGetProductListPrice: 404
+  - link "receipt.html?db=AdventureWorks2025&obj=dbo.ufnGetProductStandardCost" -> /receipt.html?db=AdventureWorks2025&obj=dbo.ufnGetProductStandardCost: 404
+  - link "receipt.html?db=AdventureWorks2025&obj=dbo.ufnGetPurchaseOrderStatusText" -> /receipt.html?db=AdventureWorks2025&obj=dbo.ufnGetPurchaseOrderStatusText: 404
+  - link "receipt.html?db=AdventureWorks2025&obj=dbo.ufnGetSalesOrderStatusText" -> /receipt.html?db=AdventureWorks2025&obj=dbo.ufnGetSalesOrderStatusText: 404
+  - link "receipt.html?db=AdventureWorks2025&obj=dbo.ufnGetStock" -> /receipt.html?db=AdventureWorks2025&obj=dbo.ufnGetStock: 404
+  - link "receipt.html?db=AdventureWorks2025&obj=dbo.ufnLeadingZeros" -> /receipt.html?db=AdventureWorks2025&obj=dbo.ufnLeadingZeros: 404
+  - link "receipt.html?db=AdventureWorks2025&obj=dbo.uspGetBillOfMaterials" -> /receipt.html?db=AdventureWorks2025&obj=dbo.uspGetBillOfMaterials: 404
+  - link "receipt.html?db=AdventureWorks2025&obj=dbo.uspGetWhereUsedProductID" -> /receipt.html?db=AdventureWorks2025&obj=dbo.uspGetWhereUsedProductID: 404
+  - link "receipt.html?db=AdventureWorks2025&obj=HumanResources.vEmployee" -> /receipt.html?db=AdventureWorks2025&obj=HumanResources.vEmployee: 404
+  - link "receipt.html?db=AdventureWorks2025&obj=HumanResources.vEmployeeDepartment" -> /receipt.html?db=AdventureWorks2025&obj=HumanResources.vEmployeeDepartment: 404
+  - link "receipt.html?db=AdventureWorks2025&obj=HumanResources.vEmployeeDepartmentHistory" -> /receipt.html?db=AdventureWorks2025&obj=HumanResources.vEmployeeDepartmentHistory: 404
+  - link "receipt.html?db=AdventureWorks2025&obj=Person.vStateProvinceCountryRegion" -> /receipt.html?db=AdventureWorks2025&obj=Person.vStateProvinceCountryRegion: 404
+  - link "receipt.html?db=AdventureWorks2025&obj=Production.vProductAndDescription" -> /receipt.html?db=AdventureWorks2025&obj=Production.vProductAndDescription: 404
+  - link "receipt.html?db=AdventureWorks2025&obj=Purchasing.vVendorWithAddresses" -> /receipt.html?db=AdventureWorks2025&obj=Purchasing.vVendorWithAddresses: 404
+  - link "receipt.html?db=AdventureWorks2025&obj=Purchasing.vVendorWithContacts" -> /receipt.html?db=AdventureWorks2025&obj=Purchasing.vVendorWithContacts: 404
+  - link "receipt.html?db=AdventureWorks2025&obj=Sales.vIndividualCustomer" -> /receipt.html?db=AdventureWorks2025&obj=Sales.vIndividualCustomer: 404
+  - link "receipt.html?db=AdventureWorks2025&obj=Sales.vSalesPerson" -> /receipt.html?db=AdventureWorks2025&obj=Sales.vSalesPerson: 404
+  - link "receipt.html?db=AdventureWorks2025&obj=Sales.vSalesPersonSalesByFiscalYears" -> /receipt.html?db=AdventureWorks2025&obj=Sales.vSalesPersonSalesByFiscalYears: 404
+  - link "receipt.html?db=AdventureWorks2025&obj=Sales.vStoreWithAddresses" -> /receipt.html?db=AdventureWorks2025&obj=Sales.vStoreWithAddresses: 404
+  - link "receipt.html?db=AdventureWorks2025&obj=Sales.vStoreWithContacts" -> /receipt.html?db=AdventureWorks2025&obj=Sales.vStoreWithContacts: 404
+  - link "receipt.html?db=WideWorldImporters&obj=Application.DetermineCustomerAccess" -> /receipt.html?db=WideWorldImporters&obj=Application.DetermineCustomerAccess: 404
+  - link "receipt.html?db=WideWorldImporters&obj=Integration.GetCityUpdates" -> /receipt.html?db=WideWorldImporters&obj=Integration.GetCityUpdates: 404
+  - link "receipt.html?db=WideWorldImporters&obj=Integration.GetCustomerUpdates" -> /receipt.html?db=WideWorldImporters&obj=Integration.GetCustomerUpdates: 404
+  - link "receipt.html?db=WideWorldImporters&obj=Integration.GetEmployeeUpdates" -> /receipt.html?db=WideWorldImporters&obj=Integration.GetEmployeeUpdates: 404
+  - link "receipt.html?db=WideWorldImporters&obj=Integration.GetMovementUpdates" -> /receipt.html?db=WideWorldImporters&obj=Integration.GetMovementUpdates: 404
+  - link "receipt.html?db=WideWorldImporters&obj=Integration.GetOrderUpdates" -> /receipt.html?db=WideWorldImporters&obj=Integration.GetOrderUpdates: 404
+  - link "receipt.html?db=WideWorldImporters&obj=Integration.GetPaymentMethodUpdates" -> /receipt.html?db=WideWorldImporters&obj=Integration.GetPaymentMethodUpdates: 404
+  - link "receipt.html?db=WideWorldImporters&obj=Integration.GetPurchaseUpdates" -> /receipt.html?db=WideWorldImporters&obj=Integration.GetPurchaseUpdates: 404
+  - link "receipt.html?db=WideWorldImporters&obj=Integration.GetSaleUpdates" -> /receipt.html?db=WideWorldImporters&obj=Integration.GetSaleUpdates: 404
+  - link "receipt.html?db=WideWorldImporters&obj=Integration.GetStockHoldingUpdates" -> /receipt.html?db=WideWorldImporters&obj=Integration.GetStockHoldingUpdates: 404
+  - link "receipt.html?db=WideWorldImporters&obj=Integration.GetStockItemUpdates" -> /receipt.html?db=WideWorldImporters&obj=Integration.GetStockItemUpdates: 404
+  - link "receipt.html?db=WideWorldImporters&obj=Integration.GetSupplierUpdates" -> /receipt.html?db=WideWorldImporters&obj=Integration.GetSupplierUpdates: 404
+  - link "receipt.html?db=WideWorldImporters&obj=Integration.GetTransactionTypeUpdates" -> /receipt.html?db=WideWorldImporters&obj=Integration.GetTransactionTypeUpdates: 404
+  - link "receipt.html?db=WideWorldImporters&obj=Integration.GetTransactionUpdates" -> /receipt.html?db=WideWorldImporters&obj=Integration.GetTransactionUpdates: 404
+  - link "receipt.html?db=WideWorldImporters&obj=Sequences.ReseedSequenceBeyondTableValues" -> /receipt.html?db=WideWorldImporters&obj=Sequences.ReseedSequenceBeyondTableValues: 404
+  - link "receipt.html?db=WideWorldImporters&obj=Website.ActivateWebsiteLogon" -> /receipt.html?db=WideWorldImporters&obj=Website.ActivateWebsiteLogon: 404
+  - link "receipt.html?db=WideWorldImporters&obj=Website.CalculateCustomerPrice" -> /receipt.html?db=WideWorldImporters&obj=Website.CalculateCustomerPrice: 404
+  - link "receipt.html?db=WideWorldImporters&obj=Website.ChangePassword" -> /receipt.html?db=WideWorldImporters&obj=Website.ChangePassword: 404
+  - link "receipt.html?db=WideWorldImporters&obj=Website.Customers" -> /receipt.html?db=WideWorldImporters&obj=Website.Customers: 404
+  - link "receipt.html?db=WideWorldImporters&obj=Website.InsertCustomerOrders" -> /receipt.html?db=WideWorldImporters&obj=Website.InsertCustomerOrders: 404
+  - link "receipt.html?db=WideWorldImporters&obj=Website.InvoiceCustomerOrders" -> /receipt.html?db=WideWorldImporters&obj=Website.InvoiceCustomerOrders: 404
+  - link "receipt.html?db=WideWorldImporters&obj=Website.RecordColdRoomTemperatures" -> /receipt.html?db=WideWorldImporters&obj=Website.RecordColdRoomTemperatures: 404
+  - link "receipt.html?db=WideWorldImporters&obj=Website.RecordVehicleTemperature" -> /receipt.html?db=WideWorldImporters&obj=Website.RecordVehicleTemperature: 404
+  - link "receipt.html?db=WideWorldImporters&obj=Website.SearchForCustomers" -> /receipt.html?db=WideWorldImporters&obj=Website.SearchForCustomers: 404
+  - link "receipt.html?db=WideWorldImporters&obj=Website.SearchForPeople" -> /receipt.html?db=WideWorldImporters&obj=Website.SearchForPeople: 404
+  - link "receipt.html?db=WideWorldImporters&obj=Website.SearchForStockItems" -> /receipt.html?db=WideWorldImporters&obj=Website.SearchForStockItems: 404
+  - link "receipt.html?db=WideWorldImporters&obj=Website.SearchForStockItemsByTags" -> /receipt.html?db=WideWorldImporters&obj=Website.SearchForStockItemsByTags: 404
+  - link "receipt.html?db=WideWorldImporters&obj=Website.SearchForSuppliers" -> /receipt.html?db=WideWorldImporters&obj=Website.SearchForSuppliers: 404
+  - link "receipt.html?db=WideWorldImporters&obj=Website.Suppliers" -> /receipt.html?db=WideWorldImporters&obj=Website.Suppliers: 404
+  - link "receipt.html?db=WideWorldImporters&obj=Website.VehicleTemperatures" -> /receipt.html?db=WideWorldImporters&obj=Website.VehicleTemperatures: 404
+  - /src/cli/convert.ts returned 200, expected 404 (only the site should be published)
+  - /package.json returned 200, expected 404 (only the site should be published)
+  - /README.md returned 200, expected 404 (only the site should be published)
+  - /scripts/predeploy-check.mjs returned 200, expected 404 (only the site should be published)
+  - /sources/manifest.json returned 200, expected 404 (only the site should be published)
+  - /pairs/WideWorldImporters/Integration.GetMovementUpdates.json returned 200, expected 404 (only the site should be published)
