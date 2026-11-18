@@ -41,5 +41,10 @@ The CI_AS CountryRegionCode join also appears in `HumanResources.vEmployee`, `Sa
 
 No other conversion in the repository has this join (`grep 'CountryRegionCode" = '` over `conversions/*/*.sql`, drafts excluded, 2026-11-18).
 
-## Tranches B (rest) and C
-Not designed yet: JSON results (B); setup statements, state observation queries, table-valued parameters, identity columns, dependencies and memory-optimized tables (C). Each new feature gets unit tests in `src/agreed/` and its own negative control before a pass is trusted.
+## Tranche B: JSON results (blocked on SQL Server)
+Built and kept: the capture joins a FOR JSON procedure's chunk rows into one document (as the harness does); the PostgreSQL script compares the function's result with it as `jsonb` (whitespace, escaping and object key order are not compared there; array order and values are; step 3 compares key order); the negative control corrupts a value inside the document so it stays valid JSON (`corruptJson`). The tSQLt side was written to capture through `tSQLt.ResultSetFilter`, because SQL Server refuses `INSERT ... EXEC` on a procedure that uses FOR JSON.
+
+Measured 2026-11-18 on `Website.SearchForStockItems`: PostgreSQL passed all 7 cases; every SQL Server test failed with error 6549 inside `tSQLt.ResultSetFilter` (the FOR JSON restriction applies through it too). No other in-server way for a tSQLt test to observe the result was found: a loopback OPENROWSET needs a provider the Linux image lacks, and copying the procedure's query into the test would not test the original object. The ruling of 2026-11-12 says step 2 is tSQLt on SQL Server, so these objects are refused by `agreed-tests` (with the reason) until the owner rules. The step 2 failure the trial run recorded was a harness limit, not a conversion defect, and was reverted.
+
+## Tranche C
+Not designed yet: setup statements, state observation queries, table-valued parameters, identity columns, dependencies and memory-optimized tables (C). Each new feature gets unit tests in `src/agreed/` and its own negative control before a pass is trusted.

@@ -7,14 +7,50 @@ import type { ExpectedFile } from "./generate.js";
 /** The corrupted copy, which case was corrupted (its test must fail), and what was changed. */
 export interface Corrupted { file: ExpectedFile; caseIndex: number; what: string }
 
+/**
+ * A JSON object or array with its first primitive value changed (strings gain "X", numbers gain 1, booleans flip, null
+ * becomes "X"); an empty container gains an element. Undefined when the text is not a JSON object or array.
+ */
+export function corruptJson(text: string): string | undefined {
+  if (!/^\s*[[{]/.test(text)) return undefined;
+  let doc: unknown;
+  try { doc = JSON.parse(text); } catch { return undefined; }
+  const change = (v: unknown): unknown =>
+    typeof v === "string" ? `${v}X` : typeof v === "number" ? v + 1 : typeof v === "boolean" ? !v : "X";
+  const walk = (node: unknown): boolean => {
+    if (Array.isArray(node)) {
+      for (let i = 0; i < node.length; i++) {
+        if (node[i] !== null && typeof node[i] === "object") { if (walk(node[i])) return true; } else { node[i] = change(node[i]); return true; }
+      }
+      return false;
+    }
+    if (node && typeof node === "object") {
+      const o = node as Record<string, unknown>;
+      for (const k of Object.keys(o)) {
+        if (o[k] !== null && typeof o[k] === "object") { if (walk(o[k])) return true; } else { o[k] = change(o[k]); return true; }
+      }
+    }
+    return false;
+  };
+  if (!walk(doc)) {
+    if (Array.isArray(doc)) doc.push("X"); else (doc as Record<string, unknown>).corrupted = "X";
+  }
+  return JSON.stringify(doc);
+}
+
 /** A canonical cell changed to a different value of the same kind, so it still loads into the same column type. */
 export function corruptCell(cell: string): string | undefined {
   const [kind, ...rest] = cell.split(":");
   const v = rest.join(":");
   switch (kind) {
-    // same length, last character changed: a longer value would not fit the expected table's column, and SQL Server
-    // would raise a truncation error instead of an assertion failure (seen 2026-11-18 on nvarchar(16))
-    case "s": return v.length ? `s:${v.slice(0, -1)}${v.endsWith("X") ? "Y" : "X"}` : "s:X";
+    case "s": {
+      // a JSON document stays valid JSON (a value inside it changes), so the comparison fails, not the parser
+      const json = corruptJson(v);
+      if (json !== undefined) return `s:${json}`;
+      // same length, last character changed: a longer value would not fit the expected table's column, and SQL Server
+      // would raise a truncation error instead of an assertion failure (seen 2026-11-18 on nvarchar(16))
+      return v.length ? `s:${v.slice(0, -1)}${v.endsWith("X") ? "Y" : "X"}` : "s:X";
+    }
     case "n": {
       const m = v.match(/^(-?)(\d+)(\.\d+)?$/);
       if (!m) return undefined;

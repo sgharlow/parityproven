@@ -111,3 +111,9 @@ describe("geography and xml", () => {
     expect(pg).toContain('SELECT "BusinessEntityID", "Demographics"::text AS "Demographics" FROM (');
   });
 });
+describe("FOR JSON procedures", () => {
+  it("are refused, with the measured reason, until the owner rules how step 2 applies to them", () => {
+    const s = specByName("Website.SearchForStockItems")!;
+    expect(unsupportedFeatures(s).join(" ")).toMatch(/FOR JSON procedure .*INSERT \.\.\. EXEC is refused.*ResultSetFilter, error 6549/);
+  });
+});

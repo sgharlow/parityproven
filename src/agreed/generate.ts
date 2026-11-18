@@ -158,7 +158,11 @@ export function unsupportedFeatures(spec: ObjectSpec): string[] {
   const out: string[] = [];
   if (!spec.fixedCases?.length) out.push("no fixed cases (the agreed tests are the fixed cases)");
   if (spec.tables.some((t) => t.tvp)) out.push("table-valued parameters");
-  if (spec.forJsonChunks || spec.jsonColumns?.length) out.push("JSON results");
+  // FOR JSON procedures: the PostgreSQL side works (compared as jsonb), but no tSQLt test can observe the result on SQL
+  // Server: INSERT ... EXEC is refused for a procedure that uses FOR JSON, directly and through tSQLt.ResultSetFilter
+  // (error 6549, measured 2026-11-18). Blocked until the owner rules how step 2 applies to them.
+  if (spec.forJsonChunks) out.push("JSON results from a FOR JSON procedure (tSQLt cannot capture them: INSERT ... EXEC is refused, also via ResultSetFilter, error 6549)");
+  if (spec.jsonColumns?.length && !spec.forJsonChunks) out.push("JSON columns in an ordinary result set");
   // declared result errors are supported (2026-11-18): each case asserts its outcome, and its rows when it completed
   if (spec.resultErrorClasses?.length && spec.stateCheck) out.push("declared result errors together with state checks");
   if (spec.sampleSetup || spec.setup) out.push("per-sample or one-off setup statements");
@@ -353,6 +357,15 @@ export function tsqltScript(spec: ObjectSpec, expected: ExpectedFile, options: T
         body.push(`SELECT ${st.columns.map(ssName).join(", ")} INTO #ActualState${k + 1} FROM ${ssName(t.schema)}.${ssName(t.name)};`);
         body.push(`EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedState${k + 1}', @Actual = N'#ActualState${k + 1}', @Message = N'${tableKey(t)} after the call';`);
       });
+    } else if (spec.forJsonChunks) {
+      // SQL Server refuses INSERT ... EXEC on a procedure that uses FOR JSON; tSQLt.ResultSetFilter runs the call and
+      // re-emits its first result set, which can be inserted. The chunks are joined in arrival order, as the harness does.
+      const doc = exp.rows?.[0]?.[0] ?? "∅";
+      body.push("CREATE TABLE #Chunks (pp_id int IDENTITY(1,1) PRIMARY KEY, chunk nvarchar(max) NULL);");
+      body.push(`INSERT INTO #Chunks (chunk)\nEXEC tSQLt.ResultSetFilter 1, N'${call.replace(/'/g, "''")}';`);
+      body.push("DECLARE @actual nvarchar(max) = (SELECT STRING_AGG(chunk, N'') WITHIN GROUP (ORDER BY pp_id) FROM #Chunks);");
+      body.push(`DECLARE @expected nvarchar(max) = ${ssLiteral(doc)};`);
+      body.push("EXEC tSQLt.AssertEqualsString @Expected = @expected, @Actual = @actual, @Message = N'JSON document';");
     } else {
       const cols = exp.columns ?? [];
       if (!cols.length) throw new Error(`${spec.name}: expected columns missing in case "${fc.label}"`);
@@ -487,6 +500,20 @@ export function pgScript(spec: ObjectSpec, expected: ExpectedFile): string {
         if (st.rows.length) lines.push(`INSERT INTO ${ex} (${cols}) VALUES\n  ${st.rows.map((r) => `(${r.map(pgLiteral).join(", ")})`).join(",\n  ")};`);
         lines.push(pgAssertSame(name, `${tableKey(t)} after the call`, `SELECT ${cols} FROM ${ex}`, `SELECT ${cols} FROM ${pgTableName(t)}`));
       });
+    } else if (spec.forJsonChunks) {
+      // compared as jsonb: whitespace, escaping and object key order are not compared here (step 3 compares key order),
+      // array order and values are
+      const doc = exp.rows?.[0]?.[0] ?? "∅";
+      lines.push([
+        "DO $pp$",
+        "DECLARE got jsonb;",
+        "BEGIN",
+        `  SELECT (q.result)::jsonb INTO got FROM (${call}) AS q;`,
+        `  IF got IS DISTINCT FROM ${doc === "∅" ? "NULL" : `${pgLiteral(doc)}`}::jsonb THEN`,
+        `    RAISE EXCEPTION 'agreed test failed (%): the JSON document differs: %', ${pgString(name)}, got;`,
+        "  END IF;",
+        "END $pp$;",
+      ].join("\n"));
     } else if (spec.resultErrorClasses?.length) {
       // the call runs inside a block that catches only the declared SQLSTATEs (its insert is undone when it raises);
       // the table is created first WITH NO DATA, which does not run the call

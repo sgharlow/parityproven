@@ -135,6 +135,12 @@ async function capture(scratch: MssqlClient, spec: ObjectSpec): Promise<Expected
         cases.push({ label: fc.label, columns, raised: `raised: ${cls.label}` });
         continue;
       }
+      if (spec.forJsonChunks) {
+        // FOR JSON streams the document as chunk rows of one column; joined in arrival order, as the harness does
+        const text = rs.rows.length ? rs.rows.map((r) => String(r[0] ?? "")).join("") : null;
+        cases.push({ label: fc.label, columns: [{ name: "result", sqlServerType: "nvarchar(max)" }], rows: [[text === null ? "∅" : `s:${text}`]] });
+        continue;
+      }
       const names = rs.columns.map((c) => c.name);
       if (names.join("\u0001") !== columns.map((c) => c.name).join("\u0001")) {
         throw new Error(`${spec.name}: described columns ${JSON.stringify(columns.map((c) => c.name))} differ from returned ${JSON.stringify(names)}`);

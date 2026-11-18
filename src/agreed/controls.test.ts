@@ -21,6 +21,14 @@ describe("corruptCell", () => {
     expect(corruptCell("x:0a")).toBe("x:1a");
     expect(corruptCell("x:")).toBe("x:00");
   });
+  it("changes a value inside a JSON document and keeps it valid JSON", () => {
+    expect(corruptCell('s:{"Items":[{"id":1,"name":"a"}]}')).toBe('s:{"Items":[{"id":2,"name":"a"}]}');
+    expect(corruptCell('s:[{"x":"q"}]')).toBe('s:[{"x":"qX"}]');
+    expect(corruptCell('s:{"Items":[]}')).toBe('s:{"Items":[],"corrupted":"X"}');
+    expect(corruptCell("s:[]")).toBe('s:["X"]');
+    expect(corruptCell("s:{not json")).toBe("s:{not jsoX");   // not JSON: the ordinary text corruption
+    for (const doc of ['{"a":[1,{"b":null}]}', '[true]']) JSON.parse(corruptCell(`s:${doc}`)!.slice(2));
+  });
   it("moves a geography point along x, keeping it a valid point", () => {
     expect(corruptCell("g:POINT(-122.25 47.5)")).toBe("g:POINT(-121.25 47.5)");
   });
