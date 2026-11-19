@@ -38,13 +38,13 @@ describe("tsqltScript: schema-bound objects", () => {
 
 describe("declared result errors (spec.resultErrorClasses)", () => {
   const bom = specByName("dbo.uspGetBillOfMaterials")!;
-  const cols = [{ name: "ProductAssemblyID", sqlServerType: "int" }];
+  const cols = [{ name: "ProductAssemblyID", sqlServerType: "int" }, { name: "ComponentID", sqlServerType: "int" }, { name: "BOMLevel", sqlServerType: "int" }];
   // case 1 raised the declared error on SQL Server; the others completed
   const exp: ExpectedFile = {
     object: "dbo.uspGetBillOfMaterials", database: bom.database, capturedFrom: "", capturedAt: "", review: "",
     cases: (bom.fixedCases ?? []).map((fc, i) => (i === 0
       ? { label: fc.label, columns: cols, raised: "raised: maximum recursion (25) exhausted" }
-      : { label: fc.label, columns: cols, rows: [["n:1"]] })),
+      : { label: fc.label, columns: cols, rows: [["n:1", "n:2", "n:0"]] })),
   } as ExpectedFile;
 
   it("is no longer an unsupported feature", () => {
@@ -77,6 +77,35 @@ describe("declared result errors (spec.resultErrorClasses)", () => {
     expect(cases[1].sql).toContain("SELECT * FROM pp_expected");
   });
 });
+describe("order key (the source guarantees an order)", () => {
+  const sh = specByName("Integration.GetStockHoldingUpdates")!;
+  const cols = [{ name: "WWI Stock Item ID", sqlServerType: "int" }, { name: "Bin Location", sqlServerType: "nvarchar(20)" }];
+  const exp: ExpectedFile = {
+    object: "Integration.GetStockHoldingUpdates", database: sh.database, capturedFrom: "", capturedAt: "", review: "",
+    cases: (sh.fixedCases ?? []).map((fc) => ({ label: fc.label, columns: cols, rows: [["n:2", "s:B"], ["n:1", "s:A"]] })),
+  } as ExpectedFile;
+
+  it("asserts the order-key sequence in the order SQL Server returned the rows", () => {
+    const sql = pgCases(pgScript(sh, exp))[0].sql;
+    expect(sql).toContain("SELECT row_number() OVER () AS pp_ord, pp_r.* FROM (");
+    expect(sql).toContain("CREATE TEMP TABLE pp_expected_ord (pp_ord bigint, LIKE pp_actual) ON COMMIT DROP;");
+    expect(sql).toContain("(1, '2', 'B'),\n  (2, '1', 'A')");
+    expect(sql).toContain(`array_agg(ROW("WWI Stock Item ID")::text ORDER BY pp_ord) INTO got FROM pp_actual_ord`);
+    expect(sql).toContain("rows are not in the order the original returns (order key WWI Stock Item ID)");
+    expect(pgScript(sh, exp)).toContain("also asserts the order of the order key (WWI Stock Item ID)");
+  });
+
+  it("adds no order check when the source guarantees none", () => {
+    expect(pgScript(spec, expected)).not.toContain("pp_actual_ord");
+    expect(pgScript(spec, expected)).toContain("Row order is not asserted here");
+  });
+
+  it("refuses an order key that is not a result column", () => {
+    const bad = { ...exp, cases: exp.cases.map((c) => ({ ...c, columns: [cols[1]!], rows: [["s:A"]] })) } as ExpectedFile;
+    expect(() => pgScript(sh, bad)).toThrow(/order key column\(s\) WWI Stock Item ID not in the result/);
+  });
+});
+
 describe("geography and xml", () => {
   it("geography points are canonical WKT, written in each engine's own spelling", () => {
     expect(inputCell("POINT(-122.3 47.6)", { kind: "geography" })).toBe("g:POINT(-122.3 47.6)");
