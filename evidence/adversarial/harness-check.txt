@@ -1,0 +1,20 @@
+Harness check for the adversarial gate (verification-standard.md, "Before trusting the harness"), 2026-11-19.
+Object: AdventureWorks2025 dbo.ufnLeadingZeros. Throwaway attacker and auditor files (models "smoke-attacker", "smoke-auditor"), five int cases:
+0, 5, -12, 123456789 (nine digits), NULL. Run with --no-record, so no pair record and nothing under tests/ changed.
+
+1. Unmodified conversion (conversions/AdventureWorks2025/dbo.ufnLeadingZeros.sql):
+   npm run adversarial -- run --object dbo.ufnLeadingZeros --dir .tmp/adv-smoke --evidence-dir .tmp/adv-smoke/evidence --no-record
+   Result: "5 adversarial cases ran, 0 differed". Every case passed on SQL Server (tSQLt, expected values captured from the
+   original T-SQL) and on PostgreSQL.
+   Planted defect check on those cases: 0 of 1 caught ("auto: strict comparison made inclusive": > 8 became >= 8, which no
+   five-case input observes, because an 8-character value pads to the same text either way). Mutant adequacy = inadequate;
+   gate = FAIL ("mutant adequacy is inadequate"). This is the seeded "case that targets nothing" check: the gate refuses attacks
+   that do not catch a planted defect, unless the auditor records the defect as equivalent.
+
+2. Planted defect in a copy of the conversion (.tmp/adv-smoke/planted.sql): "length(return_value) > 8" changed to "> 9", so a
+   nine-digit number is no longer replaced by '*'.
+   npm run adversarial -- run --object dbo.ufnLeadingZeros --dir .tmp/adv-smoke --evidence-dir .tmp/adv-smoke/evidence-planted --no-record --final-sql .tmp/adv-smoke/planted.sql
+   Result: "5 adversarial cases ran, 1 differed". Case A04 (123456789) passed on SQL Server and FAILED on PostgreSQL
+   ("1 expected row(s) missing, 1 unexpected row(s) in the result"); gate = FAIL ("case A04 differed").
+
+Both outcomes were seen. The gate result was computed by src/adversarial/gate.ts from the engine results; no agent output was read.

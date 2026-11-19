@@ -22,6 +22,7 @@
     "apply-rulings": "node dist/cli/apply-rulings.js",
     "review-packet": "node dist/cli/review-packet.js",
     "agreed-tests": "node dist/cli/agreed-tests.js",
+    "adversarial": "node dist/cli/adversarial.js",
     "predeploy:check": "node scripts/predeploy-check.mjs",
     "site:build": "node scripts/build-site.mjs",
     "readme:status": "node dist/cli/readme-status.js",
