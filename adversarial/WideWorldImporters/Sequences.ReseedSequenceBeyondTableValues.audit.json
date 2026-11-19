@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "object": "Sequences.ReseedSequenceBeyondTableValues",
+  "database": "WideWorldImporters",
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T21:39:58.1908526-07:00"
+  },
+  "casesAudited": [
+    "A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09", "A10"
+  ],
+  "acceptedNotApplicable": [],
+  "equivalentMutants": [],
+  "objections": [
+    {
+      "id": "O01",
+      "caseId": "A08",
+      "kind": "duplicate",
+      "text": "The hand-derived fixed case 'table maximum equals the unused sequence's start value' already calls OrderID with an unused sequence whose start equals the table maximum and requires a restart at maximum + 1. A08 repeats that same input relationship and branch with start and maximum 7; using the unrelated StockItemID sequence first does not change the OrderID attack.",
+      "status": "open"
+    }
+  ]
+}

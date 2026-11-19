@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "object": "Sales.vStoreWithAddresses",
+  "database": "AdventureWorks2025",
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T21:39:58.1908526-07:00"
+  },
+  "casesAudited": [
+    "A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09"
+  ],
+  "acceptedNotApplicable": [],
+  "equivalentMutants": [],
+  "objections": [
+    {
+      "id": "O01",
+      "caseId": "A07",
+      "kind": "label-mismatch",
+      "text": "A07 labels the empty entity name as an empty vendor name, but the value is sent to Sales.Store.Name. This object and case contain no vendor table.",
+      "status": "open"
+    },
+    {
+      "id": "O02",
+      "caseId": "A08",
+      "kind": "label-mismatch",
+      "text": "A08 labels BusinessEntityID 2147483647 as a vendor, but the value is sent to Sales.Store.BusinessEntityID. This object and case contain no vendor table.",
+      "status": "open"
+    }
+  ]
+}

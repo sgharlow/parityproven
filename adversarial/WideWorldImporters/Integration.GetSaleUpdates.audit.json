@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "object": "Integration.GetSaleUpdates",
+  "database": "WideWorldImporters",
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T21:39:58.1908526-07:00"
+  },
+  "casesAudited": [
+    "A01", "A02", "A03", "A04", "A05"
+  ],
+  "acceptedNotApplicable": [
+    "null-vs-empty"
+  ],
+  "equivalentMutants": [],
+  "objections": [
+    {
+      "id": "O01",
+      "caseId": "A03",
+      "kind": "weak",
+      "text": "A03 says the subtraction 999999999999.99 - (-999999999999.99) needs the extra precision digit of SQL Server's decimal(19,2) result. The actual result, 1999999999999.98, still fits decimal(18,2), so these values do not attack the stated precision-widening boundary.",
+      "status": "open"
+    }
+  ]
+}
