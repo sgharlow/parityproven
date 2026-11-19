@@ -1,0 +1,641 @@
+{
+  "schemaVersion": 1,
+  "object": "HumanResources.vEmployeeDepartmentHistory",
+  "database": "AdventureWorks2025",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-18T20:21:05-07:00"
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "date boundaries: start dates 0001-01-01, 1752-12-31, 1753-01-01, 2000-02-29 and 9999-12-31; end dates 0001-01-01 and 9999-12-31",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "date covers 0001-01-01 to 9999-12-31 on both engines (wider than datetime). Values before 1753 and the leap day check the date mapping and how both drivers read early years (a client that builds dates with Date.UTC maps years 0-99 to 1900-1999). both open and ended histories are listed.",
+      "fixedCase": {
+        "tables": {
+          "HumanResources.Employee": [
+            {
+              "BusinessEntityID": 1
+            },
+            {
+              "BusinessEntityID": 2
+            },
+            {
+              "BusinessEntityID": 3
+            }
+          ],
+          "Person.Person": [
+            {
+              "BusinessEntityID": 1,
+              "Title": null,
+              "FirstName": "First1",
+              "MiddleName": null,
+              "LastName": "Last1",
+              "Suffix": null
+            },
+            {
+              "BusinessEntityID": 2,
+              "Title": null,
+              "FirstName": "First2",
+              "MiddleName": null,
+              "LastName": "Last2",
+              "Suffix": null
+            },
+            {
+              "BusinessEntityID": 3,
+              "Title": null,
+              "FirstName": "First3",
+              "MiddleName": null,
+              "LastName": "Last3",
+              "Suffix": null
+            }
+          ],
+          "HumanResources.Department": [
+            {
+              "DepartmentID": 1,
+              "Name": "Dept 1",
+              "GroupName": "Group 1"
+            },
+            {
+              "DepartmentID": 2,
+              "Name": "Dept 2",
+              "GroupName": "Group 2"
+            }
+          ],
+          "HumanResources.EmployeeDepartmentHistory": [
+            {
+              "BusinessEntityID": 1,
+              "DepartmentID": 1,
+              "ShiftID": 1,
+              "StartDate": "0001-01-01",
+              "EndDate": null
+            },
+            {
+              "BusinessEntityID": 1,
+              "DepartmentID": 2,
+              "ShiftID": 1,
+              "StartDate": "1752-12-31",
+              "EndDate": "0001-01-01"
+            },
+            {
+              "BusinessEntityID": 2,
+              "DepartmentID": 1,
+              "ShiftID": 1,
+              "StartDate": "1753-01-01",
+              "EndDate": null
+            },
+            {
+              "BusinessEntityID": 2,
+              "DepartmentID": 2,
+              "ShiftID": 1,
+              "StartDate": "2000-02-29",
+              "EndDate": "9999-12-31"
+            },
+            {
+              "BusinessEntityID": 3,
+              "DepartmentID": 1,
+              "ShiftID": 1,
+              "StartDate": "9999-12-31",
+              "EndDate": null
+            },
+            {
+              "BusinessEntityID": 3,
+              "DepartmentID": 2,
+              "ShiftID": 1,
+              "StartDate": "1900-01-01",
+              "EndDate": "1900-01-01"
+            }
+          ],
+          "HumanResources.Shift": [
+            {
+              "ShiftID": 1,
+              "Name": "Day"
+            },
+            {
+              "ShiftID": 0,
+              "Name": "Zero"
+            },
+            {
+              "ShiftID": 255,
+              "Name": "Max"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A02",
+      "label": "an end date before the start date, and an end date equal to it: the view does not compare the two",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "Neither view compares EndDate with StartDate; a conversion that added a validity check would drop rows. both open and ended histories are listed. 9999-12-31 is the end date of one row.",
+      "fixedCase": {
+        "tables": {
+          "HumanResources.Employee": [
+            {
+              "BusinessEntityID": 1
+            },
+            {
+              "BusinessEntityID": 2
+            }
+          ],
+          "Person.Person": [
+            {
+              "BusinessEntityID": 1,
+              "Title": null,
+              "FirstName": "First1",
+              "MiddleName": null,
+              "LastName": "Last1",
+              "Suffix": null
+            },
+            {
+              "BusinessEntityID": 2,
+              "Title": null,
+              "FirstName": "First2",
+              "MiddleName": null,
+              "LastName": "Last2",
+              "Suffix": null
+            }
+          ],
+          "HumanResources.Department": [
+            {
+              "DepartmentID": 1,
+              "Name": "Dept 1",
+              "GroupName": "Group 1"
+            }
+          ],
+          "HumanResources.EmployeeDepartmentHistory": [
+            {
+              "BusinessEntityID": 1,
+              "DepartmentID": 1,
+              "ShiftID": 1,
+              "StartDate": "2010-06-15",
+              "EndDate": "2010-06-14"
+            },
+            {
+              "BusinessEntityID": 2,
+              "DepartmentID": 1,
+              "ShiftID": 1,
+              "StartDate": "2010-06-15",
+              "EndDate": "2010-06-15"
+            },
+            {
+              "BusinessEntityID": 2,
+              "DepartmentID": 1,
+              "ShiftID": 1,
+              "StartDate": "2011-01-01",
+              "EndDate": "9999-12-31"
+            },
+            {
+              "BusinessEntityID": 1,
+              "DepartmentID": 1,
+              "ShiftID": 1,
+              "StartDate": "2012-01-01",
+              "EndDate": null
+            }
+          ],
+          "HumanResources.Shift": [
+            {
+              "ShiftID": 1,
+              "Name": "Day"
+            },
+            {
+              "ShiftID": 0,
+              "Name": "Zero"
+            },
+            {
+              "ShiftID": 255,
+              "Name": "Max"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A03",
+      "label": "NULL versus '': Title, MiddleName and Suffix as NULL and as ''; an empty department name and group",
+      "traps": [
+        "null-vs-empty"
+      ],
+      "reasoning": "Each nullable text column is sent as NULL for one person and '' for another; Department.Name and GroupName are NOT NULL and sent as ''. '' must stay '' and NULL stay NULL on both engines.",
+      "fixedCase": {
+        "tables": {
+          "HumanResources.Employee": [
+            {
+              "BusinessEntityID": 1
+            },
+            {
+              "BusinessEntityID": 2
+            }
+          ],
+          "Person.Person": [
+            {
+              "BusinessEntityID": 1,
+              "Title": null,
+              "FirstName": "First1",
+              "MiddleName": null,
+              "LastName": "Last1",
+              "Suffix": null
+            },
+            {
+              "BusinessEntityID": 2,
+              "Title": "",
+              "FirstName": "First2",
+              "MiddleName": "",
+              "LastName": "Last2",
+              "Suffix": ""
+            }
+          ],
+          "HumanResources.Department": [
+            {
+              "DepartmentID": 1,
+              "Name": "",
+              "GroupName": ""
+            },
+            {
+              "DepartmentID": 2,
+              "Name": "Dept 2",
+              "GroupName": "Group 2"
+            }
+          ],
+          "HumanResources.EmployeeDepartmentHistory": [
+            {
+              "BusinessEntityID": 1,
+              "DepartmentID": 1,
+              "ShiftID": 1,
+              "StartDate": "2001-01-01",
+              "EndDate": null
+            },
+            {
+              "BusinessEntityID": 2,
+              "DepartmentID": 2,
+              "ShiftID": 1,
+              "StartDate": "2001-01-01",
+              "EndDate": null
+            }
+          ],
+          "HumanResources.Shift": [
+            {
+              "ShiftID": 1,
+              "Name": "Day"
+            },
+            {
+              "ShiftID": 0,
+              "Name": "Zero"
+            },
+            {
+              "ShiftID": 255,
+              "Name": "Max"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A04",
+      "label": "text returned as stored: department names differing only in case, trailing spaces, non-ASCII and an emoji",
+      "traps": [
+        "collation-case",
+        "trailing-spaces"
+      ],
+      "reasoning": "No text is compared in the view, so 'Sales', 'SALES' and 'sales ' are three departments with their own spelling; a conversion that case-folded, trimmed or grouped them would differ. An emoji and combining characters check the nvarchar -> varchar load on both engines.",
+      "fixedCase": {
+        "tables": {
+          "HumanResources.Employee": [
+            {
+              "BusinessEntityID": 1
+            },
+            {
+              "BusinessEntityID": 2
+            },
+            {
+              "BusinessEntityID": 3
+            }
+          ],
+          "Person.Person": [
+            {
+              "BusinessEntityID": 1,
+              "Title": null,
+              "FirstName": "Ann ",
+              "MiddleName": null,
+              "LastName": "Last1",
+              "Suffix": null
+            },
+            {
+              "BusinessEntityID": 2,
+              "Title": null,
+              "FirstName": "ANN",
+              "MiddleName": null,
+              "LastName": "Last2",
+              "Suffix": null
+            },
+            {
+              "BusinessEntityID": 3,
+              "Title": null,
+              "FirstName": "ann",
+              "MiddleName": null,
+              "LastName": "Last3",
+              "Suffix": null
+            }
+          ],
+          "HumanResources.Department": [
+            {
+              "DepartmentID": 1,
+              "Name": "Sales",
+              "GroupName": "Sales and Marketing"
+            },
+            {
+              "DepartmentID": 2,
+              "Name": "SALES",
+              "GroupName": "Sales and Marketing "
+            },
+            {
+              "DepartmentID": 3,
+              "Name": "sales ",
+              "GroupName": "Ventes 😀 é"
+            }
+          ],
+          "HumanResources.EmployeeDepartmentHistory": [
+            {
+              "BusinessEntityID": 1,
+              "DepartmentID": 1,
+              "ShiftID": 1,
+              "StartDate": "2001-01-01",
+              "EndDate": null
+            },
+            {
+              "BusinessEntityID": 2,
+              "DepartmentID": 2,
+              "ShiftID": 1,
+              "StartDate": "2001-01-01",
+              "EndDate": null
+            },
+            {
+              "BusinessEntityID": 3,
+              "DepartmentID": 3,
+              "ShiftID": 1,
+              "StartDate": "2001-01-01",
+              "EndDate": null
+            }
+          ],
+          "HumanResources.Shift": [
+            {
+              "ShiftID": 1,
+              "Name": "Day"
+            },
+            {
+              "ShiftID": 0,
+              "Name": "Zero"
+            },
+            {
+              "ShiftID": 255,
+              "Name": "Max"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A05",
+      "label": "duplicate history rows (same employee, department and start date twice): two identical output rows",
+      "traps": [
+        "top-ties"
+      ],
+      "reasoning": "EmployeeDepartmentHistory has no key constraint in the scratch tables, so the same row twice is two rows on both engines; the view has no DISTINCT. Compared as a multiset.",
+      "fixedCase": {
+        "tables": {
+          "HumanResources.Employee": [
+            {
+              "BusinessEntityID": 1
+            }
+          ],
+          "Person.Person": [
+            {
+              "BusinessEntityID": 1,
+              "Title": null,
+              "FirstName": "First1",
+              "MiddleName": null,
+              "LastName": "Last1",
+              "Suffix": null
+            }
+          ],
+          "HumanResources.Department": [
+            {
+              "DepartmentID": 1,
+              "Name": "Dept 1",
+              "GroupName": "Group 1"
+            }
+          ],
+          "HumanResources.EmployeeDepartmentHistory": [
+            {
+              "BusinessEntityID": 1,
+              "DepartmentID": 1,
+              "ShiftID": 1,
+              "StartDate": "2005-07-01",
+              "EndDate": null
+            },
+            {
+              "BusinessEntityID": 1,
+              "DepartmentID": 1,
+              "ShiftID": 1,
+              "StartDate": "2005-07-01",
+              "EndDate": null
+            },
+            {
+              "BusinessEntityID": 1,
+              "DepartmentID": 1,
+              "ShiftID": 1,
+              "StartDate": "2001-01-01",
+              "EndDate": "2005-06-30"
+            }
+          ],
+          "HumanResources.Shift": [
+            {
+              "ShiftID": 1,
+              "Name": "Day"
+            },
+            {
+              "ShiftID": 0,
+              "Name": "Zero"
+            },
+            {
+              "ShiftID": 255,
+              "Name": "Max"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A06",
+      "label": "smallint and int extremes: departments -32768 and 32767, employees 0 and 2147483647, shifts 0 and 255 (tinyint limits)",
+      "traps": [
+        "identity-gaps"
+      ],
+      "reasoning": "DepartmentID is smallint (smallint on PostgreSQL), BusinessEntityID int, ShiftID tinyint (smallint on PostgreSQL); the keys jump and sit at the type limits. A narrowing or sign error in the mapping would drop or change rows.",
+      "fixedCase": {
+        "tables": {
+          "HumanResources.Employee": [
+            {
+              "BusinessEntityID": 0
+            },
+            {
+              "BusinessEntityID": 2147483647
+            }
+          ],
+          "Person.Person": [
+            {
+              "BusinessEntityID": 0,
+              "Title": null,
+              "FirstName": "First0",
+              "MiddleName": null,
+              "LastName": "Last0",
+              "Suffix": null
+            },
+            {
+              "BusinessEntityID": 2147483647,
+              "Title": null,
+              "FirstName": "First2147483647",
+              "MiddleName": null,
+              "LastName": "Last2147483647",
+              "Suffix": null
+            }
+          ],
+          "HumanResources.Department": [
+            {
+              "DepartmentID": -32768,
+              "Name": "Dept -32768",
+              "GroupName": "Group -32768"
+            },
+            {
+              "DepartmentID": 32767,
+              "Name": "Dept 32767",
+              "GroupName": "Group 32767"
+            }
+          ],
+          "HumanResources.EmployeeDepartmentHistory": [
+            {
+              "BusinessEntityID": 0,
+              "DepartmentID": -32768,
+              "ShiftID": 0,
+              "StartDate": "2001-01-01",
+              "EndDate": null
+            },
+            {
+              "BusinessEntityID": 2147483647,
+              "DepartmentID": 32767,
+              "ShiftID": 255,
+              "StartDate": "2001-01-01",
+              "EndDate": null
+            }
+          ],
+          "HumanResources.Shift": [
+            {
+              "ShiftID": 1,
+              "Name": "Day"
+            },
+            {
+              "ShiftID": 0,
+              "Name": "Zero"
+            },
+            {
+              "ShiftID": 255,
+              "Name": "Max"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A07",
+      "label": "rows dropped by the inner joins: a history for a missing department, a missing person and a missing shift; a person who is not an employee",
+      "traps": [],
+      "reasoning": "Department, Person and Shift are inner joins. Department 9 does not exist, employee 4 has no Person row, and shift 7 does not exist; those rows are dropped. Employee 5 has a Person row but no Employee row and is not listed.",
+      "fixedCase": {
+        "tables": {
+          "HumanResources.Employee": [
+            {
+              "BusinessEntityID": 1
+            },
+            {
+              "BusinessEntityID": 4
+            }
+          ],
+          "Person.Person": [
+            {
+              "BusinessEntityID": 1,
+              "Title": null,
+              "FirstName": "First1",
+              "MiddleName": null,
+              "LastName": "Last1",
+              "Suffix": null
+            },
+            {
+              "BusinessEntityID": 5,
+              "Title": null,
+              "FirstName": "First5",
+              "MiddleName": null,
+              "LastName": "Last5",
+              "Suffix": null
+            }
+          ],
+          "HumanResources.Department": [
+            {
+              "DepartmentID": 1,
+              "Name": "Dept 1",
+              "GroupName": "Group 1"
+            }
+          ],
+          "HumanResources.EmployeeDepartmentHistory": [
+            {
+              "BusinessEntityID": 1,
+              "DepartmentID": 9,
+              "ShiftID": 1,
+              "StartDate": "2001-01-01",
+              "EndDate": null
+            },
+            {
+              "BusinessEntityID": 1,
+              "DepartmentID": 1,
+              "ShiftID": 7,
+              "StartDate": "2002-01-01",
+              "EndDate": null
+            },
+            {
+              "BusinessEntityID": 4,
+              "DepartmentID": 1,
+              "ShiftID": 1,
+              "StartDate": "2001-01-01",
+              "EndDate": null
+            },
+            {
+              "BusinessEntityID": 5,
+              "DepartmentID": 1,
+              "ShiftID": 1,
+              "StartDate": "2001-01-01",
+              "EndDate": null
+            }
+          ],
+          "HumanResources.Shift": [
+            {
+              "ShiftID": 1,
+              "Name": "Day"
+            },
+            {
+              "ShiftID": 0,
+              "Name": "Zero"
+            },
+            {
+              "ShiftID": 255,
+              "Name": "Max"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,442 @@
+{
+  "schemaVersion": 1,
+  "object": "Person.vStateProvinceCountryRegion",
+  "database": "AdventureWorks2025",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-18T20:21:05-07:00"
+  },
+  "notApplicable": {
+    "null-vs-empty": "Every text column of StateProvince and CountryRegion is NOT NULL, so no NULL text value can be sent; '' is attacked as an empty country code and an empty nchar(3) province code."
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "case-only variants 'Us', 'uS' and 'us ' of a country code join 'US'",
+      "traps": [
+        "collation-case",
+        "trailing-spaces"
+      ],
+      "reasoning": "CI_AS ignores case and SQL Server equality ignores trailing spaces, so all three province codes join country 'US'. The conversion uses rtrim under an ICU level-2 collation; this checks mixed case and case plus trailing space together.",
+      "fixedCase": {
+        "tables": {
+          "Person.StateProvince": [
+            {
+              "StateProvinceID": 1,
+              "StateProvinceCode": "S1",
+              "CountryRegionCode": "Us",
+              "IsOnlyStateProvinceFlag": 0,
+              "Name": "Province 1",
+              "TerritoryID": 1
+            },
+            {
+              "StateProvinceID": 2,
+              "StateProvinceCode": "S2",
+              "CountryRegionCode": "uS",
+              "IsOnlyStateProvinceFlag": 0,
+              "Name": "Province 2",
+              "TerritoryID": 1
+            },
+            {
+              "StateProvinceID": 3,
+              "StateProvinceCode": "S3",
+              "CountryRegionCode": "us ",
+              "IsOnlyStateProvinceFlag": 0,
+              "Name": "Province 3",
+              "TerritoryID": 1
+            }
+          ],
+          "Person.CountryRegion": [
+            {
+              "CountryRegionCode": "US",
+              "Name": "United States"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A02",
+      "label": "expansions: province code 'Æ' against country 'AE' and 'ß' against 'SS', with 'ae' and 'ss' as case-only controls",
+      "traps": [
+        "collation-case"
+      ],
+      "reasoning": "Windows collation rules (used by SQL_Latin1_General_CP1_CI_AS for nvarchar) treat 'Æ' as equal to 'AE' and 'ß' as equal to 'ss'. The ICU root collation at strength 2 gives 'æ' its own primary weight (not equal to 'ae') while 'ß' = 'ss' differs only at the tertiary level. The engines may disagree on whether the 'Æ' province joins.",
+      "fixedCase": {
+        "tables": {
+          "Person.StateProvince": [
+            {
+              "StateProvinceID": 1,
+              "StateProvinceCode": "S1",
+              "CountryRegionCode": "Æ",
+              "IsOnlyStateProvinceFlag": 0,
+              "Name": "Province 1",
+              "TerritoryID": 1
+            },
+            {
+              "StateProvinceID": 2,
+              "StateProvinceCode": "S2",
+              "CountryRegionCode": "ß",
+              "IsOnlyStateProvinceFlag": 0,
+              "Name": "Province 2",
+              "TerritoryID": 1
+            },
+            {
+              "StateProvinceID": 3,
+              "StateProvinceCode": "S3",
+              "CountryRegionCode": "ae",
+              "IsOnlyStateProvinceFlag": 0,
+              "Name": "Province 3",
+              "TerritoryID": 1
+            },
+            {
+              "StateProvinceID": 4,
+              "StateProvinceCode": "S4",
+              "CountryRegionCode": "ss",
+              "IsOnlyStateProvinceFlag": 0,
+              "Name": "Province 4",
+              "TerritoryID": 1
+            }
+          ],
+          "Person.CountryRegion": [
+            {
+              "CountryRegionCode": "AE",
+              "Name": "United Arab Emirates"
+            },
+            {
+              "CountryRegionCode": "SS",
+              "Name": "South Sudan"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A03",
+      "label": "compatibility forms: full-width U+FF35 U+FF33 against 'US' and the Kelvin sign U+212A followed by 'E' against 'KE', with 'ke' as a case-only control",
+      "traps": [
+        "collation-case"
+      ],
+      "reasoning": "SQL Server collations without _WS are width-insensitive, so full-width 'ＵＳ' equals 'US'; U+212A KELVIN SIGN is canonically equivalent to 'K'. ICU at strength 2 ignores width (a tertiary difference) and normalises canonical equivalents. Either engine may treat one of these differently.",
+      "fixedCase": {
+        "tables": {
+          "Person.StateProvince": [
+            {
+              "StateProvinceID": 1,
+              "StateProvinceCode": "S1",
+              "CountryRegionCode": "ＵＳ",
+              "IsOnlyStateProvinceFlag": 0,
+              "Name": "Province 1",
+              "TerritoryID": 1
+            },
+            {
+              "StateProvinceID": 2,
+              "StateProvinceCode": "S2",
+              "CountryRegionCode": "KE",
+              "IsOnlyStateProvinceFlag": 0,
+              "Name": "Province 2",
+              "TerritoryID": 1
+            },
+            {
+              "StateProvinceID": 3,
+              "StateProvinceCode": "S3",
+              "CountryRegionCode": "ke",
+              "IsOnlyStateProvinceFlag": 0,
+              "Name": "Province 3",
+              "TerritoryID": 1
+            }
+          ],
+          "Person.CountryRegion": [
+            {
+              "CountryRegionCode": "US",
+              "Name": "United States"
+            },
+            {
+              "CountryRegionCode": "KE",
+              "Name": "Kenya"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A04",
+      "label": "whitespace look-alikes: 'US' with a trailing no-break space (U+00A0), a trailing tab, a leading space, a soft hyphen (U+00AD) inside, and 'CA ' (a real trailing space)",
+      "traps": [
+        "trailing-spaces"
+      ],
+      "reasoning": "SQL Server pads the shorter value with U+0020 before comparing, so only 'CA ' is certain to join. Whether U+00A0 compares equal to the pad space, and whether the soft hyphen U+00AD is ignorable, are collation rules; PostgreSQL rtrim(' ') removes U+0020 only and ICU treats U+00AD as ignorable and U+00A0 as a space variant. A tab and a leading space should join on neither engine.",
+      "fixedCase": {
+        "tables": {
+          "Person.StateProvince": [
+            {
+              "StateProvinceID": 1,
+              "StateProvinceCode": "S1",
+              "CountryRegionCode": "US ",
+              "IsOnlyStateProvinceFlag": 0,
+              "Name": "Province 1",
+              "TerritoryID": 1
+            },
+            {
+              "StateProvinceID": 2,
+              "StateProvinceCode": "S2",
+              "CountryRegionCode": "US\t",
+              "IsOnlyStateProvinceFlag": 0,
+              "Name": "Province 2",
+              "TerritoryID": 1
+            },
+            {
+              "StateProvinceID": 3,
+              "StateProvinceCode": "S3",
+              "CountryRegionCode": " US",
+              "IsOnlyStateProvinceFlag": 0,
+              "Name": "Province 3",
+              "TerritoryID": 1
+            },
+            {
+              "StateProvinceID": 4,
+              "StateProvinceCode": "S4",
+              "CountryRegionCode": "U­S",
+              "IsOnlyStateProvinceFlag": 0,
+              "Name": "Province 4",
+              "TerritoryID": 1
+            },
+            {
+              "StateProvinceID": 5,
+              "StateProvinceCode": "S5",
+              "CountryRegionCode": "CA ",
+              "IsOnlyStateProvinceFlag": 0,
+              "Name": "Province 5",
+              "TerritoryID": 1
+            }
+          ],
+          "Person.CountryRegion": [
+            {
+              "CountryRegionCode": "US",
+              "Name": "United States"
+            },
+            {
+              "CountryRegionCode": "CA",
+              "Name": "Canada"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A05",
+      "label": "accents and dotted/dotless I: 'ÜS' against 'US' (accent-sensitive); U+0131 and U+0130 followed by 'T' against 'IT', with 'it' as a case-only control",
+      "traps": [
+        "collation-case"
+      ],
+      "reasoning": "CI_AS is accent-sensitive, so 'ÜS' must not join 'US'. U+0131 (dotless i) and U+0130 (I with dot above) case-fold differently by rule set: Windows rules and ICU root may each match or not match 'IT'. 'it' joins on both.",
+      "fixedCase": {
+        "tables": {
+          "Person.StateProvince": [
+            {
+              "StateProvinceID": 1,
+              "StateProvinceCode": "S1",
+              "CountryRegionCode": "ÜS",
+              "IsOnlyStateProvinceFlag": 0,
+              "Name": "Province 1",
+              "TerritoryID": 1
+            },
+            {
+              "StateProvinceID": 2,
+              "StateProvinceCode": "S2",
+              "CountryRegionCode": "ıT",
+              "IsOnlyStateProvinceFlag": 0,
+              "Name": "Province 2",
+              "TerritoryID": 1
+            },
+            {
+              "StateProvinceID": 3,
+              "StateProvinceCode": "S3",
+              "CountryRegionCode": "İT",
+              "IsOnlyStateProvinceFlag": 0,
+              "Name": "Province 3",
+              "TerritoryID": 1
+            },
+            {
+              "StateProvinceID": 4,
+              "StateProvinceCode": "S4",
+              "CountryRegionCode": "it",
+              "IsOnlyStateProvinceFlag": 0,
+              "Name": "Province 4",
+              "TerritoryID": 1
+            }
+          ],
+          "Person.CountryRegion": [
+            {
+              "CountryRegionCode": "US",
+              "Name": "United States"
+            },
+            {
+              "CountryRegionCode": "IT",
+              "Name": "Italy"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A06",
+      "label": "an empty country code: province codes '' and ' ' both join country '' (trailing spaces ignored)",
+      "traps": [
+        "trailing-spaces"
+      ],
+      "reasoning": "SQL Server compares '' and ' ' as equal (padding), so both provinces join the country whose code is ''. rtrim(' ') gives '' on PostgreSQL; this checks the empty-string edge of the rtrim + ICU equality and that '' is not treated as NULL.",
+      "fixedCase": {
+        "tables": {
+          "Person.StateProvince": [
+            {
+              "StateProvinceID": 1,
+              "StateProvinceCode": "S1",
+              "CountryRegionCode": "",
+              "IsOnlyStateProvinceFlag": 0,
+              "Name": "Province 1",
+              "TerritoryID": 1
+            },
+            {
+              "StateProvinceID": 2,
+              "StateProvinceCode": "S2",
+              "CountryRegionCode": " ",
+              "IsOnlyStateProvinceFlag": 0,
+              "Name": "Province 2",
+              "TerritoryID": 1
+            }
+          ],
+          "Person.CountryRegion": [
+            {
+              "CountryRegionCode": "",
+              "Name": "Nowhere"
+            },
+            {
+              "CountryRegionCode": "US",
+              "Name": "United States"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A07",
+      "label": "nchar(3) province codes: '', 'A', 'AB ', 'ABC', 'abc' and 'é' come back padded to three characters",
+      "traps": [
+        "collation-case",
+        "trailing-spaces"
+      ],
+      "reasoning": "StateProvinceCode is nchar(3) (char(3) on PostgreSQL). Both engines pad with spaces on output; 'ABC' and 'abc' are distinct values passed through. The empty string pads to three spaces on both, and is not NULL.",
+      "fixedCase": {
+        "tables": {
+          "Person.StateProvince": [
+            {
+              "StateProvinceID": 1,
+              "StateProvinceCode": "",
+              "CountryRegionCode": "US",
+              "IsOnlyStateProvinceFlag": 0,
+              "Name": "Province 1",
+              "TerritoryID": 0
+            },
+            {
+              "StateProvinceID": 2,
+              "StateProvinceCode": "A",
+              "CountryRegionCode": "US",
+              "IsOnlyStateProvinceFlag": 1,
+              "Name": "Province 2",
+              "TerritoryID": 1
+            },
+            {
+              "StateProvinceID": 3,
+              "StateProvinceCode": "AB ",
+              "CountryRegionCode": "US",
+              "IsOnlyStateProvinceFlag": 0,
+              "Name": "Province 3",
+              "TerritoryID": 2
+            },
+            {
+              "StateProvinceID": 4,
+              "StateProvinceCode": "ABC",
+              "CountryRegionCode": "US",
+              "IsOnlyStateProvinceFlag": 1,
+              "Name": "Province 4",
+              "TerritoryID": 3
+            },
+            {
+              "StateProvinceID": 5,
+              "StateProvinceCode": "abc",
+              "CountryRegionCode": "US",
+              "IsOnlyStateProvinceFlag": 0,
+              "Name": "Province 5",
+              "TerritoryID": 4
+            },
+            {
+              "StateProvinceID": 6,
+              "StateProvinceCode": "é",
+              "CountryRegionCode": "US",
+              "IsOnlyStateProvinceFlag": 1,
+              "Name": "Province 6",
+              "TerritoryID": 5
+            }
+          ],
+          "Person.CountryRegion": [
+            {
+              "CountryRegionCode": "US",
+              "Name": "United States"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A08",
+      "label": "several provinces of one country, ids with gaps and at the int limits, territory -2147483648, names with trailing spaces and an emoji",
+      "traps": [
+        "identity-gaps",
+        "top-ties",
+        "trailing-spaces"
+      ],
+      "reasoning": "StateProvinceID jumps (0, 9, 2147483647); TerritoryID is not joined and is passed through at the int minimum. Three provinces share a country and a TerritoryID (a repeated non-key value). Names keep their trailing space; the emoji checks the load.",
+      "fixedCase": {
+        "tables": {
+          "Person.StateProvince": [
+            {
+              "StateProvinceID": 0,
+              "StateProvinceCode": "AA",
+              "CountryRegionCode": "US",
+              "IsOnlyStateProvinceFlag": 1,
+              "Name": "Alpha ",
+              "TerritoryID": -2147483648
+            },
+            {
+              "StateProvinceID": 9,
+              "StateProvinceCode": "BB",
+              "CountryRegionCode": "US",
+              "IsOnlyStateProvinceFlag": 0,
+              "Name": "Beta 😀",
+              "TerritoryID": -2147483648
+            },
+            {
+              "StateProvinceID": 2147483647,
+              "StateProvinceCode": "CC",
+              "CountryRegionCode": "us",
+              "IsOnlyStateProvinceFlag": 0,
+              "Name": "",
+              "TerritoryID": 2147483647
+            }
+          ],
+          "Person.CountryRegion": [
+            {
+              "CountryRegionCode": "US",
+              "Name": "United States "
+            },
+            {
+              "CountryRegionCode": "CA",
+              "Name": "Canada"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,1562 @@
+{
+  "schemaVersion": 1,
+  "object": "Sales.vSalesPerson",
+  "database": "AdventureWorks2025",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-18T20:21:05-07:00"
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "case-only variants 'Us', 'uS' and 'us ' of a country code join 'US'",
+      "traps": [
+        "collation-case",
+        "trailing-spaces"
+      ],
+      "reasoning": "CI_AS ignores case and SQL Server equality ignores trailing spaces, so all three province codes join country 'US'. The conversion uses rtrim under an ICU level-2 collation; this checks mixed case and case plus trailing space together.",
+      "fixedCase": {
+        "tables": {
+          "Sales.SalesPerson": [
+            {
+              "BusinessEntityID": 1,
+              "TerritoryID": null,
+              "SalesQuota": null,
+              "SalesYTD": "0.0000",
+              "SalesLastYear": "0.0000"
+            },
+            {
+              "BusinessEntityID": 2,
+              "TerritoryID": null,
+              "SalesQuota": null,
+              "SalesYTD": "0.0000",
+              "SalesLastYear": "0.0000"
+            },
+            {
+              "BusinessEntityID": 3,
+              "TerritoryID": null,
+              "SalesQuota": null,
+              "SalesYTD": "0.0000",
+              "SalesLastYear": "0.0000"
+            }
+          ],
+          "HumanResources.Employee": [
+            {
+              "BusinessEntityID": 1,
+              "JobTitle": "Sales Representative"
+            },
+            {
+              "BusinessEntityID": 2,
+              "JobTitle": "Sales Representative"
+            },
+            {
+              "BusinessEntityID": 3,
+              "JobTitle": "Sales Representative"
+            }
+          ],
+          "Person.Person": [
+            {
+              "BusinessEntityID": 1,
+              "Title": null,
+              "FirstName": "First1",
+              "MiddleName": null,
+              "LastName": "Last1",
+              "Suffix": null,
+              "EmailPromotion": 0
+            },
+            {
+              "BusinessEntityID": 2,
+              "Title": null,
+              "FirstName": "First2",
+              "MiddleName": null,
+              "LastName": "Last2",
+              "Suffix": null,
+              "EmailPromotion": 0
+            },
+            {
+              "BusinessEntityID": 3,
+              "Title": null,
+              "FirstName": "First3",
+              "MiddleName": null,
+              "LastName": "Last3",
+              "Suffix": null,
+              "EmailPromotion": 0
+            }
+          ],
+          "Person.BusinessEntityAddress": [
+            {
+              "BusinessEntityID": 1,
+              "AddressID": 1
+            },
+            {
+              "BusinessEntityID": 2,
+              "AddressID": 2
+            },
+            {
+              "BusinessEntityID": 3,
+              "AddressID": 3
+            }
+          ],
+          "Person.Address": [
+            {
+              "AddressID": 1,
+              "AddressLine1": "1 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 1,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 2,
+              "AddressLine1": "2 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 2,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 3,
+              "AddressLine1": "3 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 3,
+              "PostalCode": "98011"
+            }
+          ],
+          "Person.StateProvince": [
+            {
+              "StateProvinceID": 1,
+              "CountryRegionCode": "Us",
+              "Name": "Province 1"
+            },
+            {
+              "StateProvinceID": 2,
+              "CountryRegionCode": "uS",
+              "Name": "Province 2"
+            },
+            {
+              "StateProvinceID": 3,
+              "CountryRegionCode": "us ",
+              "Name": "Province 3"
+            }
+          ],
+          "Person.CountryRegion": [
+            {
+              "CountryRegionCode": "US",
+              "Name": "United States"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A02",
+      "label": "expansions: province code 'Æ' against country 'AE' and 'ß' against 'SS', with 'ae' and 'ss' as case-only controls",
+      "traps": [
+        "collation-case"
+      ],
+      "reasoning": "Windows collation rules (used by SQL_Latin1_General_CP1_CI_AS for nvarchar) treat 'Æ' as equal to 'AE' and 'ß' as equal to 'ss'. The ICU root collation at strength 2 gives 'æ' its own primary weight (not equal to 'ae') while 'ß' = 'ss' differs only at the tertiary level. The engines may disagree on whether the 'Æ' province joins.",
+      "fixedCase": {
+        "tables": {
+          "Sales.SalesPerson": [
+            {
+              "BusinessEntityID": 1,
+              "TerritoryID": null,
+              "SalesQuota": null,
+              "SalesYTD": "0.0000",
+              "SalesLastYear": "0.0000"
+            },
+            {
+              "BusinessEntityID": 2,
+              "TerritoryID": null,
+              "SalesQuota": null,
+              "SalesYTD": "0.0000",
+              "SalesLastYear": "0.0000"
+            },
+            {
+              "BusinessEntityID": 3,
+              "TerritoryID": null,
+              "SalesQuota": null,
+              "SalesYTD": "0.0000",
+              "SalesLastYear": "0.0000"
+            },
+            {
+              "BusinessEntityID": 4,
+              "TerritoryID": null,
+              "SalesQuota": null,
+              "SalesYTD": "0.0000",
+              "SalesLastYear": "0.0000"
+            }
+          ],
+          "HumanResources.Employee": [
+            {
+              "BusinessEntityID": 1,
+              "JobTitle": "Sales Representative"
+            },
+            {
+              "BusinessEntityID": 2,
+              "JobTitle": "Sales Representative"
+            },
+            {
+              "BusinessEntityID": 3,
+              "JobTitle": "Sales Representative"
+            },
+            {
+              "BusinessEntityID": 4,
+              "JobTitle": "Sales Representative"
+            }
+          ],
+          "Person.Person": [
+            {
+              "BusinessEntityID": 1,
+              "Title": null,
+              "FirstName": "First1",
+              "MiddleName": null,
+              "LastName": "Last1",
+              "Suffix": null,
+              "EmailPromotion": 0
+            },
+            {
+              "BusinessEntityID": 2,
+              "Title": null,
+              "FirstName": "First2",
+              "MiddleName": null,
+              "LastName": "Last2",
+              "Suffix": null,
+              "EmailPromotion": 0
+            },
+            {
+              "BusinessEntityID": 3,
+              "Title": null,
+              "FirstName": "First3",
+              "MiddleName": null,
+              "LastName": "Last3",
+              "Suffix": null,
+              "EmailPromotion": 0
+            },
+            {
+              "BusinessEntityID": 4,
+              "Title": null,
+              "FirstName": "First4",
+              "MiddleName": null,
+              "LastName": "Last4",
+              "Suffix": null,
+              "EmailPromotion": 0
+            }
+          ],
+          "Person.BusinessEntityAddress": [
+            {
+              "BusinessEntityID": 1,
+              "AddressID": 1
+            },
+            {
+              "BusinessEntityID": 2,
+              "AddressID": 2
+            },
+            {
+              "BusinessEntityID": 3,
+              "AddressID": 3
+            },
+            {
+              "BusinessEntityID": 4,
+              "AddressID": 4
+            }
+          ],
+          "Person.Address": [
+            {
+              "AddressID": 1,
+              "AddressLine1": "1 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 1,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 2,
+              "AddressLine1": "2 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 2,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 3,
+              "AddressLine1": "3 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 3,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 4,
+              "AddressLine1": "4 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 4,
+              "PostalCode": "98011"
+            }
+          ],
+          "Person.StateProvince": [
+            {
+              "StateProvinceID": 1,
+              "CountryRegionCode": "Æ",
+              "Name": "Province 1"
+            },
+            {
+              "StateProvinceID": 2,
+              "CountryRegionCode": "ß",
+              "Name": "Province 2"
+            },
+            {
+              "StateProvinceID": 3,
+              "CountryRegionCode": "ae",
+              "Name": "Province 3"
+            },
+            {
+              "StateProvinceID": 4,
+              "CountryRegionCode": "ss",
+              "Name": "Province 4"
+            }
+          ],
+          "Person.CountryRegion": [
+            {
+              "CountryRegionCode": "AE",
+              "Name": "United Arab Emirates"
+            },
+            {
+              "CountryRegionCode": "SS",
+              "Name": "South Sudan"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A03",
+      "label": "compatibility forms: full-width U+FF35 U+FF33 against 'US' and the Kelvin sign U+212A followed by 'E' against 'KE', with 'ke' as a case-only control",
+      "traps": [
+        "collation-case"
+      ],
+      "reasoning": "SQL Server collations without _WS are width-insensitive, so full-width 'ＵＳ' equals 'US'; U+212A KELVIN SIGN is canonically equivalent to 'K'. ICU at strength 2 ignores width (a tertiary difference) and normalises canonical equivalents. Either engine may treat one of these differently.",
+      "fixedCase": {
+        "tables": {
+          "Sales.SalesPerson": [
+            {
+              "BusinessEntityID": 1,
+              "TerritoryID": null,
+              "SalesQuota": null,
+              "SalesYTD": "0.0000",
+              "SalesLastYear": "0.0000"
+            },
+            {
+              "BusinessEntityID": 2,
+              "TerritoryID": null,
+              "SalesQuota": null,
+              "SalesYTD": "0.0000",
+              "SalesLastYear": "0.0000"
+            },
+            {
+              "BusinessEntityID": 3,
+              "TerritoryID": null,
+              "SalesQuota": null,
+              "SalesYTD": "0.0000",
+              "SalesLastYear": "0.0000"
+            }
+          ],
+          "HumanResources.Employee": [
+            {
+              "BusinessEntityID": 1,
+              "JobTitle": "Sales Representative"
+            },
+            {
+              "BusinessEntityID": 2,
+              "JobTitle": "Sales Representative"
+            },
+            {
+              "BusinessEntityID": 3,
+              "JobTitle": "Sales Representative"
+            }
+          ],
+          "Person.Person": [
+            {
+              "BusinessEntityID": 1,
+              "Title": null,
+              "FirstName": "First1",
+              "MiddleName": null,
+              "LastName": "Last1",
+              "Suffix": null,
+              "EmailPromotion": 0
+            },
+            {
+              "BusinessEntityID": 2,
+              "Title": null,
+              "FirstName": "First2",
+              "MiddleName": null,
+              "LastName": "Last2",
+              "Suffix": null,
+              "EmailPromotion": 0
+            },
+            {
+              "BusinessEntityID": 3,
+              "Title": null,
+              "FirstName": "First3",
+              "MiddleName": null,
+              "LastName": "Last3",
+              "Suffix": null,
+              "EmailPromotion": 0
+            }
+          ],
+          "Person.BusinessEntityAddress": [
+            {
+              "BusinessEntityID": 1,
+              "AddressID": 1
+            },
+            {
+              "BusinessEntityID": 2,
+              "AddressID": 2
+            },
+            {
+              "BusinessEntityID": 3,
+              "AddressID": 3
+            }
+          ],
+          "Person.Address": [
+            {
+              "AddressID": 1,
+              "AddressLine1": "1 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 1,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 2,
+              "AddressLine1": "2 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 2,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 3,
+              "AddressLine1": "3 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 3,
+              "PostalCode": "98011"
+            }
+          ],
+          "Person.StateProvince": [
+            {
+              "StateProvinceID": 1,
+              "CountryRegionCode": "ＵＳ",
+              "Name": "Province 1"
+            },
+            {
+              "StateProvinceID": 2,
+              "CountryRegionCode": "KE",
+              "Name": "Province 2"
+            },
+            {
+              "StateProvinceID": 3,
+              "CountryRegionCode": "ke",
+              "Name": "Province 3"
+            }
+          ],
+          "Person.CountryRegion": [
+            {
+              "CountryRegionCode": "US",
+              "Name": "United States"
+            },
+            {
+              "CountryRegionCode": "KE",
+              "Name": "Kenya"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A04",
+      "label": "whitespace look-alikes: 'US' with a trailing no-break space (U+00A0), a trailing tab, a leading space, a soft hyphen (U+00AD) inside, and 'CA ' (a real trailing space)",
+      "traps": [
+        "trailing-spaces"
+      ],
+      "reasoning": "SQL Server pads the shorter value with U+0020 before comparing, so only 'CA ' is certain to join. Whether U+00A0 compares equal to the pad space, and whether the soft hyphen U+00AD is ignorable, are collation rules; PostgreSQL rtrim(' ') removes U+0020 only and ICU treats U+00AD as ignorable and U+00A0 as a space variant. A tab and a leading space should join on neither engine.",
+      "fixedCase": {
+        "tables": {
+          "Sales.SalesPerson": [
+            {
+              "BusinessEntityID": 1,
+              "TerritoryID": null,
+              "SalesQuota": null,
+              "SalesYTD": "0.0000",
+              "SalesLastYear": "0.0000"
+            },
+            {
+              "BusinessEntityID": 2,
+              "TerritoryID": null,
+              "SalesQuota": null,
+              "SalesYTD": "0.0000",
+              "SalesLastYear": "0.0000"
+            },
+            {
+              "BusinessEntityID": 3,
+              "TerritoryID": null,
+              "SalesQuota": null,
+              "SalesYTD": "0.0000",
+              "SalesLastYear": "0.0000"
+            },
+            {
+              "BusinessEntityID": 4,
+              "TerritoryID": null,
+              "SalesQuota": null,
+              "SalesYTD": "0.0000",
+              "SalesLastYear": "0.0000"
+            },
+            {
+              "BusinessEntityID": 5,
+              "TerritoryID": null,
+              "SalesQuota": null,
+              "SalesYTD": "0.0000",
+              "SalesLastYear": "0.0000"
+            }
+          ],
+          "HumanResources.Employee": [
+            {
+              "BusinessEntityID": 1,
+              "JobTitle": "Sales Representative"
+            },
+            {
+              "BusinessEntityID": 2,
+              "JobTitle": "Sales Representative"
+            },
+            {
+              "BusinessEntityID": 3,
+              "JobTitle": "Sales Representative"
+            },
+            {
+              "BusinessEntityID": 4,
+              "JobTitle": "Sales Representative"
+            },
+            {
+              "BusinessEntityID": 5,
+              "JobTitle": "Sales Representative"
+            }
+          ],
+          "Person.Person": [
+            {
+              "BusinessEntityID": 1,
+              "Title": null,
+              "FirstName": "First1",
+              "MiddleName": null,
+              "LastName": "Last1",
+              "Suffix": null,
+              "EmailPromotion": 0
+            },
+            {
+              "BusinessEntityID": 2,
+              "Title": null,
+              "FirstName": "First2",
+              "MiddleName": null,
+              "LastName": "Last2",
+              "Suffix": null,
+              "EmailPromotion": 0
+            },
+            {
+              "BusinessEntityID": 3,
+              "Title": null,
+              "FirstName": "First3",
+              "MiddleName": null,
+              "LastName": "Last3",
+              "Suffix": null,
+              "EmailPromotion": 0
+            },
+            {
+              "BusinessEntityID": 4,
+              "Title": null,
+              "FirstName": "First4",
+              "MiddleName": null,
+              "LastName": "Last4",
+              "Suffix": null,
+              "EmailPromotion": 0
+            },
+            {
+              "BusinessEntityID": 5,
+              "Title": null,
+              "FirstName": "First5",
+              "MiddleName": null,
+              "LastName": "Last5",
+              "Suffix": null,
+              "EmailPromotion": 0
+            }
+          ],
+          "Person.BusinessEntityAddress": [
+            {
+              "BusinessEntityID": 1,
+              "AddressID": 1
+            },
+            {
+              "BusinessEntityID": 2,
+              "AddressID": 2
+            },
+            {
+              "BusinessEntityID": 3,
+              "AddressID": 3
+            },
+            {
+              "BusinessEntityID": 4,
+              "AddressID": 4
+            },
+            {
+              "BusinessEntityID": 5,
+              "AddressID": 5
+            }
+          ],
+          "Person.Address": [
+            {
+              "AddressID": 1,
+              "AddressLine1": "1 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 1,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 2,
+              "AddressLine1": "2 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 2,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 3,
+              "AddressLine1": "3 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 3,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 4,
+              "AddressLine1": "4 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 4,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 5,
+              "AddressLine1": "5 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 5,
+              "PostalCode": "98011"
+            }
+          ],
+          "Person.StateProvince": [
+            {
+              "StateProvinceID": 1,
+              "CountryRegionCode": "US ",
+              "Name": "Province 1"
+            },
+            {
+              "StateProvinceID": 2,
+              "CountryRegionCode": "US\t",
+              "Name": "Province 2"
+            },
+            {
+              "StateProvinceID": 3,
+              "CountryRegionCode": " US",
+              "Name": "Province 3"
+            },
+            {
+              "StateProvinceID": 4,
+              "CountryRegionCode": "U­S",
+              "Name": "Province 4"
+            },
+            {
+              "StateProvinceID": 5,
+              "CountryRegionCode": "CA ",
+              "Name": "Province 5"
+            }
+          ],
+          "Person.CountryRegion": [
+            {
+              "CountryRegionCode": "US",
+              "Name": "United States"
+            },
+            {
+              "CountryRegionCode": "CA",
+              "Name": "Canada"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A05",
+      "label": "accents and dotted/dotless I: 'ÜS' against 'US' (accent-sensitive); U+0131 and U+0130 followed by 'T' against 'IT', with 'it' as a case-only control",
+      "traps": [
+        "collation-case"
+      ],
+      "reasoning": "CI_AS is accent-sensitive, so 'ÜS' must not join 'US'. U+0131 (dotless i) and U+0130 (I with dot above) case-fold differently by rule set: Windows rules and ICU root may each match or not match 'IT'. 'it' joins on both.",
+      "fixedCase": {
+        "tables": {
+          "Sales.SalesPerson": [
+            {
+              "BusinessEntityID": 1,
+              "TerritoryID": null,
+              "SalesQuota": null,
+              "SalesYTD": "0.0000",
+              "SalesLastYear": "0.0000"
+            },
+            {
+              "BusinessEntityID": 2,
+              "TerritoryID": null,
+              "SalesQuota": null,
+              "SalesYTD": "0.0000",
+              "SalesLastYear": "0.0000"
+            },
+            {
+              "BusinessEntityID": 3,
+              "TerritoryID": null,
+              "SalesQuota": null,
+              "SalesYTD": "0.0000",
+              "SalesLastYear": "0.0000"
+            },
+            {
+              "BusinessEntityID": 4,
+              "TerritoryID": null,
+              "SalesQuota": null,
+              "SalesYTD": "0.0000",
+              "SalesLastYear": "0.0000"
+            }
+          ],
+          "HumanResources.Employee": [
+            {
+              "BusinessEntityID": 1,
+              "JobTitle": "Sales Representative"
+            },
+            {
+              "BusinessEntityID": 2,
+              "JobTitle": "Sales Representative"
+            },
+            {
+              "BusinessEntityID": 3,
+              "JobTitle": "Sales Representative"
+            },
+            {
+              "BusinessEntityID": 4,
+              "JobTitle": "Sales Representative"
+            }
+          ],
+          "Person.Person": [
+            {
+              "BusinessEntityID": 1,
+              "Title": null,
+              "FirstName": "First1",
+              "MiddleName": null,
+              "LastName": "Last1",
+              "Suffix": null,
+              "EmailPromotion": 0
+            },
+            {
+              "BusinessEntityID": 2,
+              "Title": null,
+              "FirstName": "First2",
+              "MiddleName": null,
+              "LastName": "Last2",
+              "Suffix": null,
+              "EmailPromotion": 0
+            },
+            {
+              "BusinessEntityID": 3,
+              "Title": null,
+              "FirstName": "First3",
+              "MiddleName": null,
+              "LastName": "Last3",
+              "Suffix": null,
+              "EmailPromotion": 0
+            },
+            {
+              "BusinessEntityID": 4,
+              "Title": null,
+              "FirstName": "First4",
+              "MiddleName": null,
+              "LastName": "Last4",
+              "Suffix": null,
+              "EmailPromotion": 0
+            }
+          ],
+          "Person.BusinessEntityAddress": [
+            {
+              "BusinessEntityID": 1,
+              "AddressID": 1
+            },
+            {
+              "BusinessEntityID": 2,
+              "AddressID": 2
+            },
+            {
+              "BusinessEntityID": 3,
+              "AddressID": 3
+            },
+            {
+              "BusinessEntityID": 4,
+              "AddressID": 4
+            }
+          ],
+          "Person.Address": [
+            {
+              "AddressID": 1,
+              "AddressLine1": "1 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 1,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 2,
+              "AddressLine1": "2 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 2,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 3,
+              "AddressLine1": "3 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 3,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 4,
+              "AddressLine1": "4 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 4,
+              "PostalCode": "98011"
+            }
+          ],
+          "Person.StateProvince": [
+            {
+              "StateProvinceID": 1,
+              "CountryRegionCode": "ÜS",
+              "Name": "Province 1"
+            },
+            {
+              "StateProvinceID": 2,
+              "CountryRegionCode": "ıT",
+              "Name": "Province 2"
+            },
+            {
+              "StateProvinceID": 3,
+              "CountryRegionCode": "İT",
+              "Name": "Province 3"
+            },
+            {
+              "StateProvinceID": 4,
+              "CountryRegionCode": "it",
+              "Name": "Province 4"
+            }
+          ],
+          "Person.CountryRegion": [
+            {
+              "CountryRegionCode": "US",
+              "Name": "United States"
+            },
+            {
+              "CountryRegionCode": "IT",
+              "Name": "Italy"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A06",
+      "label": "an empty country code: province codes '' and ' ' both join country '' (trailing spaces ignored)",
+      "traps": [
+        "trailing-spaces"
+      ],
+      "reasoning": "SQL Server compares '' and ' ' as equal (padding), so both provinces join the country whose code is ''. rtrim(' ') gives '' on PostgreSQL; this checks the empty-string edge of the rtrim + ICU equality and that '' is not treated as NULL.",
+      "fixedCase": {
+        "tables": {
+          "Sales.SalesPerson": [
+            {
+              "BusinessEntityID": 1,
+              "TerritoryID": null,
+              "SalesQuota": null,
+              "SalesYTD": "0.0000",
+              "SalesLastYear": "0.0000"
+            },
+            {
+              "BusinessEntityID": 2,
+              "TerritoryID": null,
+              "SalesQuota": null,
+              "SalesYTD": "0.0000",
+              "SalesLastYear": "0.0000"
+            }
+          ],
+          "HumanResources.Employee": [
+            {
+              "BusinessEntityID": 1,
+              "JobTitle": "Sales Representative"
+            },
+            {
+              "BusinessEntityID": 2,
+              "JobTitle": "Sales Representative"
+            }
+          ],
+          "Person.Person": [
+            {
+              "BusinessEntityID": 1,
+              "Title": null,
+              "FirstName": "First1",
+              "MiddleName": null,
+              "LastName": "Last1",
+              "Suffix": null,
+              "EmailPromotion": 0
+            },
+            {
+              "BusinessEntityID": 2,
+              "Title": null,
+              "FirstName": "First2",
+              "MiddleName": null,
+              "LastName": "Last2",
+              "Suffix": null,
+              "EmailPromotion": 0
+            }
+          ],
+          "Person.BusinessEntityAddress": [
+            {
+              "BusinessEntityID": 1,
+              "AddressID": 1
+            },
+            {
+              "BusinessEntityID": 2,
+              "AddressID": 2
+            }
+          ],
+          "Person.Address": [
+            {
+              "AddressID": 1,
+              "AddressLine1": "1 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 1,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 2,
+              "AddressLine1": "2 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 2,
+              "PostalCode": "98011"
+            }
+          ],
+          "Person.StateProvince": [
+            {
+              "StateProvinceID": 1,
+              "CountryRegionCode": "",
+              "Name": "Province 1"
+            },
+            {
+              "StateProvinceID": 2,
+              "CountryRegionCode": " ",
+              "Name": "Province 2"
+            }
+          ],
+          "Person.CountryRegion": [
+            {
+              "CountryRegionCode": "",
+              "Name": "Nowhere"
+            },
+            {
+              "CountryRegionCode": "US",
+              "Name": "United States"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A07",
+      "label": "money extremes passed through: SalesYTD 922337203685477.5807 and -922337203685477.5808, values ending in 5 at the fourth place, NULL quota",
+      "traps": [
+        "numeric-rounding"
+      ],
+      "reasoning": "SalesQuota, SalesYTD and SalesLastYear are money (numeric(19,4) on PostgreSQL) and are only passed through. The money limits, 0.0005 and -0.0005 check the mapping and both clients: a client that reads money as a float would lose the last digits of the limits.",
+      "fixedCase": {
+        "tables": {
+          "Sales.SalesPerson": [
+            {
+              "BusinessEntityID": 1,
+              "TerritoryID": null,
+              "SalesQuota": null,
+              "SalesYTD": "922337203685477.5807",
+              "SalesLastYear": "-922337203685477.5808"
+            },
+            {
+              "BusinessEntityID": 2,
+              "TerritoryID": null,
+              "SalesQuota": "0.0005",
+              "SalesYTD": "-0.0005",
+              "SalesLastYear": "0.0015"
+            },
+            {
+              "BusinessEntityID": 3,
+              "TerritoryID": null,
+              "SalesQuota": "0.0000",
+              "SalesYTD": "123456789012.3455",
+              "SalesLastYear": "99999999999999.9995"
+            }
+          ],
+          "HumanResources.Employee": [
+            {
+              "BusinessEntityID": 1,
+              "JobTitle": "Sales Representative"
+            },
+            {
+              "BusinessEntityID": 2,
+              "JobTitle": "Sales Representative"
+            },
+            {
+              "BusinessEntityID": 3,
+              "JobTitle": "Sales Representative"
+            }
+          ],
+          "Person.Person": [
+            {
+              "BusinessEntityID": 1,
+              "Title": null,
+              "FirstName": "First1",
+              "MiddleName": null,
+              "LastName": "Last1",
+              "Suffix": null,
+              "EmailPromotion": 0
+            },
+            {
+              "BusinessEntityID": 2,
+              "Title": null,
+              "FirstName": "First2",
+              "MiddleName": null,
+              "LastName": "Last2",
+              "Suffix": null,
+              "EmailPromotion": 0
+            },
+            {
+              "BusinessEntityID": 3,
+              "Title": null,
+              "FirstName": "First3",
+              "MiddleName": null,
+              "LastName": "Last3",
+              "Suffix": null,
+              "EmailPromotion": 0
+            }
+          ],
+          "Person.BusinessEntityAddress": [
+            {
+              "BusinessEntityID": 1,
+              "AddressID": 1
+            },
+            {
+              "BusinessEntityID": 2,
+              "AddressID": 2
+            },
+            {
+              "BusinessEntityID": 3,
+              "AddressID": 3
+            }
+          ],
+          "Person.Address": [
+            {
+              "AddressID": 1,
+              "AddressLine1": "1 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 1,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 2,
+              "AddressLine1": "2 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 2,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 3,
+              "AddressLine1": "3 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 3,
+              "PostalCode": "98011"
+            }
+          ],
+          "Person.StateProvince": [
+            {
+              "StateProvinceID": 1,
+              "CountryRegionCode": "US",
+              "Name": "Province 1"
+            },
+            {
+              "StateProvinceID": 2,
+              "CountryRegionCode": "US",
+              "Name": "Province 2"
+            },
+            {
+              "StateProvinceID": 3,
+              "CountryRegionCode": "US",
+              "Name": "Province 3"
+            }
+          ],
+          "Person.CountryRegion": [
+            {
+              "CountryRegionCode": "US",
+              "Name": "United States"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A08",
+      "label": "territory: TerritoryID NULL, a missing territory (LEFT JOIN NULL), a territory named '' and a group with a trailing space",
+      "traps": [
+        "null-vs-empty",
+        "trailing-spaces"
+      ],
+      "reasoning": "SalesTerritory is a LEFT JOIN: NULL TerritoryID and an unknown TerritoryID both give NULL TerritoryName and TerritoryGroup; a territory whose Name is '' must give '' (not NULL). Title is NULL for one person and '' for another.",
+      "fixedCase": {
+        "tables": {
+          "Sales.SalesPerson": [
+            {
+              "BusinessEntityID": 1,
+              "TerritoryID": null,
+              "SalesQuota": null,
+              "SalesYTD": "0.0000",
+              "SalesLastYear": "0.0000"
+            },
+            {
+              "BusinessEntityID": 2,
+              "TerritoryID": 9,
+              "SalesQuota": null,
+              "SalesYTD": "0.0000",
+              "SalesLastYear": "0.0000"
+            },
+            {
+              "BusinessEntityID": 3,
+              "TerritoryID": 1,
+              "SalesQuota": null,
+              "SalesYTD": "0.0000",
+              "SalesLastYear": "0.0000"
+            }
+          ],
+          "HumanResources.Employee": [
+            {
+              "BusinessEntityID": 1,
+              "JobTitle": "Sales Representative"
+            },
+            {
+              "BusinessEntityID": 2,
+              "JobTitle": "Sales Representative"
+            },
+            {
+              "BusinessEntityID": 3,
+              "JobTitle": "Sales Representative"
+            }
+          ],
+          "Person.Person": [
+            {
+              "BusinessEntityID": 1,
+              "Title": null,
+              "FirstName": "First1",
+              "MiddleName": null,
+              "LastName": "Last1",
+              "Suffix": null,
+              "EmailPromotion": 0
+            },
+            {
+              "BusinessEntityID": 2,
+              "Title": "",
+              "FirstName": "First2",
+              "MiddleName": null,
+              "LastName": "Last2",
+              "Suffix": null,
+              "EmailPromotion": 0
+            },
+            {
+              "BusinessEntityID": 3,
+              "Title": "Mr.",
+              "FirstName": "First3",
+              "MiddleName": "",
+              "LastName": "Last3",
+              "Suffix": "",
+              "EmailPromotion": 0
+            }
+          ],
+          "Person.BusinessEntityAddress": [
+            {
+              "BusinessEntityID": 1,
+              "AddressID": 1
+            },
+            {
+              "BusinessEntityID": 2,
+              "AddressID": 2
+            },
+            {
+              "BusinessEntityID": 3,
+              "AddressID": 3
+            }
+          ],
+          "Person.Address": [
+            {
+              "AddressID": 1,
+              "AddressLine1": "1 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 1,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 2,
+              "AddressLine1": "2 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 2,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 3,
+              "AddressLine1": "3 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 3,
+              "PostalCode": "98011"
+            }
+          ],
+          "Person.StateProvince": [
+            {
+              "StateProvinceID": 1,
+              "CountryRegionCode": "US",
+              "Name": "Province 1"
+            },
+            {
+              "StateProvinceID": 2,
+              "CountryRegionCode": "US",
+              "Name": "Province 2"
+            },
+            {
+              "StateProvinceID": 3,
+              "CountryRegionCode": "US",
+              "Name": "Province 3"
+            }
+          ],
+          "Person.CountryRegion": [
+            {
+              "CountryRegionCode": "US",
+              "Name": "United States"
+            }
+          ],
+          "Sales.SalesTerritory": [
+            {
+              "TerritoryID": 1,
+              "Name": "",
+              "Group": "North America "
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A09",
+      "label": "text returned as stored and fan-out: case-only name variants, an emoji, two identical phone rows and an unknown phone type",
+      "traps": [
+        "collation-case",
+        "top-ties"
+      ],
+      "reasoning": "Names 'Ann', 'ANN' and 'ann' are passed through. PersonPhone has no key in the scratch tables, so two identical phone rows give two identical output rows; a phone of type 9 has no PhoneNumberType row (NULL).",
+      "fixedCase": {
+        "tables": {
+          "Sales.SalesPerson": [
+            {
+              "BusinessEntityID": 1,
+              "TerritoryID": null,
+              "SalesQuota": null,
+              "SalesYTD": "0.0000",
+              "SalesLastYear": "0.0000"
+            },
+            {
+              "BusinessEntityID": 2,
+              "TerritoryID": null,
+              "SalesQuota": null,
+              "SalesYTD": "0.0000",
+              "SalesLastYear": "0.0000"
+            },
+            {
+              "BusinessEntityID": 3,
+              "TerritoryID": null,
+              "SalesQuota": null,
+              "SalesYTD": "0.0000",
+              "SalesLastYear": "0.0000"
+            }
+          ],
+          "HumanResources.Employee": [
+            {
+              "BusinessEntityID": 1,
+              "JobTitle": "Sales Representative"
+            },
+            {
+              "BusinessEntityID": 2,
+              "JobTitle": "Sales Representative"
+            },
+            {
+              "BusinessEntityID": 3,
+              "JobTitle": "Sales Representative"
+            }
+          ],
+          "Person.Person": [
+            {
+              "BusinessEntityID": 1,
+              "Title": null,
+              "FirstName": "Ann",
+              "MiddleName": null,
+              "LastName": "Last1",
+              "Suffix": null,
+              "EmailPromotion": 0
+            },
+            {
+              "BusinessEntityID": 2,
+              "Title": null,
+              "FirstName": "ANN",
+              "MiddleName": null,
+              "LastName": "Zoë 😀",
+              "Suffix": null,
+              "EmailPromotion": 0
+            },
+            {
+              "BusinessEntityID": 3,
+              "Title": null,
+              "FirstName": "ann",
+              "MiddleName": null,
+              "LastName": "Last3",
+              "Suffix": null,
+              "EmailPromotion": 0
+            }
+          ],
+          "Person.BusinessEntityAddress": [
+            {
+              "BusinessEntityID": 1,
+              "AddressID": 1
+            },
+            {
+              "BusinessEntityID": 2,
+              "AddressID": 2
+            },
+            {
+              "BusinessEntityID": 3,
+              "AddressID": 3
+            }
+          ],
+          "Person.Address": [
+            {
+              "AddressID": 1,
+              "AddressLine1": "1 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 1,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 2,
+              "AddressLine1": "2 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 2,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 3,
+              "AddressLine1": "3 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 3,
+              "PostalCode": "98011"
+            }
+          ],
+          "Person.StateProvince": [
+            {
+              "StateProvinceID": 1,
+              "CountryRegionCode": "US",
+              "Name": "Province 1"
+            },
+            {
+              "StateProvinceID": 2,
+              "CountryRegionCode": "US",
+              "Name": "Province 2"
+            },
+            {
+              "StateProvinceID": 3,
+              "CountryRegionCode": "US",
+              "Name": "Province 3"
+            }
+          ],
+          "Person.CountryRegion": [
+            {
+              "CountryRegionCode": "US",
+              "Name": "United States"
+            }
+          ],
+          "Person.PersonPhone": [
+            {
+              "BusinessEntityID": 1,
+              "PhoneNumber": "555-0100",
+              "PhoneNumberTypeID": 1
+            },
+            {
+              "BusinessEntityID": 1,
+              "PhoneNumber": "555-0100",
+              "PhoneNumberTypeID": 1
+            },
+            {
+              "BusinessEntityID": 1,
+              "PhoneNumber": "555-0199",
+              "PhoneNumberTypeID": 9
+            }
+          ],
+          "Person.PhoneNumberType": [
+            {
+              "PhoneNumberTypeID": 1,
+              "Name": "Cell"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A10",
+      "label": "keys with gaps and at the int limits: sales persons 0 and 2147483647, territory -2147483648, a sales person without an Employee row",
+      "traps": [
+        "identity-gaps"
+      ],
+      "reasoning": "BusinessEntityID and TerritoryID jump and sit at the int limits. Sales person 5 has no Employee row and is dropped by the inner join.",
+      "fixedCase": {
+        "tables": {
+          "Sales.SalesPerson": [
+            {
+              "BusinessEntityID": 0,
+              "TerritoryID": -2147483648,
+              "SalesQuota": null,
+              "SalesYTD": "0.0000",
+              "SalesLastYear": "0.0000"
+            },
+            {
+              "BusinessEntityID": 2147483647,
+              "TerritoryID": null,
+              "SalesQuota": null,
+              "SalesYTD": "0.0000",
+              "SalesLastYear": "0.0000"
+            },
+            {
+              "BusinessEntityID": 5,
+              "TerritoryID": null,
+              "SalesQuota": null,
+              "SalesYTD": "0.0000",
+              "SalesLastYear": "0.0000"
+            }
+          ],
+          "HumanResources.Employee": [
+            {
+              "BusinessEntityID": 0,
+              "JobTitle": "Sales Representative"
+            },
+            {
+              "BusinessEntityID": 2147483647,
+              "JobTitle": "Sales Representative"
+            }
+          ],
+          "Person.Person": [
+            {
+              "BusinessEntityID": 0,
+              "Title": null,
+              "FirstName": "First0",
+              "MiddleName": null,
+              "LastName": "Last0",
+              "Suffix": null,
+              "EmailPromotion": 0
+            },
+            {
+              "BusinessEntityID": 2147483647,
+              "Title": null,
+              "FirstName": "First2147483647",
+              "MiddleName": null,
+              "LastName": "Last2147483647",
+              "Suffix": null,
+              "EmailPromotion": 0
+            },
+            {
+              "BusinessEntityID": 5,
+              "Title": null,
+              "FirstName": "First5",
+              "MiddleName": null,
+              "LastName": "Last5",
+              "Suffix": null,
+              "EmailPromotion": 0
+            }
+          ],
+          "Person.BusinessEntityAddress": [
+            {
+              "BusinessEntityID": 0,
+              "AddressID": 1
+            },
+            {
+              "BusinessEntityID": 2147483647,
+              "AddressID": 1
+            },
+            {
+              "BusinessEntityID": 5,
+              "AddressID": 1
+            }
+          ],
+          "Person.Address": [
+            {
+              "AddressID": 1,
+              "AddressLine1": "1 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 1,
+              "PostalCode": "98011"
+            }
+          ],
+          "Person.StateProvince": [
+            {
+              "StateProvinceID": 1,
+              "CountryRegionCode": "US",
+              "Name": "Province 1"
+            }
+          ],
+          "Person.CountryRegion": [
+            {
+              "CountryRegionCode": "US",
+              "Name": "United States"
+            }
+          ],
+          "Sales.SalesTerritory": [
+            {
+              "TerritoryID": -2147483648,
+              "Name": "Min",
+              "Group": "Group"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

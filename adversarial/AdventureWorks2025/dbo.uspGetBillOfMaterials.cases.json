@@ -1,0 +1,1543 @@
+{
+  "schemaVersion": 1,
+  "object": "dbo.uspGetBillOfMaterials",
+  "database": "AdventureWorks2025",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-18T20:21:05-07:00"
+  },
+  "notApplicable": {
+    "null-vs-empty": "The only text column, Product.Name, is NOT NULL, so no NULL text value can be sent. '' is attacked in the names case; a NULL check date and a NULL start product are attacked separately."
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "check date 1 ms after an end date (.001): SQL Server rounds the datetime parameter to .000, so the edge is still in use",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "@CheckDate is datetime: '2020-06-30T00:00:00.001' becomes .000 (1/300 s ticks) and @CheckDate <= ISNULL(EndDate, @CheckDate) holds. The PostgreSQL parameter is timestamp and keeps .001, which is after EndDate, so the anchor row for product 2 may be dropped.",
+      "fixedCase": {
+        "args": [
+          1,
+          "2020-06-30T00:00:00.001"
+        ],
+        "tables": {
+          "Production.BillOfMaterials": [
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 2,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": "2020-06-30T00:00:00.000",
+              "BOMLevel": 1,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 3,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 1,
+              "PerAssemblyQty": "1.00"
+            }
+          ],
+          "Production.Product": [
+            {
+              "ProductID": 1,
+              "Name": "P1",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 2,
+              "Name": "P2",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 3,
+              "Name": "P3",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A02",
+      "label": "check date 1 ms before a start date (23:59:59.999): SQL Server rounds it up to the start, so the edge is in use",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "datetime rounds 2019-12-31 23:59:59.999 up to 2020-01-01 00:00:00.000, equal to StartDate, so @CheckDate >= StartDate holds. timestamp keeps .999, before StartDate.",
+      "fixedCase": {
+        "args": [
+          1,
+          "2019-12-31T23:59:59.999"
+        ],
+        "tables": {
+          "Production.BillOfMaterials": [
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 2,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 1,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 3,
+              "StartDate": "2019-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 1,
+              "PerAssemblyQty": "1.00"
+            }
+          ],
+          "Production.Product": [
+            {
+              "ProductID": 1,
+              "Name": "P1",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 2,
+              "Name": "P2",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 3,
+              "Name": "P3",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A03",
+      "label": "start dates stored as .001 (datetime keeps .000) and a check date at .000: in use on SQL Server, anchor and recursive member",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "The StartDate column is datetime: inserting .001 stores .000. The PostgreSQL column is timestamp(3) and stores .001, so check_date >= StartDate fails there, in the anchor (1 -> 2) and in the recursive member (2 -> 3).",
+      "fixedCase": {
+        "args": [
+          1,
+          "2020-01-01T00:00:00.000"
+        ],
+        "tables": {
+          "Production.BillOfMaterials": [
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 2,
+              "StartDate": "2020-01-01T00:00:00.001",
+              "EndDate": null,
+              "BOMLevel": 1,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 2,
+              "ComponentID": 3,
+              "StartDate": "2020-01-01T00:00:00.001",
+              "EndDate": null,
+              "BOMLevel": 2,
+              "PerAssemblyQty": "1.00"
+            }
+          ],
+          "Production.Product": [
+            {
+              "ProductID": 1,
+              "Name": "P1",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 2,
+              "Name": "P2",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 3,
+              "Name": "P3",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A04",
+      "label": "an end date stored as 23:59:59.999 becomes the next midnight on SQL Server: a recursive edge still in use at that midnight",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "datetime stores 2020-06-30 23:59:59.999 as 2020-07-01 00:00:00.000, so a check date of 2020-07-01 00:00 is <= EndDate. timestamp(3) keeps .999 and the recursive row (2 -> 3) is dropped.",
+      "fixedCase": {
+        "args": [
+          1,
+          "2020-07-01T00:00:00.000"
+        ],
+        "tables": {
+          "Production.BillOfMaterials": [
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 2,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 1,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 2,
+              "ComponentID": 3,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": "2020-06-30T23:59:59.999",
+              "BOMLevel": 2,
+              "PerAssemblyQty": "1.00"
+            }
+          ],
+          "Production.Product": [
+            {
+              "ProductID": 1,
+              "Name": "P1",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 2,
+              "Name": "P2",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 3,
+              "Name": "P3",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A05",
+      "label": "27-edge chain whose last edge ends at 23:59:59.999: SQL Server rounds it into use, reaches recursion level 26 and stops with error 530",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "Whether MAXRECURSION 25 is exceeded depends on the date filter of the 27th edge. SQL Server stores its EndDate as the next midnight, so the edge is in use at the check date and the walk needs 26 recursions (error 530). PostgreSQL keeps .999, drops the edge and returns 27 rows instead of raising.",
+      "fixedCase": {
+        "args": [
+          1,
+          "2020-01-02T00:00:00.000"
+        ],
+        "tables": {
+          "Production.BillOfMaterials": [
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 2,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 1,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 2,
+              "ComponentID": 3,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 2,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 3,
+              "ComponentID": 4,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 3,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 4,
+              "ComponentID": 5,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 4,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 5,
+              "ComponentID": 6,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 5,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 6,
+              "ComponentID": 7,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 6,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 7,
+              "ComponentID": 8,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 7,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 8,
+              "ComponentID": 9,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 8,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 9,
+              "ComponentID": 10,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 9,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 10,
+              "ComponentID": 11,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 10,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 11,
+              "ComponentID": 12,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 11,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 12,
+              "ComponentID": 13,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 12,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 13,
+              "ComponentID": 14,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 13,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 14,
+              "ComponentID": 15,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 14,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 15,
+              "ComponentID": 16,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 15,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 16,
+              "ComponentID": 17,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 16,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 17,
+              "ComponentID": 18,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 17,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 18,
+              "ComponentID": 19,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 18,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 19,
+              "ComponentID": 20,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 19,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 20,
+              "ComponentID": 21,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 20,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 21,
+              "ComponentID": 22,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 21,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 22,
+              "ComponentID": 23,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 22,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 23,
+              "ComponentID": 24,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 23,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 24,
+              "ComponentID": 25,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 24,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 25,
+              "ComponentID": 26,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 25,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 26,
+              "ComponentID": 27,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 26,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 27,
+              "ComponentID": 28,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": "2020-01-01T23:59:59.999",
+              "BOMLevel": 27,
+              "PerAssemblyQty": "1.00"
+            }
+          ],
+          "Production.Product": [
+            {
+              "ProductID": 1,
+              "Name": "P1",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 2,
+              "Name": "P2",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 3,
+              "Name": "P3",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 4,
+              "Name": "P4",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 5,
+              "Name": "P5",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 6,
+              "Name": "P6",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 7,
+              "Name": "P7",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 8,
+              "Name": "P8",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 9,
+              "Name": "P9",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 10,
+              "Name": "P10",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 11,
+              "Name": "P11",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 12,
+              "Name": "P12",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 13,
+              "Name": "P13",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 14,
+              "Name": "P14",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 15,
+              "Name": "P15",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 16,
+              "Name": "P16",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 17,
+              "Name": "P17",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 18,
+              "Name": "P18",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 19,
+              "Name": "P19",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 20,
+              "Name": "P20",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 21,
+              "Name": "P21",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 22,
+              "Name": "P22",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 23,
+              "Name": "P23",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 24,
+              "Name": "P24",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 25,
+              "Name": "P25",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 26,
+              "Name": "P26",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 27,
+              "Name": "P27",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 28,
+              "Name": "P28",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A06",
+      "label": "an edge ending at 11:59:59.999 duplicates an open edge: SQL Server sums both quantities at 12:00, timestamp only one",
+      "traps": [
+        "dates-datetime",
+        "numeric-rounding",
+        "top-ties"
+      ],
+      "reasoning": "Two BillOfMaterials rows for the same pair: one open (1.00), one ending 2020-01-02 11:59:59.999, which datetime stores as 12:00:00.000. At a 12:00 check date SQL Server keeps both and TotalQuantity is 3.25; PostgreSQL drops the second and returns 1.00.",
+      "fixedCase": {
+        "args": [
+          1,
+          "2020-01-02T12:00:00.000"
+        ],
+        "tables": {
+          "Production.BillOfMaterials": [
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 2,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 1,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 2,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": "2020-01-02T11:59:59.999",
+              "BOMLevel": 1,
+              "PerAssemblyQty": "2.25"
+            }
+          ],
+          "Production.Product": [
+            {
+              "ProductID": 1,
+              "Name": "P1",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 2,
+              "Name": "P2",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A07",
+      "label": "boundary dates: 1753-01-01 to 9999-12-31 23:59:59.997 in use at the last datetime instant; an edge starting then; one ending a tick before",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "The check date is the largest datetime value. Edges from 1753-01-01 to 9999-12-31 23:59:59.997 and from that instant (open-ended) are in use; one ending at .993 is not. Checks the timestamp(3) mapping and COALESCE at the extremes of the datetime range.",
+      "fixedCase": {
+        "args": [
+          1,
+          "9999-12-31T23:59:59.997"
+        ],
+        "tables": {
+          "Production.BillOfMaterials": [
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 2,
+              "StartDate": "1753-01-01T00:00:00.000",
+              "EndDate": "9999-12-31T23:59:59.997",
+              "BOMLevel": 1,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 3,
+              "StartDate": "9999-12-31T23:59:59.997",
+              "EndDate": null,
+              "BOMLevel": 1,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 4,
+              "StartDate": "1753-01-01T00:00:00.000",
+              "EndDate": "9999-12-31T23:59:59.993",
+              "BOMLevel": 1,
+              "PerAssemblyQty": "1.00"
+            }
+          ],
+          "Production.Product": [
+            {
+              "ProductID": 1,
+              "Name": "P1",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 2,
+              "Name": "P2",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 3,
+              "Name": "P3",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 4,
+              "Name": "P4",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A08",
+      "label": "check date 1753-01-01 00:00:00.000 (datetime minimum): only an edge starting exactly then is in use",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "The smallest datetime value as the check date: an edge starting 1753-01-01 00:00:00.000 is in use (>=, inclusive), one starting 1753-01-01 00:00:00.003 is not.",
+      "fixedCase": {
+        "args": [
+          1,
+          "1753-01-01T00:00:00.000"
+        ],
+        "tables": {
+          "Production.BillOfMaterials": [
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 2,
+              "StartDate": "1753-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 1,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 3,
+              "StartDate": "1753-01-01T00:00:00.003",
+              "EndDate": null,
+              "BOMLevel": 1,
+              "PerAssemblyQty": "1.00"
+            }
+          ],
+          "Production.Product": [
+            {
+              "ProductID": 1,
+              "Name": "P1",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 2,
+              "Name": "P2",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 3,
+              "Name": "P3",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A09",
+      "label": "NULL check date: no rows (every date comparison is unknown)",
+      "traps": [],
+      "reasoning": "@CheckDate >= StartDate is UNKNOWN for NULL, and ISNULL(EndDate, NULL) keeps it UNKNOWN. A conversion that defaulted a NULL check date (e.g. to now()) or used COALESCE(check_date, ...) would return rows.",
+      "fixedCase": {
+        "args": [
+          1,
+          null
+        ],
+        "tables": {
+          "Production.BillOfMaterials": [
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 2,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 1,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 3,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": "2020-06-30T00:00:00.000",
+              "BOMLevel": 1,
+              "PerAssemblyQty": "1.00"
+            }
+          ],
+          "Production.Product": [
+            {
+              "ProductID": 1,
+              "Name": "P1",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 2,
+              "Name": "P2",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 3,
+              "Name": "P3",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A10",
+      "label": "NULL start product: no rows, also when a bill row has a NULL assembly",
+      "traps": [],
+      "reasoning": "b.ProductAssemblyID = NULL (or b.ComponentID = NULL) is never true. A row with a NULL ProductAssemblyID (a top-level product) is present; a conversion using IS NOT DISTINCT FROM would match it.",
+      "fixedCase": {
+        "args": [
+          null,
+          "2020-01-02T12:00:00.000"
+        ],
+        "tables": {
+          "Production.BillOfMaterials": [
+            {
+              "ProductAssemblyID": null,
+              "ComponentID": 1,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 0,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 2,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 1,
+              "PerAssemblyQty": "1.00"
+            }
+          ],
+          "Production.Product": [
+            {
+              "ProductID": 1,
+              "Name": "P1",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 2,
+              "Name": "P2",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A11",
+      "label": "a diamond (1 -> 2 -> 4, 1 -> 3 -> 4) and 4 -> 5: the 4 -> 5 rows reached by two paths at one recursion level are summed",
+      "traps": [
+        "numeric-rounding",
+        "top-ties"
+      ],
+      "reasoning": "Both paths reach the 4 -> 5 edge at recursion level 2 with the same BOMLevel, cost and price, so GROUP BY merges them and SUM(PerAssemblyQty) adds 0.45 twice (0.90). Quantities end in 5 (0.05, 0.15, 0.25, 0.35, 0.45) and costs in .0005, so any rounding of the decimal(8,2) sum or the money columns would show.",
+      "fixedCase": {
+        "args": [
+          1,
+          "2020-01-02T12:00:00.000"
+        ],
+        "tables": {
+          "Production.BillOfMaterials": [
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 2,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 1,
+              "PerAssemblyQty": "0.05"
+            },
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 3,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 1,
+              "PerAssemblyQty": "0.15"
+            },
+            {
+              "ProductAssemblyID": 2,
+              "ComponentID": 4,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 2,
+              "PerAssemblyQty": "0.25"
+            },
+            {
+              "ProductAssemblyID": 3,
+              "ComponentID": 4,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 2,
+              "PerAssemblyQty": "0.35"
+            },
+            {
+              "ProductAssemblyID": 4,
+              "ComponentID": 5,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 3,
+              "PerAssemblyQty": "0.45"
+            }
+          ],
+          "Production.Product": [
+            {
+              "ProductID": 1,
+              "Name": "P1",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 2,
+              "Name": "P2",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 3,
+              "Name": "P3",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 4,
+              "Name": "P4",
+              "StandardCost": "0.0005",
+              "ListPrice": "1.0005"
+            },
+            {
+              "ProductID": 5,
+              "Name": "P5",
+              "StandardCost": "-0.0005",
+              "ListPrice": "0.0015"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A12",
+      "label": "the same edge reached at recursion levels 1 and 2 (1 -> 3 and 1 -> 2 -> 3, then 3 -> 4): two groups that tie on the order key",
+      "traps": [
+        "top-ties"
+      ],
+      "reasoning": "RecursionLevel is in the GROUP BY, so 3 -> 4 gives two rows that share BOMLevel, ProductAssemblyID and ComponentID and differ only in RecursionLevel (1 and 2). Their relative order is not defined; the rows themselves must match.",
+      "fixedCase": {
+        "args": [
+          1,
+          "2020-01-02T12:00:00.000"
+        ],
+        "tables": {
+          "Production.BillOfMaterials": [
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 2,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 1,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 2,
+              "ComponentID": 3,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 2,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 3,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 2,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 3,
+              "ComponentID": 4,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 3,
+              "PerAssemblyQty": "1.00"
+            }
+          ],
+          "Production.Product": [
+            {
+              "ProductID": 1,
+              "Name": "P1",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 2,
+              "Name": "P2",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 3,
+              "Name": "P3",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 4,
+              "Name": "P4",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A13",
+      "label": "BOMLevel out of step with depth: 32767, -32768 and 0 (smallint extremes) on a three-edge chain",
+      "traps": [
+        "top-ties"
+      ],
+      "reasoning": "ORDER BY BOMLevel uses the stored value, not the depth, so the deepest row (-32768) sorts first. smallint extremes check the column mapping; two products share a Name so a non-key value repeats.",
+      "fixedCase": {
+        "args": [
+          1,
+          "2020-01-02T12:00:00.000"
+        ],
+        "tables": {
+          "Production.BillOfMaterials": [
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 2,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 32767,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 2,
+              "ComponentID": 3,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": -32768,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 3,
+              "ComponentID": 4,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 0,
+              "PerAssemblyQty": "1.00"
+            }
+          ],
+          "Production.Product": [
+            {
+              "ProductID": 1,
+              "Name": "P1",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 2,
+              "Name": "P2",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 3,
+              "Name": "P2",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 4,
+              "Name": "P4",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A14",
+      "label": "component names that differ only in case or a trailing space, an empty name and non-ASCII text are returned as stored",
+      "traps": [
+        "collation-case",
+        "trailing-spaces"
+      ],
+      "reasoning": "ComponentDesc is the component (b.ComponentID)'s Name and is in the GROUP BY. Under CI_AS 'Bolt', 'BOLT' and 'bolt ' compare equal, but they belong to different ProductIDs, so they must stay three rows with their own spelling; a conversion that grouped or deduplicated on a case-folded or trimmed name would merge them. '' (empty, not NULL), an accent, an emoji and a 50-character name check the nvarchar(50) -> varchar(50) mapping.",
+      "fixedCase": {
+        "args": [
+          1,
+          "2020-01-02T12:00:00.000"
+        ],
+        "tables": {
+          "Production.BillOfMaterials": [
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 2,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 1,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 3,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 1,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 4,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 1,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 5,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 1,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 6,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 1,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 7,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 1,
+              "PerAssemblyQty": "1.00"
+            }
+          ],
+          "Production.Product": [
+            {
+              "ProductID": 1,
+              "Name": "P1",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 2,
+              "Name": "Bolt",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 3,
+              "Name": "BOLT",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 4,
+              "Name": "bolt ",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 5,
+              "Name": "",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 6,
+              "Name": "Écrou 😀",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 7,
+              "Name": "ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-AB",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A15",
+      "label": "money extremes and a quantity summed past decimal(8,2): three identical 999999.99 rows give 2999999.97",
+      "traps": [
+        "numeric-rounding",
+        "top-ties"
+      ],
+      "reasoning": "SUM(decimal(8,2)) is decimal(38,2) in T-SQL, so three 999999.99 rows sum to 2999999.97; a conversion that kept numeric(8,2) for the sum would overflow. StandardCost and ListPrice at the money maximum and minimum (922337203685477.5807, -922337203685477.5808) check money -> numeric(19,4), and a negative quantity and a cost ending in 5 are included.",
+      "fixedCase": {
+        "args": [
+          1,
+          "2020-01-02T12:00:00.000"
+        ],
+        "tables": {
+          "Production.BillOfMaterials": [
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 2,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 1,
+              "PerAssemblyQty": "999999.99"
+            },
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 2,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 1,
+              "PerAssemblyQty": "999999.99"
+            },
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 2,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 1,
+              "PerAssemblyQty": "999999.99"
+            },
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 3,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 1,
+              "PerAssemblyQty": "-999999.99"
+            }
+          ],
+          "Production.Product": [
+            {
+              "ProductID": 1,
+              "Name": "P1",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 2,
+              "Name": "P2",
+              "StandardCost": "922337203685477.5807",
+              "ListPrice": "-922337203685477.5808"
+            },
+            {
+              "ProductID": 3,
+              "Name": "P3",
+              "StandardCost": "0.0005",
+              "ListPrice": "0.0000"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A16",
+      "label": "product ids with gaps and at the int limits: 1 -> 1000 -> 2147483647, with -2147483648 and 0 unused",
+      "traps": [
+        "identity-gaps"
+      ],
+      "reasoning": "ProductID is the key of Product; the walk follows 1, 1000 and 2147483647, with unrelated products 0 and -2147483648 present. recursion_level + 1 and the integer columns must not overflow or be narrowed.",
+      "fixedCase": {
+        "args": [
+          1,
+          "2020-01-02T12:00:00.000"
+        ],
+        "tables": {
+          "Production.BillOfMaterials": [
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 1000,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 1,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 1000,
+              "ComponentID": 2147483647,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 2,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 0,
+              "ComponentID": -2147483648,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 1,
+              "PerAssemblyQty": "1.00"
+            }
+          ],
+          "Production.Product": [
+            {
+              "ProductID": -2147483648,
+              "Name": "P-2147483648",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 0,
+              "Name": "P0",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 1,
+              "Name": "P1",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 1000,
+              "Name": "P1000",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 2147483647,
+              "Name": "P2147483647",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A17",
+      "label": "a cycle reached only through an edge that is not in use at the check date, and an unreachable cycle: rows, no recursion error",
+      "traps": [],
+      "reasoning": "2 -> 3 -> 2 would be a cycle, but 3 -> 2 ended on 2019-12-31; 5 <-> 6 is a cycle the walk never reaches. SQL Server applies the date filter in the recursive member, so it never recurses past level 1. The PostgreSQL walk must apply the same filter before counting levels, or it raises 54001.",
+      "fixedCase": {
+        "args": [
+          1,
+          "2020-01-02T12:00:00.000"
+        ],
+        "tables": {
+          "Production.BillOfMaterials": [
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 2,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 1,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 2,
+              "ComponentID": 3,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 2,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 3,
+              "ComponentID": 2,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": "2019-12-31T00:00:00.000",
+              "BOMLevel": 3,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 5,
+              "ComponentID": 6,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 1,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 6,
+              "ComponentID": 5,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 1,
+              "PerAssemblyQty": "1.00"
+            }
+          ],
+          "Production.Product": [
+            {
+              "ProductID": 1,
+              "Name": "P1",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 2,
+              "Name": "P2",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 3,
+              "Name": "P3",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 5,
+              "Name": "P5",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 6,
+              "Name": "P6",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A18",
+      "label": "a product missing in the middle of the walk: its row is dropped and the walk does not continue below it",
+      "traps": [],
+      "reasoning": "The recursive member joins Product on the component (b.ComponentID); product 3 has no Product row, so 2 -> 3 is not produced and 3 -> 4 is never reached. A conversion that recursed on BillOfMaterials alone and joined Product afterwards would list 3 -> 4.",
+      "fixedCase": {
+        "args": [
+          1,
+          "2020-01-02T12:00:00.000"
+        ],
+        "tables": {
+          "Production.BillOfMaterials": [
+            {
+              "ProductAssemblyID": 1,
+              "ComponentID": 2,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 1,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 2,
+              "ComponentID": 3,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 2,
+              "PerAssemblyQty": "1.00"
+            },
+            {
+              "ProductAssemblyID": 3,
+              "ComponentID": 4,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "BOMLevel": 3,
+              "PerAssemblyQty": "1.00"
+            }
+          ],
+          "Production.Product": [
+            {
+              "ProductID": 1,
+              "Name": "P1",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 2,
+              "Name": "P2",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            },
+            {
+              "ProductID": 4,
+              "Name": "P4",
+              "StandardCost": "1.5000",
+              "ListPrice": "2.2500"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
