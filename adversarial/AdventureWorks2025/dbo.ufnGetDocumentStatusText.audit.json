@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "object": "dbo.ufnGetDocumentStatusText",
+  "database": "AdventureWorks2025",
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T19:19:51.7066204-07:00"
+  },
+  "casesAudited": [
+    "A01",
+    "A02",
+    "A03",
+    "A04",
+    "A05",
+    "A06"
+  ],
+  "acceptedNotApplicable": [
+    "null-vs-empty",
+    "collation-case",
+    "trailing-spaces",
+    "dates-datetime",
+    "numeric-rounding",
+    "top-ties",
+    "identity-gaps"
+  ],
+  "equivalentMutants": [],
+  "objections": [
+    {
+      "id": "O01",
+      "caseId": "A06",
+      "kind": "duplicate",
+      "text": "A06 sends status 1 with no tables, exactly the same payload as the hand-derived fixed case for the Pending approval mapping. That fixed case already checks the full 16-character return value and its declared result type.",
+      "status": "open"
+    }
+  ]
+}

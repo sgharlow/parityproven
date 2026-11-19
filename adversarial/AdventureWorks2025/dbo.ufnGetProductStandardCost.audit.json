@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "object": "dbo.ufnGetProductStandardCost",
+  "database": "AdventureWorks2025",
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T19:19:51.7066204-07:00"
+  },
+  "casesAudited": [
+    "A01",
+    "A02",
+    "A03",
+    "A04",
+    "A05",
+    "A06",
+    "A07",
+    "A08",
+    "A09",
+    "A10",
+    "A11",
+    "A12",
+    "A13",
+    "A14",
+    "A15",
+    "A16",
+    "A17",
+    "A18",
+    "A19"
+  ],
+  "acceptedNotApplicable": [
+    "null-vs-empty",
+    "collation-case",
+    "trailing-spaces",
+    "top-ties"
+  ],
+  "equivalentMutants": [],
+  "objections": []
+}

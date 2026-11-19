@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "object": "dbo.ufnGetAccountingStartDate",
+  "database": "AdventureWorks2025",
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T19:19:51.7066204-07:00"
+  },
+  "casesAudited": [
+    "A01"
+  ],
+  "acceptedNotApplicable": [
+    "null-vs-empty",
+    "collation-case",
+    "trailing-spaces",
+    "dates-datetime",
+    "numeric-rounding",
+    "top-ties",
+    "identity-gaps"
+  ],
+  "equivalentMutants": [],
+  "objections": [
+    {
+      "id": "O01",
+      "caseId": "A01",
+      "kind": "duplicate",
+      "text": "A01 sends the same complete payload as the sole hand-derived fixed case: no arguments and no tables. Both cases assert the same midnight timestamp value and type, so A01 adds no distinct attack input.",
+      "status": "open"
+    }
+  ]
+}
