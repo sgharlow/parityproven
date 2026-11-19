@@ -5,7 +5,7 @@ import type { PairRecord } from "./schema.js";
 type E = PairRecord["evidence"];
 const gate = (g: "pass" | "fail" | "not-run"): E["adversarial"] => ({ gate: g, ran: 3, differed: 0, evidencePath: "evidence/adversarial/x.json", conversionSha256: "a", runAt: "2026-11-19T10:00:00Z" });
 const ev = (o: Partial<E> = {}): E => ({
-  step1: "pass", step2: "pass", step3: "pass", step4: "pass", step5: "pass", step6: "n/a", harnessVersion: "t", adversarial: gate("pass"), ...o,
+  step1: "pass", step2: "pass", step3: "pass", step4: "pass", step5: "pass", step6: "n/a", harnessVersion: "t", adversarial: gate("pass"), step5Method: "adversarial-report", ...o,
 });
 
 describe("computeStatus", () => {
@@ -20,6 +20,12 @@ describe("computeStatus", () => {
       expect(computeStatus(e)).toBe("pending");
       expect(missingForVerified(e)).toEqual(["adversarial gate"]);
     }
+  });
+
+  it("stays pending when step 5 passed without the adversarial report (pre-gate sign-off)", () => {
+    const e = ev({ step5Method: undefined });
+    expect(computeStatus(e)).toBe("pending");
+    expect(missingForVerified(e)).toEqual(["step5 approval on the adversarial report"]);
   });
 
   it("is failed when any step failed, even with a passing gate", () => {
