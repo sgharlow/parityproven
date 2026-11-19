@@ -58,6 +58,18 @@ export function ttyProblem(stdinIsTty: boolean | undefined, stdoutIsTty: boolean
   return stdinIsTty && stdoutIsTty ? null : "approve needs an interactive terminal (stdin and stdout must be a TTY); agents and workflow steps cannot run it";
 }
 
+/**
+ * Agent-written entries that let the gate pass (resolved objections, accepted not-applicable traps, equivalent mutants).
+ * The owner reads and confirms these at approval; the gate itself only checks that they are present.
+ */
+export function ownerConfirmItems(ev: AdversarialEvidence): string[] {
+  const items: string[] = [];
+  for (const o of ev.objections) if (o.status === "resolved") items.push(`objection ${o.id} resolved (${o.kind}): ${o.resolution ?? "no resolution text"}`);
+  for (const [t, cov] of Object.entries(ev.traps)) if (cov?.applicable && cov.notApplicableReason && cov.accepted) items.push(`trap ${t} accepted as not applicable: ${cov.notApplicableReason}`);
+  for (const m of ev.mutantAdequacy.equivalentRecorded) items.push(`planted defect ${m} recorded as equivalent (not observable)`);
+  return items;
+}
+
 /** Reviewer name retyped at the prompt must equal --reviewer. */
 export function reviewerConfirmed(given: string, retyped: string): boolean {
   return given.trim().length > 0 && given.trim() === retyped.trim();

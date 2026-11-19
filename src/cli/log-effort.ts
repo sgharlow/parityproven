@@ -18,6 +18,7 @@ import { existsSync, readFileSync, writeFileSync, readdirSync } from "fs";
 import { firstCommitDate } from "../pairs/review-rules.js";
 import type { PairRecord } from "../pairs/schema.js";
 import { computeStatus, missingForVerified } from "../pairs/status.js";
+import { ttyProblem } from "./approve-decision.js";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const arg = (n: string): string | undefined => {
@@ -50,6 +51,9 @@ function main(): void {
 
   const reviewer = arg("--review");
   if (reviewer !== undefined) {
+    // step 5 is the owner's: agents and workflow steps (no TTY) cannot record it here (ruling A1)
+    const tty = ttyProblem(process.stdin.isTTY, process.stdout.isTTY);
+    if (tty) throw new Error(tty.replace("approve needs", "--review needs"));
     const date = arg("--date") ?? new Date().toISOString().slice(0, 10);
     const first = firstCommitDate(ROOT, path);
     if (first && date <= first) {

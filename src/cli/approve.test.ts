@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { createHash } from "crypto";
-import { decideApproval, reportObjects, reviewerConfirmed, ttyProblem, type ApproveInput } from "./approve-decision.js";
+import { decideApproval, ownerConfirmItems, reportObjects, reviewerConfirmed, ttyProblem, type ApproveInput } from "./approve-decision.js";
 import { TRAP_IDS, type AdversarialEvidence, type TrapCoverage, type TrapId } from "../adversarial/schema.js";
 import type { PairRecord } from "../pairs/schema.js";
 
@@ -90,6 +90,22 @@ describe("decideApproval", () => {
   it("allows step 4 n/a", () => {
     const i = input(); i.pair.evidence.step4 = "n/a";
     expect(decideApproval(i).ok).toBe(true);
+  });
+});
+
+describe("ownerConfirmItems", () => {
+  it("lists resolved objections, accepted not-applicable traps and equivalent mutants", () => {
+    const ev = evidence();
+    ev.objections = [{ id: "O1", kind: "weak", text: "t", status: "resolved", resolution: "fixed" }];
+    ev.traps["collation-case"] = { applicable: true, coveredBy: [], notApplicableReason: "no text", accepted: true };
+    ev.mutantAdequacy.equivalentRecorded = ["m2"];
+    const items = ownerConfirmItems(ev);
+    expect(items).toHaveLength(3);
+    expect(items.join("|")).toContain("O1");
+    expect(items.join("|")).toContain("m2");
+  });
+  it("lists nothing for a clean object", () => {
+    expect(ownerConfirmItems(evidence())).toEqual([]);
   });
 });
 

@@ -14,7 +14,7 @@ import type { PairRecord } from "../pairs/schema.js";
 import type { AdversarialEvidence } from "../adversarial/schema.js";
 import { computeStatus } from "../pairs/status.js";
 import { firstCommitDate } from "../pairs/review-rules.js";
-import { decideApproval, reportObjects, reviewerConfirmed, ttyProblem } from "./approve-decision.js";
+import { decideApproval, reportObjects, ownerConfirmItems, reviewerConfirmed, ttyProblem } from "./approve-decision.js";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const arg = (n: string): string | undefined => {
@@ -50,8 +50,14 @@ async function main(): Promise<void> {
     throw new Error(`${refused.length} of ${planned.length} objects refused; nothing was written`);
   }
 
+  // agent-written entries that let the gate pass are shown here; retyping the name confirms them
+  for (const { database, object } of objects) {
+    const evPath = resolve(ROOT, "evidence", "adversarial", database, `${object}.json`);
+    const items = ownerConfirmItems(JSON.parse(readFileSync(evPath, "utf-8")) as AdversarialEvidence);
+    if (items.length) console.log(`\n${database} ${object}: agent-written entries you confirm by approving:\n${items.map((x) => `  - ${x}`).join("\n")}`);
+  }
   const rl = createInterface({ input: process.stdin, output: process.stdout });
-  const retyped = await rl.question(`Approving ${planned.length} objects on ${report}. Retype the reviewer name to confirm: `);
+  const retyped = await rl.question(`\nApproving ${planned.length} objects on ${report}, including the entries listed above. Retype the reviewer name to confirm: `);
   rl.close();
   if (!reviewerConfirmed(reviewer, retyped)) throw new Error("reviewer name did not match; nothing was written");
 

@@ -31,7 +31,7 @@ function good(): AdversarialEvidence {
     objections: [],
     mutantAdequacy: { verdict: "adequate", caught: ["m1"], missed: [], skipped: [], equivalentRecorded: [] },
     gate: { passed: true, reasons: [] },
-    wording: "1 adversarial cases ran, 0 differed",
+    wording: "1 adversarial case ran, 0 differed",
   };
 }
 
