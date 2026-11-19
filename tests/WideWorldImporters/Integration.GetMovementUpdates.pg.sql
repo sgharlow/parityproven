@@ -38,3 +38,36 @@ BEGIN
   END IF;
 END $pp$;
 ROLLBACK;
+
+-- @case 2: window edges to the microsecond: at @LastCutoff excluded, +1 µs included, at @NewCutoff included, +1 µs excluded
+BEGIN;
+DELETE FROM warehouse.stock_item_transactions;
+INSERT INTO warehouse.stock_item_transactions ("StockItemTransactionID", "StockItemID", "TransactionTypeID", "CustomerID", "InvoiceID", "SupplierID", "PurchaseOrderID", "TransactionOccurredWhen", "Quantity", "LastEditedWhen") VALUES
+  ('1', '1', '1', NULL, NULL, NULL, NULL, '2020-06-15 12:00:00.000000', '1.000', '2020-06-15 11:00:00.000000'),
+  ('2', '1', '1', NULL, NULL, NULL, NULL, '2020-06-15 12:00:00.000000', '1.000', '2020-06-15 11:00:00.000001'),
+  ('3', '1', '1', NULL, NULL, NULL, NULL, '2020-06-15 12:00:00.000000', '1.000', '2020-06-15 13:00:00.000000'),
+  ('4', '1', '1', NULL, NULL, NULL, NULL, '2020-06-15 12:00:00.000000', '1.000', '2020-06-15 13:00:00.000001');
+CREATE TEMP TABLE pp_actual ON COMMIT DROP AS
+SELECT * FROM integration.get_movement_updates('2020-06-15 11:00:00.000000'::timestamp, '2020-06-15 13:00:00.000000'::timestamp);
+DO $pp$
+DECLARE got text[];
+BEGIN
+  SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
+  IF got IS DISTINCT FROM ARRAY['Date Key', 'WWI Stock Item Transaction ID', 'WWI Invoice ID', 'WWI Purchase Order ID', 'Quantity', 'WWI Stock Item ID', 'WWI Customer ID', 'WWI Supplier ID', 'WWI Transaction Type ID', 'Transaction Occurred When']::text[] THEN
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 02 window edges to the microsecond: at @LastCutoff excluded, +1 µs included, at @NewCutoff included, +1…', got, ARRAY['Date Key', 'WWI Stock Item Transaction ID', 'WWI Invoice ID', 'WWI Purchase Order ID', 'Quantity', 'WWI Stock Item ID', 'WWI Customer ID', 'WWI Supplier ID', 'WWI Transaction Type ID', 'Transaction Occurred When']::text[];
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
+INSERT INTO pp_expected VALUES
+  ('2020-06-15', '2', NULL, NULL, '1', '1', NULL, NULL, '1', '2020-06-15 12:00:00.000000'),
+  ('2020-06-15', '3', NULL, NULL, '1', '1', NULL, NULL, '1', '2020-06-15 12:00:00.000000');
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 02 window edges to the microsecond: at @LastCutoff excluded, +1 µs included, at @NewCutoff included, +1…', missing, extra;
+  END IF;
+END $pp$;
+ROLLBACK;

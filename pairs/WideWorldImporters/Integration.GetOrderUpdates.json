@@ -16,7 +16,8 @@
     "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
     "engine": "kiro",
     "notes": [
-      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
+      "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step).",
+      "Step 5 reset on 2026-11-18 (owner choice R3): verified after a second review by Steve Harlow on 2026-11-16, but the agreed tests were then strengthened (a second fixed case at the window edges; GetOrderUpdates also a tax value where rounding and truncation differ), so the review no longer covers the current evidence. The conversion is unchanged."
     ]
   },
   "columnMappings": [
@@ -64,7 +65,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "pass",
-    "step5": "pass",
+    "step5": "not-run",
     "step6": "n/a",
     "runtimeRatio": 0.3,
     "runtime": {
@@ -101,16 +102,16 @@
     "testsRun": [
       "tSQLt V1.0.8083.3529 on SQL Server (tests/WideWorldImporters/Integration.GetOrderUpdates.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/WideWorldImporters/Integration.GetOrderUpdates.pg.sql); expected results tests/WideWorldImporters/Integration.GetOrderUpdates.expected.json",
       "SQL Server: AgreedTests.[test 01 tax amount at the intermediate-scale boundary (0.99 * 0.505 / 100; SQL Server gives 0.004999 at scale…]: pass",
+      "SQL Server: AgreedTests.[test 02 window lower edge (at @LastCutoff excluded, +1 µs included; @NewCutoff included); tax rounds half up…]: pass",
       "PostgreSQL: AgreedTests.[test 01 tax amount at the intermediate-scale boundary (0.99 * 0.505 / 100; SQL Server gives 0.004999 at scale…]: pass",
-      "planted defects caught by the agreed tests: 0 of 2"
-    ],
-    "reviewer": "Steve Harlow",
-    "reviewDate": "2026-11-16"
+      "PostgreSQL: AgreedTests.[test 02 window lower edge (at @LastCutoff excluded, +1 µs included; @NewCutoff included); tax rounds half up…]: pass",
+      "planted defects caught by the agreed tests: 2 of 2"
+    ]
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "verified"
+  "status": "pending"
 }

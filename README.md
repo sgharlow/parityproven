@@ -8,11 +8,11 @@ Hackathon: [Kiroween 2026](https://kiroween.devpost.com/) — category **Resurre
 
 <!-- status:start (generated from receipts/index.json and pairs/ by npm run readme:status; do not edit) -->
 - Inventoried: 98 programmable objects (AdventureWorks2025 51, WideWorldImporters 47).
-- On the scorecard: 55 receipts (AdventureWorks2025 25, WideWorldImporters 30): **6 verified**, 34 pending, 15 failed. A further 17 are excluded as out of scope and 26 are not attempted, each with its reason.
+- On the scorecard: 55 receipts (AdventureWorks2025 25, WideWorldImporters 30): **4 verified**, 36 pending, 15 failed. A further 17 are excluded as out of scope and 26 are not attempted, each with its reason.
 - Converted and run through the harness: 46 objects (the other 9 pair records are recorded as failed without a conversion).
 - Step 2 (agreed tests) passes for 42: `HumanResources.vEmployee`, `HumanResources.vEmployeeDepartment`, `HumanResources.vEmployeeDepartmentHistory`, `Person.vStateProvinceCountryRegion`, `Production.vProductAndDescription`, `Purchasing.vVendorWithAddresses`, `Purchasing.vVendorWithContacts`, `Sales.vIndividualCustomer`, `Sales.vSalesPerson`, `Sales.vSalesPersonSalesByFiscalYears`, `Sales.vStoreWithAddresses`, `Sales.vStoreWithContacts`, `dbo.ufnGetAccountingEndDate`, `dbo.ufnGetAccountingStartDate`, `dbo.ufnGetContactInformation`, `dbo.ufnGetDocumentStatusText`, `dbo.ufnGetPurchaseOrderStatusText`, `dbo.ufnGetSalesOrderStatusText`, `dbo.ufnLeadingZeros`, `dbo.uspGetBillOfMaterials`, `dbo.uspGetWhereUsedProductID`, `Integration.GetMovementUpdates`, `Integration.GetOrderUpdates`, `Integration.GetPurchaseUpdates`, `Integration.GetSaleUpdates`, `Integration.GetStockHoldingUpdates`, `Integration.GetTransactionUpdates`, `Sequences.ReseedSequenceBeyondTableValues`, `Website.ActivateWebsiteLogon`, `Website.CalculateCustomerPrice`, `Website.ChangePassword`, `Website.Customers`, `Website.InsertCustomerOrders`, `Website.InvoiceCustomerOrders`, `Website.RecordColdRoomTemperatures`, `Website.RecordVehicleTemperature`, `Website.SearchForCustomers`, `Website.SearchForPeople`, `Website.SearchForStockItems`, `Website.SearchForStockItemsByTags`, `Website.SearchForSuppliers`, `Website.Suppliers`.
-- Step 5 (second review) recorded for 6 (Steve Harlow on 2026-11-16). Verified: `Integration.GetMovementUpdates`, `Integration.GetOrderUpdates`, `Website.ActivateWebsiteLogon`, `Website.CalculateCustomerPrice`, `Website.ChangePassword`, `Website.RecordVehicleTemperature`.
-- Receipts built 2026-11-18T21:07:02.747Z.
+- Step 5 (second review) recorded for 4 (Steve Harlow on 2026-11-16). Verified: `Website.ActivateWebsiteLogon`, `Website.CalculateCustomerPrice`, `Website.ChangePassword`, `Website.RecordVehicleTemperature`.
+- Receipts built 2026-11-19T00:32:27.464Z.
 <!-- status:end -->
 
 ---

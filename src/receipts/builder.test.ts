@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { buildReceipts } from "./builder.js";
+import { computeStatus } from "../pairs/status.js";
 import { resolve } from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
@@ -23,9 +24,11 @@ describe("buildReceipts", () => {
     expect(r.database).toBe("WideWorldImporters");
     expect(r.objectName).toBe("GetMovementUpdates");
     expect(r.schemaName).toBe("Integration");
-    expect(r.status).toBe("verified");   // step 5 recorded 2026-11-16 (was "pending" until the second review)
+    // the receipt's status is the status rule applied to the record's steps (the record's status itself is data: it
+    // changes with reviews, e.g. reset on 2026-11-18 when this object's agreed tests were strengthened)
     expect(r.verificationSteps).toHaveLength(6);
-    expect(r.verificationSteps[4].status).toBe("pass");   // step5
+    const steps = r.verificationSteps.map((s) => s.status);
+    expect(r.status).toBe(computeStatus({ step1: steps[0], step2: steps[1], step3: steps[2], step4: steps[3], step5: steps[4], step6: steps[5] } as never));
     expect(r.verificationSteps[2].status).toBe("pass");   // step3
     expect(r.verificationSteps[2].label).toContain("Result sets match");
 

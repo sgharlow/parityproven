@@ -70,3 +70,71 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
+-- case 2: window lower edge (at @LastCutoff excluded, +1 µs included; @NewCutoff included); tax rounds half up at 2 dp: 1.4985 -> 1.50 and 0.105 -> 0.11 (truncation would give 1.49 and 0.10)
+CREATE PROCEDURE [AgreedTests].[test 02 window lower edge (at @LastCutoff excluded, +1 µs included; @NewCutoff included); tax rounds half up…]
+AS
+BEGIN
+  EXEC tSQLt.FakeTable @TableName = N'[Sales].[Orders]';
+  EXEC tSQLt.FakeTable @TableName = N'[Sales].[OrderLines]';
+  EXEC tSQLt.FakeTable @TableName = N'[Warehouse].[PackageTypes]';
+  EXEC tSQLt.FakeTable @TableName = N'[Sales].[Customers]';
+  INSERT INTO [Sales].[Orders] ([OrderID], [CustomerID], [SalespersonPersonID], [PickedByPersonID], [BackorderOrderID], [OrderDate], [LastEditedWhen]) VALUES
+    (1, 1, 1, NULL, NULL, CAST('2020-06-15' AS date), CAST('2020-06-15T11:00:00.000000' AS datetime2(7))),
+    (2, 1, 1, NULL, NULL, CAST('2020-06-15' AS date), CAST('2020-06-15T11:00:00.000001' AS datetime2(7))),
+    (3, 1, 1, NULL, NULL, CAST('2020-06-15' AS date), CAST('2020-06-15T13:00:00.000000' AS datetime2(7)));
+  INSERT INTO [Sales].[OrderLines] ([OrderLineID], [OrderID], [StockItemID], [Description], [PackageTypeID], [Quantity], [UnitPrice], [TaxRate], [PickingCompletedWhen], [LastEditedWhen]) VALUES
+    (1, 1, 1, N'line 1', 1, 1, 9.99, 15.000, NULL, CAST('2020-06-15T09:00:00.000000' AS datetime2(7))),
+    (2, 2, 1, N'line 2', 1, 1, 9.99, 15.000, NULL, CAST('2020-06-15T09:00:00.000000' AS datetime2(7))),
+    (3, 3, 1, N'line 3', 1, 3, 0.35, 10.000, NULL, CAST('2020-06-15T09:00:00.000000' AS datetime2(7)));
+  INSERT INTO [Warehouse].[PackageTypes] ([PackageTypeID], [PackageTypeName]) VALUES
+    (1, N'Each');
+  INSERT INTO [Sales].[Customers] ([CustomerID], [DeliveryCityID]) VALUES
+    (1, 1);
+  CREATE TABLE #Expected (
+    [Order Date Key] date NULL,
+    [Picked Date Key] date NULL,
+    [WWI Order ID] int NULL,
+    [WWI Backorder ID] int NULL,
+    [Description] nvarchar(100) NULL,
+    [Package] nvarchar(50) NULL,
+    [Quantity] int NULL,
+    [Unit Price] decimal(18,2) NULL,
+    [Tax Rate] decimal(18,3) NULL,
+    [Total Excluding Tax] decimal(29,2) NULL,
+    [Tax Amount] numeric(38,6) NULL,
+    [Total Including Tax] numeric(38,6) NULL,
+    [WWI City ID] int NULL,
+    [WWI Customer ID] int NULL,
+    [WWI Stock Item ID] int NULL,
+    [WWI Salesperson ID] int NULL,
+    [WWI Picker ID] int NULL,
+    [Last Modified When] datetime2(7) NULL
+  );
+  CREATE TABLE #Actual (
+    [Order Date Key] date NULL,
+    [Picked Date Key] date NULL,
+    [WWI Order ID] int NULL,
+    [WWI Backorder ID] int NULL,
+    [Description] nvarchar(100) NULL,
+    [Package] nvarchar(50) NULL,
+    [Quantity] int NULL,
+    [Unit Price] decimal(18,2) NULL,
+    [Tax Rate] decimal(18,3) NULL,
+    [Total Excluding Tax] decimal(29,2) NULL,
+    [Tax Amount] numeric(38,6) NULL,
+    [Total Including Tax] numeric(38,6) NULL,
+    [WWI City ID] int NULL,
+    [WWI Customer ID] int NULL,
+    [WWI Stock Item ID] int NULL,
+    [WWI Salesperson ID] int NULL,
+    [WWI Picker ID] int NULL,
+    [Last Modified When] datetime2(7) NULL
+  );
+  INSERT INTO #Expected ([Order Date Key], [Picked Date Key], [WWI Order ID], [WWI Backorder ID], [Description], [Package], [Quantity], [Unit Price], [Tax Rate], [Total Excluding Tax], [Tax Amount], [Total Including Tax], [WWI City ID], [WWI Customer ID], [WWI Stock Item ID], [WWI Salesperson ID], [WWI Picker ID], [Last Modified When]) VALUES
+    (CAST('2020-06-15' AS date), NULL, 2, NULL, N'line 2', N'Each', 1, 9.99, 15, 9.99, 1.5, 11.49, 1, 1, 1, 1, NULL, CAST('2020-06-15T11:00:00.000001' AS datetime2(7))),
+    (CAST('2020-06-15' AS date), NULL, 3, NULL, N'line 3', N'Each', 3, 0.35, 10, 1.05, 0.11, 1.16, 1, 1, 1, 1, NULL, CAST('2020-06-15T13:00:00.000000' AS datetime2(7)));
+  INSERT INTO #Actual
+  EXEC Integration.GetOrderUpdates @LastCutoff = '2020-06-15T11:00:00.000', @NewCutoff = '2020-06-15T13:00:00.000';
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
+END;
+GO

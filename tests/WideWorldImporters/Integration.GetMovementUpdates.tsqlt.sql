@@ -49,3 +49,45 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
+-- case 2: window edges to the microsecond: at @LastCutoff excluded, +1 µs included, at @NewCutoff included, +1 µs excluded
+CREATE PROCEDURE [AgreedTests].[test 02 window edges to the microsecond: at @LastCutoff excluded, +1 µs included, at @NewCutoff included, +1…]
+AS
+BEGIN
+  EXEC tSQLt.FakeTable @TableName = N'[Warehouse].[StockItemTransactions]';
+  INSERT INTO [Warehouse].[StockItemTransactions] ([StockItemTransactionID], [StockItemID], [TransactionTypeID], [CustomerID], [InvoiceID], [SupplierID], [PurchaseOrderID], [TransactionOccurredWhen], [Quantity], [LastEditedWhen]) VALUES
+    (1, 1, 1, NULL, NULL, NULL, NULL, CAST('2020-06-15T12:00:00.000000' AS datetime2(7)), 1.000, CAST('2020-06-15T11:00:00.000000' AS datetime2(7))),
+    (2, 1, 1, NULL, NULL, NULL, NULL, CAST('2020-06-15T12:00:00.000000' AS datetime2(7)), 1.000, CAST('2020-06-15T11:00:00.000001' AS datetime2(7))),
+    (3, 1, 1, NULL, NULL, NULL, NULL, CAST('2020-06-15T12:00:00.000000' AS datetime2(7)), 1.000, CAST('2020-06-15T13:00:00.000000' AS datetime2(7))),
+    (4, 1, 1, NULL, NULL, NULL, NULL, CAST('2020-06-15T12:00:00.000000' AS datetime2(7)), 1.000, CAST('2020-06-15T13:00:00.000001' AS datetime2(7)));
+  CREATE TABLE #Expected (
+    [Date Key] date NULL,
+    [WWI Stock Item Transaction ID] int NULL,
+    [WWI Invoice ID] int NULL,
+    [WWI Purchase Order ID] int NULL,
+    [Quantity] int NULL,
+    [WWI Stock Item ID] int NULL,
+    [WWI Customer ID] int NULL,
+    [WWI Supplier ID] int NULL,
+    [WWI Transaction Type ID] int NULL,
+    [Transaction Occurred When] datetime2(7) NULL
+  );
+  CREATE TABLE #Actual (
+    [Date Key] date NULL,
+    [WWI Stock Item Transaction ID] int NULL,
+    [WWI Invoice ID] int NULL,
+    [WWI Purchase Order ID] int NULL,
+    [Quantity] int NULL,
+    [WWI Stock Item ID] int NULL,
+    [WWI Customer ID] int NULL,
+    [WWI Supplier ID] int NULL,
+    [WWI Transaction Type ID] int NULL,
+    [Transaction Occurred When] datetime2(7) NULL
+  );
+  INSERT INTO #Expected ([Date Key], [WWI Stock Item Transaction ID], [WWI Invoice ID], [WWI Purchase Order ID], [Quantity], [WWI Stock Item ID], [WWI Customer ID], [WWI Supplier ID], [WWI Transaction Type ID], [Transaction Occurred When]) VALUES
+    (CAST('2020-06-15' AS date), 2, NULL, NULL, 1, 1, NULL, NULL, 1, CAST('2020-06-15T12:00:00.000000' AS datetime2(7))),
+    (CAST('2020-06-15' AS date), 3, NULL, NULL, 1, 1, NULL, NULL, 1, CAST('2020-06-15T12:00:00.000000' AS datetime2(7)));
+  INSERT INTO #Actual
+  EXEC Integration.GetMovementUpdates @LastCutoff = '2020-06-15T11:00:00.000', @NewCutoff = '2020-06-15T13:00:00.000';
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
+END;
+GO

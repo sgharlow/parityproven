@@ -1,0 +1,11 @@
+negative control for Integration.GetOrderUpdates (step 2), 2026-11-19T00:31:44.585Z
+corruption: case 1 expected value row 1, column Order Date Key: d:2020-01-01 -> d:2021-01-01
+SQL Server: test 01 tax amount at the intermediate-scale boundary (0.99 * 0.505 / 100; SQL Server gives 0.004999 at scale…: FAIL — Failure: Unexpected/missing resultset rows!
+|_m_|Order Date Key|Picked Date Key|WWI Order ID|WWI Backorder ID|Description|Package|Quantity|Unit Price|Tax Rate|Total Excluding Tax|Tax Amount|Total Including Tax|WWI City ID|WWI Customer ID|WWI Stock Item ID|WWI Salesperson ID|WWI Picker ID|Last Modified When         |
++---+--------------+---------------+------------+----------------+-----------+-------+--------+----------+--------+-------------------+----------+-------------------+-----------+---------------+-----------------+------------------+-------------+---------------------------+
+|<  |2021-01-01    |!NULL!         |1           |!NULL!          |x          |Each   |1       |0.99      |0.505   |0.99               |0.000000  |0.990000           |1          |1              |1                |1                 |!NULL!       |2020-06-15 12:00:01.0000000|
+|>  |2020-01-01    |!NULL!         |1           |!NULL!          |x          |Each   |1       |0.99      |0.505   |0.99               |0.000000  |0.990000           |1          |1              |1                |1                 |!NULL!       |2020-06-15 12:00:01.0000000|
+SQL Server: test 02 window lower edge (at @LastCutoff excluded, +1 µs included; @NewCutoff included); tax rounds half up…: pass
+PostgreSQL: test 01 tax amount at the intermediate-scale boundary (0.99 * 0.505 / 100; SQL Server gives 0.004999 at scale…: FAIL — agreed test failed (test 01 tax amount at the intermediate-scale boundary (0.99 * 0.505 / 100; SQL Server gives 0.004999 at scale…): 1 expected row(s) missing, 1 unexpected row(s) in the result
+PostgreSQL: test 02 window lower edge (at @LastCutoff excluded, +1 µs included; @NewCutoff included); tax rounds half up…: pass
+RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed

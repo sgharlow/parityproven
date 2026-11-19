@@ -43,3 +43,46 @@ BEGIN
   END IF;
 END $pp$;
 ROLLBACK;
+
+-- @case 2: window lower edge (at @LastCutoff excluded, +1 µs included; @NewCutoff included); tax rounds half up at 2 dp: 1.4985 -> 1.50 and 0.105 -> 0.11 (truncation would give 1.49 and 0.10)
+BEGIN;
+DELETE FROM sales.orders;
+DELETE FROM sales.order_lines;
+DELETE FROM warehouse.package_types;
+DELETE FROM sales.customers;
+INSERT INTO sales.orders ("OrderID", "CustomerID", "SalespersonPersonID", "PickedByPersonID", "BackorderOrderID", "OrderDate", "LastEditedWhen") VALUES
+  ('1', '1', '1', NULL, NULL, '2020-06-15', '2020-06-15 11:00:00.000000'),
+  ('2', '1', '1', NULL, NULL, '2020-06-15', '2020-06-15 11:00:00.000001'),
+  ('3', '1', '1', NULL, NULL, '2020-06-15', '2020-06-15 13:00:00.000000');
+INSERT INTO sales.order_lines ("OrderLineID", "OrderID", "StockItemID", "Description", "PackageTypeID", "Quantity", "UnitPrice", "TaxRate", "PickingCompletedWhen", "LastEditedWhen") VALUES
+  ('1', '1', '1', 'line 1', '1', '1', '9.99', '15.000', NULL, '2020-06-15 09:00:00.000000'),
+  ('2', '2', '1', 'line 2', '1', '1', '9.99', '15.000', NULL, '2020-06-15 09:00:00.000000'),
+  ('3', '3', '1', 'line 3', '1', '3', '0.35', '10.000', NULL, '2020-06-15 09:00:00.000000');
+INSERT INTO warehouse.package_types ("PackageTypeID", "PackageTypeName") VALUES
+  ('1', 'Each');
+INSERT INTO sales.customers ("CustomerID", "DeliveryCityID") VALUES
+  ('1', '1');
+CREATE TEMP TABLE pp_actual ON COMMIT DROP AS
+SELECT * FROM integration.get_order_updates('2020-06-15 11:00:00.000000'::timestamp, '2020-06-15 13:00:00.000000'::timestamp);
+DO $pp$
+DECLARE got text[];
+BEGIN
+  SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
+  IF got IS DISTINCT FROM ARRAY['Order Date Key', 'Picked Date Key', 'WWI Order ID', 'WWI Backorder ID', 'Description', 'Package', 'Quantity', 'Unit Price', 'Tax Rate', 'Total Excluding Tax', 'Tax Amount', 'Total Including Tax', 'WWI City ID', 'WWI Customer ID', 'WWI Stock Item ID', 'WWI Salesperson ID', 'WWI Picker ID', 'Last Modified When']::text[] THEN
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 02 window lower edge (at @LastCutoff excluded, +1 µs included; @NewCutoff included); tax rounds half up…', got, ARRAY['Order Date Key', 'Picked Date Key', 'WWI Order ID', 'WWI Backorder ID', 'Description', 'Package', 'Quantity', 'Unit Price', 'Tax Rate', 'Total Excluding Tax', 'Tax Amount', 'Total Including Tax', 'WWI City ID', 'WWI Customer ID', 'WWI Stock Item ID', 'WWI Salesperson ID', 'WWI Picker ID', 'Last Modified When']::text[];
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
+INSERT INTO pp_expected VALUES
+  ('2020-06-15', NULL, '2', NULL, 'line 2', 'Each', '1', '9.99', '15', '9.99', '1.5', '11.49', '1', '1', '1', '1', NULL, '2020-06-15 11:00:00.000001'),
+  ('2020-06-15', NULL, '3', NULL, 'line 3', 'Each', '3', '0.35', '10', '1.05', '0.11', '1.16', '1', '1', '1', '1', NULL, '2020-06-15 13:00:00.000000');
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 02 window lower edge (at @LastCutoff excluded, +1 µs included; @NewCutoff included); tax rounds half up…', missing, extra;
+  END IF;
+END $pp$;
+ROLLBACK;

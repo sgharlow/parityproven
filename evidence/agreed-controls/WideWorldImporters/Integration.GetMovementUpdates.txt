@@ -1,0 +1,13 @@
+negative control for Integration.GetMovementUpdates (step 2), 2026-11-19T00:31:53.757Z
+corruption: case 1 expected value row 1, column Date Key: d:2020-06-15 -> d:2021-06-15
+SQL Server: test 01 fractional Quantity (decimal -> int cast): FAIL — Failure: Unexpected/missing resultset rows!
+|_m_|Date Key  |WWI Stock Item Transaction ID|WWI Invoice ID|WWI Purchase Order ID|Quantity|WWI Stock Item ID|WWI Customer ID|WWI Supplier ID|WWI Transaction Type ID|Transaction Occurred When  |
++---+----------+-----------------------------+--------------+---------------------+--------+-----------------+---------------+---------------+-----------------------+---------------------------+
+|<  |2021-06-15|1                            |!NULL!        |!NULL!               |2       |1                |!NULL!         |!NULL!         |1                      |2020-06-15 12:00:00.0000000|
+|=  |2020-06-15|2                            |!NULL!        |!NULL!               |-2      |1                |!NULL!         |!NULL!         |1                      |2020-06-15 12:00:00.0000000|
+|=  |2020-06-15|3                            |!NULL!        |!NULL!               |0       |1                |!NULL!         |!NULL!         |1                      |2020-06-15 12:00:00.0000000|
+|>  |2020-06-15|1                            |!NULL!        |!NULL!               |2       |1                |!NULL!         |!NULL!         |1                      |2020-06-15 12:00:00.0000000|
+SQL Server: test 02 window edges to the microsecond: at @LastCutoff excluded, +1 µs included, at @NewCutoff included, +1…: pass
+PostgreSQL: test 01 fractional Quantity (decimal -> int cast): FAIL — agreed test failed (test 01 fractional Quantity (decimal -> int cast)): 1 expected row(s) missing, 1 unexpected row(s) in the result
+PostgreSQL: test 02 window edges to the microsecond: at @LastCutoff excluded, +1 µs included, at @NewCutoff included, +1…: pass
+RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed

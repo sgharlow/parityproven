@@ -1,5 +1,5 @@
 {
-  "builtAt": "2026-11-18T21:07:02.747Z",
+  "builtAt": "2026-11-19T00:32:27.464Z",
   "receipts": [
     {
       "database": "AdventureWorks2025",
@@ -268,7 +268,7 @@
       "objectName": "GetMovementUpdates",
       "objectClass": "procedure",
       "tier": "simple",
-      "status": "verified",
+      "status": "pending",
       "path": "WideWorldImporters/Integration.GetMovementUpdates.json"
     },
     {
@@ -277,7 +277,7 @@
       "objectName": "GetOrderUpdates",
       "objectClass": "procedure",
       "tier": "simple",
-      "status": "verified",
+      "status": "pending",
       "path": "WideWorldImporters/Integration.GetOrderUpdates.json"
     },
     {
@@ -946,8 +946,8 @@
   },
   "summary": {
     "total": 55,
-    "verified": 6,
-    "pending": 34,
+    "verified": 4,
+    "pending": 36,
     "failed": 15,
     "excluded": 17,
     "notAttempted": 26,

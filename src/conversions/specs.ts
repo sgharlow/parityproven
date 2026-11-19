@@ -61,14 +61,8 @@ export const SPECS: ObjectSpec[] = [
         col("Quantity", dec(18, 3)), col("LastEditedWhen", dt2),
       ],
     }],
-    fixedCases: [{
-      label: "fractional Quantity (decimal -> int cast)", cutoffs: WINDOW,
-      tables: { "Warehouse.StockItemTransactions": [2.5, -2.5, 0.999].map((q, i) => ({
-        StockItemTransactionID: i + 1, StockItemID: 1, TransactionTypeID: 1, CustomerID: null,
-        InvoiceID: null, SupplierID: null, PurchaseOrderID: null,
-        TransactionOccurredWhen: IN_WINDOW_1, Quantity: q.toFixed(3), LastEditedWhen: IN_WINDOW_2,
-      })) },
-    }],
+    // second case added 2026-11-18: the window edges, so the agreed tests see the cutoff comparisons (step 3 already did)
+    fixedCases: [movementFirstCase(), movementEdgeCase()],
     mutants: [
       { name: "Quantity rounds instead of truncating", from: 'CAST(TRUNC(sit."Quantity") AS integer)', to: 'sit."Quantity"::integer' },
       { name: "upper cutoff exclusive", from: '<= new_cutoff', to: '< new_cutoff' },
@@ -97,7 +91,7 @@ export const SPECS: ObjectSpec[] = [
         "Warehouse.PackageTypes": [{ PackageTypeID: 1, PackageTypeName: "Each" }],
         "Sales.Customers": [{ CustomerID: 1, DeliveryCityID: 1 }],
       },
-    }],
+    }, orderUpdatesEdgeCase()],
     mutants: [
       { name: "tax amount truncates instead of rounding at 2dp", from: "round(ol.\"Quantity\" * ol.\"UnitPrice\" * ol.\"TaxRate\" / 100.0, 2)", to: "trunc(ol.\"Quantity\" * ol.\"UnitPrice\" * ol.\"TaxRate\" / 100.0, 2)" },
       { name: "lower cutoff inclusive", from: "> last_cutoff", to: ">= last_cutoff" },
@@ -186,6 +180,60 @@ export const SPECS: ObjectSpec[] = [
     fixedCases: [transactionUpdatesCase()],
   },
 ];
+
+/** Integration.GetMovementUpdates case 1 (unchanged since 2026-11-12): fractional quantities truncate in the int cast. */
+function movementFirstCase(): FixedCase {
+  return {
+    label: "fractional Quantity (decimal -> int cast)", cutoffs: WINDOW,
+    tables: { "Warehouse.StockItemTransactions": [2.5, -2.5, 0.999].map((q, i) => ({
+      StockItemTransactionID: i + 1, StockItemID: 1, TransactionTypeID: 1, CustomerID: null,
+      InvoiceID: null, SupplierID: null, PurchaseOrderID: null,
+      TransactionOccurredWhen: IN_WINDOW_1, Quantity: q.toFixed(3), LastEditedWhen: IN_WINDOW_2,
+    })) },
+  };
+}
+
+/**
+ * Integration.GetMovementUpdates case 2 (added 2026-11-18): LastEditedWhen at each window edge. Expected 2 rows
+ * (transactions 2 and 3): exactly @LastCutoff is excluded, 1 µs after it included, exactly @NewCutoff included, 1 µs
+ * after it excluded.
+ */
+function movementEdgeCase(): FixedCase {
+  return {
+    label: "window edges to the microsecond: at @LastCutoff excluded, +1 µs included, at @NewCutoff included, +1 µs excluded",
+    cutoffs: WINDOW,
+    tables: { "Warehouse.StockItemTransactions": [AT_LAST, JUST_AFTER_LAST, AT_NEW, JUST_AFTER_NEW].map((edited, i) => ({
+      StockItemTransactionID: i + 1, StockItemID: 1, TransactionTypeID: 1, CustomerID: null,
+      InvoiceID: null, SupplierID: null, PurchaseOrderID: null,
+      TransactionOccurredWhen: IN_WINDOW_1, Quantity: "1.000", LastEditedWhen: edited,
+    })) },
+  };
+}
+
+/**
+ * Integration.GetOrderUpdates case 2 (added 2026-11-18). Last Modified = the later of order and line LastEditedWhen.
+ * Expected 2 rows (orders 2 and 3):
+ *  - order 1: modified exactly at @LastCutoff (excluded, the lower bound is exclusive)
+ *  - order 2: 1 µs after @LastCutoff (included); tax 1 x 9.99 x 15% = 1.4985, which ROUND(, 2) makes 1.50
+ *    (truncation would give 1.49); Total Excluding Tax 9.99; Total Including Tax 11.49
+ *  - order 3: exactly @NewCutoff (included); tax 3 x 0.35 x 10% = 0.105, rounds to 0.11 (truncation: 0.10)
+ */
+function orderUpdatesEdgeCase(): FixedCase {
+  const order = (id: number, edited: string): Row =>
+    ({ OrderID: id, CustomerID: 1, SalespersonPersonID: 1, PickedByPersonID: null, BackorderOrderID: null, OrderDate: "2020-06-15", LastEditedWhen: edited });
+  const line = (id: number, orderId: number, qty: number, price: string, rate: string): Row =>
+    ({ OrderLineID: id, OrderID: orderId, StockItemID: 1, Description: `line ${id}`, PackageTypeID: 1, Quantity: qty, UnitPrice: price, TaxRate: rate, PickingCompletedWhen: null, LastEditedWhen: BEFORE });
+  return {
+    label: "window lower edge (at @LastCutoff excluded, +1 µs included; @NewCutoff included); tax rounds half up at 2 dp: 1.4985 -> 1.50 and 0.105 -> 0.11 (truncation would give 1.49 and 0.10)",
+    cutoffs: WINDOW,
+    tables: {
+      "Sales.Orders": [order(1, AT_LAST), order(2, JUST_AFTER_LAST), order(3, AT_NEW)],
+      "Sales.OrderLines": [line(1, 1, 1, "9.99", "15.000"), line(2, 2, 1, "9.99", "15.000"), line(3, 3, 3, "0.35", "10.000")],
+      "Warehouse.PackageTypes": [{ PackageTypeID: 1, PackageTypeName: "Each" }],
+      "Sales.Customers": [{ CustomerID: 1, DeliveryCityID: 1 }],
+    },
+  };
+}
 
 /**
  * Integration.GetPurchaseUpdates (hand-derived). "Last modified" = the later of the order's and the line's LastEditedWhen.
