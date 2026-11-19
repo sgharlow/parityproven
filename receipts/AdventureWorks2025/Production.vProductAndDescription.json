@@ -106,22 +106,18 @@
       "planted defects caught by the agreed tests: 2 of 2"
     ],
     "adversarial": {
-      "gate": "fail",
+      "gate": "pass",
       "ran": 5,
       "differed": 0,
       "evidencePath": "evidence/adversarial/AdventureWorks2025/Production.vProductAndDescription.json",
-      "runAt": "2026-11-19T04:16:49.738Z",
+      "runAt": "2026-11-19T06:17:18.498Z",
       "agentWritten": true,
       "wording": "5 adversarial cases ran, 0 differed",
       "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
       "auditorModel": "gpt-5.6-sol",
       "sameModel": false,
       "mutantAdequacy": "adequate",
-      "gateReasons": [
-        "objection O01 is open",
-        "objection O02 is open",
-        "objection O03 is open"
-      ],
+      "gateReasons": [],
       "cases": [
         {
           "id": "A01",
@@ -146,7 +142,7 @@
         },
         {
           "id": "A03",
-          "label": "an empty description and names that differ only in case: '' kept, not NULL; 'Chain' and 'CHAIN' are two products",
+          "label": "an empty description, and product and model names that differ only in case from each other: '' kept, not NULL",
           "traps": [
             "collation-case"
           ],
@@ -156,7 +152,7 @@
         },
         {
           "id": "A04",
-          "label": "duplicate culture rows and two products on one model: rows multiply (2 products x 3 culture rows), duplicates kept",
+          "label": "two descriptions with the same text in one culture and two products on one model: rows multiply (2 products x 3 culture rows), identical rows kept",
           "traps": [
             "top-ties"
           ],
@@ -186,5 +182,5 @@
     "p50Hours": 0.75,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-19T05:37:18.791Z"
+  "builtAt": "2026-11-19T06:24:38.456Z"
 }

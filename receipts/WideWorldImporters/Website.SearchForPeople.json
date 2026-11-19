@@ -137,7 +137,7 @@
       "ran": 6,
       "differed": 0,
       "evidencePath": "evidence/adversarial/WideWorldImporters/Website.SearchForPeople.json",
-      "runAt": "2026-11-19T05:36:12.238Z",
+      "runAt": "2026-11-19T06:23:28.819Z",
       "agentWritten": true,
       "wording": "6 adversarial cases ran, 0 differed",
       "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
@@ -145,16 +145,12 @@
       "sameModel": false,
       "mutantAdequacy": "inadequate",
       "gateReasons": [
-        "objection O01 is open",
-        "objection O02 is open",
-        "objection O03 is open",
-        "objection O04 is open",
-        "mutant adequacy is inadequate (unexplained misses: '_' matches a letter only)"
+        "mutant adequacy is inadequate (unexplained misses: employee tested before salesperson)"
       ],
       "cases": [
         {
           "id": "A01",
-          "label": "SearchName values differing only in case both match; the two rows share PreferredName",
+          "label": "SearchName: Cyrillic values differing only in case match a case-insensitive search ('дом' finds 'ДОМ' and 'Дом', not 'дым' or 'ÉCLAIR')",
           "traps": [
             "collation-case",
             "top-ties"
@@ -165,7 +161,7 @@
         },
         {
           "id": "A02",
-          "label": "a trailing space in SearchName is matched by LIKE '%amy%'",
+          "label": "SearchName: a search text ending in a space ('amy ') matches only values with a space after 'amy'",
           "traps": [
             "trailing-spaces"
           ],
@@ -175,7 +171,7 @@
         },
         {
           "id": "A03",
-          "label": "character class [^a] matches any one character that is not 'a'",
+          "label": "SearchName: '_' matches a digit, an accented letter and a space, and '[^a-c]' excludes a, b and c in either case ('x_[^a-c]')",
           "traps": [],
           "status": "ran",
           "sqlServer": "pass",
@@ -183,7 +179,7 @@
         },
         {
           "id": "A04",
-          "label": "relationship precedence: a person flagged both salesperson and employee is reported as 'Salesperson'",
+          "label": "relationship and company for people who are neither salesperson nor employee: customer contact, supplier alternate contact, and no relationship ('WWI')",
           "traps": [],
           "status": "ran",
           "sqlServer": "pass",
@@ -219,5 +215,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-19T05:37:18.807Z"
+  "builtAt": "2026-11-19T06:24:38.469Z"
 }

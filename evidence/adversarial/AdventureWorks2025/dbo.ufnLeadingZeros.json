@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "object": "dbo.ufnLeadingZeros",
   "database": "AdventureWorks2025",
-  "runAt": "2026-11-19T02:26:47.021Z",
+  "runAt": "2026-11-19T06:19:58.663Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "71fbec7f435258e2d71571bdf1980b124670f38daa9b4d97753eba7d5fb418e2",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-18T19:13:01-07:00",
+    "at": "2026-11-19T05:46:45.561Z",
     "file": "adversarial/AdventureWorks2025/dbo.ufnLeadingZeros.cases.json",
-    "sha256": "0a70d52de1169a27dbfa397b89b1c6f2aa02c242a35f224603e73038f7c8a00f"
+    "sha256": "1b4dd5ff6c1f9f098a6ebf0e7e5498febae105440e26e9203aecc98b781d689b"
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-18T19:19:51.7066204-07:00",
+    "at": "2026-11-19T06:06:57.652Z",
     "file": "adversarial/AdventureWorks2025/dbo.ufnLeadingZeros.audit.json",
-    "sha256": "2b12687fd81a12ae9d40e656d2d10d015769069957c70853da3816c7f3fdf35e"
+    "sha256": "cd8a1c7054d883ef3b2fd0456ee97f781e1c85ab4c89a91016891a9c4c28f079"
   },
   "sameModel": false,
   "casesAudited": [
@@ -75,9 +75,9 @@
   "cases": [
     {
       "id": "A01",
-      "label": "-1 keeps its sign inside the padding: '000000-1'",
+      "label": "-1000 (5 characters with the sign) gets three zeros before the sign: '000-1000'",
       "traps": [],
-      "reasoning": "T-SQL pads the string '-1' with REPLICATE('0', 8 - DATALENGTH) on the left, so the zeros go before the sign. A to_char or lpad of abs() with a leading sign would give '-0000001'.",
+      "reasoning": "T-SQL pads the string '-1000' with REPLICATE('0', 8 - DATALENGTH) on the left, so the zeros go before the sign. A to_char or lpad of abs() with a leading sign would give '-0001000'. The hand-derived cases use negative values of 2, 8, 9 and 11 characters only; 5 characters is a length class none of them uses.",
       "trapChecks": {},
       "status": "ran",
       "sqlServer": {
@@ -90,9 +90,9 @@
     },
     {
       "id": "A02",
-      "label": "-1000000 (exactly 8 characters with the sign) is unchanged",
+      "label": "-100000 (7 characters with the sign) gets one zero before the sign: '0-100000'",
       "traps": [],
-      "reasoning": "8 characters including the sign fits varchar(8) exactly: REPLICATE('0', 0) is ''. A length test that counts digits only (not the sign) would treat it as 7 and pad, or as too long.",
+      "reasoning": "One character short of the exact fit for a negative value: REPLICATE('0', 1) goes before the sign. A length test that counted digits only (6) would pad two zeros; one that tested abs(value) against 8 digits would keep it unpadded. No hand-derived case uses a 7-character negative value.",
       "trapChecks": {},
       "status": "ran",
       "sqlServer": {
@@ -105,9 +105,9 @@
     },
     {
       "id": "A03",
-      "label": "-99999999 (9 characters with the sign) does not fit varchar(8): '0000000*'",
+      "label": "-999999999 (10 characters with the sign) does not fit varchar(8): '0000000*'",
       "traps": [],
-      "reasoning": "8 digits but 9 characters with the sign. A check on the number of digits (or on abs(value) > 99999999) would keep it and lpad would truncate; SQL Server's CONVERT gives '*'.",
+      "reasoning": "9 digits and 10 characters with the sign. A check on the number of digits against 9 (the positive overflow boundary) or a substring of the text would keep part of it; SQL Server's CONVERT(varchar(8)) gives '*'. The hand-derived negative overflow cases are 9 and 11 characters; 10 characters is a class none of them uses.",
       "trapChecks": {},
       "status": "ran",
       "sqlServer": {
@@ -120,9 +120,9 @@
     },
     {
       "id": "A04",
-      "label": "10000000 (8 digits, smallest 8-digit value) is unchanged",
+      "label": "1000 (4 digits) gets four leading zeros: '00001000'",
       "traps": [],
-      "reasoning": "Lower boundary of the 8-character range from below; an off-by-one in the length test (>= 8 instead of > 8) would turn it into '*'.",
+      "reasoning": "A mid-range length: REPLICATE('0', 4). A conversion computing the pad width from log10(value) or from integer division would be off by one on an exact power of ten. The hand-derived positive cases use 1, 8, 9 and 10 characters; 4 characters is a class none of them uses.",
       "trapChecks": {},
       "status": "ran",
       "sqlServer": {
@@ -165,9 +165,9 @@
     },
     {
       "id": "A07",
-      "label": "2147483646 (one below int maximum) gives '0000000*'",
+      "label": "100000 (6 digits, an exact power of ten) gets two leading zeros: '00100000'",
       "traps": [],
-      "reasoning": "Large positive value next to the int maximum; an implementation that adds 1 or works in a narrower type would overflow or truncate instead of returning '*'.",
+      "reasoning": "Exact power of ten with 6 digits: floor(log10(100000)) + 1 = 6, but a ceil(log10()) length gives 5 and pads three zeros. No hand-derived case uses a 6-character value.",
       "trapChecks": {},
       "status": "ran",
       "sqlServer": {
@@ -180,9 +180,9 @@
     },
     {
       "id": "A08",
-      "label": "-2147483647 (one above int minimum) gives '0000000*'",
+      "label": "-10000 (6 characters with the sign) gets two zeros before the sign: '00-10000'",
       "traps": [],
-      "reasoning": "Large negative value next to the int minimum, where abs() is still representable; a digit-count test via abs() would give a different branch than at the minimum itself.",
+      "reasoning": "A 6-character negative value; the sign is one of the 8 characters (DATALENGTH of varchar counts one byte per ASCII character), so two zeros are added before the sign. No hand-derived case uses a 6-character negative value.",
       "trapChecks": {},
       "status": "ran",
       "sqlServer": {
@@ -205,62 +205,87 @@
       "caseId": "A01",
       "kind": "duplicate",
       "text": "The hand-derived -5 case already supplies a two-character negative integer and requires the sign after six padding zeros. A01 changes only the digit from 5 to 1 and attacks the same input class and mechanism.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A01 now sends the five-character value -1000, a negative length class absent from the hand-derived cases.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O02",
       "caseId": "A02",
       "kind": "duplicate",
       "text": "The hand-derived -9999999 case already supplies an eight-character negative integer, including the sign, and requires it unchanged. A02 is the same length class and attacks the same boundary behavior.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A02 now sends the seven-character value -100000, one character short of exact fit and absent from the hand-derived cases.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O03",
       "caseId": "A03",
       "kind": "duplicate",
       "text": "The hand-derived -10000000 case already supplies a nine-character negative integer and requires CONVERT(varchar(8), int) to produce '*' before padding. A03 attacks the same length and conversion path.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A03 now sends a ten-character negative value, filling the overflow length class between the hand-derived nine- and eleven-character cases.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O04",
       "caseId": "A04",
       "kind": "duplicate",
       "text": "The hand-derived 12345678 and 99999999 cases already supply eight-character positive integers and require them unchanged. A04 is the same length boundary and does not add a distinct attack mechanism.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A04 now sends the four-digit power of ten 1000, a positive length class absent from the hand-derived inputs and sensitive to log-based length errors.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O05",
       "caseId": "A07",
       "kind": "duplicate",
       "text": "The hand-derived int-maximum case already exercises a positive value above eight characters and requires '0000000*'. Moving one below the maximum uses the same conversion and padding path.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A07 now sends the six-digit power of ten 100000, a non-overflow length class absent from the hand-derived cases.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O06",
       "caseId": "A08",
       "kind": "duplicate",
       "text": "The hand-derived int-minimum case already exercises a negative value above eight characters and requires '0000000*'. Moving one above the minimum uses the same conversion and padding path.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A08 now sends the six-character negative value -10000, a padded non-overflow length class absent from the hand-derived cases.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     }
   ],
   "mutantAdequacy": {
-    "verdict": "adequate",
-    "caught": [
+    "verdict": "inadequate",
+    "caught": [],
+    "missed": [
       "auto: strict comparison made inclusive"
     ],
-    "missed": [],
     "skipped": [],
     "equivalentRecorded": []
   },
   "gate": {
     "passed": false,
     "reasons": [
-      "objection O01 is open",
-      "objection O02 is open",
-      "objection O03 is open",
-      "objection O04 is open",
-      "objection O05 is open",
-      "objection O06 is open"
+      "mutant adequacy is inadequate (unexplained misses: auto: strict comparison made inclusive)"
     ]
   },
   "wording": "8 adversarial cases ran, 0 differed"

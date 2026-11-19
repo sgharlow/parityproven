@@ -103,7 +103,7 @@
       "ran": 5,
       "differed": 0,
       "evidencePath": "evidence/adversarial/WideWorldImporters/Integration.GetStockHoldingUpdates.json",
-      "runAt": "2026-11-19T05:05:32.898Z",
+      "runAt": "2026-11-19T06:24:02.904Z",
       "agentWritten": true,
       "wording": "5 adversarial cases ran, 0 differed",
       "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
@@ -111,6 +111,7 @@
       "sameModel": false,
       "mutantAdequacy": "inadequate",
       "gateReasons": [
+        "objection O01 is open",
         "mutant adequacy is inadequate (unexplained misses: descending order)"
       ],
       "cases": [
@@ -175,5 +176,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-19T05:37:18.802Z"
+  "builtAt": "2026-11-19T06:24:38.464Z"
 }

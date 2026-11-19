@@ -2,11 +2,11 @@
   "object": "HumanResources.vEmployeeDepartment",
   "database": "AdventureWorks2025",
   "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
-  "capturedAt": "2026-11-19T04:16:18.088Z",
+  "capturedAt": "2026-11-19T06:16:37.292Z",
   "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
   "cases": [
     {
-      "label": "[A01] date boundaries: start dates 0001-01-01, 1752-12-31, 1753-01-01, 2000-02-29 and 9999-12-31; end dates 0001-01-01 and 9999-12-31",
+      "label": "[A01] date boundaries: start dates 0001-01-01, 1752-12-31, 1753-01-01, 2000-02-29 and 9999-12-31; end dates 0001-01-01, 1900-01-01 and 9999-12-31",
       "columns": [
         {
           "name": "BusinessEntityID",
@@ -101,7 +101,7 @@
       ]
     },
     {
-      "label": "[A02] an end date before the start date, and an end date equal to it: the view does not compare the two",
+      "label": "[A02] an end date equal to the start date, and one a day after it: the view does not compare the two",
       "columns": [
         {
           "name": "BusinessEntityID",
@@ -231,7 +231,7 @@
       ]
     },
     {
-      "label": "[A04] text returned as stored: department names differing only in case, trailing spaces, non-ASCII and an emoji",
+      "label": "[A04] text returned as stored: a department name and group names differing only in case, trailing spaces, non-ASCII and an emoji",
       "columns": [
         {
           "name": "BusinessEntityID",
@@ -284,7 +284,7 @@
           "∅",
           "s:Job 1",
           "s:Sales",
-          "s:Sales and Marketing",
+          "s:SALES",
           "d:2001-01-01"
         ],
         [
@@ -295,7 +295,7 @@
           "s:Last2",
           "∅",
           "s:Job 2",
-          "s:SALES",
+          "s:Marketing ",
           "s:Sales and Marketing ",
           "d:2001-01-01"
         ],
@@ -307,8 +307,8 @@
           "s:Last3",
           "∅",
           "s:Job 3",
-          "s:sales ",
-          "s:Ventes 😀 é",
+          "s:Ventes 😀 é",
+          "s:sales",
           "d:2001-01-01"
         ]
       ]

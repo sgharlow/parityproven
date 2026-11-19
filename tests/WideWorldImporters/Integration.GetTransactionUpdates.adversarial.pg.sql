@@ -211,11 +211,13 @@ DELETE FROM sales.customer_transactions;
 DELETE FROM sales.invoices;
 DELETE FROM purchasing.supplier_transactions;
 INSERT INTO sales.customer_transactions ("CustomerTransactionID", "CustomerID", "TransactionTypeID", "InvoiceID", "PaymentMethodID", "TransactionDate", "AmountExcludingTax", "TaxAmount", "TransactionAmount", "OutstandingBalance", "IsFinalized", "LastEditedWhen") VALUES
-  ('1', '5', '1', NULL, NULL, '2020-06-15', '100.00', '15.00', '115.00', '0.00', '1', '0001-01-01 00:00:00.000000'),
-  ('2', '5', '1', NULL, NULL, '9999-12-31', '100.00', '15.00', '115.00', '0.00', '1', '9999-12-31 23:59:59.999999');
+  ('1', '5', '1', NULL, NULL, '1753-01-01', '100.00', '15.00', '115.00', '0.00', '1', '0001-01-01 00:00:00.000000'),
+  ('2', '5', '1', NULL, NULL, '9999-12-31', '100.00', '15.00', '115.00', '0.00', '1', '9999-12-31 23:59:59.999999'),
+  ('3', '5', '1', NULL, NULL, '1753-01-01', '100.00', '15.00', '115.00', '0.00', '1', '0001-01-01 00:00:00.000001');
 INSERT INTO purchasing.supplier_transactions ("SupplierTransactionID", "SupplierID", "TransactionTypeID", "PurchaseOrderID", "PaymentMethodID", "SupplierInvoiceNumber", "TransactionDate", "AmountExcludingTax", "TaxAmount", "TransactionAmount", "OutstandingBalance", "IsFinalized", "LastEditedWhen") VALUES
   ('1', '4', '5', NULL, '2', 'INV-1', '1753-01-01', '-50.00', '-7.50', '-57.50', '0.00', '0', '0001-01-01 00:00:00.000001'),
-  ('2', '4', '5', NULL, '2', 'INV-2', '2020-06-15', '-50.00', '-7.50', '-57.50', '0.00', '0', '0001-01-01 00:00:00.000000');
+  ('2', '4', '5', NULL, '2', 'INV-2', '2020-06-15', '-50.00', '-7.50', '-57.50', '0.00', '0', '0001-01-01 00:00:00.000000'),
+  ('3', '4', '5', NULL, '2', 'INV-3', '9999-12-31', '-50.00', '-7.50', '-57.50', '0.00', '0', '9999-12-31 23:59:59.999999');
 CREATE TEMP TABLE pp_actual ON COMMIT DROP AS
 SELECT * FROM integration.get_transaction_updates('0001-01-01 00:00:00.000000'::timestamp, '9999-12-31 23:59:59.999999'::timestamp);
 DO $pp$
@@ -229,7 +231,9 @@ END $pp$;
 CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
 INSERT INTO pp_expected VALUES
   ('9999-12-31', '2', NULL, NULL, NULL, NULL, '100', '15', '115', '0', '1', '5', '5', NULL, '1', NULL, '9999-12-31 23:59:59.999999'),
-  ('1753-01-01', NULL, '1', NULL, NULL, 'INV-1', '-50', '-7.5', '-57.5', '0', '0', NULL, NULL, '4', '5', '2', '0001-01-01 00:00:00.000001');
+  ('1753-01-01', '3', NULL, NULL, NULL, NULL, '100', '15', '115', '0', '1', '5', '5', NULL, '1', NULL, '0001-01-01 00:00:00.000001'),
+  ('1753-01-01', NULL, '1', NULL, NULL, 'INV-1', '-50', '-7.5', '-57.5', '0', '0', NULL, NULL, '4', '5', '2', '0001-01-01 00:00:00.000001'),
+  ('9999-12-31', NULL, '3', NULL, NULL, 'INV-3', '-50', '-7.5', '-57.5', '0', '0', NULL, NULL, '4', '5', '2', '9999-12-31 23:59:59.999999');
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN

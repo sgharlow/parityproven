@@ -2,11 +2,11 @@
   "object": "Sales.vSalesPerson",
   "database": "AdventureWorks2025",
   "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
-  "capturedAt": "2026-11-19T04:17:28.815Z",
+  "capturedAt": "2026-11-19T06:18:10.658Z",
   "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
   "cases": [
     {
-      "label": "[A01] case-only variants 'Us', 'uS' and 'us ' of a country code join 'US'",
+      "label": "[A01] case pairs outside ASCII ('üs' to 'ÜS', 'σa' to 'ΣA') and case plus a trailing space on the country side ('CA' to 'ca ')",
       "columns": [
         {
           "name": "BusinessEntityID",
@@ -115,7 +115,7 @@
           "s:Bothell",
           "s:Province 1",
           "s:98011",
-          "s:United States",
+          "s:Country Ü",
           "∅",
           "∅",
           "∅",
@@ -139,7 +139,7 @@
           "s:Bothell",
           "s:Province 2",
           "s:98011",
-          "s:United States",
+          "s:Country Σ",
           "∅",
           "∅",
           "∅",
@@ -163,7 +163,7 @@
           "s:Bothell",
           "s:Province 3",
           "s:98011",
-          "s:United States",
+          "s:Country ca",
           "∅",
           "∅",
           "∅",
@@ -888,6 +888,173 @@
       ]
     },
     {
+      "label": "[A07] large money values passed through (up to 900719925474.0990), values ending in 5 at the fourth place, zero sales and a NULL quota",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Title",
+          "sqlServerType": "nvarchar(8)"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "MiddleName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Suffix",
+          "sqlServerType": "nvarchar(10)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PhoneNumber",
+          "sqlServerType": "nvarchar(25)"
+        },
+        {
+          "name": "PhoneNumberType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailAddress",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailPromotion",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "AddressLine1",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "AddressLine2",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "City",
+          "sqlServerType": "nvarchar(30)"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PostalCode",
+          "sqlServerType": "nvarchar(15)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TerritoryName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TerritoryGroup",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "SalesQuota",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "SalesYTD",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "SalesLastYear",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "∅",
+          "s:First1",
+          "∅",
+          "s:Last1",
+          "∅",
+          "s:Sales Representative",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "s:1 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 1",
+          "s:98011",
+          "s:United States",
+          "∅",
+          "∅",
+          "∅",
+          "n:900719925474.0985",
+          "n:900719925474.099"
+        ],
+        [
+          "n:2",
+          "∅",
+          "s:First2",
+          "∅",
+          "s:Last2",
+          "∅",
+          "s:Sales Representative",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "s:2 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 2",
+          "s:98011",
+          "s:United States",
+          "∅",
+          "∅",
+          "n:0.0005",
+          "n:0.0005",
+          "n:0.0015"
+        ],
+        [
+          "n:3",
+          "∅",
+          "s:First3",
+          "∅",
+          "s:Last3",
+          "∅",
+          "s:Sales Representative",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "s:3 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 3",
+          "s:98011",
+          "s:United States",
+          "∅",
+          "∅",
+          "n:123456789012.3455",
+          "n:0",
+          "n:899999999999.9995"
+        ]
+      ]
+    },
+    {
       "label": "[A08] territory: TerritoryID NULL, a missing territory (LEFT JOIN NULL), a territory named '' and a group with a trailing space",
       "columns": [
         {
@@ -1055,7 +1222,7 @@
       ]
     },
     {
-      "label": "[A09] text returned as stored and fan-out: case-only name variants, an emoji, two identical phone rows and an unknown phone type",
+      "label": "[A09] text returned as stored and fan-out: case-only name variants, an emoji, the same number under two phone types of one name and an unknown phone type",
       "columns": [
         {
           "name": "BusinessEntityID",

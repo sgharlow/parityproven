@@ -2,11 +2,11 @@
   "object": "Sales.vIndividualCustomer",
   "database": "AdventureWorks2025",
   "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
-  "capturedAt": "2026-11-19T04:17:13.830Z",
+  "capturedAt": "2026-11-19T06:17:53.120Z",
   "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
   "cases": [
     {
-      "label": "[A01] case-only variants 'Us', 'uS' and 'us ' of a country code join 'US'",
+      "label": "[A01] case pairs outside ASCII ('üs' to 'ÜS', 'σa' to 'ΣA') and case plus a trailing space on the country side ('CA' to 'ca ')",
       "columns": [
         {
           "name": "BusinessEntityID",
@@ -99,7 +99,7 @@
           "s:Bothell",
           "s:Province 1",
           "s:98011",
-          "s:United States",
+          "s:Country Ü",
           "∅"
         ],
         [
@@ -119,7 +119,7 @@
           "s:Bothell",
           "s:Province 2",
           "s:98011",
-          "s:United States",
+          "s:Country Σ",
           "∅"
         ],
         [
@@ -139,7 +139,7 @@
           "s:Bothell",
           "s:Province 3",
           "s:98011",
-          "s:United States",
+          "s:Country ca",
           "∅"
         ]
       ]
@@ -839,7 +839,7 @@
       ]
     },
     {
-      "label": "[A08] a person with two individual customer rows and two identical phones: rows multiply (2 x 2), duplicates kept",
+      "label": "[A08] a person with two individual customer rows and the same number under two phone types of one name: rows multiply (2 x 2), identical rows kept",
       "columns": [
         {
           "name": "BusinessEntityID",

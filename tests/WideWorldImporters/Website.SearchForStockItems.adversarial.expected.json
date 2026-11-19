@@ -2,11 +2,11 @@
   "object": "Website.SearchForStockItems",
   "database": "WideWorldImporters",
   "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
-  "capturedAt": "2026-11-19T05:36:29.955Z",
+  "capturedAt": "2026-11-19T06:23:33.979Z",
   "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
   "cases": [
     {
-      "label": "[A01] SearchDetails: values differing only in case both match a case-insensitive search and keep their own case in the result",
+      "label": "[A01] SearchDetails: Cyrillic values differing only in case match a case-insensitive search ('дом' finds 'ДОМ' and 'Дом', not 'дым' or 'ÉCLAIR')",
       "columns": [
         {
           "name": "result",
@@ -15,7 +15,7 @@
       ],
       "rows": [
         [
-          "s:{\"StockItems\":[{\"StockItemID\":1,\"StockItemName\":\"Item A\"},{\"StockItemID\":3,\"StockItemName\":\"Item B\"}]}"
+          "s:{\"StockItems\":[{\"StockItemID\":1,\"StockItemName\":\"Item 01\"},{\"StockItemID\":2,\"StockItemName\":\"Item 02\"},{\"StockItemID\":3,\"StockItemName\":\"Item 03\"}]}"
         ]
       ]
     },
@@ -34,7 +34,7 @@
       ]
     },
     {
-      "label": "[A03] SearchDetails: a trailing space in the data is matched by LIKE '%x%'",
+      "label": "[A03] SearchDetails: a search text ending in a space ('amy ') matches only values with a space after 'amy'",
       "columns": [
         {
           "name": "result",
@@ -43,12 +43,12 @@
       ],
       "rows": [
         [
-          "s:{\"StockItems\":[{\"StockItemID\":1,\"StockItemName\":\"Only\"}]}"
+          "s:{\"StockItems\":[{\"StockItemID\":2,\"StockItemName\":\"Item 02\"},{\"StockItemID\":4,\"StockItemName\":\"Item 04\"}]}"
         ]
       ]
     },
     {
-      "label": "[A04] SearchDetails: character class [a-c] matches one of a, b, c (T-SQL LIKE, not PostgreSQL LIKE)",
+      "label": "[A04] SearchDetails: a reversed range '[c-a]' (T-SQL accepts it; a regular expression rejects it as an invalid range)",
       "columns": [
         {
           "name": "result",
@@ -57,12 +57,12 @@
       ],
       "rows": [
         [
-          "s:{\"StockItems\":[{\"StockItemID\":1,\"StockItemName\":\"I1\"},{\"StockItemID\":3,\"StockItemName\":\"I3\"}]}"
+          "s:"
         ]
       ]
     },
     {
-      "label": "[A05] SearchDetails: a backslash is an ordinary character in T-SQL LIKE (no escape)",
+      "label": "[A05] SearchDetails: a search text ending in a backslash ('a\\') is an ordinary character in T-SQL LIKE",
       "columns": [
         {
           "name": "result",
@@ -71,7 +71,7 @@
       ],
       "rows": [
         [
-          "s:{\"StockItems\":[{\"StockItemID\":1,\"StockItemName\":\"I1\"}]}"
+          "s:{\"StockItems\":[{\"StockItemID\":1,\"StockItemName\":\"Item 01\"},{\"StockItemID\":2,\"StockItemName\":\"Item 02\"}]}"
         ]
       ]
     },
@@ -100,6 +100,20 @@
       "rows": [
         [
           "s:"
+        ]
+      ]
+    },
+    {
+      "label": "[A08] SearchDetails: '_' matches a digit, an accented letter and a space ('x_9')",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"StockItems\":[{\"StockItemID\":1,\"StockItemName\":\"Item 01\"},{\"StockItemID\":2,\"StockItemName\":\"Item 02\"},{\"StockItemID\":3,\"StockItemName\":\"Item 03\"},{\"StockItemID\":4,\"StockItemName\":\"Item 04\"}]}"
         ]
       ]
     }

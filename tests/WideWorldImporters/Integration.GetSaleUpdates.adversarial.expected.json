@@ -2,7 +2,7 @@
   "object": "Integration.GetSaleUpdates",
   "database": "WideWorldImporters",
   "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
-  "capturedAt": "2026-11-19T05:05:19.674Z",
+  "capturedAt": "2026-11-19T06:20:34.122Z",
   "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
   "cases": [
     {
@@ -246,7 +246,7 @@
       ]
     },
     {
-      "label": "[A03] decimal arithmetic: Total Excluding Tax = ExtendedPrice - TaxAmount for 0.05 - 0.15, 10.05 - 1.55, 999999999999.99 - (-999999999999.99); a 3-place tax rate ending in 5; negative profit; NULL unit price",
+      "label": "[A03] decimal arithmetic: Total Excluding Tax = ExtendedPrice - TaxAmount for 0.05 - 0.15, 10.05 - 1.55, and 5000000000000.05 - (-4999999999999.95), which carries into a 14th integer digit; a 3-place tax rate ending in 5; negative profit; NULL unit price",
       "columns": [
         {
           "name": "Invoice Date Key",
@@ -383,10 +383,10 @@
           "n:4",
           "∅",
           "n:15",
-          "n:1999999999999.98",
-          "n:-999999999999.99",
+          "n:10000000000000",
+          "n:-4999999999999.95",
           "n:3",
-          "n:999999999999.99",
+          "n:5000000000000.05",
           "n:4",
           "n:0",
           "n:10",

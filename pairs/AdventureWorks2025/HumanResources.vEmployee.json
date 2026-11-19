@@ -126,12 +126,12 @@
     ],
     "harnessVersion": "harness-generic-0.3.0",
     "adversarial": {
-      "gate": "fail",
+      "gate": "pass",
       "ran": 11,
       "differed": 0,
       "evidencePath": "evidence/adversarial/AdventureWorks2025/HumanResources.vEmployee.json",
       "conversionSha256": "7cf6461ee469eabc8617b0018b7cc753b088c1ae071db956441f62ab87a0616a",
-      "runAt": "2026-11-19T04:16:13.864Z"
+      "runAt": "2026-11-19T06:16:30.452Z"
     }
   },
   "effort": {

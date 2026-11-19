@@ -149,12 +149,12 @@
       "planted defects caught by the agreed tests: 7 of 7"
     ],
     "adversarial": {
-      "gate": "fail",
-      "ran": 7,
+      "gate": "pass",
+      "ran": 8,
       "differed": 0,
       "evidencePath": "evidence/adversarial/WideWorldImporters/Website.InvoiceCustomerOrders.json",
       "conversionSha256": "ad1de5eaca3cc95e4d1ce4a67b0963f473cc4faa183279d53cf876ec1bd54267",
-      "runAt": "2026-11-19T05:29:37.745Z"
+      "runAt": "2026-11-19T06:22:48.764Z"
     }
   },
   "effort": {

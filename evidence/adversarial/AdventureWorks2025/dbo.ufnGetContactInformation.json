@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "object": "dbo.ufnGetContactInformation",
   "database": "AdventureWorks2025",
-  "runAt": "2026-11-19T03:11:02.691Z",
+  "runAt": "2026-11-19T06:19:09.994Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "6ce4235c9a7b3aee479ec5695986f6d12f4ae9d19a3e5684e39ed7e8f3762cbb",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-18T19:13:01-07:00",
+    "at": "2026-11-19T05:46:45.561Z",
     "file": "adversarial/AdventureWorks2025/dbo.ufnGetContactInformation.cases.json",
-    "sha256": "ef5ff8f02cfe679bf0b879a413e5edf7d4fd89dd608d6e28989dc5b32d6183a3"
+    "sha256": "6137f3f18c0426b4f36b98f0a6acaf75846aac26b1723f24bba9f45a7bee7951"
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-18T19:19:51.7066204-07:00",
+    "at": "2026-11-19T06:06:57.652Z",
     "file": "adversarial/AdventureWorks2025/dbo.ufnGetContactInformation.audit.json",
-    "sha256": "b5ad81f68958559579b23e3bd0413021f9da52e16708efb7a7e27a5458f49022"
+    "sha256": "616c48dba25337602f7a90c1ebdf0f8d4a55bcfb71bd7ce9272fc1e416af6792"
   },
   "sameModel": false,
   "casesAudited": [
@@ -30,7 +30,8 @@
     "A09",
     "A10",
     "A11",
-    "A12"
+    "A12",
+    "A13"
   ],
   "traps": {
     "null-vs-empty": {
@@ -177,7 +178,7 @@
       "id": "A06",
       "label": "an entity that is both a vendor and a store: one contact row gives a Vendor Contact and a Store Contact row",
       "traps": [],
-      "reasoning": "The vendor and store branches are independent IF EXISTS blocks; both fire for business entity 100. A conversion using ELSIF, or returning after the first branch, would give one row.",
+      "reasoning": "The vendor and store branches are independent IF EXISTS blocks, and here ONE BusinessEntityContact row feeds both, because entity 100 is in Purchasing.Vendor and in Sales.Store (both key on BusinessEntityID, so this is valid source data). The hand-derived person-1 case uses two different entities (vendor 100, store 200) through two contact rows, so a set-based rewrite that classifies each contact row once (LEFT JOIN vendor, LEFT JOIN store, CASE WHEN vendor THEN 'Vendor Contact' WHEN store THEN 'Store Contact') passes that case but returns one row here; so would ELSIF. SQL Server returns two rows.",
       "trapChecks": {},
       "status": "ran",
       "sqlServer": {
@@ -190,9 +191,9 @@
     },
     {
       "id": "A07",
-      "label": "the same vendor-contact row twice (no key on BusinessEntityContact): two identical Vendor Contact rows",
+      "label": "one person is a contact of two vendors with the same contact type: two identical Vendor Contact rows",
       "traps": [],
-      "reasoning": "INSERT ... SELECT into the table variable keeps duplicates. A conversion with SELECT DISTINCT or UNION would return one row; the multiset comparison counts both.",
+      "reasoning": "The returned columns do not include the vendor, so contact rows (100, 3, 1) and (101, 3, 1), distinct under the source key (BusinessEntityID, PersonID, ContactTypeID), give two identical output rows. INSERT ... SELECT into the table variable keeps both; a conversion with SELECT DISTINCT or UNION would return one. The hand-derived two-vendor case uses two different contact types, so its rows differ and DISTINCT would not change it.",
       "trapChecks": {},
       "status": "ran",
       "sqlServer": {
@@ -277,10 +278,25 @@
         "passed": true
       },
       "differed": false
+    },
+    {
+      "id": "A13",
+      "label": "a person with one consumer account and two store customer accounts: exactly one Consumer row",
+      "traps": [],
+      "reasoning": "The Consumer branch filters c.StoreID IS NULL both in its EXISTS test and in the INSERT ... SELECT. A conversion that kept the filter only in the existence test would add a Consumer row for each store customer account (three rows here). Sales.Customer keys on CustomerID, so one person may hold several customer rows.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
     }
   ],
   "summary": {
-    "ran": 12,
+    "ran": 13,
     "differed": 0,
     "invalid": 0
   },
@@ -290,35 +306,40 @@
       "caseId": "A06",
       "kind": "duplicate",
       "text": "The hand-derived person-1 case already makes the vendor and store predicates true in the same call and requires rows from both independent branches. It already catches the ELSIF or early-return defect named for A06; using one entity in both tables does not create a distinct attack on that mechanism.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A06 now uses one BusinessEntityContact row whose entity is simultaneously a vendor and a store. This distinguishes a row-classifying set rewrite from the hand-derived input, which reaches the branches through separate entities and contact rows.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O02",
       "caseId": "A07",
       "kind": "not-an-attack",
       "text": "A07 duplicates the same (BusinessEntityID, PersonID, ContactTypeID) row, but those three columns form the source table's composite primary key. The claim that BusinessEntityContact has no key is false, and this input cannot occur under the source schema preconditions.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A07 now uses two vendors, producing distinct BusinessEntityContact primary-key tuples that project identical rows because the vendor id is not returned.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     }
   ],
   "mutantAdequacy": {
-    "verdict": "inadequate",
+    "verdict": "adequate",
     "caught": [
+      "consumer rows include store customers",
       "vendor contacts labelled as store contacts",
       "employee rows without the person join (JobTitle from the wrong row)"
     ],
-    "missed": [
-      "consumer rows include store customers"
-    ],
+    "missed": [],
     "skipped": [],
     "equivalentRecorded": []
   },
   "gate": {
-    "passed": false,
-    "reasons": [
-      "objection O01 is open",
-      "objection O02 is open",
-      "mutant adequacy is inadequate (unexplained misses: consumer rows include store customers)"
-    ]
+    "passed": true,
+    "reasons": []
   },
-  "wording": "12 adversarial cases ran, 0 differed"
+  "wording": "13 adversarial cases ran, 0 differed"
 }

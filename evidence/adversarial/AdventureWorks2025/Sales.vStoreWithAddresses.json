@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "object": "Sales.vStoreWithAddresses",
   "database": "AdventureWorks2025",
-  "runAt": "2026-11-19T05:04:39.479Z",
+  "runAt": "2026-11-19T06:18:34.149Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "f706a516e1b8665acb413a875cb1e40c26156c6170299f2cc5690261fbff3934",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-19T04:36:25.160Z",
+    "at": "2026-11-19T05:51:37.445Z",
     "file": "adversarial/AdventureWorks2025/Sales.vStoreWithAddresses.cases.json",
-    "sha256": "1aa32145900ebe4e18e17ea7bb44749596150de5ecadf326900b8bc243bbd0a0"
+    "sha256": "43149f5b3ea8e1a7f5f51a18b5fc8e526c7c458423cb5bba289610e20b48d36a"
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-18T21:39:58.1908526-07:00",
+    "at": "2026-11-19T06:06:57.652Z",
     "file": "adversarial/AdventureWorks2025/Sales.vStoreWithAddresses.audit.json",
-    "sha256": "84558d0773e752d1860ae8d39d8b5c3a9994b9005aab866f8c76eb527417dbb3"
+    "sha256": "6abc50258aad786de143279326209a1ee9ac8a4708acd68749c7f1975c3fefad"
   },
   "sameModel": false,
   "casesAudited": [
@@ -215,7 +215,7 @@
     },
     {
       "id": "A07",
-      "label": "NULL versus '' in AddressLine2, an empty vendor name, address type name and city, and a single-space AddressLine2",
+      "label": "NULL versus '' in AddressLine2, an empty store name, address type name and city, and a single-space AddressLine2",
       "traps": [
         "null-vs-empty",
         "trailing-spaces"
@@ -242,7 +242,7 @@
     },
     {
       "id": "A08",
-      "label": "keys with gaps and at the int limits: vendor 2147483647, address -2147483648, address type 0; text with an emoji and full length",
+      "label": "keys with gaps and at the int limits: store 2147483647, address -2147483648, address type 0; text with an emoji and full length",
       "traps": [
         "identity-gaps"
       ],
@@ -296,14 +296,24 @@
       "caseId": "A07",
       "kind": "label-mismatch",
       "text": "A07 labels the empty entity name as an empty vendor name, but the value is sent to Sales.Store.Name. This object and case contain no vendor table.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A07 now consistently labels the value as a store name in both the label and reasoning.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O02",
       "caseId": "A08",
       "kind": "label-mismatch",
       "text": "A08 labels BusinessEntityID 2147483647 as a vendor, but the value is sent to Sales.Store.BusinessEntityID. This object and case contain no vendor table.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A08 now consistently labels BusinessEntityID 2147483647 as a store key.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     }
   ],
   "mutantAdequacy": {
@@ -318,11 +328,8 @@
     "equivalentRecorded": []
   },
   "gate": {
-    "passed": false,
-    "reasons": [
-      "objection O01 is open",
-      "objection O02 is open"
-    ]
+    "passed": true,
+    "reasons": []
   },
   "wording": "9 adversarial cases ran, 0 differed"
 }

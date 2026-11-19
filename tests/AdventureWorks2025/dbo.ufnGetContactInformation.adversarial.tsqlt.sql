@@ -266,8 +266,8 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
--- case 7: [A07] the same vendor-contact row twice (no key on BusinessEntityContact): two identical Vendor Contact rows
-CREATE PROCEDURE [AgreedTests].[test 07 [A07 the same vendor-contact row twice (no key on BusinessEntityContact): two identical Vendor Contac…]
+-- case 7: [A07] one person is a contact of two vendors with the same contact type: two identical Vendor Contact rows
+CREATE PROCEDURE [AgreedTests].[test 07 [A07 one person is a contact of two vendors with the same contact type: two identical Vendor Contact…]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[HumanResources].[Employee]';
@@ -279,13 +279,14 @@ BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Sales].[Store]';
   INSERT INTO [Person].[BusinessEntityContact] ([BusinessEntityID], [PersonID], [ContactTypeID]) VALUES
     (100, 3, 1),
-    (100, 3, 1);
+    (101, 3, 1);
   INSERT INTO [Person].[ContactType] ([ContactTypeID], [Name]) VALUES
     (1, N'Owner');
   INSERT INTO [Person].[Person] ([BusinessEntityID], [FirstName], [LastName]) VALUES
     (3, N'Cy', N'Oh');
   INSERT INTO [Purchasing].[Vendor] ([BusinessEntityID]) VALUES
-    (100);
+    (100),
+    (101);
   CREATE TABLE #Expected (
     [PersonID] int NULL,
     [FirstName] nvarchar(50) NULL,
@@ -493,6 +494,47 @@ BEGIN
     (9, N'Ida', N'Vo', N'Purchasing Manager', N'Store Contact');
   INSERT INTO #Actual
   SELECT * FROM dbo.ufnGetContactInformation(9);
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
+END;
+GO
+-- case 13: [A13] a person with one consumer account and two store customer accounts: exactly one Consumer row
+CREATE PROCEDURE [AgreedTests].[test 13 [A13 a person with one consumer account and two store customer accounts: exactly one Consumer row]
+AS
+BEGIN
+  EXEC tSQLt.FakeTable @TableName = N'[HumanResources].[Employee]';
+  EXEC tSQLt.FakeTable @TableName = N'[Person].[BusinessEntityContact]';
+  EXEC tSQLt.FakeTable @TableName = N'[Person].[ContactType]';
+  EXEC tSQLt.FakeTable @TableName = N'[Person].[Person]';
+  EXEC tSQLt.FakeTable @TableName = N'[Purchasing].[Vendor]';
+  EXEC tSQLt.FakeTable @TableName = N'[Sales].[Customer]';
+  EXEC tSQLt.FakeTable @TableName = N'[Sales].[Store]';
+  INSERT INTO [Person].[Person] ([BusinessEntityID], [FirstName], [LastName]) VALUES
+    (10, N'Jo', N'Wu');
+  INSERT INTO [Sales].[Customer] ([PersonID], [StoreID]) VALUES
+    (10, 200),
+    (10, NULL),
+    (10, 201);
+  INSERT INTO [Sales].[Store] ([BusinessEntityID]) VALUES
+    (200),
+    (201);
+  CREATE TABLE #Expected (
+    [PersonID] int NULL,
+    [FirstName] nvarchar(50) NULL,
+    [LastName] nvarchar(50) NULL,
+    [JobTitle] nvarchar(50) NULL,
+    [BusinessEntityType] nvarchar(50) NULL
+  );
+  CREATE TABLE #Actual (
+    [PersonID] int NULL,
+    [FirstName] nvarchar(50) NULL,
+    [LastName] nvarchar(50) NULL,
+    [JobTitle] nvarchar(50) NULL,
+    [BusinessEntityType] nvarchar(50) NULL
+  );
+  INSERT INTO #Expected ([PersonID], [FirstName], [LastName], [JobTitle], [BusinessEntityType]) VALUES
+    (10, N'Jo', N'Wu', NULL, N'Consumer');
+  INSERT INTO #Actual
+  SELECT * FROM dbo.ufnGetContactInformation(10);
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO

@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "object": "Sequences.ReseedSequenceBeyondTableValues",
   "database": "WideWorldImporters",
-  "runAt": "2026-11-19T05:05:55.244Z",
+  "runAt": "2026-11-19T06:21:09.540Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "421daebce24772249a9341c2573b8a8c723045ebaad08421d7045d9f16cce773",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-19T04:36:25.160Z",
+    "at": "2026-11-19T06:00:45.121Z",
     "file": "adversarial/WideWorldImporters/Sequences.ReseedSequenceBeyondTableValues.cases.json",
-    "sha256": "9c00e039de587442884babb973a992347eacf7222170467d8e8bdffadd38212a"
+    "sha256": "3aacd865ad569f39188c9d510128bd919182ee66ea5e14736d426d8b3ce3989f"
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-18T21:39:58.1908526-07:00",
+    "at": "2026-11-19T06:06:57.652Z",
     "file": "adversarial/WideWorldImporters/Sequences.ReseedSequenceBeyondTableValues.audit.json",
-    "sha256": "9ee4c1b32d4b8d06570cfb15d846a89435d6ffdf1726594989b881cd54172319"
+    "sha256": "1694d9f3f7e8266386345046e962281ca2a8ce60e1fc8931574322ca407ab80c"
   },
   "sameModel": false,
   "casesAudited": [
@@ -219,9 +219,9 @@
     },
     {
       "id": "A08",
-      "label": "table maximum equal to the start value of an unused sequence at 7, while the other sequence was used 3 times: restart at 8",
+      "label": "table maximum equal to the current value of a used sequence (start 5, used 3 times, current 7): restart at 8; an unused sequence starting at 7 is left alone",
       "traps": [],
-      "reasoning": "Before first use current_value is the start value 7. The comparison is >=, so a maximum of exactly 7 restarts OrderID at 8 (> would leave it to issue 7, and restarting at the maximum would issue 7). StockItemID (start 5, used 3, current 7) is not named and must keep issuing 8.",
+      "reasoning": "The hand-derived boundary case uses an unused sequence, whose current value is its start value (pg_sequences.last_value is NULL before first use). Here OrderID has issued 5, 6 and 7, so its current value 7 comes from last_value, and the table maximum is exactly 7: the comparison is >=, so it restarts at 8 (> would leave it to issue 8 anyway, but a conversion that read the start value instead of the current value would compare 7 with 5). StockItemID (start 7, unused) is not named and must keep issuing 7.",
       "trapChecks": {},
       "status": "ran",
       "sqlServer": {
@@ -274,25 +274,31 @@
       "caseId": "A08",
       "kind": "duplicate",
       "text": "The hand-derived fixed case 'table maximum equals the unused sequence's start value' already calls OrderID with an unused sequence whose start equals the table maximum and requires a restart at maximum + 1. A08 repeats that same input relationship and branch with start and maximum 7; using the unrelated StockItemID sequence first does not change the OrderID attack.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A08 now uses an OrderID sequence that has issued three values, so current value 7 comes from last_value rather than from an unused sequence's start. This distinguishes current-value handling from the hand-derived unused-sequence boundary.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     }
   ],
   "mutantAdequacy": {
-    "verdict": "adequate",
+    "verdict": "inadequate",
     "caught": [
       "reads pg_sequences.last_value (NULL after a restart or before first use)",
-      "strictly greater instead of >=",
       "restarts at the maximum instead of maximum + 1",
       "empty table maximum NULL instead of 0"
     ],
-    "missed": [],
+    "missed": [
+      "strictly greater instead of >="
+    ],
     "skipped": [],
     "equivalentRecorded": []
   },
   "gate": {
     "passed": false,
     "reasons": [
-      "objection O01 is open"
+      "mutant adequacy is inadequate (unexplained misses: strictly greater instead of >=)"
     ]
   },
   "wording": "10 adversarial cases ran, 0 differed"

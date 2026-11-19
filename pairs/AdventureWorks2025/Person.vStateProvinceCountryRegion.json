@@ -96,12 +96,12 @@
     ],
     "harnessVersion": "harness-generic-0.3.0",
     "adversarial": {
-      "gate": "fail",
+      "gate": "pass",
       "ran": 8,
       "differed": 0,
       "evidencePath": "evidence/adversarial/AdventureWorks2025/Person.vStateProvinceCountryRegion.json",
       "conversionSha256": "0ff4afa5c1ec5d0c2eb55fde4153422859391380960eec59ad3b3fd636b99f11",
-      "runAt": "2026-11-19T04:16:41.513Z"
+      "runAt": "2026-11-19T06:17:07.914Z"
     }
   },
   "effort": {

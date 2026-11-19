@@ -2,7 +2,7 @@
   "object": "dbo.ufnGetDocumentStatusText",
   "database": "AdventureWorks2025",
   "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
-  "capturedAt": "2026-11-19T02:25:41.681Z",
+  "capturedAt": "2026-11-19T06:19:15.632Z",
   "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
   "cases": [
     {
@@ -86,6 +86,34 @@
       "rows": [
         [
           "s:Pending approval"
+        ]
+      ]
+    },
+    {
+      "label": "[A07] status 2 gives 'Approved' (a mapped branch the other adversarial cases do not reach)",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(16)"
+        }
+      ],
+      "rows": [
+        [
+          "s:Approved"
+        ]
+      ]
+    },
+    {
+      "label": "[A08] status 3 gives 'Obsolete' (the last WHEN branch before ELSE)",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(16)"
+        }
+      ],
+      "rows": [
+        [
+          "s:Obsolete"
         ]
       ]
     }

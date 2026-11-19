@@ -353,3 +353,31 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedState1', @Actual = N'#ActualState1', @Message = N'Application.People after the call';
 END;
 GO
+-- case 13: [A13] a disabled person who still holds an old logon name and hash is activated: both are replaced
+--[@tSQLt:NoTransaction](DEFAULT)
+CREATE PROCEDURE [AgreedTests].[test 13 [A13 a disabled person who still holds an old logon name and hash is activated: both are replaced]
+AS
+BEGIN
+  EXEC tSQLt.FakeTable @TableName = N'[Application].[People]';
+  INSERT INTO [Application].[People] ([PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences]) VALUES
+    (1, N'Person 1', 1, NULL, NULL, N'{"theme":"green"}'),
+    (2, N'Person 2', 0, N'old', 0x00ff10, N'mine');
+  SELECT TOP (0) [PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences] INTO #ExpectedState1 FROM [Application].[People];
+  INSERT INTO #ExpectedState1 ([PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences]) VALUES
+    (1, N'Person 1', 1, NULL, NULL, N'{"theme":"green"}'),
+    (2, N'Person 2', 1, N'new@example.com', 0xd1beeae20716eea18a0cce3a0e032e63028a3a68b1bec3ccb5855b2faa412c69, N'{"theme":"green"}');
+  DECLARE @outcome nvarchar(4000) = N'completed';
+  BEGIN TRY
+    EXEC Website.ActivateWebsiteLogon @PersonID = 2, @LogonName = N'new@example.com', @InitialPassword = N'pw';
+  END TRY
+  BEGIN CATCH
+    SET @outcome = CASE WHEN ERROR_NUMBER() IN (51000) THEN N'raised' ELSE N'unexpected error ' + CAST(ERROR_NUMBER() AS nvarchar(20)) + N': ' + ERROR_MESSAGE() END;
+    -- a procedure that fails inside its own transaction can leave it open (and uncommittable); the test is outside
+    -- tSQLt's transaction (NoTransaction), so this undoes only the procedure's work, as SQL Server does at batch end
+    IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+  END CATCH;
+  SELECT [PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences] INTO #ActualState1 FROM [Application].[People];
+  EXEC tSQLt.AssertEqualsString @Expected = N'completed', @Actual = @outcome, @Message = N'outcome';
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedState1', @Actual = N'#ActualState1', @Message = N'Application.People after the call';
+END;
+GO

@@ -22,12 +22,13 @@ BEGIN
     (1, N'Bike', 1);
   INSERT INTO [Production].[ProductDescription] ([ProductDescriptionID], [Description]) VALUES
     (1, N'one'),
-    (2, N'two');
+    (2, N'two'),
+    (3, N'three');
   INSERT INTO [Production].[ProductModel] ([ProductModelID], [Name]) VALUES
     (1, N'Road');
   INSERT INTO [Production].[ProductModelProductDescriptionCulture] ([ProductModelID], [ProductDescriptionID], [CultureID]) VALUES
     (1, 1, N'en'),
-    (1, 1, N'EN'),
+    (1, 3, N'EN'),
     (1, 2, N'en '),
     (1, 2, N''),
     (1, 2, N'zh-cht');
@@ -47,7 +48,7 @@ BEGIN
   );
   INSERT INTO #Expected ([ProductID], [Name], [ProductModel], [CultureID], [Description]) VALUES
     (1, N'Bike', N'Road', N'en    ', N'one'),
-    (1, N'Bike', N'Road', N'EN    ', N'one'),
+    (1, N'Bike', N'Road', N'EN    ', N'three'),
     (1, N'Bike', N'Road', N'en    ', N'two'),
     (1, N'Bike', N'Road', N'      ', N'two'),
     (1, N'Bike', N'Road', N'zh-cht', N'two');
@@ -110,8 +111,8 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
--- case 3: [A03] an empty description and names that differ only in case: '' kept, not NULL; 'Chain' and 'CHAIN' are two products
-CREATE PROCEDURE [AgreedTests].[test 03 [A03 an empty description and names that differ only in case: kept, not NULL; Chain and CHAIN are two…]
+-- case 3: [A03] an empty description, and product and model names that differ only in case from each other: '' kept, not NULL
+CREATE PROCEDURE [AgreedTests].[test 03 [A03 an empty description, and product and model names that differ only in case from each other: kept…]
 AS
 BEGIN
   DELETE FROM [Production].[Product];
@@ -120,12 +121,12 @@ BEGIN
   DELETE FROM [Production].[ProductModelProductDescriptionCulture];
   INSERT INTO [Production].[Product] ([ProductID], [Name], [ProductModelID]) VALUES
     (1, N'Chain', 1),
-    (2, N'CHAIN', 2);
+    (2, N'road', 2);
   INSERT INTO [Production].[ProductDescription] ([ProductDescriptionID], [Description]) VALUES
     (1, N'');
   INSERT INTO [Production].[ProductModel] ([ProductModelID], [Name]) VALUES
-    (1, N'Road'),
-    (2, N'ROAD');
+    (1, N'CHAIN'),
+    (2, N'Road');
   INSERT INTO [Production].[ProductModelProductDescriptionCulture] ([ProductModelID], [ProductDescriptionID], [CultureID]) VALUES
     (1, 1, N'en'),
     (2, 1, N'en');
@@ -144,15 +145,15 @@ BEGIN
     [Description] nvarchar(400) NULL
   );
   INSERT INTO #Expected ([ProductID], [Name], [ProductModel], [CultureID], [Description]) VALUES
-    (1, N'Chain', N'Road', N'en    ', N''),
-    (2, N'CHAIN', N'ROAD', N'en    ', N'');
+    (1, N'Chain', N'CHAIN', N'en    ', N''),
+    (2, N'road', N'Road', N'en    ', N'');
   INSERT INTO #Actual
   SELECT * FROM Production.vProductAndDescription;
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
--- case 4: [A04] duplicate culture rows and two products on one model: rows multiply (2 products x 3 culture rows), duplicates kept
-CREATE PROCEDURE [AgreedTests].[test 04 [A04 duplicate culture rows and two products on one model: rows multiply (2 products x 3 culture rows…]
+-- case 4: [A04] two descriptions with the same text in one culture and two products on one model: rows multiply (2 products x 3 culture rows), identical rows kept
+CREATE PROCEDURE [AgreedTests].[test 04 [A04 two descriptions with the same text in one culture and two products on one model: rows multiply…]
 AS
 BEGIN
   DELETE FROM [Production].[Product];
@@ -161,15 +162,16 @@ BEGIN
   DELETE FROM [Production].[ProductModelProductDescriptionCulture];
   INSERT INTO [Production].[Product] ([ProductID], [Name], [ProductModelID]) VALUES
     (1, N'Bike', 1),
-    (2, N'Bike', 1);
+    (2, N'Trike', 1);
   INSERT INTO [Production].[ProductDescription] ([ProductDescriptionID], [Description]) VALUES
     (1, N'same'),
-    (2, N'other');
+    (2, N'other'),
+    (3, N'same');
   INSERT INTO [Production].[ProductModel] ([ProductModelID], [Name]) VALUES
     (1, N'Road');
   INSERT INTO [Production].[ProductModelProductDescriptionCulture] ([ProductModelID], [ProductDescriptionID], [CultureID]) VALUES
     (1, 1, N'en'),
-    (1, 1, N'en'),
+    (1, 3, N'en'),
     (1, 2, N'fr');
   CREATE TABLE #Expected (
     [ProductID] int NULL,
@@ -189,9 +191,9 @@ BEGIN
     (1, N'Bike', N'Road', N'en    ', N'same'),
     (1, N'Bike', N'Road', N'en    ', N'same'),
     (1, N'Bike', N'Road', N'fr    ', N'other'),
-    (2, N'Bike', N'Road', N'en    ', N'same'),
-    (2, N'Bike', N'Road', N'en    ', N'same'),
-    (2, N'Bike', N'Road', N'fr    ', N'other');
+    (2, N'Trike', N'Road', N'en    ', N'same'),
+    (2, N'Trike', N'Road', N'en    ', N'same'),
+    (2, N'Trike', N'Road', N'fr    ', N'other');
   INSERT INTO #Actual
   SELECT * FROM Production.vProductAndDescription;
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';

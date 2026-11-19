@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "object": "Website.InsertCustomerOrders",
   "database": "WideWorldImporters",
-  "runAt": "2026-11-19T05:29:09.851Z",
+  "runAt": "2026-11-19T06:22:24.967Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "a4b0b66ee99c6e6d095d21c9f84f27ee166ee40eda23e3a8e7ea908c664ed694",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-19T05:20:49.498Z",
+    "at": "2026-11-19T06:00:45.121Z",
     "file": "adversarial/WideWorldImporters/Website.InsertCustomerOrders.cases.json",
-    "sha256": "3c811b8281c470719b2246ce71091d966381ea200974f79d928d64f597785859"
+    "sha256": "af1f20756fdd7ed7d61622629c6b4a0f803199c2973fa3a63e9d1c692e501b08"
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-18T22:23:38.8804730-07:00",
+    "at": "2026-11-19T06:06:57.652Z",
     "file": "adversarial/WideWorldImporters/Website.InsertCustomerOrders.audit.json",
-    "sha256": "f1e6846979338f321781d2de4d77d3386b8ad9550a49a0ab0e0c1de17cbf2b45"
+    "sha256": "11880e908edf4104f9b1572f9180bb649678bc2b06efebdca78da2e6b8641351"
   },
   "sameModel": false,
   "casesAudited": [
@@ -24,7 +24,9 @@
     "A03",
     "A04",
     "A05",
-    "A06"
+    "A06",
+    "A07",
+    "A08"
   ],
   "traps": {
     "null-vs-empty": {
@@ -48,14 +50,16 @@
     "dates-datetime": {
       "applicable": true,
       "coveredBy": [
-        "A05"
+        "A05",
+        "A07"
       ]
     },
     "numeric-rounding": {
       "applicable": true,
       "coveredBy": [
         "A05",
-        "A06"
+        "A06",
+        "A07"
       ]
     },
     "top-ties": {
@@ -213,34 +217,73 @@
         "passed": true
       },
       "differed": false
+    },
+    {
+      "id": "A07",
+      "label": "lines are priced on today's date, not the expected delivery date: a deal valid today applies, one valid only on the delivery date 9999-12-31 does not",
+      "traps": [
+        "dates-datetime",
+        "numeric-rounding"
+      ],
+      "reasoning": "Sales.OrderLines.UnitPrice comes from Website.CalculateCustomerPrice(CustomerID, StockItemID, SYSDATETIME() as a date). Deal 1 runs from 2000-01-01 to 9999-12-30 and covers today; deal 2 is valid only on 9999-12-31, the order's expected delivery date, with a lower price. SQL Server prices the line at 7.55; a conversion that priced on the expected delivery date would take 1.05.",
+      "trapChecks": {
+        "dates-datetime": {
+          "present": true,
+          "detail": "boundary date \"9999-12-31\" in ExpectedDeliveryDate"
+        },
+        "numeric-rounding": {
+          "present": true,
+          "detail": "7.55 in UnitPrice ends in a 5"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A08",
+      "label": "an order line for a stock item with no Warehouse.StockItems row is not inserted; the order and its other line are",
+      "traps": [],
+      "reasoning": "Website.OrderLineList is a table type with no foreign key, so a caller can send StockItemID 42, which has no stock item. The INSERT into Sales.OrderLines joins Warehouse.StockItems with INNER JOIN, so that line is skipped. A conversion with an outer join would try to insert it with a NULL package type and tax rate, which Sales.OrderLines rejects (NOT NULL), so the whole call would fail.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
     }
   ],
   "summary": {
-    "ran": 6,
+    "ran": 8,
     "differed": 0,
     "invalid": 0
   },
   "objections": [],
   "mutantAdequacy": {
-    "verdict": "inadequate",
+    "verdict": "adequate",
     "caught": [
       "lines priced at the list price (no customer pricing)",
+      "priced on the expected delivery date",
       "picked quantity set to the ordered quantity",
+      "lines for unknown stock items kept",
       "salesperson taken from the created-by argument",
       "order date set to the expected delivery date"
     ],
-    "missed": [
-      "priced on the expected delivery date",
-      "lines for unknown stock items kept"
-    ],
+    "missed": [],
     "skipped": [],
     "equivalentRecorded": []
   },
   "gate": {
-    "passed": false,
-    "reasons": [
-      "mutant adequacy is inadequate (unexplained misses: priced on the expected delivery date, lines for unknown stock items kept)"
-    ]
+    "passed": true,
+    "reasons": []
   },
-  "wording": "6 adversarial cases ran, 0 differed"
+  "wording": "8 adversarial cases ran, 0 differed"
 }

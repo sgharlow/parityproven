@@ -97,12 +97,12 @@
     "reviewer": "Steve Harlow",
     "reviewDate": "2026-11-16",
     "adversarial": {
-      "gate": "fail",
-      "ran": 6,
+      "gate": "pass",
+      "ran": 7,
       "differed": 0,
       "evidencePath": "evidence/adversarial/WideWorldImporters/Website.CalculateCustomerPrice.json",
       "conversionSha256": "b8d088f0d1507d4e4d0385f06d6dd67564920fc05d000ccd5643981c6088d3d0",
-      "runAt": "2026-11-19T05:28:22.077Z"
+      "runAt": "2026-11-19T06:21:39.632Z"
     }
   },
   "effort": {
@@ -110,5 +110,5 @@
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

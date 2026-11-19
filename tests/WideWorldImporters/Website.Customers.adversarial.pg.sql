@@ -7,7 +7,7 @@
 -- Prerequisites: the spec's tables created and the final conversion deployed.
 -- Each case is one transaction and always rolls back.
 
--- @case 1: [A01] '' versus NULL in DeliveryRun and RunPosition are kept distinct across the LEFT JOINs
+-- @case 1: [A01] '' from a joined row versus NULL from a NULL foreign key in the same output column; DeliveryRun and RunPosition '' and NULL the other way round
 BEGIN;
 DELETE FROM sales.customers;
 DELETE FROM sales.customer_categories;
@@ -16,14 +16,15 @@ DELETE FROM application.people;
 DELETE FROM application.delivery_methods;
 DELETE FROM application.cities;
 INSERT INTO sales.customers ("CustomerID", "CustomerName", "CustomerCategoryID", "PrimaryContactPersonID", "AlternateContactPersonID", "BuyingGroupID", "DeliveryMethodID", "DeliveryCityID", "PhoneNumber", "FaxNumber", "WebsiteURL", "DeliveryLocation", "DeliveryRun", "RunPosition") VALUES
-  ('1', 'Customer 1', '1', '1', NULL, NULL, '1', '1', '(206) 555-0100', '(206) 555-0101', 'http://x', NULL, '', NULL);
+  ('1', 'Customer 1', '1', '1', '2', '1', '1', '1', '(206) 555-0100', '(206) 555-0101', 'http://x', NULL, NULL, ''),
+  ('2', 'Customer 2', '1', '1', NULL, NULL, '1', '1', '(206) 555-0100', '(206) 555-0101', 'http://x', NULL, '', NULL);
 INSERT INTO sales.customer_categories ("CustomerCategoryID", "CustomerCategoryName") VALUES
   ('1', 'Novelty Shop');
 INSERT INTO sales.buying_groups ("BuyingGroupID", "BuyingGroupName") VALUES
-  ('1', 'Tailspin Toys');
+  ('1', '');
 INSERT INTO application.people ("PersonID", "FullName") VALUES
   ('1', 'Ann Lee'),
-  ('2', 'Bo Ng');
+  ('2', '');
 INSERT INTO application.delivery_methods ("DeliveryMethodID", "DeliveryMethodName") VALUES
   ('1', 'Delivery Van');
 INSERT INTO application.cities ("CityID", "CityName") VALUES
@@ -35,24 +36,25 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['CustomerID', 'CustomerName', 'CustomerCategoryName', 'PrimaryContact', 'AlternateContact', 'PhoneNumber', 'FaxNumber', 'BuyingGroupName', 'WebsiteURL', 'DeliveryMethod', 'CityName', 'DeliveryLocation', 'DeliveryRun', 'RunPosition']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 01 [A01 versus NULL in DeliveryRun and RunPosition are kept distinct across the LEFT JOINs', got, ARRAY['CustomerID', 'CustomerName', 'CustomerCategoryName', 'PrimaryContact', 'AlternateContact', 'PhoneNumber', 'FaxNumber', 'BuyingGroupName', 'WebsiteURL', 'DeliveryMethod', 'CityName', 'DeliveryLocation', 'DeliveryRun', 'RunPosition']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 01 [A01 from a joined row versus NULL from a NULL foreign key in the same output column; DeliveryRun and…', got, ARRAY['CustomerID', 'CustomerName', 'CustomerCategoryName', 'PrimaryContact', 'AlternateContact', 'PhoneNumber', 'FaxNumber', 'BuyingGroupName', 'WebsiteURL', 'DeliveryMethod', 'CityName', 'DeliveryLocation', 'DeliveryRun', 'RunPosition']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
 INSERT INTO pp_expected VALUES
-  ('1', 'Customer 1', 'Novelty Shop', 'Ann Lee', NULL, '(206) 555-0100', '(206) 555-0101', NULL, 'http://x', 'Delivery Van', 'Seattle', NULL, '', NULL);
+  ('1', 'Customer 1', 'Novelty Shop', 'Ann Lee', '', '(206) 555-0100', '(206) 555-0101', '', 'http://x', 'Delivery Van', 'Seattle', NULL, NULL, ''),
+  ('2', 'Customer 2', 'Novelty Shop', 'Ann Lee', NULL, '(206) 555-0100', '(206) 555-0101', NULL, 'http://x', 'Delivery Van', 'Seattle', NULL, '', NULL);
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 01 [A01 versus NULL in DeliveryRun and RunPosition are kept distinct across the LEFT JOINs', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 01 [A01 from a joined row versus NULL from a NULL foreign key in the same output column; DeliveryRun and…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;
 
--- @case 2: [A02] two customers share a phone number; a missing category/contact/city still yields the row with NULLs
+-- @case 2: [A02] three customers share phone, fax and website; NULL buying groups and alternate contacts (valid NULL keys) keep their rows; primary and alternate contacts are crossed
 BEGIN;
 DELETE FROM sales.customers;
 DELETE FROM sales.customer_categories;
@@ -61,8 +63,9 @@ DELETE FROM application.people;
 DELETE FROM application.delivery_methods;
 DELETE FROM application.cities;
 INSERT INTO sales.customers ("CustomerID", "CustomerName", "CustomerCategoryID", "PrimaryContactPersonID", "AlternateContactPersonID", "BuyingGroupID", "DeliveryMethodID", "DeliveryCityID", "PhoneNumber", "FaxNumber", "WebsiteURL", "DeliveryLocation", "DeliveryRun", "RunPosition") VALUES
-  ('1', 'Customer 1', '1', '1', NULL, NULL, '1', '1', '(206) 555-9999', '(206) 555-0101', 'http://x', NULL, NULL, NULL),
-  ('2', 'Customer 2', '99', '99', NULL, NULL, '99', '99', '(206) 555-9999', '(206) 555-0101', 'http://x', NULL, NULL, NULL);
+  ('1', 'Customer 1', '1', '1', '2', '1', '1', '1', '(206) 555-9999', '(206) 555-9998', 'http://same', NULL, NULL, NULL),
+  ('2', 'Customer 2', '1', '2', '1', NULL, '1', '1', '(206) 555-9999', '(206) 555-9998', 'http://same', NULL, NULL, NULL),
+  ('3', 'Customer 3', '1', '1', NULL, NULL, '1', '1', '(206) 555-9999', '(206) 555-9998', 'http://same', NULL, NULL, NULL);
 INSERT INTO sales.customer_categories ("CustomerCategoryID", "CustomerCategoryName") VALUES
   ('1', 'Novelty Shop');
 INSERT INTO sales.buying_groups ("BuyingGroupID", "BuyingGroupName") VALUES
@@ -81,20 +84,21 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['CustomerID', 'CustomerName', 'CustomerCategoryName', 'PrimaryContact', 'AlternateContact', 'PhoneNumber', 'FaxNumber', 'BuyingGroupName', 'WebsiteURL', 'DeliveryMethod', 'CityName', 'DeliveryLocation', 'DeliveryRun', 'RunPosition']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 02 [A02 two customers share a phone number; a missing category/contact/city still yields the row with NU…', got, ARRAY['CustomerID', 'CustomerName', 'CustomerCategoryName', 'PrimaryContact', 'AlternateContact', 'PhoneNumber', 'FaxNumber', 'BuyingGroupName', 'WebsiteURL', 'DeliveryMethod', 'CityName', 'DeliveryLocation', 'DeliveryRun', 'RunPosition']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 02 [A02 three customers share phone, fax and website; NULL buying groups and alternate contacts (valid N…', got, ARRAY['CustomerID', 'CustomerName', 'CustomerCategoryName', 'PrimaryContact', 'AlternateContact', 'PhoneNumber', 'FaxNumber', 'BuyingGroupName', 'WebsiteURL', 'DeliveryMethod', 'CityName', 'DeliveryLocation', 'DeliveryRun', 'RunPosition']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
 INSERT INTO pp_expected VALUES
-  ('1', 'Customer 1', 'Novelty Shop', 'Ann Lee', NULL, '(206) 555-9999', '(206) 555-0101', NULL, 'http://x', 'Delivery Van', 'Seattle', NULL, NULL, NULL),
-  ('2', 'Customer 2', NULL, NULL, NULL, '(206) 555-9999', '(206) 555-0101', NULL, 'http://x', NULL, NULL, NULL, NULL, NULL);
+  ('1', 'Customer 1', 'Novelty Shop', 'Ann Lee', 'Bo Ng', '(206) 555-9999', '(206) 555-9998', 'Tailspin Toys', 'http://same', 'Delivery Van', 'Seattle', NULL, NULL, NULL),
+  ('2', 'Customer 2', 'Novelty Shop', 'Bo Ng', 'Ann Lee', '(206) 555-9999', '(206) 555-9998', NULL, 'http://same', 'Delivery Van', 'Seattle', NULL, NULL, NULL),
+  ('3', 'Customer 3', 'Novelty Shop', 'Ann Lee', NULL, '(206) 555-9999', '(206) 555-9998', NULL, 'http://same', 'Delivery Van', 'Seattle', NULL, NULL, NULL);
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 02 [A02 two customers share a phone number; a missing category/contact/city still yields the row with NU…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 02 [A02 three customers share phone, fax and website; NULL buying groups and alternate contacts (valid N…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;

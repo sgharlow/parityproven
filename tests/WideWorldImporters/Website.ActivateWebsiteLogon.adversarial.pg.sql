@@ -468,3 +468,41 @@ BEGIN
   END IF;
 END $pp$;
 ROLLBACK;
+
+-- @case 13: [A13] a disabled person who still holds an old logon name and hash is activated: both are replaced
+BEGIN;
+DELETE FROM application.people;
+INSERT INTO application.people ("PersonID", "FullName", "IsPermittedToLogon", "LogonName", "HashedPassword", "UserPreferences") VALUES
+  ('1', 'Person 1', '1', NULL, NULL, '{"theme":"green"}'),
+  ('2', 'Person 2', '0', 'old', '\x00ff10', 'mine');
+CREATE TEMP TABLE pp_outcome (outcome text) ON COMMIT DROP;
+DO $pp$
+BEGIN
+  CALL website.activate_website_logon('2'::integer, 'new@example.com'::text, 'pw'::text);
+  INSERT INTO pp_outcome VALUES ('completed');
+EXCEPTION
+  WHEN SQLSTATE 'P0001' THEN INSERT INTO pp_outcome VALUES ('raised');
+END $pp$;
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT 'completed'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'completed'::text AS outcome)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 13 [A13 a disabled person who still holds an old logon name and hash is activated: both are replaced', missing, extra;
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected_state_1 ON COMMIT DROP AS SELECT "PersonID", "FullName", "IsPermittedToLogon", "LogonName", "HashedPassword", "UserPreferences" FROM application.people WITH NO DATA;
+INSERT INTO pp_expected_state_1 ("PersonID", "FullName", "IsPermittedToLogon", "LogonName", "HashedPassword", "UserPreferences") VALUES
+  ('1', 'Person 1', '1', NULL, NULL, '{"theme":"green"}'),
+  ('2', 'Person 2', '1', 'new@example.com', '\xd1beeae20716eea18a0cce3a0e032e63028a3a68b1bec3ccb5855b2faa412c69', '{"theme":"green"}');
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT "PersonID", "FullName", "IsPermittedToLogon", "LogonName", "HashedPassword", "UserPreferences" FROM pp_expected_state_1) EXCEPT ALL (SELECT "PersonID", "FullName", "IsPermittedToLogon", "LogonName", "HashedPassword", "UserPreferences" FROM application.people)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT "PersonID", "FullName", "IsPermittedToLogon", "LogonName", "HashedPassword", "UserPreferences" FROM application.people) EXCEPT ALL (SELECT "PersonID", "FullName", "IsPermittedToLogon", "LogonName", "HashedPassword", "UserPreferences" FROM pp_expected_state_1)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in Application.People after the call', 'test 13 [A13 a disabled person who still holds an old logon name and hash is activated: both are replaced', missing, extra;
+  END IF;
+END $pp$;
+ROLLBACK;

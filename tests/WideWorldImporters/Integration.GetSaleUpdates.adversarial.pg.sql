@@ -105,7 +105,7 @@ BEGIN
 END $pp$;
 ROLLBACK;
 
--- @case 3: [A03] decimal arithmetic: Total Excluding Tax = ExtendedPrice - TaxAmount for 0.05 - 0.15, 10.05 - 1.55, 999999999999.99 - (-999999999999.99); a 3-place tax rate ending in 5; negative profit; NULL unit price
+-- @case 3: [A03] decimal arithmetic: Total Excluding Tax = ExtendedPrice - TaxAmount for 0.05 - 0.15, 10.05 - 1.55, and 5000000000000.05 - (-4999999999999.95), which carries into a 14th integer digit; a 3-place tax rate ending in 5; negative profit; NULL unit price
 BEGIN;
 DELETE FROM sales.invoices;
 DELETE FROM sales.invoice_lines;
@@ -117,7 +117,7 @@ INSERT INTO sales.invoices ("InvoiceID", "CustomerID", "BillToCustomerID", "Sale
 INSERT INTO sales.invoice_lines ("InvoiceLineID", "InvoiceID", "StockItemID", "Description", "PackageTypeID", "Quantity", "UnitPrice", "TaxRate", "TaxAmount", "LineProfit", "ExtendedPrice", "LastEditedWhen") VALUES
   ('1', '1', '1', 'item 1', '1', '4', '2.50', '15.000', '0.15', '-0.05', '0.05', '2020-06-15 12:00:00.000000'),
   ('2', '1', '1', 'item 2', '1', '4', '2.50', '15.005', '1.55', '3.00', '10.05', '2020-06-15 12:00:00.000000'),
-  ('3', '1', '1', 'item 3', '1', '4', NULL, '15.000', '-999999999999.99', '3.00', '999999999999.99', '2020-06-15 12:00:00.000000');
+  ('3', '1', '1', 'item 3', '1', '4', NULL, '15.000', '-4999999999999.95', '3.00', '5000000000000.05', '2020-06-15 12:00:00.000000');
 INSERT INTO warehouse.stock_items ("StockItemID", "IsChillerStock") VALUES
   ('1', '0'),
   ('2', '1');
@@ -139,7 +139,7 @@ CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
 INSERT INTO pp_expected VALUES
   ('2020-06-14', NULL, '1', 'item 1', 'Each', '4', '2.5', '15', '-0.1', '0.15', '-0.05', '0.05', '4', '0', '10', '1', '1', '1', '3', '2020-06-15 12:00:00.000000'),
   ('2020-06-14', NULL, '1', 'item 2', 'Each', '4', '2.5', '15.005', '8.5', '1.55', '3', '10.05', '4', '0', '10', '1', '1', '1', '3', '2020-06-15 12:00:00.000000'),
-  ('2020-06-14', NULL, '1', 'item 3', 'Each', '4', NULL, '15', '1999999999999.98', '-999999999999.99', '3', '999999999999.99', '4', '0', '10', '1', '1', '1', '3', '2020-06-15 12:00:00.000000');
+  ('2020-06-14', NULL, '1', 'item 3', 'Each', '4', NULL, '15', '10000000000000', '-4999999999999.95', '3', '5000000000000.05', '4', '0', '10', '1', '1', '1', '3', '2020-06-15 12:00:00.000000');
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN

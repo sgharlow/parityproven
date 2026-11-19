@@ -118,12 +118,12 @@
     "reviewer": "Steve Harlow",
     "reviewDate": "2026-11-16",
     "adversarial": {
-      "gate": "fail",
-      "ran": 6,
+      "gate": "pass",
+      "ran": 9,
       "differed": 0,
       "evidencePath": "evidence/adversarial/WideWorldImporters/Website.RecordVehicleTemperature.json",
       "conversionSha256": "46156b46b7be9426e71faa55826546979ce2ce2fd0e570d8509bfbcf03ecae3b",
-      "runAt": "2026-11-19T05:30:09.791Z"
+      "runAt": "2026-11-19T06:23:21.827Z"
     }
   },
   "effort": {
@@ -131,5 +131,5 @@
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

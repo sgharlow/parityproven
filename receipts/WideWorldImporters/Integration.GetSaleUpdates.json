@@ -133,20 +133,18 @@
       "planted defects caught by the agreed tests: 2 of 2"
     ],
     "adversarial": {
-      "gate": "fail",
+      "gate": "pass",
       "ran": 5,
       "differed": 0,
       "evidencePath": "evidence/adversarial/WideWorldImporters/Integration.GetSaleUpdates.json",
-      "runAt": "2026-11-19T05:05:25.164Z",
+      "runAt": "2026-11-19T06:20:39.874Z",
       "agentWritten": true,
       "wording": "5 adversarial cases ran, 0 differed",
       "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
       "auditorModel": "gpt-5.6-sol",
       "sameModel": false,
       "mutantAdequacy": "adequate",
-      "gateReasons": [
-        "objection O01 is open"
-      ],
+      "gateReasons": [],
       "cases": [
         {
           "id": "A01",
@@ -170,7 +168,7 @@
         },
         {
           "id": "A03",
-          "label": "decimal arithmetic: Total Excluding Tax = ExtendedPrice - TaxAmount for 0.05 - 0.15, 10.05 - 1.55, 999999999999.99 - (-999999999999.99); a 3-place tax rate ending in 5; negative profit; NULL unit price",
+          "label": "decimal arithmetic: Total Excluding Tax = ExtendedPrice - TaxAmount for 0.05 - 0.15, 10.05 - 1.55, and 5000000000000.05 - (-4999999999999.95), which carries into a 14th integer digit; a 3-place tax rate ending in 5; negative profit; NULL unit price",
           "traps": [
             "numeric-rounding"
           ],
@@ -211,5 +209,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-19T05:37:18.801Z"
+  "builtAt": "2026-11-19T06:24:38.464Z"
 }

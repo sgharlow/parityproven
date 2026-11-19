@@ -7,7 +7,7 @@
 -- Prerequisites: the spec's tables created and the final conversion deployed.
 -- Each case is one transaction and always rolls back.
 
--- @case 1: [A01] date boundaries: start dates 0001-01-01, 1752-12-31, 1753-01-01, 2000-02-29 and 9999-12-31; end dates 0001-01-01 and 9999-12-31
+-- @case 1: [A01] date boundaries: start dates 0001-01-01, 1752-12-31, 1753-01-01, 2000-02-29 and 9999-12-31; end dates 0001-01-01, 1900-01-01 and 9999-12-31
 BEGIN;
 DELETE FROM humanresources.department;
 DELETE FROM humanresources.employee;
@@ -26,7 +26,8 @@ INSERT INTO humanresources.employee_department_history ("BusinessEntityID", "Dep
   ('2', '1', '1753-01-01', NULL),
   ('2', '2', '2000-02-29', '9999-12-31'),
   ('3', '1', '9999-12-31', NULL),
-  ('3', '2', '1900-01-01', '1900-01-01');
+  ('3', '2', '1900-01-01', '1900-01-01'),
+  ('3', '1', '0001-01-01', '0001-01-01');
 INSERT INTO person.person ("BusinessEntityID", "Title", "FirstName", "MiddleName", "LastName", "Suffix") VALUES
   ('1', NULL, 'First1', NULL, 'Last1', NULL),
   ('2', NULL, 'First2', NULL, 'Last2', NULL),
@@ -58,7 +59,7 @@ BEGIN
 END $pp$;
 ROLLBACK;
 
--- @case 2: [A02] an end date before the start date, and an end date equal to it: the view does not compare the two
+-- @case 2: [A02] an end date equal to the start date, and one a day after it: the view does not compare the two
 BEGIN;
 DELETE FROM humanresources.department;
 DELETE FROM humanresources.employee;
@@ -70,7 +71,7 @@ INSERT INTO humanresources.employee ("BusinessEntityID", "JobTitle") VALUES
   ('1', 'Job 1'),
   ('2', 'Job 2');
 INSERT INTO humanresources.employee_department_history ("BusinessEntityID", "DepartmentID", "StartDate", "EndDate") VALUES
-  ('1', '1', '2010-06-15', '2010-06-14'),
+  ('1', '1', '2010-06-14', '2010-06-15'),
   ('2', '1', '2010-06-15', '2010-06-15'),
   ('2', '1', '2011-01-01', '9999-12-31'),
   ('1', '1', '2012-01-01', NULL);
@@ -84,7 +85,7 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['BusinessEntityID', 'Title', 'FirstName', 'MiddleName', 'LastName', 'Suffix', 'JobTitle', 'Department', 'GroupName', 'StartDate']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 02 [A02 an end date before the start date, and an end date equal to it: the view does not compare the two', got, ARRAY['BusinessEntityID', 'Title', 'FirstName', 'MiddleName', 'LastName', 'Suffix', 'JobTitle', 'Department', 'GroupName', 'StartDate']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 02 [A02 an end date equal to the start date, and one a day after it: the view does not compare the two', got, ARRAY['BusinessEntityID', 'Title', 'FirstName', 'MiddleName', 'LastName', 'Suffix', 'JobTitle', 'Department', 'GroupName', 'StartDate']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
@@ -96,7 +97,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 02 [A02 an end date before the start date, and an end date equal to it: the view does not compare the two', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 02 [A02 an end date equal to the start date, and one a day after it: the view does not compare the two', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;
@@ -144,16 +145,16 @@ BEGIN
 END $pp$;
 ROLLBACK;
 
--- @case 4: [A04] text returned as stored: department names differing only in case, trailing spaces, non-ASCII and an emoji
+-- @case 4: [A04] text returned as stored: a department name and group names differing only in case, trailing spaces, non-ASCII and an emoji
 BEGIN;
 DELETE FROM humanresources.department;
 DELETE FROM humanresources.employee;
 DELETE FROM humanresources.employee_department_history;
 DELETE FROM person.person;
 INSERT INTO humanresources.department ("DepartmentID", "Name", "GroupName") VALUES
-  ('1', 'Sales', 'Sales and Marketing'),
-  ('2', 'SALES', 'Sales and Marketing '),
-  ('3', 'sales ', 'Ventes 😀 é');
+  ('1', 'Sales', 'SALES'),
+  ('2', 'Marketing ', 'Sales and Marketing '),
+  ('3', 'Ventes 😀 é', 'sales');
 INSERT INTO humanresources.employee ("BusinessEntityID", "JobTitle") VALUES
   ('1', 'Job 1'),
   ('2', 'Job 2'),
@@ -173,21 +174,21 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['BusinessEntityID', 'Title', 'FirstName', 'MiddleName', 'LastName', 'Suffix', 'JobTitle', 'Department', 'GroupName', 'StartDate']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 04 [A04 text returned as stored: department names differing only in case, trailing spaces, non-ASCII and…', got, ARRAY['BusinessEntityID', 'Title', 'FirstName', 'MiddleName', 'LastName', 'Suffix', 'JobTitle', 'Department', 'GroupName', 'StartDate']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 04 [A04 text returned as stored: a department name and group names differing only in case, trailing spac…', got, ARRAY['BusinessEntityID', 'Title', 'FirstName', 'MiddleName', 'LastName', 'Suffix', 'JobTitle', 'Department', 'GroupName', 'StartDate']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
 INSERT INTO pp_expected VALUES
-  ('1', NULL, 'Ann ', NULL, 'Last1', NULL, 'Job 1', 'Sales', 'Sales and Marketing', '2001-01-01'),
-  ('2', NULL, 'ANN', NULL, 'Last2', NULL, 'Job 2', 'SALES', 'Sales and Marketing ', '2001-01-01'),
-  ('3', NULL, 'ann', NULL, 'Last3', NULL, 'Job 3', 'sales ', 'Ventes 😀 é', '2001-01-01');
+  ('1', NULL, 'Ann ', NULL, 'Last1', NULL, 'Job 1', 'Sales', 'SALES', '2001-01-01'),
+  ('2', NULL, 'ANN', NULL, 'Last2', NULL, 'Job 2', 'Marketing ', 'Sales and Marketing ', '2001-01-01'),
+  ('3', NULL, 'ann', NULL, 'Last3', NULL, 'Job 3', 'Ventes 😀 é', 'sales', '2001-01-01');
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 04 [A04 text returned as stored: department names differing only in case, trailing spaces, non-ASCII and…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 04 [A04 text returned as stored: a department name and group names differing only in case, trailing spac…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;

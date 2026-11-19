@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "object": "Integration.GetStockHoldingUpdates",
   "database": "WideWorldImporters",
-  "runAt": "2026-11-19T05:05:32.898Z",
+  "runAt": "2026-11-19T06:24:02.904Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "eb2a3aed3e96b8909687d5b94bc43bdc3a1fea2531165a8ca18e6857f748b854",
   "attacker": {
@@ -13,9 +13,9 @@
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-18T21:39:58.1908526-07:00",
+    "at": "2026-11-19T06:06:57.652Z",
     "file": "adversarial/WideWorldImporters/Integration.GetStockHoldingUpdates.audit.json",
-    "sha256": "7fe7020534eda425239cf62cfc9bfa63147d5b51c2a7772928a7c9a7afe59081"
+    "sha256": "78165c22db1153da3271972b0391a671c69f7eb79781e00c31b788197c8477f4"
   },
   "sameModel": false,
   "casesAudited": [
@@ -182,7 +182,15 @@
     "differed": 0,
     "invalid": 0
   },
-  "objections": [],
+  "objections": [
+    {
+      "id": "O01",
+      "caseId": "A01",
+      "kind": "other",
+      "text": "A01 supplies distinct StockItemID values in descending insertion order and therefore would expose the planted descending-order defect under the required ordered comparison. The adversarial plain-SQL assertions compare these rows as a multiset, despite spec.orderKey naming 'WWI Stock Item ID', so no input-only revision can catch the defect. Descending order is observable because the source query guarantees ascending order; it must not be recorded as equivalent. The harness needs to enforce the order key in adversarial assertions.",
+      "status": "open"
+    }
+  ],
   "mutantAdequacy": {
     "verdict": "inadequate",
     "caught": [
@@ -197,6 +205,7 @@
   "gate": {
     "passed": false,
     "reasons": [
+      "objection O01 is open",
       "mutant adequacy is inadequate (unexplained misses: descending order)"
     ]
   },

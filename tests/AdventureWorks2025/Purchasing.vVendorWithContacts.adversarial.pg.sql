@@ -105,7 +105,7 @@ BEGIN
 END $pp$;
 ROLLBACK;
 
--- @case 3: [A03] fan-out: a contact with two identical phone rows and an unknown phone type; the same person as contact twice under two types
+-- @case 3: [A03] fan-out: a contact with the same number under two phone types of one name and an unknown phone type; the same person as contact twice under two types
 BEGIN;
 DELETE FROM person.business_entity_contact;
 DELETE FROM person.contact_type;
@@ -124,10 +124,11 @@ INSERT INTO person.person ("BusinessEntityID", "Title", "FirstName", "MiddleName
   ('10', NULL, 'First10', NULL, 'Last10', NULL, '0');
 INSERT INTO person.person_phone ("BusinessEntityID", "PhoneNumber", "PhoneNumberTypeID") VALUES
   ('10', '555-0100', '1'),
-  ('10', '555-0100', '1'),
+  ('10', '555-0100', '2'),
   ('10', '555-0199', '9');
 INSERT INTO person.phone_number_type ("PhoneNumberTypeID", "Name") VALUES
-  ('1', 'Cell');
+  ('1', 'Cell'),
+  ('2', 'Cell');
 INSERT INTO purchasing.vendor ("BusinessEntityID", "Name") VALUES
   ('1', 'Vendor 1');
 CREATE TEMP TABLE pp_actual ON COMMIT DROP AS
@@ -137,7 +138,7 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['BusinessEntityID', 'Name', 'ContactType', 'Title', 'FirstName', 'MiddleName', 'LastName', 'Suffix', 'PhoneNumber', 'PhoneNumberType', 'EmailAddress', 'EmailPromotion']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 03 [A03 fan-out: a contact with two identical phone rows and an unknown phone type; the same person as c…', got, ARRAY['BusinessEntityID', 'Name', 'ContactType', 'Title', 'FirstName', 'MiddleName', 'LastName', 'Suffix', 'PhoneNumber', 'PhoneNumberType', 'EmailAddress', 'EmailPromotion']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 03 [A03 fan-out: a contact with the same number under two phone types of one name and an unknown phone t…', got, ARRAY['BusinessEntityID', 'Name', 'ContactType', 'Title', 'FirstName', 'MiddleName', 'LastName', 'Suffix', 'PhoneNumber', 'PhoneNumberType', 'EmailAddress', 'EmailPromotion']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
@@ -154,7 +155,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 03 [A03 fan-out: a contact with two identical phone rows and an unknown phone type; the same person as c…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 03 [A03 fan-out: a contact with the same number under two phone types of one name and an unknown phone t…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;

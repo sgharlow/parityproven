@@ -26,11 +26,12 @@ BEGIN
     (3);
   INSERT INTO [HumanResources].[EmployeeDepartmentHistory] ([BusinessEntityID], [DepartmentID], [ShiftID], [StartDate], [EndDate]) VALUES
     (1, 1, 1, CAST('0001-01-01' AS date), NULL),
-    (1, 2, 1, CAST('1752-12-31' AS date), CAST('0001-01-01' AS date)),
+    (1, 2, 1, CAST('0001-01-01' AS date), CAST('0001-01-01' AS date)),
     (2, 1, 1, CAST('1753-01-01' AS date), NULL),
     (2, 2, 1, CAST('2000-02-29' AS date), CAST('9999-12-31' AS date)),
     (3, 1, 1, CAST('9999-12-31' AS date), NULL),
-    (3, 2, 1, CAST('1900-01-01' AS date), CAST('1900-01-01' AS date));
+    (3, 2, 1, CAST('1900-01-01' AS date), CAST('1900-01-01' AS date)),
+    (1, 2, 1, CAST('1752-12-31' AS date), NULL);
   INSERT INTO [HumanResources].[Shift] ([ShiftID], [Name]) VALUES
     (1, N'Day'),
     (0, N'Zero'),
@@ -67,18 +68,19 @@ BEGIN
   );
   INSERT INTO #Expected ([BusinessEntityID], [Title], [FirstName], [MiddleName], [LastName], [Suffix], [Shift], [Department], [GroupName], [StartDate], [EndDate]) VALUES
     (1, NULL, N'First1', NULL, N'Last1', NULL, N'Day', N'Dept 1', N'Group 1', CAST('0001-01-01' AS date), NULL),
-    (1, NULL, N'First1', NULL, N'Last1', NULL, N'Day', N'Dept 2', N'Group 2', CAST('1752-12-31' AS date), CAST('0001-01-01' AS date)),
+    (1, NULL, N'First1', NULL, N'Last1', NULL, N'Day', N'Dept 2', N'Group 2', CAST('0001-01-01' AS date), CAST('0001-01-01' AS date)),
     (2, NULL, N'First2', NULL, N'Last2', NULL, N'Day', N'Dept 1', N'Group 1', CAST('1753-01-01' AS date), NULL),
     (2, NULL, N'First2', NULL, N'Last2', NULL, N'Day', N'Dept 2', N'Group 2', CAST('2000-02-29' AS date), CAST('9999-12-31' AS date)),
     (3, NULL, N'First3', NULL, N'Last3', NULL, N'Day', N'Dept 1', N'Group 1', CAST('9999-12-31' AS date), NULL),
-    (3, NULL, N'First3', NULL, N'Last3', NULL, N'Day', N'Dept 2', N'Group 2', CAST('1900-01-01' AS date), CAST('1900-01-01' AS date));
+    (3, NULL, N'First3', NULL, N'Last3', NULL, N'Day', N'Dept 2', N'Group 2', CAST('1900-01-01' AS date), CAST('1900-01-01' AS date)),
+    (1, NULL, N'First1', NULL, N'Last1', NULL, N'Day', N'Dept 2', N'Group 2', CAST('1752-12-31' AS date), NULL);
   INSERT INTO #Actual
   SELECT * FROM HumanResources.vEmployeeDepartmentHistory;
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
--- case 2: [A02] an end date before the start date, and an end date equal to it: the view does not compare the two
-CREATE PROCEDURE [AgreedTests].[test 02 [A02 an end date before the start date, and an end date equal to it: the view does not compare the two]
+-- case 2: [A02] an end date equal to the start date, and one a day after it: the view does not compare the two
+CREATE PROCEDURE [AgreedTests].[test 02 [A02 an end date equal to the start date, and one a day after it: the view does not compare the two]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[HumanResources].[Department]';
@@ -92,7 +94,7 @@ BEGIN
     (1),
     (2);
   INSERT INTO [HumanResources].[EmployeeDepartmentHistory] ([BusinessEntityID], [DepartmentID], [ShiftID], [StartDate], [EndDate]) VALUES
-    (1, 1, 1, CAST('2010-06-15' AS date), CAST('2010-06-14' AS date)),
+    (1, 1, 1, CAST('2010-06-14' AS date), CAST('2010-06-15' AS date)),
     (2, 1, 1, CAST('2010-06-15' AS date), CAST('2010-06-15' AS date)),
     (2, 1, 1, CAST('2011-01-01' AS date), CAST('9999-12-31' AS date)),
     (1, 1, 1, CAST('2012-01-01' AS date), NULL);
@@ -130,7 +132,7 @@ BEGIN
     [EndDate] date NULL
   );
   INSERT INTO #Expected ([BusinessEntityID], [Title], [FirstName], [MiddleName], [LastName], [Suffix], [Shift], [Department], [GroupName], [StartDate], [EndDate]) VALUES
-    (1, NULL, N'First1', NULL, N'Last1', NULL, N'Day', N'Dept 1', N'Group 1', CAST('2010-06-15' AS date), CAST('2010-06-14' AS date)),
+    (1, NULL, N'First1', NULL, N'Last1', NULL, N'Day', N'Dept 1', N'Group 1', CAST('2010-06-14' AS date), CAST('2010-06-15' AS date)),
     (2, NULL, N'First2', NULL, N'Last2', NULL, N'Day', N'Dept 1', N'Group 1', CAST('2010-06-15' AS date), CAST('2010-06-15' AS date)),
     (2, NULL, N'First2', NULL, N'Last2', NULL, N'Day', N'Dept 1', N'Group 1', CAST('2011-01-01' AS date), CAST('9999-12-31' AS date)),
     (1, NULL, N'First1', NULL, N'Last1', NULL, N'Day', N'Dept 1', N'Group 1', CAST('2012-01-01' AS date), NULL);
@@ -198,8 +200,8 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
--- case 4: [A04] text returned as stored: department names differing only in case, trailing spaces, non-ASCII and an emoji
-CREATE PROCEDURE [AgreedTests].[test 04 [A04 text returned as stored: department names differing only in case, trailing spaces, non-ASCII and…]
+-- case 4: [A04] text returned as stored: a department name and group names differing only in case, trailing spaces, non-ASCII and an emoji
+CREATE PROCEDURE [AgreedTests].[test 04 [A04 text returned as stored: a department name and group names differing only in case, trailing spac…]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[HumanResources].[Department]';
@@ -208,9 +210,9 @@ BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[HumanResources].[Shift]';
   EXEC tSQLt.FakeTable @TableName = N'[Person].[Person]';
   INSERT INTO [HumanResources].[Department] ([DepartmentID], [Name], [GroupName]) VALUES
-    (1, N'Sales', N'Sales and Marketing'),
-    (2, N'SALES', N'Sales and Marketing '),
-    (3, N'sales ', N'Ventes 😀 é');
+    (1, N'Sales', N'SALES'),
+    (2, N'Marketing ', N'Sales and Marketing '),
+    (3, N'Ventes 😀 é', N'sales');
   INSERT INTO [HumanResources].[Employee] ([BusinessEntityID]) VALUES
     (1),
     (2),
@@ -254,16 +256,16 @@ BEGIN
     [EndDate] date NULL
   );
   INSERT INTO #Expected ([BusinessEntityID], [Title], [FirstName], [MiddleName], [LastName], [Suffix], [Shift], [Department], [GroupName], [StartDate], [EndDate]) VALUES
-    (1, NULL, N'Ann ', NULL, N'Last1', NULL, N'Day', N'Sales', N'Sales and Marketing', CAST('2001-01-01' AS date), NULL),
-    (2, NULL, N'ANN', NULL, N'Last2', NULL, N'Day', N'SALES', N'Sales and Marketing ', CAST('2001-01-01' AS date), NULL),
-    (3, NULL, N'ann', NULL, N'Last3', NULL, N'Day', N'sales ', N'Ventes 😀 é', CAST('2001-01-01' AS date), NULL);
+    (1, NULL, N'Ann ', NULL, N'Last1', NULL, N'Day', N'Sales', N'SALES', CAST('2001-01-01' AS date), NULL),
+    (2, NULL, N'ANN', NULL, N'Last2', NULL, N'Day', N'Marketing ', N'Sales and Marketing ', CAST('2001-01-01' AS date), NULL),
+    (3, NULL, N'ann', NULL, N'Last3', NULL, N'Day', N'Ventes 😀 é', N'sales', CAST('2001-01-01' AS date), NULL);
   INSERT INTO #Actual
   SELECT * FROM HumanResources.vEmployeeDepartmentHistory;
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
--- case 5: [A05] duplicate history rows (same employee, department and start date twice): two identical output rows
-CREATE PROCEDURE [AgreedTests].[test 05 [A05 duplicate history rows (same employee, department and start date twice): two identical output ro…]
+-- case 5: [A05] the same employee, department and start date on two shifts: two rows that differ only in Shift
+CREATE PROCEDURE [AgreedTests].[test 05 [A05 the same employee, department and start date on two shifts: two rows that differ only in Shift]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[HumanResources].[Department]';
@@ -277,7 +279,7 @@ BEGIN
     (1);
   INSERT INTO [HumanResources].[EmployeeDepartmentHistory] ([BusinessEntityID], [DepartmentID], [ShiftID], [StartDate], [EndDate]) VALUES
     (1, 1, 1, CAST('2005-07-01' AS date), NULL),
-    (1, 1, 1, CAST('2005-07-01' AS date), NULL),
+    (1, 1, 0, CAST('2005-07-01' AS date), NULL),
     (1, 1, 1, CAST('2001-01-01' AS date), CAST('2005-06-30' AS date));
   INSERT INTO [HumanResources].[Shift] ([ShiftID], [Name]) VALUES
     (1, N'Day'),
@@ -313,7 +315,7 @@ BEGIN
   );
   INSERT INTO #Expected ([BusinessEntityID], [Title], [FirstName], [MiddleName], [LastName], [Suffix], [Shift], [Department], [GroupName], [StartDate], [EndDate]) VALUES
     (1, NULL, N'First1', NULL, N'Last1', NULL, N'Day', N'Dept 1', N'Group 1', CAST('2005-07-01' AS date), NULL),
-    (1, NULL, N'First1', NULL, N'Last1', NULL, N'Day', N'Dept 1', N'Group 1', CAST('2005-07-01' AS date), NULL),
+    (1, NULL, N'First1', NULL, N'Last1', NULL, N'Zero', N'Dept 1', N'Group 1', CAST('2005-07-01' AS date), NULL),
     (1, NULL, N'First1', NULL, N'Last1', NULL, N'Day', N'Dept 1', N'Group 1', CAST('2001-01-01' AS date), CAST('2005-06-30' AS date));
   INSERT INTO #Actual
   SELECT * FROM HumanResources.vEmployeeDepartmentHistory;

@@ -8,8 +8,8 @@
 GO
 EXEC tSQLt.NewTestClass 'AgreedTests';
 GO
--- case 1: [A01] '' versus NULL in DeliveryRun and RunPosition are kept distinct across the LEFT JOINs
-CREATE PROCEDURE [AgreedTests].[test 01 [A01 versus NULL in DeliveryRun and RunPosition are kept distinct across the LEFT JOINs]
+-- case 1: [A01] '' from a joined row versus NULL from a NULL foreign key in the same output column; DeliveryRun and RunPosition '' and NULL the other way round
+CREATE PROCEDURE [AgreedTests].[test 01 [A01 from a joined row versus NULL from a NULL foreign key in the same output column; DeliveryRun and…]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Sales].[Customers]';
@@ -19,14 +19,15 @@ BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Application].[DeliveryMethods]';
   EXEC tSQLt.FakeTable @TableName = N'[Application].[Cities]';
   INSERT INTO [Sales].[Customers] ([CustomerID], [CustomerName], [CustomerCategoryID], [PrimaryContactPersonID], [AlternateContactPersonID], [BuyingGroupID], [DeliveryMethodID], [DeliveryCityID], [PhoneNumber], [FaxNumber], [WebsiteURL], [DeliveryLocation], [DeliveryRun], [RunPosition]) VALUES
-    (1, N'Customer 1', 1, 1, NULL, NULL, 1, 1, N'(206) 555-0100', N'(206) 555-0101', N'http://x', NULL, N'', NULL);
+    (1, N'Customer 1', 1, 1, 2, 1, 1, 1, N'(206) 555-0100', N'(206) 555-0101', N'http://x', NULL, NULL, N''),
+    (2, N'Customer 2', 1, 1, NULL, NULL, 1, 1, N'(206) 555-0100', N'(206) 555-0101', N'http://x', NULL, N'', NULL);
   INSERT INTO [Sales].[CustomerCategories] ([CustomerCategoryID], [CustomerCategoryName]) VALUES
     (1, N'Novelty Shop');
   INSERT INTO [Sales].[BuyingGroups] ([BuyingGroupID], [BuyingGroupName]) VALUES
-    (1, N'Tailspin Toys');
+    (1, N'');
   INSERT INTO [Application].[People] ([PersonID], [FullName]) VALUES
     (1, N'Ann Lee'),
-    (2, N'Bo Ng');
+    (2, N'');
   INSERT INTO [Application].[DeliveryMethods] ([DeliveryMethodID], [DeliveryMethodName]) VALUES
     (1, N'Delivery Van');
   INSERT INTO [Application].[Cities] ([CityID], [CityName]) VALUES
@@ -64,14 +65,15 @@ BEGIN
     [RunPosition] nvarchar(5) NULL
   );
   INSERT INTO #Expected ([CustomerID], [CustomerName], [CustomerCategoryName], [PrimaryContact], [AlternateContact], [PhoneNumber], [FaxNumber], [BuyingGroupName], [WebsiteURL], [DeliveryMethod], [CityName], [DeliveryLocation], [DeliveryRun], [RunPosition]) VALUES
-    (1, N'Customer 1', N'Novelty Shop', N'Ann Lee', NULL, N'(206) 555-0100', N'(206) 555-0101', NULL, N'http://x', N'Delivery Van', N'Seattle', NULL, N'', NULL);
+    (1, N'Customer 1', N'Novelty Shop', N'Ann Lee', N'', N'(206) 555-0100', N'(206) 555-0101', N'', N'http://x', N'Delivery Van', N'Seattle', NULL, NULL, N''),
+    (2, N'Customer 2', N'Novelty Shop', N'Ann Lee', NULL, N'(206) 555-0100', N'(206) 555-0101', NULL, N'http://x', N'Delivery Van', N'Seattle', NULL, N'', NULL);
   INSERT INTO #Actual
   SELECT CustomerID, CustomerName, CustomerCategoryName, PrimaryContact, AlternateContact, PhoneNumber, FaxNumber, BuyingGroupName, WebsiteURL, DeliveryMethod, CityName, DeliveryLocation.STAsText() AS DeliveryLocation, DeliveryRun, RunPosition FROM Website.Customers;
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
--- case 2: [A02] two customers share a phone number; a missing category/contact/city still yields the row with NULLs
-CREATE PROCEDURE [AgreedTests].[test 02 [A02 two customers share a phone number; a missing category/contact/city still yields the row with NU…]
+-- case 2: [A02] three customers share phone, fax and website; NULL buying groups and alternate contacts (valid NULL keys) keep their rows; primary and alternate contacts are crossed
+CREATE PROCEDURE [AgreedTests].[test 02 [A02 three customers share phone, fax and website; NULL buying groups and alternate contacts (valid N…]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Sales].[Customers]';
@@ -81,8 +83,9 @@ BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Application].[DeliveryMethods]';
   EXEC tSQLt.FakeTable @TableName = N'[Application].[Cities]';
   INSERT INTO [Sales].[Customers] ([CustomerID], [CustomerName], [CustomerCategoryID], [PrimaryContactPersonID], [AlternateContactPersonID], [BuyingGroupID], [DeliveryMethodID], [DeliveryCityID], [PhoneNumber], [FaxNumber], [WebsiteURL], [DeliveryLocation], [DeliveryRun], [RunPosition]) VALUES
-    (1, N'Customer 1', 1, 1, NULL, NULL, 1, 1, N'(206) 555-9999', N'(206) 555-0101', N'http://x', NULL, NULL, NULL),
-    (2, N'Customer 2', 99, 99, NULL, NULL, 99, 99, N'(206) 555-9999', N'(206) 555-0101', N'http://x', NULL, NULL, NULL);
+    (1, N'Customer 1', 1, 1, 2, 1, 1, 1, N'(206) 555-9999', N'(206) 555-9998', N'http://same', NULL, NULL, NULL),
+    (2, N'Customer 2', 1, 2, 1, NULL, 1, 1, N'(206) 555-9999', N'(206) 555-9998', N'http://same', NULL, NULL, NULL),
+    (3, N'Customer 3', 1, 1, NULL, NULL, 1, 1, N'(206) 555-9999', N'(206) 555-9998', N'http://same', NULL, NULL, NULL);
   INSERT INTO [Sales].[CustomerCategories] ([CustomerCategoryID], [CustomerCategoryName]) VALUES
     (1, N'Novelty Shop');
   INSERT INTO [Sales].[BuyingGroups] ([BuyingGroupID], [BuyingGroupName]) VALUES
@@ -127,8 +130,9 @@ BEGIN
     [RunPosition] nvarchar(5) NULL
   );
   INSERT INTO #Expected ([CustomerID], [CustomerName], [CustomerCategoryName], [PrimaryContact], [AlternateContact], [PhoneNumber], [FaxNumber], [BuyingGroupName], [WebsiteURL], [DeliveryMethod], [CityName], [DeliveryLocation], [DeliveryRun], [RunPosition]) VALUES
-    (1, N'Customer 1', N'Novelty Shop', N'Ann Lee', NULL, N'(206) 555-9999', N'(206) 555-0101', NULL, N'http://x', N'Delivery Van', N'Seattle', NULL, NULL, NULL),
-    (2, N'Customer 2', NULL, NULL, NULL, N'(206) 555-9999', N'(206) 555-0101', NULL, N'http://x', NULL, NULL, NULL, NULL, NULL);
+    (1, N'Customer 1', N'Novelty Shop', N'Ann Lee', N'Bo Ng', N'(206) 555-9999', N'(206) 555-9998', N'Tailspin Toys', N'http://same', N'Delivery Van', N'Seattle', NULL, NULL, NULL),
+    (2, N'Customer 2', N'Novelty Shop', N'Bo Ng', N'Ann Lee', N'(206) 555-9999', N'(206) 555-9998', NULL, N'http://same', N'Delivery Van', N'Seattle', NULL, NULL, NULL),
+    (3, N'Customer 3', N'Novelty Shop', N'Ann Lee', NULL, N'(206) 555-9999', N'(206) 555-9998', NULL, N'http://same', N'Delivery Van', N'Seattle', NULL, NULL, NULL);
   INSERT INTO #Actual
   SELECT CustomerID, CustomerName, CustomerCategoryName, PrimaryContact, AlternateContact, PhoneNumber, FaxNumber, BuyingGroupName, WebsiteURL, DeliveryMethod, CityName, DeliveryLocation.STAsText() AS DeliveryLocation, DeliveryRun, RunPosition FROM Website.Customers;
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';

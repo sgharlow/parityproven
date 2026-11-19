@@ -2,7 +2,7 @@
   "object": "dbo.uspGetBillOfMaterials",
   "database": "AdventureWorks2025",
   "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
-  "capturedAt": "2026-11-19T04:15:41.537Z",
+  "capturedAt": "2026-11-19T06:20:05.071Z",
   "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
   "cases": [
     {
@@ -280,7 +280,7 @@
       "raised": "raised: maximum recursion (25) exhausted"
     },
     {
-      "label": "[A06] an edge ending at 11:59:59.999 duplicates an open edge: SQL Server sums both quantities at 12:00, timestamp only one",
+      "label": "[A06] an edge ending at 11:59:59.999 overlaps an open edge for the same pair: SQL Server sums both quantities at 12:00, a timestamp that kept .999 only one",
       "columns": [
         {
           "name": "ProductAssemblyID",
@@ -553,7 +553,7 @@
           "n:1",
           "n:2",
           "s:P2",
-          "n:0.05",
+          "n:1.05",
           "n:1.5",
           "n:2.25",
           "n:1",
@@ -563,7 +563,7 @@
           "n:1",
           "n:3",
           "s:P3",
-          "n:0.15",
+          "n:1.15",
           "n:1.5",
           "n:2.25",
           "n:1",
@@ -573,7 +573,7 @@
           "n:2",
           "n:4",
           "s:P4",
-          "n:0.25",
+          "n:1.25",
           "n:0.0005",
           "n:1.0005",
           "n:2",
@@ -583,7 +583,7 @@
           "n:3",
           "n:4",
           "s:P4",
-          "n:0.35",
+          "n:1.35",
           "n:0.0005",
           "n:1.0005",
           "n:2",
@@ -593,8 +593,8 @@
           "n:4",
           "n:5",
           "s:P5",
-          "n:0.9",
-          "n:-0.0005",
+          "n:2.9",
+          "n:0.0005",
           "n:0.0015",
           "n:3",
           "n:2"
@@ -691,7 +691,7 @@
       ]
     },
     {
-      "label": "[A13] BOMLevel out of step with depth: 32767, -32768 and 0 (smallint extremes) on a three-edge chain",
+      "label": "[A13] BOMLevel out of step with depth: 32767 (smallint maximum), 1 and 16384 on a three-edge chain",
       "columns": [
         {
           "name": "ProductAssemblyID",
@@ -730,11 +730,11 @@
         [
           "n:2",
           "n:3",
-          "s:P2",
+          "s:P3",
           "n:1",
           "n:1.5",
           "n:2.25",
-          "n:-32768",
+          "n:1",
           "n:1"
         ],
         [
@@ -744,7 +744,7 @@
           "n:1",
           "n:1.5",
           "n:2.25",
-          "n:0",
+          "n:16384",
           "n:2"
         ],
         [
@@ -760,7 +760,7 @@
       ]
     },
     {
-      "label": "[A14] component names that differ only in case or a trailing space, an empty name and non-ASCII text are returned as stored",
+      "label": "[A14] product names with a trailing space, an empty name, non-ASCII text and a 50-character name are returned as stored",
       "columns": [
         {
           "name": "ProductAssemblyID",
@@ -809,7 +809,7 @@
         [
           "n:1",
           "n:3",
-          "s:BOLT",
+          "s:Nut ",
           "n:1",
           "n:1.5",
           "n:2.25",
@@ -819,16 +819,6 @@
         [
           "n:1",
           "n:4",
-          "s:bolt ",
-          "n:1",
-          "n:1.5",
-          "n:2.25",
-          "n:1",
-          "n:0"
-        ],
-        [
-          "n:1",
-          "n:5",
           "s:",
           "n:1",
           "n:1.5",
@@ -838,7 +828,7 @@
         ],
         [
           "n:1",
-          "n:6",
+          "n:5",
           "s:Écrou 😀",
           "n:1",
           "n:1.5",
@@ -848,11 +838,70 @@
         ],
         [
           "n:1",
-          "n:7",
+          "n:6",
           "s:ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-AB",
           "n:1",
           "n:1.5",
           "n:2.25",
+          "n:1",
+          "n:0"
+        ]
+      ]
+    },
+    {
+      "label": "[A15] a quantity summed past decimal(8,2): three in-use 999999.99 rows for one pair give 2999999.97; large money costs ending in 5",
+      "columns": [
+        {
+          "name": "ProductAssemblyID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "ComponentID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "ComponentDesc",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TotalQuantity",
+          "sqlServerType": "decimal(38,2)"
+        },
+        {
+          "name": "StandardCost",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "ListPrice",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "BOMLevel",
+          "sqlServerType": "smallint"
+        },
+        {
+          "name": "RecursionLevel",
+          "sqlServerType": "int"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "n:2",
+          "s:P2",
+          "n:2999999.97",
+          "n:900719925474.0985",
+          "n:900719925474.099",
+          "n:1",
+          "n:0"
+        ],
+        [
+          "n:1",
+          "n:3",
+          "s:P3",
+          "n:1.05",
+          "n:0.0005",
+          "n:0",
           "n:1",
           "n:0"
         ]
@@ -1022,6 +1071,305 @@
           "n:2.25",
           "n:1",
           "n:0"
+        ]
+      ]
+    },
+    {
+      "label": "[A19] 26-edge chain whose last edge is in use only because datetime rounds its end 23:59:59.999 to midnight: exactly 25 recursions, allowed, 26 rows",
+      "columns": [
+        {
+          "name": "ProductAssemblyID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "ComponentID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "ComponentDesc",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TotalQuantity",
+          "sqlServerType": "decimal(38,2)"
+        },
+        {
+          "name": "StandardCost",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "ListPrice",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "BOMLevel",
+          "sqlServerType": "smallint"
+        },
+        {
+          "name": "RecursionLevel",
+          "sqlServerType": "int"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "n:2",
+          "s:P2",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:1",
+          "n:0"
+        ],
+        [
+          "n:2",
+          "n:3",
+          "s:P3",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:2",
+          "n:1"
+        ],
+        [
+          "n:3",
+          "n:4",
+          "s:P4",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:3",
+          "n:2"
+        ],
+        [
+          "n:4",
+          "n:5",
+          "s:P5",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:4",
+          "n:3"
+        ],
+        [
+          "n:5",
+          "n:6",
+          "s:P6",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:5",
+          "n:4"
+        ],
+        [
+          "n:6",
+          "n:7",
+          "s:P7",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:6",
+          "n:5"
+        ],
+        [
+          "n:7",
+          "n:8",
+          "s:P8",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:7",
+          "n:6"
+        ],
+        [
+          "n:8",
+          "n:9",
+          "s:P9",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:8",
+          "n:7"
+        ],
+        [
+          "n:9",
+          "n:10",
+          "s:P10",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:9",
+          "n:8"
+        ],
+        [
+          "n:10",
+          "n:11",
+          "s:P11",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:10",
+          "n:9"
+        ],
+        [
+          "n:11",
+          "n:12",
+          "s:P12",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:11",
+          "n:10"
+        ],
+        [
+          "n:12",
+          "n:13",
+          "s:P13",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:12",
+          "n:11"
+        ],
+        [
+          "n:13",
+          "n:14",
+          "s:P14",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:13",
+          "n:12"
+        ],
+        [
+          "n:14",
+          "n:15",
+          "s:P15",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:14",
+          "n:13"
+        ],
+        [
+          "n:15",
+          "n:16",
+          "s:P16",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:15",
+          "n:14"
+        ],
+        [
+          "n:16",
+          "n:17",
+          "s:P17",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:16",
+          "n:15"
+        ],
+        [
+          "n:17",
+          "n:18",
+          "s:P18",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:17",
+          "n:16"
+        ],
+        [
+          "n:18",
+          "n:19",
+          "s:P19",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:18",
+          "n:17"
+        ],
+        [
+          "n:19",
+          "n:20",
+          "s:P20",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:19",
+          "n:18"
+        ],
+        [
+          "n:20",
+          "n:21",
+          "s:P21",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:20",
+          "n:19"
+        ],
+        [
+          "n:21",
+          "n:22",
+          "s:P22",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:21",
+          "n:20"
+        ],
+        [
+          "n:22",
+          "n:23",
+          "s:P23",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:22",
+          "n:21"
+        ],
+        [
+          "n:23",
+          "n:24",
+          "s:P24",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:23",
+          "n:22"
+        ],
+        [
+          "n:24",
+          "n:25",
+          "s:P25",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:24",
+          "n:23"
+        ],
+        [
+          "n:25",
+          "n:26",
+          "s:P26",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:25",
+          "n:24"
+        ],
+        [
+          "n:26",
+          "n:27",
+          "s:P27",
+          "n:1",
+          "n:1.5",
+          "n:2.25",
+          "n:26",
+          "n:25"
         ]
       ]
     }

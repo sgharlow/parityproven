@@ -95,12 +95,12 @@
       "planted defects caught by the agreed tests: 4 of 4"
     ],
     "adversarial": {
-      "gate": "fail",
+      "gate": "pass",
       "ran": 4,
       "differed": 0,
       "evidencePath": "evidence/adversarial/WideWorldImporters/Website.RecordColdRoomTemperatures.json",
       "conversionSha256": "6a35f9a6ea380b94842288ede6569c049a286cc48ed0e721601440efa9f8608a",
-      "runAt": "2026-11-19T05:29:55.966Z"
+      "runAt": "2026-11-19T06:23:06.302Z"
     }
   },
   "effort": {

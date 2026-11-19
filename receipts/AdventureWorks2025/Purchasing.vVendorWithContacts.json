@@ -110,20 +110,18 @@
       "planted defects caught by the agreed tests: 2 of 2"
     ],
     "adversarial": {
-      "gate": "fail",
+      "gate": "pass",
       "ran": 5,
       "differed": 0,
       "evidencePath": "evidence/adversarial/AdventureWorks2025/Purchasing.vVendorWithContacts.json",
-      "runAt": "2026-11-19T04:17:09.381Z",
+      "runAt": "2026-11-19T06:17:45.663Z",
       "agentWritten": true,
       "wording": "5 adversarial cases ran, 0 differed",
       "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
       "auditorModel": "gpt-5.6-sol",
       "sameModel": false,
       "mutantAdequacy": "adequate",
-      "gateReasons": [
-        "objection O01 is open"
-      ],
+      "gateReasons": [],
       "cases": [
         {
           "id": "A01",
@@ -148,7 +146,7 @@
         },
         {
           "id": "A03",
-          "label": "fan-out: a contact with two identical phone rows and an unknown phone type; the same person as contact twice under two types",
+          "label": "fan-out: a contact with the same number under two phone types of one name and an unknown phone type; the same person as contact twice under two types",
           "traps": [
             "top-ties"
           ],
@@ -186,5 +184,5 @@
     "p50Hours": 0.75,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-19T05:37:18.793Z"
+  "builtAt": "2026-11-19T06:24:38.458Z"
 }

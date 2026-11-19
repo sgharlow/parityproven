@@ -10,8 +10,8 @@
 GO
 EXEC tSQLt.NewTestClass 'AgreedTests';
 GO
--- case 1: [A01] -1 keeps its sign inside the padding: '000000-1'
-CREATE PROCEDURE [AgreedTests].[test 01 [A01 -1 keeps its sign inside the padding: 000000-1]
+-- case 1: [A01] -1000 (5 characters with the sign) gets three zeros before the sign: '000-1000'
+CREATE PROCEDURE [AgreedTests].[test 01 [A01 -1000 (5 characters with the sign) gets three zeros before the sign: 000-1000]
 AS
 BEGIN
   CREATE TABLE #Expected (
@@ -21,14 +21,14 @@ BEGIN
     [result] varchar(8) NULL
   );
   INSERT INTO #Expected ([result]) VALUES
-    (N'000000-1');
+    (N'000-1000');
   INSERT INTO #Actual
-  SELECT dbo.ufnLeadingZeros(-1) AS result;
+  SELECT dbo.ufnLeadingZeros(-1000) AS result;
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
--- case 2: [A02] -1000000 (exactly 8 characters with the sign) is unchanged
-CREATE PROCEDURE [AgreedTests].[test 02 [A02 -1000000 (exactly 8 characters with the sign) is unchanged]
+-- case 2: [A02] -100000 (7 characters with the sign) gets one zero before the sign: '0-100000'
+CREATE PROCEDURE [AgreedTests].[test 02 [A02 -100000 (7 characters with the sign) gets one zero before the sign: 0-100000]
 AS
 BEGIN
   CREATE TABLE #Expected (
@@ -38,14 +38,14 @@ BEGIN
     [result] varchar(8) NULL
   );
   INSERT INTO #Expected ([result]) VALUES
-    (N'-1000000');
+    (N'0-100000');
   INSERT INTO #Actual
-  SELECT dbo.ufnLeadingZeros(-1000000) AS result;
+  SELECT dbo.ufnLeadingZeros(-100000) AS result;
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
--- case 3: [A03] -99999999 (9 characters with the sign) does not fit varchar(8): '0000000*'
-CREATE PROCEDURE [AgreedTests].[test 03 [A03 -99999999 (9 characters with the sign) does not fit varchar(8): 0000000*]
+-- case 3: [A03] -999999999 (10 characters with the sign) does not fit varchar(8): '0000000*'
+CREATE PROCEDURE [AgreedTests].[test 03 [A03 -999999999 (10 characters with the sign) does not fit varchar(8): 0000000*]
 AS
 BEGIN
   CREATE TABLE #Expected (
@@ -57,12 +57,12 @@ BEGIN
   INSERT INTO #Expected ([result]) VALUES
     (N'0000000*');
   INSERT INTO #Actual
-  SELECT dbo.ufnLeadingZeros(-99999999) AS result;
+  SELECT dbo.ufnLeadingZeros(-999999999) AS result;
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
--- case 4: [A04] 10000000 (8 digits, smallest 8-digit value) is unchanged
-CREATE PROCEDURE [AgreedTests].[test 04 [A04 10000000 (8 digits, smallest 8-digit value) is unchanged]
+-- case 4: [A04] 1000 (4 digits) gets four leading zeros: '00001000'
+CREATE PROCEDURE [AgreedTests].[test 04 [A04 1000 (4 digits) gets four leading zeros: 00001000]
 AS
 BEGIN
   CREATE TABLE #Expected (
@@ -72,9 +72,9 @@ BEGIN
     [result] varchar(8) NULL
   );
   INSERT INTO #Expected ([result]) VALUES
-    (N'10000000');
+    (N'00001000');
   INSERT INTO #Actual
-  SELECT dbo.ufnLeadingZeros(10000000) AS result;
+  SELECT dbo.ufnLeadingZeros(1000) AS result;
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
@@ -112,8 +112,8 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
--- case 7: [A07] 2147483646 (one below int maximum) gives '0000000*'
-CREATE PROCEDURE [AgreedTests].[test 07 [A07 2147483646 (one below int maximum) gives 0000000*]
+-- case 7: [A07] 100000 (6 digits, an exact power of ten) gets two leading zeros: '00100000'
+CREATE PROCEDURE [AgreedTests].[test 07 [A07 100000 (6 digits, an exact power of ten) gets two leading zeros: 00100000]
 AS
 BEGIN
   CREATE TABLE #Expected (
@@ -123,14 +123,14 @@ BEGIN
     [result] varchar(8) NULL
   );
   INSERT INTO #Expected ([result]) VALUES
-    (N'0000000*');
+    (N'00100000');
   INSERT INTO #Actual
-  SELECT dbo.ufnLeadingZeros(2147483646) AS result;
+  SELECT dbo.ufnLeadingZeros(100000) AS result;
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
--- case 8: [A08] -2147483647 (one above int minimum) gives '0000000*'
-CREATE PROCEDURE [AgreedTests].[test 08 [A08 -2147483647 (one above int minimum) gives 0000000*]
+-- case 8: [A08] -10000 (6 characters with the sign) gets two zeros before the sign: '00-10000'
+CREATE PROCEDURE [AgreedTests].[test 08 [A08 -10000 (6 characters with the sign) gets two zeros before the sign: 00-10000]
 AS
 BEGIN
   CREATE TABLE #Expected (
@@ -140,9 +140,9 @@ BEGIN
     [result] varchar(8) NULL
   );
   INSERT INTO #Expected ([result]) VALUES
-    (N'0000000*');
+    (N'00-10000');
   INSERT INTO #Actual
-  SELECT dbo.ufnLeadingZeros(-2147483647) AS result;
+  SELECT dbo.ufnLeadingZeros(-10000) AS result;
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO

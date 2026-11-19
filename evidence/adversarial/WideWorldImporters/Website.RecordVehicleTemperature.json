@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "object": "Website.RecordVehicleTemperature",
   "database": "WideWorldImporters",
-  "runAt": "2026-11-19T05:30:09.791Z",
+  "runAt": "2026-11-19T06:23:21.827Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "46156b46b7be9426e71faa55826546979ce2ce2fd0e570d8509bfbcf03ecae3b",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-19T05:20:49.498Z",
+    "at": "2026-11-19T06:00:45.121Z",
     "file": "adversarial/WideWorldImporters/Website.RecordVehicleTemperature.cases.json",
-    "sha256": "8974659a6a5bc023b4c5c0912717e633aded89e152e2e907456a83f6c93ac750"
+    "sha256": "423c03c7b9c0c0b628c3863692963b80cbd482caf44be91d84b2cf67886c122d"
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-18T22:23:38.8804730-07:00",
+    "at": "2026-11-19T06:06:57.652Z",
     "file": "adversarial/WideWorldImporters/Website.RecordVehicleTemperature.audit.json",
-    "sha256": "046fe259fe561ae9330105ef52a825bb685771d4e17916fe519e21dc704562d0"
+    "sha256": "19af5446c0587fe28532f9fd5b534df73a281e3c6815a2383cd8e98863db556e"
   },
   "sameModel": false,
   "casesAudited": [
@@ -24,7 +24,10 @@
     "A03",
     "A04",
     "A05",
-    "A06"
+    "A06",
+    "A07",
+    "A08",
+    "A09"
   ],
   "traps": {
     "null-vs-empty": {
@@ -93,9 +96,9 @@
     },
     {
       "id": "A02",
-      "label": "duplicate 'rego' key: the first occurrence wins",
+      "label": "duplicate 'temp' key: the first (1.5) wins; the second is in exponent notation (1e2)",
       "traps": [],
-      "reasoning": "OPENJSON ... WITH takes the first of duplicate keys; the conversion's json_member does the same (json, not jsonb, keeps order). VehicleRegistration must be 'first' on both engines.",
+      "reasoning": "OPENJSON ... WITH takes the first of duplicate keys. The hand-derived duplicate-key case repeats 'rego' (text); here the repeated key is the decimal 'temp', and its second value 1e2 is one the procedure rejects. SQL Server stores 1.50; a conversion that took the last value (jsonb, or ORDER BY ... DESC) would read 1e2 and raise.",
       "trapChecks": {},
       "status": "ran",
       "sqlServer": {
@@ -108,9 +111,9 @@
     },
     {
       "id": "A03",
-      "label": "temperature 3.965 rounds half away from zero to 3.97",
+      "label": "temperature -3.965 rounds half away from zero to -3.97 (half-up gives -3.96)",
       "traps": [],
-      "reasoning": "CAST of 3.965 to decimal(18,2) rounds half away from zero to 3.97; tsql_compat.to_decimal_18_2 uses round(numeric,2) which must match, not banker's rounding.",
+      "reasoning": "CAST of -3.965 to decimal(18,2) rounds the midpoint away from zero, to -3.97. The hand-derived case is the positive 3.965, where half-up and half-away-from-zero agree; for a negative midpoint, rounding half up (floor(x * 100 + 0.5)) gives -3.96 and banker's rounding gives -3.96.",
       "trapChecks": {},
       "status": "ran",
       "sqlServer": {
@@ -153,9 +156,54 @@
     },
     {
       "id": "A06",
-      "label": "NULL document: ISJSON(NULL) is NULL, so nothing is inserted and no error is raised",
+      "label": "the document is the JSON literal null (text 'null', not SQL NULL): not an object or array, so ISJSON is 0 and the call raises",
       "traps": [],
-      "reasoning": "ISJSON returns NULL for a NULL argument, which is not = 0, so the THROW is skipped; OPENJSON over NULL yields no rows. The conversion's isjson() returns NULL and inserts nothing. No error on either engine.",
+      "reasoning": "ISJSON(N'null') is 0 because, without a type argument, ISJSON accepts only an object or an array; the procedure then throws. The hand-derived NULL-document case sends SQL NULL, for which ISJSON is NULL and nothing happens, and the hand-derived scalar case uses a different scalar. A conversion that tested 'IS JSON' (which accepts any JSON value) would go on to parse it and insert nothing without an error.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A07",
+      "label": "temperature in upper-case exponent notation with a negative exponent (25E-1) is rejected",
+      "traps": [],
+      "reasoning": "The procedure accepts a temperature only as plain decimal text; 25E-1 is valid JSON and equals 2.5, but SQL Server's conversion to decimal(18,2) refuses exponent notation and the call fails. A conversion that cast through numeric or float, or a pattern that allowed an exponent (any case, any sign), would store 2.50.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A08",
+      "label": "two recordings, the first with an empty 'when' (1900-01-01) and the second dated normally: both inserted",
+      "traps": [],
+      "reasoning": "An empty 'when' converts to 1900-01-01 00:00:00 on SQL Server (an empty string is not NULL); the second recording has a normal date. A conversion that mapped '' to NULL would store NULL or fail; the hand-derived case has a single recording, so this also checks that the empty-string branch applies per recording. The null-vs-empty trap is not claimed: the only text input is the document itself.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A09",
+      "label": "a 1007-character argument whose first 1000 characters are a valid document followed by spaces: truncated to nvarchar(1000), it is valid and inserted",
+      "traps": [],
+      "reasoning": "The parameter is nvarchar(1000), so SQL Server keeps the first 1000 characters: the document and trailing spaces, without the 'garbage' that follows. The truncated text is valid JSON and the recording is inserted. A conversion that did not truncate would see invalid JSON and raise. The hand-derived over-length case has the opposite outcome (truncation makes the JSON invalid).",
       "trapChecks": {},
       "status": "ran",
       "sqlServer": {
@@ -168,7 +216,7 @@
     }
   ],
   "summary": {
-    "ran": 6,
+    "ran": 9,
     "differed": 0,
     "invalid": 0
   },
@@ -178,46 +226,55 @@
       "caseId": "A02",
       "kind": "duplicate",
       "text": "The hand-derived duplicate-key case sends the same first and second rego values and already requires OPENJSON-compatible first-occurrence behavior. A02 repeats that input and mechanism.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A02 now duplicates the numeric temp key rather than rego, and makes the second occurrence exponent notation that would fail if selected. It tests first-occurrence handling through a distinct typed conversion path.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O02",
       "caseId": "A03",
       "kind": "duplicate",
       "text": "The hand-derived temperature-rounding case already sends temp 3.965 in the same document shape and requires 3.97. A03 is the same attack with only the registration changed.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A03 now sends -3.965. The negative midpoint distinguishes half-away-from-zero (-3.97) from half-up and half-even (-3.96), unlike the positive hand-derived midpoint.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O03",
       "caseId": "A06",
       "kind": "duplicate",
       "text": "The hand-derived NULL-document case already calls the procedure with a NULL argument and requires no error and no inserted rows. A06 is identical.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A06 now sends the JSON scalar text 'null', not SQL NULL. SQL Server ISJSON without a type constraint rejects that scalar, exposing a conversion that accepts all JSON values.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     }
   ],
   "mutantAdequacy": {
-    "verdict": "inadequate",
+    "verdict": "adequate",
     "caught": [
-      "duplicate keys: last one wins",
-      "AS JSON fragment normalised (jsonb)"
-    ],
-    "missed": [
       "parameter not truncated to nvarchar(1000)",
       "ISJSON accepts JSON scalars",
+      "duplicate keys: last one wins",
       "empty string is not 1900-01-01",
-      "decimal accepts exponent notation"
+      "decimal accepts exponent notation",
+      "AS JSON fragment normalised (jsonb)"
     ],
+    "missed": [],
     "skipped": [],
     "equivalentRecorded": []
   },
   "gate": {
-    "passed": false,
-    "reasons": [
-      "objection O01 is open",
-      "objection O02 is open",
-      "objection O03 is open",
-      "mutant adequacy is inadequate (unexplained misses: parameter not truncated to nvarchar(1000), ISJSON accepts JSON scalars, empty string is not 1900-01-01, decimal accepts exponent notation)"
-    ]
+    "passed": true,
+    "reasons": []
   },
-  "wording": "6 adversarial cases ran, 0 differed"
+  "wording": "9 adversarial cases ran, 0 differed"
 }

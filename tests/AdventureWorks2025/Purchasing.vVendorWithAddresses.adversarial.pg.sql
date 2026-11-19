@@ -7,7 +7,7 @@
 -- Prerequisites: the spec's tables created and the final conversion deployed.
 -- Each case is one transaction and always rolls back.
 
--- @case 1: [A01] case-only variants 'Us', 'uS' and 'us ' of a country code join 'US'
+-- @case 1: [A01] case pairs outside ASCII ('üs' to 'ÜS', 'σa' to 'ΣA') and case plus a trailing space on the country side ('CA' to 'ca ')
 BEGIN;
 DELETE FROM person.address;
 DELETE FROM person.address_type;
@@ -26,11 +26,13 @@ INSERT INTO person.business_entity_address ("BusinessEntityID", "AddressID", "Ad
   ('2', '2', '1'),
   ('3', '3', '1');
 INSERT INTO person.country_region ("CountryRegionCode", "Name") VALUES
-  ('US', 'United States');
+  ('ÜS', 'Country Ü'),
+  ('ΣA', 'Country Σ'),
+  ('ca ', 'Country ca');
 INSERT INTO person.state_province ("StateProvinceID", "CountryRegionCode", "Name") VALUES
-  ('1', 'Us', 'Province 1'),
-  ('2', 'uS', 'Province 2'),
-  ('3', 'us ', 'Province 3');
+  ('1', 'üs', 'Province 1'),
+  ('2', 'σa', 'Province 2'),
+  ('3', 'CA', 'Province 3');
 INSERT INTO purchasing.vendor ("BusinessEntityID", "Name") VALUES
   ('1', 'Vendor 1'),
   ('2', 'Vendor 2'),
@@ -42,21 +44,21 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['BusinessEntityID', 'Name', 'AddressType', 'AddressLine1', 'AddressLine2', 'City', 'StateProvinceName', 'PostalCode', 'CountryRegionName']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 01 [A01 case-only variants Us, uS and us of a country code join US', got, ARRAY['BusinessEntityID', 'Name', 'AddressType', 'AddressLine1', 'AddressLine2', 'City', 'StateProvinceName', 'PostalCode', 'CountryRegionName']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 01 [A01 case pairs outside ASCII (üs to ÜS, ?a to ?A) and case plus a trailing space on the country side…', got, ARRAY['BusinessEntityID', 'Name', 'AddressType', 'AddressLine1', 'AddressLine2', 'City', 'StateProvinceName', 'PostalCode', 'CountryRegionName']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
 INSERT INTO pp_expected VALUES
-  ('1', 'Vendor 1', 'Main Office', '1 Main St', NULL, 'Bothell', 'Province 1', '98011', 'United States'),
-  ('2', 'Vendor 2', 'Main Office', '2 Main St', NULL, 'Bothell', 'Province 2', '98011', 'United States'),
-  ('3', 'Vendor 3', 'Main Office', '3 Main St', NULL, 'Bothell', 'Province 3', '98011', 'United States');
+  ('1', 'Vendor 1', 'Main Office', '1 Main St', NULL, 'Bothell', 'Province 1', '98011', 'Country Ü'),
+  ('2', 'Vendor 2', 'Main Office', '2 Main St', NULL, 'Bothell', 'Province 2', '98011', 'Country Σ'),
+  ('3', 'Vendor 3', 'Main Office', '3 Main St', NULL, 'Bothell', 'Province 3', '98011', 'Country ca');
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 01 [A01 case-only variants Us, uS and us of a country code join US', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 01 [A01 case pairs outside ASCII (üs to ÜS, ?a to ?A) and case plus a trailing space on the country side…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;
@@ -395,7 +397,7 @@ BEGIN
 END $pp$;
 ROLLBACK;
 
--- @case 8: [A08] one address used twice by a vendor under two address types, a duplicate BusinessEntityAddress row, and an address type of another case
+-- @case 8: [A08] one address used by a vendor under two address types and by a second vendor; a vendor name that differs only in case from an address type
 BEGIN;
 DELETE FROM person.address;
 DELETE FROM person.address_type;
@@ -407,17 +409,18 @@ INSERT INTO person.address ("AddressID", "AddressLine1", "AddressLine2", "City",
   ('1', '1 Main St', NULL, 'Bothell', '1', '98011');
 INSERT INTO person.address_type ("AddressTypeID", "Name") VALUES
   ('1', 'Shipping'),
-  ('2', 'SHIPPING');
+  ('2', 'Billing');
 INSERT INTO person.business_entity_address ("BusinessEntityID", "AddressID", "AddressTypeID") VALUES
   ('1', '1', '1'),
   ('1', '1', '2'),
-  ('1', '1', '2');
+  ('2', '1', '1');
 INSERT INTO person.country_region ("CountryRegionCode", "Name") VALUES
   ('US', 'United States');
 INSERT INTO person.state_province ("StateProvinceID", "CountryRegionCode", "Name") VALUES
   ('1', 'US', 'Province 1');
 INSERT INTO purchasing.vendor ("BusinessEntityID", "Name") VALUES
-  ('1', 'Vendor 1');
+  ('1', 'Vendor 1'),
+  ('2', 'shipping');
 CREATE TEMP TABLE pp_actual ON COMMIT DROP AS
 SELECT * FROM purchasing.v_vendor_with_addresses;
 DO $pp$
@@ -425,21 +428,21 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['BusinessEntityID', 'Name', 'AddressType', 'AddressLine1', 'AddressLine2', 'City', 'StateProvinceName', 'PostalCode', 'CountryRegionName']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 08 [A08 one address used twice by a vendor under two address types, a duplicate BusinessEntityAddress ro…', got, ARRAY['BusinessEntityID', 'Name', 'AddressType', 'AddressLine1', 'AddressLine2', 'City', 'StateProvinceName', 'PostalCode', 'CountryRegionName']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 08 [A08 one address used by a vendor under two address types and by a second vendor; a vendor name that…', got, ARRAY['BusinessEntityID', 'Name', 'AddressType', 'AddressLine1', 'AddressLine2', 'City', 'StateProvinceName', 'PostalCode', 'CountryRegionName']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
 INSERT INTO pp_expected VALUES
   ('1', 'Vendor 1', 'Shipping', '1 Main St', NULL, 'Bothell', 'Province 1', '98011', 'United States'),
-  ('1', 'Vendor 1', 'SHIPPING', '1 Main St', NULL, 'Bothell', 'Province 1', '98011', 'United States'),
-  ('1', 'Vendor 1', 'SHIPPING', '1 Main St', NULL, 'Bothell', 'Province 1', '98011', 'United States');
+  ('1', 'Vendor 1', 'Billing', '1 Main St', NULL, 'Bothell', 'Province 1', '98011', 'United States'),
+  ('2', 'shipping', 'Shipping', '1 Main St', NULL, 'Bothell', 'Province 1', '98011', 'United States');
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 08 [A08 one address used twice by a vendor under two address types, a duplicate BusinessEntityAddress ro…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 08 [A08 one address used by a vendor under two address types and by a second vendor; a vendor name that…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;
@@ -488,6 +491,51 @@ BEGIN
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
   IF missing > 0 OR extra > 0 THEN
     RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 09 [A09 keys with gaps and at the int limits: vendor 2147483647, address -2147483648, address type 0; te…', missing, extra;
+  END IF;
+END $pp$;
+ROLLBACK;
+
+-- @case 10: [A10] a vendor address whose address type has no AddressType row is dropped by the inner join
+BEGIN;
+DELETE FROM person.address;
+DELETE FROM person.address_type;
+DELETE FROM person.business_entity_address;
+DELETE FROM person.country_region;
+DELETE FROM person.state_province;
+DELETE FROM purchasing.vendor;
+INSERT INTO person.address ("AddressID", "AddressLine1", "AddressLine2", "City", "StateProvinceID", "PostalCode") VALUES
+  ('1', '1 Main St', NULL, 'Bothell', '1', '98011');
+INSERT INTO person.address_type ("AddressTypeID", "Name") VALUES
+  ('1', 'Main Office');
+INSERT INTO person.business_entity_address ("BusinessEntityID", "AddressID", "AddressTypeID") VALUES
+  ('1', '1', '1'),
+  ('1', '1', '9');
+INSERT INTO person.country_region ("CountryRegionCode", "Name") VALUES
+  ('US', 'United States');
+INSERT INTO person.state_province ("StateProvinceID", "CountryRegionCode", "Name") VALUES
+  ('1', 'US', 'Province 1');
+INSERT INTO purchasing.vendor ("BusinessEntityID", "Name") VALUES
+  ('1', 'Vendor 1');
+CREATE TEMP TABLE pp_actual ON COMMIT DROP AS
+SELECT * FROM purchasing.v_vendor_with_addresses;
+DO $pp$
+DECLARE got text[];
+BEGIN
+  SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
+  IF got IS DISTINCT FROM ARRAY['BusinessEntityID', 'Name', 'AddressType', 'AddressLine1', 'AddressLine2', 'City', 'StateProvinceName', 'PostalCode', 'CountryRegionName']::text[] THEN
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 10 [A10 a vendor address whose address type has no AddressType row is dropped by the inner join', got, ARRAY['BusinessEntityID', 'Name', 'AddressType', 'AddressLine1', 'AddressLine2', 'City', 'StateProvinceName', 'PostalCode', 'CountryRegionName']::text[];
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
+INSERT INTO pp_expected VALUES
+  ('1', 'Vendor 1', 'Main Office', '1 Main St', NULL, 'Bothell', 'Province 1', '98011', 'United States');
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 10 [A10 a vendor address whose address type has no AddressType row is dropped by the inner join', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;

@@ -65,12 +65,12 @@
       "planted defects caught by the agreed tests: 1 of 1"
     ],
     "adversarial": {
-      "gate": "fail",
+      "gate": "pass",
       "ran": 1,
       "differed": 0,
       "evidencePath": "evidence/adversarial/AdventureWorks2025/dbo.ufnGetAccountingEndDate.json",
       "conversionSha256": "3d090c0149df680b1a9e8fc5bb52e850aaf90a219e347a6eda61f1f03a914196",
-      "runAt": "2026-11-19T02:25:17.547Z"
+      "runAt": "2026-11-19T06:18:46.925Z"
     }
   },
   "effort": {

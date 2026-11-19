@@ -132,8 +132,8 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
--- case 3: [A03] fan-out: a contact with two identical phone rows and an unknown phone type; the same person as contact twice under two types
-CREATE PROCEDURE [AgreedTests].[test 03 [A03 fan-out: a contact with two identical phone rows and an unknown phone type; the same person as c…]
+-- case 3: [A03] fan-out: a contact with the same number under two phone types of one name and an unknown phone type; the same person as contact twice under two types
+CREATE PROCEDURE [AgreedTests].[test 03 [A03 fan-out: a contact with the same number under two phone types of one name and an unknown phone t…]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Person].[BusinessEntityContact]';
@@ -153,10 +153,11 @@ BEGIN
     (10, NULL, N'First10', NULL, N'Last10', NULL, 0);
   INSERT INTO [Person].[PersonPhone] ([BusinessEntityID], [PhoneNumber], [PhoneNumberTypeID]) VALUES
     (10, N'555-0100', 1),
-    (10, N'555-0100', 1),
+    (10, N'555-0100', 2),
     (10, N'555-0199', 9);
   INSERT INTO [Person].[PhoneNumberType] ([PhoneNumberTypeID], [Name]) VALUES
-    (1, N'Cell');
+    (1, N'Cell'),
+    (2, N'Cell');
   INSERT INTO [Purchasing].[Vendor] ([BusinessEntityID], [Name]) VALUES
     (1, N'Vendor 1');
   CREATE TABLE #Expected (

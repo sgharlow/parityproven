@@ -2,7 +2,7 @@
   "object": "Production.vProductAndDescription",
   "database": "AdventureWorks2025",
   "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
-  "capturedAt": "2026-11-19T04:16:45.455Z",
+  "capturedAt": "2026-11-19T06:17:13.757Z",
   "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
   "cases": [
     {
@@ -42,7 +42,7 @@
           "s:Bike",
           "s:Road",
           "s:EN    ",
-          "s:one"
+          "s:three"
         ],
         [
           "n:1",
@@ -137,7 +137,7 @@
       ]
     },
     {
-      "label": "[A03] an empty description and names that differ only in case: '' kept, not NULL; 'Chain' and 'CHAIN' are two products",
+      "label": "[A03] an empty description, and product and model names that differ only in case from each other: '' kept, not NULL",
       "columns": [
         {
           "name": "ProductID",
@@ -164,21 +164,21 @@
         [
           "n:1",
           "s:Chain",
-          "s:Road",
+          "s:CHAIN",
           "s:en    ",
           "s:"
         ],
         [
           "n:2",
-          "s:CHAIN",
-          "s:ROAD",
+          "s:road",
+          "s:Road",
           "s:en    ",
           "s:"
         ]
       ]
     },
     {
-      "label": "[A04] duplicate culture rows and two products on one model: rows multiply (2 products x 3 culture rows), duplicates kept",
+      "label": "[A04] two descriptions with the same text in one culture and two products on one model: rows multiply (2 products x 3 culture rows), identical rows kept",
       "columns": [
         {
           "name": "ProductID",
@@ -225,21 +225,21 @@
         ],
         [
           "n:2",
-          "s:Bike",
+          "s:Trike",
           "s:Road",
           "s:en    ",
           "s:same"
         ],
         [
           "n:2",
-          "s:Bike",
+          "s:Trike",
           "s:Road",
           "s:en    ",
           "s:same"
         ],
         [
           "n:2",
-          "s:Bike",
+          "s:Trike",
           "s:Road",
           "s:fr    ",
           "s:other"

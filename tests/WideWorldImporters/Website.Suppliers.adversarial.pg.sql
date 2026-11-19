@@ -7,7 +7,7 @@
 -- Prerequisites: the spec's tables created and the final conversion deployed.
 -- Each case is one transaction and always rolls back.
 
--- @case 1: [A01] SupplierReference '' versus NULL kept distinct; NULL DeliveryMethodID yields a NULL method via LEFT JOIN
+-- @case 1: [A01] '' from a joined delivery method versus NULL from a NULL DeliveryMethodID in the same output column; SupplierReference NULL and '' the other way round
 BEGIN;
 DELETE FROM purchasing.suppliers;
 DELETE FROM purchasing.supplier_categories;
@@ -15,15 +15,15 @@ DELETE FROM application.people;
 DELETE FROM application.delivery_methods;
 DELETE FROM application.cities;
 INSERT INTO purchasing.suppliers ("SupplierID", "SupplierName", "SupplierCategoryID", "PrimaryContactPersonID", "AlternateContactPersonID", "DeliveryMethodID", "DeliveryCityID", "SupplierReference", "PhoneNumber", "FaxNumber", "WebsiteURL", "DeliveryLocation") VALUES
-  ('1', 'Supplier 1', '1', '1', '2', NULL, '1', '', '(415) 555-0100', '(415) 555-0101', 'http://x', NULL),
-  ('3', 'Supplier 3', '1', '1', '2', '1', '1', NULL, '(415) 555-0100', '(415) 555-0101', 'http://x', NULL);
+  ('1', 'Supplier 1', '1', '1', '2', NULL, '1', NULL, '(415) 555-0100', '(415) 555-0101', 'http://x', NULL),
+  ('3', 'Supplier 3', '1', '1', '2', '1', '1', '', '(415) 555-0100', '(415) 555-0101', 'http://x', NULL);
 INSERT INTO purchasing.supplier_categories ("SupplierCategoryID", "SupplierCategoryName") VALUES
   ('1', 'Toy Supplier');
 INSERT INTO application.people ("PersonID", "FullName") VALUES
   ('1', 'Ann Lee'),
   ('2', 'Bo Ng');
 INSERT INTO application.delivery_methods ("DeliveryMethodID", "DeliveryMethodName") VALUES
-  ('1', 'Air Freight');
+  ('1', '');
 INSERT INTO application.cities ("CityID", "CityName") VALUES
   ('1', 'Auckland');
 CREATE TEMP TABLE pp_actual ON COMMIT DROP AS
@@ -33,25 +33,25 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['SupplierID', 'SupplierName', 'SupplierCategoryName', 'PrimaryContact', 'AlternateContact', 'PhoneNumber', 'FaxNumber', 'WebsiteURL', 'DeliveryMethod', 'CityName', 'DeliveryLocation', 'SupplierReference']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 01 [A01 SupplierReference versus NULL kept distinct; NULL DeliveryMethodID yields a NULL method via LEFT…', got, ARRAY['SupplierID', 'SupplierName', 'SupplierCategoryName', 'PrimaryContact', 'AlternateContact', 'PhoneNumber', 'FaxNumber', 'WebsiteURL', 'DeliveryMethod', 'CityName', 'DeliveryLocation', 'SupplierReference']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 01 [A01 from a joined delivery method versus NULL from a NULL DeliveryMethodID in the same output column…', got, ARRAY['SupplierID', 'SupplierName', 'SupplierCategoryName', 'PrimaryContact', 'AlternateContact', 'PhoneNumber', 'FaxNumber', 'WebsiteURL', 'DeliveryMethod', 'CityName', 'DeliveryLocation', 'SupplierReference']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
 INSERT INTO pp_expected VALUES
-  ('1', 'Supplier 1', 'Toy Supplier', 'Ann Lee', 'Bo Ng', '(415) 555-0100', '(415) 555-0101', 'http://x', NULL, 'Auckland', NULL, ''),
-  ('3', 'Supplier 3', 'Toy Supplier', 'Ann Lee', 'Bo Ng', '(415) 555-0100', '(415) 555-0101', 'http://x', 'Air Freight', 'Auckland', NULL, NULL);
+  ('1', 'Supplier 1', 'Toy Supplier', 'Ann Lee', 'Bo Ng', '(415) 555-0100', '(415) 555-0101', 'http://x', NULL, 'Auckland', NULL, NULL),
+  ('3', 'Supplier 3', 'Toy Supplier', 'Ann Lee', 'Bo Ng', '(415) 555-0100', '(415) 555-0101', 'http://x', '', 'Auckland', NULL, '');
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 01 [A01 SupplierReference versus NULL kept distinct; NULL DeliveryMethodID yields a NULL method via LEFT…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 01 [A01 from a joined delivery method versus NULL from a NULL DeliveryMethodID in the same output column…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;
 
--- @case 2: [A02] two suppliers share a fax number; a supplier with unmatched category/contacts/city keeps NULLs
+-- @case 2: [A02] two suppliers share phone, fax and website; a NULL delivery method keeps its row; primary and alternate contacts are crossed
 BEGIN;
 DELETE FROM purchasing.suppliers;
 DELETE FROM purchasing.supplier_categories;
@@ -59,8 +59,8 @@ DELETE FROM application.people;
 DELETE FROM application.delivery_methods;
 DELETE FROM application.cities;
 INSERT INTO purchasing.suppliers ("SupplierID", "SupplierName", "SupplierCategoryID", "PrimaryContactPersonID", "AlternateContactPersonID", "DeliveryMethodID", "DeliveryCityID", "SupplierReference", "PhoneNumber", "FaxNumber", "WebsiteURL", "DeliveryLocation") VALUES
-  ('1', 'Supplier 1', '1', '1', '2', NULL, '1', NULL, '(415) 555-0100', '(415) 555-7777', 'http://x', NULL),
-  ('2', 'Supplier 2', '99', '98', '99', NULL, '99', NULL, '(415) 555-0100', '(415) 555-7777', 'http://x', NULL);
+  ('1', 'Supplier 1', '1', '1', '2', '1', '1', 'R1', '(415) 555-0100', '(415) 555-7777', 'http://same', NULL),
+  ('2', 'Supplier 2', '1', '2', '1', NULL, '1', 'R2', '(415) 555-0100', '(415) 555-7777', 'http://same', NULL);
 INSERT INTO purchasing.supplier_categories ("SupplierCategoryID", "SupplierCategoryName") VALUES
   ('1', 'Toy Supplier');
 INSERT INTO application.people ("PersonID", "FullName") VALUES
@@ -77,20 +77,20 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['SupplierID', 'SupplierName', 'SupplierCategoryName', 'PrimaryContact', 'AlternateContact', 'PhoneNumber', 'FaxNumber', 'WebsiteURL', 'DeliveryMethod', 'CityName', 'DeliveryLocation', 'SupplierReference']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 02 [A02 two suppliers share a fax number; a supplier with unmatched category/contacts/city keeps NULLs', got, ARRAY['SupplierID', 'SupplierName', 'SupplierCategoryName', 'PrimaryContact', 'AlternateContact', 'PhoneNumber', 'FaxNumber', 'WebsiteURL', 'DeliveryMethod', 'CityName', 'DeliveryLocation', 'SupplierReference']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 02 [A02 two suppliers share phone, fax and website; a NULL delivery method keeps its row; primary and al…', got, ARRAY['SupplierID', 'SupplierName', 'SupplierCategoryName', 'PrimaryContact', 'AlternateContact', 'PhoneNumber', 'FaxNumber', 'WebsiteURL', 'DeliveryMethod', 'CityName', 'DeliveryLocation', 'SupplierReference']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
 INSERT INTO pp_expected VALUES
-  ('1', 'Supplier 1', 'Toy Supplier', 'Ann Lee', 'Bo Ng', '(415) 555-0100', '(415) 555-7777', 'http://x', NULL, 'Auckland', NULL, NULL),
-  ('2', 'Supplier 2', NULL, NULL, NULL, '(415) 555-0100', '(415) 555-7777', 'http://x', NULL, NULL, NULL, NULL);
+  ('1', 'Supplier 1', 'Toy Supplier', 'Ann Lee', 'Bo Ng', '(415) 555-0100', '(415) 555-7777', 'http://same', 'Air Freight', 'Auckland', NULL, 'R1'),
+  ('2', 'Supplier 2', 'Toy Supplier', 'Bo Ng', 'Ann Lee', '(415) 555-0100', '(415) 555-7777', 'http://same', NULL, 'Auckland', NULL, 'R2');
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 02 [A02 two suppliers share a fax number; a supplier with unmatched category/contacts/city keeps NULLs', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 02 [A02 two suppliers share phone, fax and website; a NULL delivery method keeps its row; primary and al…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;

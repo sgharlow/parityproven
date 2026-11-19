@@ -2,7 +2,7 @@
   "object": "Sequences.ReseedSequenceBeyondTableValues",
   "database": "WideWorldImporters",
   "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
-  "capturedAt": "2026-11-19T05:05:45.735Z",
+  "capturedAt": "2026-11-19T06:20:59.350Z",
   "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
   "cases": [
     {
@@ -188,7 +188,7 @@
       ]
     },
     {
-      "label": "[A08] table maximum equal to the start value of an unused sequence at 7, while the other sequence was used 3 times: restart at 8",
+      "label": "[A08] table maximum equal to the current value of a used sequence (start 5, used 3 times, current 7): restart at 8; an unused sequence starting at 7 is left alone",
       "outcome": "completed",
       "tables": {},
       "queries": [
@@ -207,7 +207,7 @@
           "rows": [
             [
               "n:8",
-              "n:8"
+              "n:7"
             ]
           ]
         }

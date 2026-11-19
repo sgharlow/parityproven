@@ -124,21 +124,18 @@
       "planted defects caught by the agreed tests: 5 of 5"
     ],
     "adversarial": {
-      "gate": "fail",
-      "ran": 12,
+      "gate": "pass",
+      "ran": 13,
       "differed": 0,
       "evidencePath": "evidence/adversarial/WideWorldImporters/Website.ActivateWebsiteLogon.json",
-      "runAt": "2026-11-19T05:06:08.171Z",
+      "runAt": "2026-11-19T06:21:25.708Z",
       "agentWritten": true,
-      "wording": "12 adversarial cases ran, 0 differed",
+      "wording": "13 adversarial cases ran, 0 differed",
       "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
       "auditorModel": "gpt-5.6-sol",
       "sameModel": false,
       "mutantAdequacy": "adequate",
-      "gateReasons": [
-        "objection O01 is open",
-        "objection O02 is open"
-      ],
+      "gateReasons": [],
       "cases": [
         {
           "id": "A01",
@@ -248,6 +245,14 @@
           "status": "ran",
           "sqlServer": "pass",
           "postgres": "pass"
+        },
+        {
+          "id": "A13",
+          "label": "a disabled person who still holds an old logon name and hash is activated: both are replaced",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
         }
       ]
     }
@@ -261,5 +266,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-19T05:37:18.803Z"
+  "builtAt": "2026-11-19T06:24:38.466Z"
 }

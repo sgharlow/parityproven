@@ -393,7 +393,7 @@ BEGIN
 END $pp$;
 ROLLBACK;
 
--- @case 8: [A08] table maximum equal to the start value of an unused sequence at 7, while the other sequence was used 3 times: restart at 8
+-- @case 8: [A08] table maximum equal to the current value of a used sequence (start 5, used 3 times, current 7): restart at 8; an unused sequence starting at 7 is left alone
 BEGIN;
 DELETE FROM sales.orders;
 DELETE FROM warehouse.stock_items;
@@ -402,17 +402,17 @@ INSERT INTO sales.orders ("Id", "OrderID") VALUES
   ('1', '7'),
   ('2', '-1');
 INSERT INTO harness.sequence_start ("Id", "SequenceName", "StartValue", "Used", "Pick") VALUES
-  ('1', 'OrderID', '7', '0', '0'),
-  ('2', 'StockItemID', '5', '3', '0');
+  ('1', 'OrderID', '5', '3', '0'),
+  ('2', 'StockItemID', '7', '0', '0');
 CREATE SCHEMA IF NOT EXISTS sequences;
 DROP SEQUENCE IF EXISTS sequences."OrderID";
-CREATE SEQUENCE sequences."OrderID" AS integer START WITH 7 MINVALUE -2147483648;
+CREATE SEQUENCE sequences."OrderID" AS integer START WITH 5 MINVALUE -2147483648;
+SELECT nextval('sequences."OrderID"');
+SELECT nextval('sequences."OrderID"');
+SELECT nextval('sequences."OrderID"');
 CREATE SCHEMA IF NOT EXISTS sequences;
 DROP SEQUENCE IF EXISTS sequences."StockItemID";
-CREATE SEQUENCE sequences."StockItemID" AS integer START WITH 5 MINVALUE -2147483648;
-SELECT nextval('sequences."StockItemID"');
-SELECT nextval('sequences."StockItemID"');
-SELECT nextval('sequences."StockItemID"');
+CREATE SEQUENCE sequences."StockItemID" AS integer START WITH 7 MINVALUE -2147483648;
 CREATE TEMP TABLE pp_outcome (outcome text) ON COMMIT DROP;
 DO $pp$
 BEGIN
@@ -425,7 +425,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT 'completed'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'completed'::text AS outcome)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 08 [A08 table maximum equal to the start value of an unused sequence at 7, while the other sequence was…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 08 [A08 table maximum equal to the current value of a used sequence (start 5, used 3 times, current 7):…', missing, extra;
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_actual_query_1 ON COMMIT DROP AS
@@ -435,19 +435,19 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_1'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['OrderID', 'StockItemID']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 08 [A08 table maximum equal to the start value of an unused sequence at 7, while the other sequence was…', got, ARRAY['OrderID', 'StockItemID']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 08 [A08 table maximum equal to the current value of a used sequence (start 5, used 3 times, current 7):…', got, ARRAY['OrderID', 'StockItemID']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected_query_1 (LIKE pp_actual_query_1) ON COMMIT DROP;
 INSERT INTO pp_expected_query_1 VALUES
-  ('8', '8');
+  ('8', '7');
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_1) EXCEPT ALL (SELECT * FROM pp_actual_query_1)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_1) EXCEPT ALL (SELECT * FROM pp_expected_query_1)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in next value of each sequence after the call', 'test 08 [A08 table maximum equal to the start value of an unused sequence at 7, while the other sequence was…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in next value of each sequence after the call', 'test 08 [A08 table maximum equal to the current value of a used sequence (start 5, used 3 times, current 7):…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;

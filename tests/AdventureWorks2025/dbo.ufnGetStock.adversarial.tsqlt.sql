@@ -8,14 +8,15 @@
 GO
 EXEC tSQLt.NewTestClass 'AgreedTests';
 GO
--- case 1: [A01] two rows of 32767 at location 6 sum to 65534, beyond smallint: int result, no overflow
-CREATE PROCEDURE [AgreedTests].[test 01 [A01 two rows of 32767 at location 6 sum to 65534, beyond smallint: int result, no overflow]
+-- case 1: [A01] 32767 at location 6 next to 32767 at locations 1 and 7 for the same product: only location 6 counts
+CREATE PROCEDURE [AgreedTests].[test 01 [A01 32767 at location 6 next to 32767 at locations 1 and 7 for the same product: only location 6 cou…]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Production].[ProductInventory]';
   INSERT INTO [Production].[ProductInventory] ([ProductID], [LocationID], [Quantity]) VALUES
     (1, 6, 32767),
-    (1, 6, 32767);
+    (1, 1, 32767),
+    (1, 7, 32767);
   CREATE TABLE #Expected (
     [result] int NULL
   );
@@ -23,20 +24,20 @@ BEGIN
     [result] int NULL
   );
   INSERT INTO #Expected ([result]) VALUES
-    (65534);
+    (32767);
   INSERT INTO #Actual
   SELECT dbo.ufnGetStock(1) AS result;
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
--- case 2: [A02] two rows of -32768 at location 6 sum to -65536: a negative int result
-CREATE PROCEDURE [AgreedTests].[test 02 [A02 two rows of -32768 at location 6 sum to -65536: a negative int result]
+-- case 2: [A02] -32768 (smallint minimum) at location 6 next to -32768 at location 1: the negative value is returned as is
+CREATE PROCEDURE [AgreedTests].[test 02 [A02 -32768 (smallint minimum) at location 6 next to -32768 at location 1: the negative value is retu…]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Production].[ProductInventory]';
   INSERT INTO [Production].[ProductInventory] ([ProductID], [LocationID], [Quantity]) VALUES
     (2, 6, -32768),
-    (2, 6, -32768);
+    (2, 1, -32768);
   CREATE TABLE #Expected (
     [result] int NULL
   );
@@ -44,20 +45,20 @@ BEGIN
     [result] int NULL
   );
   INSERT INTO #Expected ([result]) VALUES
-    (-65536);
+    (-32768);
   INSERT INTO #Actual
   SELECT dbo.ufnGetStock(2) AS result;
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
--- case 3: [A03] +7 and -7 at location 6 sum to 0 (a real zero sum, not the NULL replacement)
-CREATE PROCEDURE [AgreedTests].[test 03 [A03 +7 and -7 at location 6 sum to 0 (a real zero sum, not the NULL replacement)]
+-- case 3: [A03] -7 at location 6 and +7 at location 1: -7, while an all-locations sum would be the 0 that also stands for no stock
+CREATE PROCEDURE [AgreedTests].[test 03 [A03 -7 at location 6 and +7 at location 1: -7, while an all-locations sum would be the 0 that also s…]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Production].[ProductInventory]';
   INSERT INTO [Production].[ProductInventory] ([ProductID], [LocationID], [Quantity]) VALUES
-    (3, 6, 7),
-    (3, 6, -7);
+    (3, 6, -7),
+    (3, 1, 7);
   CREATE TABLE #Expected (
     [result] int NULL
   );
@@ -65,7 +66,7 @@ BEGIN
     [result] int NULL
   );
   INSERT INTO #Expected ([result]) VALUES
-    (0);
+    (-7);
   INSERT INTO #Actual
   SELECT dbo.ufnGetStock(3) AS result;
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';

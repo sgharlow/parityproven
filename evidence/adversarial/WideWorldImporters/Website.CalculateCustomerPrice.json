@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "object": "Website.CalculateCustomerPrice",
   "database": "WideWorldImporters",
-  "runAt": "2026-11-19T05:28:22.077Z",
+  "runAt": "2026-11-19T06:21:39.632Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "b8d088f0d1507d4e4d0385f06d6dd67564920fc05d000ccd5643981c6088d3d0",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-19T05:20:49.498Z",
+    "at": "2026-11-19T06:00:45.121Z",
     "file": "adversarial/WideWorldImporters/Website.CalculateCustomerPrice.cases.json",
-    "sha256": "0b0d8e76917de4e271bbfa5ff9a5424b62504f77feebd94ac4f28ab20da7f5cd"
+    "sha256": "665005610291ac2910f5483c5592c4c6742185c042b03c63b132e75d3670eacf"
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-18T22:23:38.8804730-07:00",
+    "at": "2026-11-19T06:06:57.652Z",
     "file": "adversarial/WideWorldImporters/Website.CalculateCustomerPrice.audit.json",
-    "sha256": "8dbf55addea511fef5b5c1a7d9073acf28dbd024898d05e7152fdf439a1ce13d"
+    "sha256": "f6f0c3b7286f6ea7300ee443942549e3b555fe2f7596b5de941a0c582623422e"
   },
   "sameModel": false,
   "casesAudited": [
@@ -24,7 +24,8 @@
     "A03",
     "A04",
     "A05",
-    "A06"
+    "A06",
+    "A07"
   ],
   "traps": {
     "null-vs-empty": {
@@ -50,7 +51,8 @@
       "coveredBy": [
         "A01",
         "A02",
-        "A04"
+        "A04",
+        "A07"
       ]
     },
     "top-ties": {
@@ -67,15 +69,15 @@
   "cases": [
     {
       "id": "A01",
-      "label": "percentage discount rounds half away from zero: 1.05 * 0.5 % = 0.00525 -> 0.01, not banker's 0.00",
+      "label": "percentage price at an exact half cent: 0.25 * 50 % = 0.125 rounds half away from zero to 0.13 (banker's rounding and truncation give 0.12)",
       "traps": [
         "numeric-rounding"
       ],
-      "reasoning": "T-SQL ROUND(@UnitPrice * @HighestDiscountPercentage / 100.0, 2) rounds half away from zero; PostgreSQL round(numeric,2) must do the same, not round-half-to-even. UnitPrice 1.05 ends in 5 and the product 0.00525 is the half-way-ish case a banker's-rounding conversion would mishandle.",
+      "reasoning": "T-SQL ROUND(@UnitPrice * @HighestDiscountPercentage / 100.0, 2) rounds an exact midpoint away from zero. 0.25 * 50.000 / 100.0 is exactly 0.125, and the digit before the 5 is even, so round-half-to-even gives 0.12, truncation gives 0.12, and only half-away-from-zero gives 0.13. The hand-derived case (2.49875) is not a midpoint, so it separates rounding from truncation but not from banker's rounding.",
       "trapChecks": {
         "numeric-rounding": {
           "present": true,
-          "detail": "1.05 in UnitPrice ends in a 5"
+          "detail": "0.25 in UnitPrice ends in a 5"
         }
       },
       "status": "ran",
@@ -189,10 +191,32 @@
         "passed": true
       },
       "differed": false
+    },
+    {
+      "id": "A07",
+      "label": "three discount amounts through different deal legs (-1.00, 0.05, 3.15): the highest, 3.15, wins and gives 6.85",
+      "traps": [
+        "numeric-rounding"
+      ],
+      "reasoning": "The price uses MAX(DiscountAmount) over every matching deal. Here the amounts come through the stock item, the buying group and the customer category legs; the lowest (-1.00) would raise the price and be rejected by the < guard, the middle one (0.05) would give 9.95. A conversion that took MIN, or the first matching deal, would differ from 10.00 - 3.15 = 6.85.",
+      "trapChecks": {
+        "numeric-rounding": {
+          "present": true,
+          "detail": "0.05 in DiscountAmount ends in a 5"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
     }
   ],
   "summary": {
-    "ran": 6,
+    "ran": 7,
     "differed": 0,
     "invalid": 0
   },
@@ -202,35 +226,40 @@
       "caseId": "A01",
       "kind": "duplicate",
       "text": "The hand-derived percentage-discount case already exercises the same ROUND-versus-truncation path with a value (2.49875) that rounds to 2.50 but truncates to 2.49. Changing the operands to produce 0.00525 does not attack a different branch or mechanism.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A01 now produces the exact midpoint 0.125. It distinguishes half-away-from-zero (0.13) from both truncation and half-even rounding (0.12), unlike the non-midpoint hand-derived value.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O02",
       "caseId": "A01",
       "kind": "label-mismatch",
       "text": "The label says banker's rounding would produce 0.00, but 0.00525 is above the exact 0.005 midpoint and therefore rounds to 0.01 under both half-even and half-away-from-zero rounding. The supplied value does not test the claimed tie-breaking difference.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "The revised arithmetic is exactly 0.125, where half-even yields 0.12 and SQL Server's half-away rule yields 0.13. The label and reasoning now match the input.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     }
   ],
   "mutantAdequacy": {
-    "verdict": "inadequate",
+    "verdict": "adequate",
     "caught": [
       "deal end date exclusive",
+      "lowest discount amount instead of highest",
       "percentage price truncates instead of rounding"
     ],
-    "missed": [
-      "lowest discount amount instead of highest"
-    ],
+    "missed": [],
     "skipped": [],
     "equivalentRecorded": []
   },
   "gate": {
-    "passed": false,
-    "reasons": [
-      "objection O01 is open",
-      "objection O02 is open",
-      "mutant adequacy is inadequate (unexplained misses: lowest discount amount instead of highest)"
-    ]
+    "passed": true,
+    "reasons": []
   },
-  "wording": "6 adversarial cases ran, 0 differed"
+  "wording": "7 adversarial cases ran, 0 differed"
 }

@@ -110,3 +110,37 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
+-- case 7: [A07] status 2 gives 'Approved' (a mapped branch the other adversarial cases do not reach)
+CREATE PROCEDURE [AgreedTests].[test 07 [A07 status 2 gives Approved (a mapped branch the other adversarial cases do not reach)]
+AS
+BEGIN
+  CREATE TABLE #Expected (
+    [result] nvarchar(16) NULL
+  );
+  CREATE TABLE #Actual (
+    [result] nvarchar(16) NULL
+  );
+  INSERT INTO #Expected ([result]) VALUES
+    (N'Approved');
+  INSERT INTO #Actual
+  SELECT dbo.ufnGetDocumentStatusText(2) AS result;
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
+END;
+GO
+-- case 8: [A08] status 3 gives 'Obsolete' (the last WHEN branch before ELSE)
+CREATE PROCEDURE [AgreedTests].[test 08 [A08 status 3 gives Obsolete (the last WHEN branch before ELSE)]
+AS
+BEGIN
+  CREATE TABLE #Expected (
+    [result] nvarchar(16) NULL
+  );
+  CREATE TABLE #Actual (
+    [result] nvarchar(16) NULL
+  );
+  INSERT INTO #Expected ([result]) VALUES
+    (N'Obsolete');
+  INSERT INTO #Actual
+  SELECT dbo.ufnGetDocumentStatusText(3) AS result;
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
+END;
+GO

@@ -148,25 +148,22 @@
       "planted defects caught by the agreed tests: 3 of 3"
     ],
     "adversarial": {
-      "gate": "fail",
+      "gate": "pass",
       "ran": 11,
       "differed": 0,
       "evidencePath": "evidence/adversarial/AdventureWorks2025/HumanResources.vEmployee.json",
-      "runAt": "2026-11-19T04:16:13.864Z",
+      "runAt": "2026-11-19T06:16:30.452Z",
       "agentWritten": true,
       "wording": "11 adversarial cases ran, 0 differed",
       "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
       "auditorModel": "gpt-5.6-sol",
       "sameModel": false,
       "mutantAdequacy": "adequate",
-      "gateReasons": [
-        "objection O01 is open",
-        "objection O02 is open"
-      ],
+      "gateReasons": [],
       "cases": [
         {
           "id": "A01",
-          "label": "case-only variants 'Us', 'uS' and 'us ' of a country code join 'US'",
+          "label": "case pairs outside ASCII ('üs' to 'ÜS', 'σa' to 'ΣA') and case plus a trailing space on the country side ('CA' to 'ca ')",
           "traps": [
             "collation-case",
             "trailing-spaces"
@@ -248,7 +245,7 @@
         },
         {
           "id": "A09",
-          "label": "two identical phone rows, two phones of one type and an unknown phone type: one row per phone, duplicates kept",
+          "label": "the same number under two phone types of one name, two phones of one type and an unknown phone type: one row per phone, identical rows kept",
           "traps": [
             "top-ties"
           ],
@@ -286,5 +283,5 @@
     "p50Hours": 0.75,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-19T05:37:18.788Z"
+  "builtAt": "2026-11-19T06:24:38.455Z"
 }

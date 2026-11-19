@@ -2,7 +2,7 @@
   "object": "Purchasing.vVendorWithContacts",
   "database": "AdventureWorks2025",
   "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
-  "capturedAt": "2026-11-19T04:17:04.095Z",
+  "capturedAt": "2026-11-19T06:17:39.165Z",
   "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
   "cases": [
     {
@@ -200,7 +200,7 @@
       ]
     },
     {
-      "label": "[A03] fan-out: a contact with two identical phone rows and an unknown phone type; the same person as contact twice under two types",
+      "label": "[A03] fan-out: a contact with the same number under two phone types of one name and an unknown phone type; the same person as contact twice under two types",
       "columns": [
         {
           "name": "BusinessEntityID",

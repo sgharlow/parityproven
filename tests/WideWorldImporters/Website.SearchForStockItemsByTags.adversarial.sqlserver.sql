@@ -8,13 +8,16 @@
 -- tSQLt.ResultSetFilter (error 6549). agreed-tests runs each case below through the client, joins the chunk rows the
 -- procedure streams back in arrival order, and compares the document exactly with the expected one.
 GO
--- case 1: [A01] Tags: values differing only in case both match a case-insensitive search and keep their own case in the result
+-- case 1: [A01] Tags: Cyrillic values differing only in case match a case-insensitive search ('дом' finds 'ДОМ' and 'Дом', not 'дым' or 'ÉCLAIR')
 DELETE FROM [Warehouse].[StockItems];
 INSERT INTO [Warehouse].[StockItems] ([StockItemID], [StockItemName], [Tags]) VALUES
-  (1, N'Item A', N'ab'),
-  (3, N'Item B', N'AB');
-EXEC Website.SearchForStockItemsByTags @SearchText = N'ab', @MaximumRowsToReturn = 5;
--- expected document: {"StockItems":[{"StockItemID":1,"StockItemName":"Item A"},{"StockItemID":3,"StockItemName":"Item B"}]}
+  (1, N'Item 01', N'дом'),
+  (2, N'Item 02', N'ДОМ'),
+  (3, N'Item 03', N'Дом'),
+  (4, N'Item 04', N'ÉCLAIR'),
+  (5, N'Item 05', N'дым');
+EXEC Website.SearchForStockItemsByTags @SearchText = N'дом', @MaximumRowsToReturn = 5;
+-- expected document: {"StockItems":[{"StockItemID":1,"StockItemName":"Item 01"},{"StockItemID":2,"StockItemName":"Item 02"},{"StockItemID":3,"StockItemName":"Item 03"}]}
 GO
 -- case 2: [A02] Tags: two matching rows share the same Tags value (a non-key tie); both are returned in name order
 DELETE FROM [Warehouse].[StockItems];
@@ -24,29 +27,36 @@ INSERT INTO [Warehouse].[StockItems] ([StockItemID], [StockItemName], [Tags]) VA
 EXEC Website.SearchForStockItemsByTags @SearchText = N'dup', @MaximumRowsToReturn = 5;
 -- expected document: {"StockItems":[{"StockItemID":1,"StockItemName":"Item A"},{"StockItemID":3,"StockItemName":"Item B"}]}
 GO
--- case 3: [A03] Tags: a trailing space in the data is matched by LIKE '%x%'
+-- case 3: [A03] Tags: a search text ending in a space ('amy ') matches only values with a space after 'amy'
 DELETE FROM [Warehouse].[StockItems];
 INSERT INTO [Warehouse].[StockItems] ([StockItemID], [StockItemName], [Tags]) VALUES
-  (1, N'Only', N'abc ');
-EXEC Website.SearchForStockItemsByTags @SearchText = N'abc', @MaximumRowsToReturn = 5;
--- expected document: {"StockItems":[{"StockItemID":1,"StockItemName":"Only"}]}
+  (1, N'Item 01', N'amy'),
+  (2, N'Item 02', N'amy '),
+  (3, N'Item 03', N'amyx'),
+  (4, N'Item 04', N'amy b');
+EXEC Website.SearchForStockItemsByTags @SearchText = N'amy ', @MaximumRowsToReturn = 5;
+-- expected document: {"StockItems":[{"StockItemID":2,"StockItemName":"Item 02"},{"StockItemID":4,"StockItemName":"Item 04"}]}
 GO
--- case 4: [A04] Tags: character class [a-c] matches one of a, b, c (T-SQL LIKE, not PostgreSQL LIKE)
+-- case 4: [A04] Tags: a reversed range '[c-a]' (T-SQL accepts it; a regular expression rejects it as an invalid range)
 DELETE FROM [Warehouse].[StockItems];
 INSERT INTO [Warehouse].[StockItems] ([StockItemID], [StockItemName], [Tags]) VALUES
-  (1, N'I1', N'b'),
-  (2, N'I2', N'd'),
-  (3, N'I3', N'aaa');
-EXEC Website.SearchForStockItemsByTags @SearchText = N'[a-c]', @MaximumRowsToReturn = 5;
--- expected document: {"StockItems":[{"StockItemID":1,"StockItemName":"I1"},{"StockItemID":3,"StockItemName":"I3"}]}
+  (1, N'Item 01', N'a'),
+  (2, N'Item 02', N'b'),
+  (3, N'Item 03', N'c'),
+  (4, N'Item 04', N'-'),
+  (5, N'Item 05', N'd');
+EXEC Website.SearchForStockItemsByTags @SearchText = N'[c-a]', @MaximumRowsToReturn = 5;
+-- expected document: 
 GO
--- case 5: [A05] Tags: a backslash is an ordinary character in T-SQL LIKE (no escape)
+-- case 5: [A05] Tags: a search text ending in a backslash ('a\') is an ordinary character in T-SQL LIKE
 DELETE FROM [Warehouse].[StockItems];
 INSERT INTO [Warehouse].[StockItems] ([StockItemID], [StockItemName], [Tags]) VALUES
-  (1, N'I1', N'a\b'),
-  (2, N'I2', N'ab');
-EXEC Website.SearchForStockItemsByTags @SearchText = N'a\b', @MaximumRowsToReturn = 5;
--- expected document: {"StockItems":[{"StockItemID":1,"StockItemName":"I1"}]}
+  (1, N'Item 01', N'a\'),
+  (2, N'Item 02', N'xa\b'),
+  (3, N'Item 03', N'ab'),
+  (4, N'Item 04', N'a');
+EXEC Website.SearchForStockItemsByTags @SearchText = N'a\', @MaximumRowsToReturn = 5;
+-- expected document: {"StockItems":[{"StockItemID":1,"StockItemName":"Item 01"},{"StockItemID":2,"StockItemName":"Item 02"}]}
 GO
 -- case 6: [A06] Tags: TOP(@MaximumRowsToReturn) returns exactly two of five hits, ordered by the Windows collation
 DELETE FROM [Warehouse].[StockItems];
@@ -73,4 +83,15 @@ INSERT INTO [Warehouse].[StockItems] ([StockItemID], [StockItemName], [Tags]) VA
   (3, N'I2', N'');
 EXEC Website.SearchForStockItemsByTags @SearchText = N'', @MaximumRowsToReturn = 5;
 -- expected document: {"StockItems":[{"StockItemID":3,"StockItemName":"I2"}]}
+GO
+-- case 9: [A09] Tags: '_' matches a digit, an accented letter and a space ('x_9')
+DELETE FROM [Warehouse].[StockItems];
+INSERT INTO [Warehouse].[StockItems] ([StockItemID], [StockItemName], [Tags]) VALUES
+  (1, N'Item 01', N'x19'),
+  (2, N'Item 02', N'xé9'),
+  (3, N'Item 03', N'x 9'),
+  (4, N'Item 04', N'xa9'),
+  (5, N'Item 05', N'x9');
+EXEC Website.SearchForStockItemsByTags @SearchText = N'x_9', @MaximumRowsToReturn = 5;
+-- expected document: {"StockItems":[{"StockItemID":1,"StockItemName":"Item 01"},{"StockItemID":2,"StockItemName":"Item 02"},{"StockItemID":3,"StockItemName":"Item 03"},{"StockItemID":4,"StockItemName":"Item 04"}]}
 GO

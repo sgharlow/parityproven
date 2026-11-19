@@ -2,11 +2,11 @@
   "object": "Person.vStateProvinceCountryRegion",
   "database": "AdventureWorks2025",
   "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
-  "capturedAt": "2026-11-19T04:16:36.970Z",
+  "capturedAt": "2026-11-19T06:17:02.896Z",
   "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
   "cases": [
     {
-      "label": "[A01] case-only variants 'Us', 'uS' and 'us ' of a country code join 'US'",
+      "label": "[A01] case pairs outside ASCII ('üs' to 'ÜS', 'σa' to 'ΣA') and case plus a trailing space on the country side ('CA' to 'ca ')",
       "columns": [
         {
           "name": "StateProvinceID",
@@ -44,8 +44,8 @@
           "b:0",
           "s:Province 1",
           "n:1",
-          "s:US",
-          "s:United States"
+          "s:ÜS",
+          "s:Country Ü"
         ],
         [
           "n:2",
@@ -53,8 +53,8 @@
           "b:0",
           "s:Province 2",
           "n:1",
-          "s:US",
-          "s:United States"
+          "s:ΣA",
+          "s:Country Σ"
         ],
         [
           "n:3",
@@ -62,8 +62,8 @@
           "b:0",
           "s:Province 3",
           "n:1",
-          "s:US",
-          "s:United States"
+          "s:ca ",
+          "s:Country ca"
         ]
       ]
     },
@@ -333,7 +333,7 @@
       ]
     },
     {
-      "label": "[A07] nchar(3) province codes: '', 'A', 'AB ', 'ABC', 'abc' and 'é' come back padded to three characters",
+      "label": "[A07] nchar(3) province codes: '', 'A', 'AB ', 'ABC', 'abc' (in another country) and 'é' come back padded to three characters",
       "columns": [
         {
           "name": "StateProvinceID",
@@ -407,8 +407,8 @@
           "b:0",
           "s:Province 5",
           "n:4",
-          "s:US",
-          "s:United States"
+          "s:CA",
+          "s:Canada"
         ],
         [
           "n:6",

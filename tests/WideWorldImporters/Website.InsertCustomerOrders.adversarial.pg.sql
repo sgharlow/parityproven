@@ -808,3 +808,266 @@ BEGIN
   END IF;
 END $pp$;
 ROLLBACK;
+
+-- @case 7: [A07] lines are priced on today's date, not the expected delivery date: a deal valid today applies, one valid only on the delivery date 9999-12-31 does not
+BEGIN;
+DELETE FROM sales.orders;
+DELETE FROM sales.order_lines;
+DELETE FROM warehouse.stock_items;
+DELETE FROM sales.customers;
+DELETE FROM sales.special_deals;
+DELETE FROM warehouse.stock_item_stock_groups;
+INSERT INTO warehouse.stock_items ("StockItemID", "UnitPackageID", "TaxRate", "UnitPrice") VALUES
+  ('1', '7', '15.000', '10.00'),
+  ('2', '9', '10.000', '99.99');
+INSERT INTO sales.customers ("CustomerID", "BuyingGroupID", "CustomerCategoryID") VALUES
+  ('1', NULL, '1'),
+  ('2', '1', '2');
+INSERT INTO sales.special_deals ("SpecialDealID", "StockItemID", "CustomerID", "BuyingGroupID", "CustomerCategoryID", "StockGroupID", "StartDate", "EndDate", "DiscountAmount", "DiscountPercentage", "UnitPrice") VALUES
+  ('1', '1', NULL, NULL, NULL, NULL, '2000-01-01', '9999-12-30', NULL, NULL, '7.55'),
+  ('2', '1', NULL, NULL, NULL, NULL, '9999-12-31', '9999-12-31', NULL, NULL, '1.05');
+ALTER SEQUENCE sequences."OrderID" RESTART WITH 73596;
+CREATE TEMP TABLE pp_outcome (outcome text) ON COMMIT DROP;
+DO $pp$
+BEGIN
+  CALL website.insert_customer_orders(website.order_list_from_json('[{"OrderReference":1,"CustomerID":1,"ContactPersonID":3,"ExpectedDeliveryDate":"9999-12-31","CustomerPurchaseOrderNumber":"PO-1","IsUndersupplyBackordered":false,"Comments":null,"DeliveryInstructions":null}]'::jsonb), website.order_line_list_from_json('[{"OrderReference":1,"StockItemID":1,"Description":"line 1/1","Quantity":2}]'::jsonb), '1'::integer, '2'::integer);
+  INSERT INTO pp_outcome VALUES ('completed');
+EXCEPTION
+  WHEN SQLSTATE '23502' THEN INSERT INTO pp_outcome VALUES ('raised: NULL into a NOT NULL column');
+  WHEN SQLSTATE '22001' THEN INSERT INTO pp_outcome VALUES ('raised: string truncation');
+  WHEN SQLSTATE '22003' THEN INSERT INTO pp_outcome VALUES ('raised: numeric overflow');
+END $pp$;
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT 'completed'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'completed'::text AS outcome)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 07 [A07 lines are priced on todays date, not the expected delivery date: a deal valid today applies, one…', missing, extra;
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_actual_query_1 ON COMMIT DROP AS
+SELECT o."CustomerID", o."SalespersonPersonID", o."PickedByPersonID", o."ContactPersonID", o."BackorderOrderID", CASE WHEN o."OrderDate" = localtimestamp::date THEN 'today' END AS "OrderDate_now", CASE WHEN o."OrderDate" = localtimestamp::date THEN NULL ELSE o."OrderDate" END AS "OrderDate",
+                       o."ExpectedDeliveryDate", o."CustomerPurchaseOrderNumber", o."IsUndersupplyBackordered", o."Comments", o."DeliveryInstructions", o."InternalComments",
+                       o."PickingCompletedWhen", o."LastEditedBy", CASE WHEN o."LastEditedWhen" BETWEEN localtimestamp - interval '5 minutes' AND localtimestamp THEN 'now' END AS "LastEditedWhen_now", CASE WHEN o."LastEditedWhen" BETWEEN localtimestamp - interval '5 minutes' AND localtimestamp THEN NULL ELSE o."LastEditedWhen" END AS "LastEditedWhen"
+                     FROM sales.orders AS o;
+DO $pp$
+DECLARE got text[];
+BEGIN
+  SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_1'::regclass AND attnum > 0 AND NOT attisdropped;
+  IF got IS DISTINCT FROM ARRAY['CustomerID', 'SalespersonPersonID', 'PickedByPersonID', 'ContactPersonID', 'BackorderOrderID', 'OrderDate_now', 'OrderDate', 'ExpectedDeliveryDate', 'CustomerPurchaseOrderNumber', 'IsUndersupplyBackordered', 'Comments', 'DeliveryInstructions', 'InternalComments', 'PickingCompletedWhen', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[] THEN
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 07 [A07 lines are priced on todays date, not the expected delivery date: a deal valid today applies, one…', got, ARRAY['CustomerID', 'SalespersonPersonID', 'PickedByPersonID', 'ContactPersonID', 'BackorderOrderID', 'OrderDate_now', 'OrderDate', 'ExpectedDeliveryDate', 'CustomerPurchaseOrderNumber', 'IsUndersupplyBackordered', 'Comments', 'DeliveryInstructions', 'InternalComments', 'PickingCompletedWhen', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected_query_1 (LIKE pp_actual_query_1) ON COMMIT DROP;
+INSERT INTO pp_expected_query_1 VALUES
+  ('1', '2', NULL, '3', NULL, 'today', NULL, '9999-12-31', 'PO-1', '0', NULL, NULL, NULL, NULL, '1', 'now', NULL);
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_1) EXCEPT ALL (SELECT * FROM pp_actual_query_1)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_1) EXCEPT ALL (SELECT * FROM pp_expected_query_1)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in orders', 'test 07 [A07 lines are priced on todays date, not the expected delivery date: a deal valid today applies, one…', missing, extra;
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_actual_query_2 ON COMMIT DROP AS
+SELECT o."CustomerPurchaseOrderNumber" AS "OrderPO", o."CustomerID" AS "OrderCustomer", CASE WHEN o."OrderID" IS NULL THEN 'orphan' ELSE 'ok' END AS "HasOrder",
+                       ol."StockItemID", ol."Description", ol."PackageTypeID", ol."Quantity", ol."UnitPrice", ol."TaxRate", ol."PickedQuantity", ol."PickingCompletedWhen",
+                       ol."LastEditedBy", CASE WHEN ol."LastEditedWhen" BETWEEN localtimestamp - interval '5 minutes' AND localtimestamp THEN 'now' END AS "LastEditedWhen_now", CASE WHEN ol."LastEditedWhen" BETWEEN localtimestamp - interval '5 minutes' AND localtimestamp THEN NULL ELSE ol."LastEditedWhen" END AS "LastEditedWhen"
+                     FROM sales.order_lines AS ol LEFT JOIN sales.orders AS o ON o."OrderID" = ol."OrderID";
+DO $pp$
+DECLARE got text[];
+BEGIN
+  SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_2'::regclass AND attnum > 0 AND NOT attisdropped;
+  IF got IS DISTINCT FROM ARRAY['OrderPO', 'OrderCustomer', 'HasOrder', 'StockItemID', 'Description', 'PackageTypeID', 'Quantity', 'UnitPrice', 'TaxRate', 'PickedQuantity', 'PickingCompletedWhen', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[] THEN
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 07 [A07 lines are priced on todays date, not the expected delivery date: a deal valid today applies, one…', got, ARRAY['OrderPO', 'OrderCustomer', 'HasOrder', 'StockItemID', 'Description', 'PackageTypeID', 'Quantity', 'UnitPrice', 'TaxRate', 'PickedQuantity', 'PickingCompletedWhen', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected_query_2 (LIKE pp_actual_query_2) ON COMMIT DROP;
+INSERT INTO pp_expected_query_2 VALUES
+  ('PO-1', '1', 'ok', '1', 'line 1/1', '7', '2', '7.55', '15', '0', NULL, '1', 'now', NULL);
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_2) EXCEPT ALL (SELECT * FROM pp_actual_query_2)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_2) EXCEPT ALL (SELECT * FROM pp_expected_query_2)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in order lines, with their order', 'test 07 [A07 lines are priced on todays date, not the expected delivery date: a deal valid today applies, one…', missing, extra;
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_actual_query_3 ON COMMIT DROP AS
+SELECT COUNT(*) AS "Orders", COUNT(DISTINCT "OrderID") AS "DistinctIDs", MIN("OrderID") AS "FirstID", MAX("OrderID") AS "LastID" FROM sales.orders;
+DO $pp$
+DECLARE got text[];
+BEGIN
+  SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_3'::regclass AND attnum > 0 AND NOT attisdropped;
+  IF got IS DISTINCT FROM ARRAY['Orders', 'DistinctIDs', 'FirstID', 'LastID']::text[] THEN
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 07 [A07 lines are priced on todays date, not the expected delivery date: a deal valid today applies, one…', got, ARRAY['Orders', 'DistinctIDs', 'FirstID', 'LastID']::text[];
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected_query_3 (LIKE pp_actual_query_3) ON COMMIT DROP;
+INSERT INTO pp_expected_query_3 VALUES
+  ('1', '1', '73596', '73596');
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_3) EXCEPT ALL (SELECT * FROM pp_actual_query_3)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_3) EXCEPT ALL (SELECT * FROM pp_expected_query_3)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in order IDs allocated', 'test 07 [A07 lines are priced on todays date, not the expected delivery date: a deal valid today applies, one…', missing, extra;
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_actual_query_4 ON COMMIT DROP AS
+SELECT nextval('sequences."OrderID"') AS "NextOrderID";
+DO $pp$
+DECLARE got text[];
+BEGIN
+  SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_4'::regclass AND attnum > 0 AND NOT attisdropped;
+  IF got IS DISTINCT FROM ARRAY['NextOrderID']::text[] THEN
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 07 [A07 lines are priced on todays date, not the expected delivery date: a deal valid today applies, one…', got, ARRAY['NextOrderID']::text[];
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected_query_4 (LIKE pp_actual_query_4) ON COMMIT DROP;
+INSERT INTO pp_expected_query_4 VALUES
+  ('73597');
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_4) EXCEPT ALL (SELECT * FROM pp_actual_query_4)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_4) EXCEPT ALL (SELECT * FROM pp_expected_query_4)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in next order ID', 'test 07 [A07 lines are priced on todays date, not the expected delivery date: a deal valid today applies, one…', missing, extra;
+  END IF;
+END $pp$;
+ROLLBACK;
+
+-- @case 8: [A08] an order line for a stock item with no Warehouse.StockItems row is not inserted; the order and its other line are
+BEGIN;
+DELETE FROM sales.orders;
+DELETE FROM sales.order_lines;
+DELETE FROM warehouse.stock_items;
+DELETE FROM sales.customers;
+DELETE FROM sales.special_deals;
+DELETE FROM warehouse.stock_item_stock_groups;
+INSERT INTO warehouse.stock_items ("StockItemID", "UnitPackageID", "TaxRate", "UnitPrice") VALUES
+  ('1', '7', '15.000', '10.00'),
+  ('2', '9', '10.000', '99.99');
+INSERT INTO sales.customers ("CustomerID", "BuyingGroupID", "CustomerCategoryID") VALUES
+  ('1', NULL, '1'),
+  ('2', '1', '2');
+ALTER SEQUENCE sequences."OrderID" RESTART WITH 73596;
+CREATE TEMP TABLE pp_outcome (outcome text) ON COMMIT DROP;
+DO $pp$
+BEGIN
+  CALL website.insert_customer_orders(website.order_list_from_json('[{"OrderReference":1,"CustomerID":1,"ContactPersonID":3,"ExpectedDeliveryDate":"2030-01-01","CustomerPurchaseOrderNumber":"PO-1","IsUndersupplyBackordered":false,"Comments":null,"DeliveryInstructions":null}]'::jsonb), website.order_line_list_from_json('[{"OrderReference":1,"StockItemID":1,"Description":"line 1/1","Quantity":2},{"OrderReference":1,"StockItemID":42,"Description":"line 1/2 (unknown item)","Quantity":1}]'::jsonb), '1'::integer, '2'::integer);
+  INSERT INTO pp_outcome VALUES ('completed');
+EXCEPTION
+  WHEN SQLSTATE '23502' THEN INSERT INTO pp_outcome VALUES ('raised: NULL into a NOT NULL column');
+  WHEN SQLSTATE '22001' THEN INSERT INTO pp_outcome VALUES ('raised: string truncation');
+  WHEN SQLSTATE '22003' THEN INSERT INTO pp_outcome VALUES ('raised: numeric overflow');
+END $pp$;
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT 'completed'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'completed'::text AS outcome)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 08 [A08 an order line for a stock item with no Warehouse.StockItems row is not inserted; the order and i…', missing, extra;
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_actual_query_1 ON COMMIT DROP AS
+SELECT o."CustomerID", o."SalespersonPersonID", o."PickedByPersonID", o."ContactPersonID", o."BackorderOrderID", CASE WHEN o."OrderDate" = localtimestamp::date THEN 'today' END AS "OrderDate_now", CASE WHEN o."OrderDate" = localtimestamp::date THEN NULL ELSE o."OrderDate" END AS "OrderDate",
+                       o."ExpectedDeliveryDate", o."CustomerPurchaseOrderNumber", o."IsUndersupplyBackordered", o."Comments", o."DeliveryInstructions", o."InternalComments",
+                       o."PickingCompletedWhen", o."LastEditedBy", CASE WHEN o."LastEditedWhen" BETWEEN localtimestamp - interval '5 minutes' AND localtimestamp THEN 'now' END AS "LastEditedWhen_now", CASE WHEN o."LastEditedWhen" BETWEEN localtimestamp - interval '5 minutes' AND localtimestamp THEN NULL ELSE o."LastEditedWhen" END AS "LastEditedWhen"
+                     FROM sales.orders AS o;
+DO $pp$
+DECLARE got text[];
+BEGIN
+  SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_1'::regclass AND attnum > 0 AND NOT attisdropped;
+  IF got IS DISTINCT FROM ARRAY['CustomerID', 'SalespersonPersonID', 'PickedByPersonID', 'ContactPersonID', 'BackorderOrderID', 'OrderDate_now', 'OrderDate', 'ExpectedDeliveryDate', 'CustomerPurchaseOrderNumber', 'IsUndersupplyBackordered', 'Comments', 'DeliveryInstructions', 'InternalComments', 'PickingCompletedWhen', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[] THEN
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 08 [A08 an order line for a stock item with no Warehouse.StockItems row is not inserted; the order and i…', got, ARRAY['CustomerID', 'SalespersonPersonID', 'PickedByPersonID', 'ContactPersonID', 'BackorderOrderID', 'OrderDate_now', 'OrderDate', 'ExpectedDeliveryDate', 'CustomerPurchaseOrderNumber', 'IsUndersupplyBackordered', 'Comments', 'DeliveryInstructions', 'InternalComments', 'PickingCompletedWhen', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected_query_1 (LIKE pp_actual_query_1) ON COMMIT DROP;
+INSERT INTO pp_expected_query_1 VALUES
+  ('1', '2', NULL, '3', NULL, 'today', NULL, '2030-01-01', 'PO-1', '0', NULL, NULL, NULL, NULL, '1', 'now', NULL);
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_1) EXCEPT ALL (SELECT * FROM pp_actual_query_1)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_1) EXCEPT ALL (SELECT * FROM pp_expected_query_1)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in orders', 'test 08 [A08 an order line for a stock item with no Warehouse.StockItems row is not inserted; the order and i…', missing, extra;
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_actual_query_2 ON COMMIT DROP AS
+SELECT o."CustomerPurchaseOrderNumber" AS "OrderPO", o."CustomerID" AS "OrderCustomer", CASE WHEN o."OrderID" IS NULL THEN 'orphan' ELSE 'ok' END AS "HasOrder",
+                       ol."StockItemID", ol."Description", ol."PackageTypeID", ol."Quantity", ol."UnitPrice", ol."TaxRate", ol."PickedQuantity", ol."PickingCompletedWhen",
+                       ol."LastEditedBy", CASE WHEN ol."LastEditedWhen" BETWEEN localtimestamp - interval '5 minutes' AND localtimestamp THEN 'now' END AS "LastEditedWhen_now", CASE WHEN ol."LastEditedWhen" BETWEEN localtimestamp - interval '5 minutes' AND localtimestamp THEN NULL ELSE ol."LastEditedWhen" END AS "LastEditedWhen"
+                     FROM sales.order_lines AS ol LEFT JOIN sales.orders AS o ON o."OrderID" = ol."OrderID";
+DO $pp$
+DECLARE got text[];
+BEGIN
+  SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_2'::regclass AND attnum > 0 AND NOT attisdropped;
+  IF got IS DISTINCT FROM ARRAY['OrderPO', 'OrderCustomer', 'HasOrder', 'StockItemID', 'Description', 'PackageTypeID', 'Quantity', 'UnitPrice', 'TaxRate', 'PickedQuantity', 'PickingCompletedWhen', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[] THEN
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 08 [A08 an order line for a stock item with no Warehouse.StockItems row is not inserted; the order and i…', got, ARRAY['OrderPO', 'OrderCustomer', 'HasOrder', 'StockItemID', 'Description', 'PackageTypeID', 'Quantity', 'UnitPrice', 'TaxRate', 'PickedQuantity', 'PickingCompletedWhen', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected_query_2 (LIKE pp_actual_query_2) ON COMMIT DROP;
+INSERT INTO pp_expected_query_2 VALUES
+  ('PO-1', '1', 'ok', '1', 'line 1/1', '7', '2', '10', '15', '0', NULL, '1', 'now', NULL);
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_2) EXCEPT ALL (SELECT * FROM pp_actual_query_2)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_2) EXCEPT ALL (SELECT * FROM pp_expected_query_2)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in order lines, with their order', 'test 08 [A08 an order line for a stock item with no Warehouse.StockItems row is not inserted; the order and i…', missing, extra;
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_actual_query_3 ON COMMIT DROP AS
+SELECT COUNT(*) AS "Orders", COUNT(DISTINCT "OrderID") AS "DistinctIDs", MIN("OrderID") AS "FirstID", MAX("OrderID") AS "LastID" FROM sales.orders;
+DO $pp$
+DECLARE got text[];
+BEGIN
+  SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_3'::regclass AND attnum > 0 AND NOT attisdropped;
+  IF got IS DISTINCT FROM ARRAY['Orders', 'DistinctIDs', 'FirstID', 'LastID']::text[] THEN
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 08 [A08 an order line for a stock item with no Warehouse.StockItems row is not inserted; the order and i…', got, ARRAY['Orders', 'DistinctIDs', 'FirstID', 'LastID']::text[];
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected_query_3 (LIKE pp_actual_query_3) ON COMMIT DROP;
+INSERT INTO pp_expected_query_3 VALUES
+  ('1', '1', '73596', '73596');
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_3) EXCEPT ALL (SELECT * FROM pp_actual_query_3)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_3) EXCEPT ALL (SELECT * FROM pp_expected_query_3)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in order IDs allocated', 'test 08 [A08 an order line for a stock item with no Warehouse.StockItems row is not inserted; the order and i…', missing, extra;
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_actual_query_4 ON COMMIT DROP AS
+SELECT nextval('sequences."OrderID"') AS "NextOrderID";
+DO $pp$
+DECLARE got text[];
+BEGIN
+  SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_4'::regclass AND attnum > 0 AND NOT attisdropped;
+  IF got IS DISTINCT FROM ARRAY['NextOrderID']::text[] THEN
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 08 [A08 an order line for a stock item with no Warehouse.StockItems row is not inserted; the order and i…', got, ARRAY['NextOrderID']::text[];
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected_query_4 (LIKE pp_actual_query_4) ON COMMIT DROP;
+INSERT INTO pp_expected_query_4 VALUES
+  ('73597');
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_4) EXCEPT ALL (SELECT * FROM pp_actual_query_4)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_4) EXCEPT ALL (SELECT * FROM pp_expected_query_4)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in next order ID', 'test 08 [A08 an order line for a stock item with no Warehouse.StockItems row is not inserted; the order and i…', missing, extra;
+  END IF;
+END $pp$;
+ROLLBACK;

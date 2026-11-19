@@ -99,11 +99,11 @@
     ],
     "adversarial": {
       "gate": "fail",
-      "ran": 7,
+      "ran": 8,
       "differed": 0,
       "evidencePath": "evidence/adversarial/WideWorldImporters/Website.SearchForStockItems.json",
       "conversionSha256": "9a1a731fc0a4e10ffb460058bb38b6fac185831a93e053d660f0ecad439932eb",
-      "runAt": "2026-11-19T05:36:30.597Z"
+      "runAt": "2026-11-19T06:23:34.690Z"
     }
   },
   "effort": {

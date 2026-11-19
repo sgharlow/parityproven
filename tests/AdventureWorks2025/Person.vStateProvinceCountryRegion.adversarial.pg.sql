@@ -7,16 +7,18 @@
 -- Prerequisites: the spec's tables created and the final conversion deployed.
 -- Each case is one transaction and always rolls back.
 
--- @case 1: [A01] case-only variants 'Us', 'uS' and 'us ' of a country code join 'US'
+-- @case 1: [A01] case pairs outside ASCII ('üs' to 'ÜS', 'σa' to 'ΣA') and case plus a trailing space on the country side ('CA' to 'ca ')
 BEGIN;
 DELETE FROM person.country_region;
 DELETE FROM person.state_province;
 INSERT INTO person.country_region ("CountryRegionCode", "Name") VALUES
-  ('US', 'United States');
+  ('ÜS', 'Country Ü'),
+  ('ΣA', 'Country Σ'),
+  ('ca ', 'Country ca');
 INSERT INTO person.state_province ("StateProvinceID", "StateProvinceCode", "CountryRegionCode", "IsOnlyStateProvinceFlag", "Name", "TerritoryID") VALUES
-  ('1', 'S1', 'Us', '0', 'Province 1', '1'),
-  ('2', 'S2', 'uS', '0', 'Province 2', '1'),
-  ('3', 'S3', 'us ', '0', 'Province 3', '1');
+  ('1', 'S1', 'üs', '0', 'Province 1', '1'),
+  ('2', 'S2', 'σa', '0', 'Province 2', '1'),
+  ('3', 'S3', 'CA', '0', 'Province 3', '1');
 CREATE TEMP TABLE pp_actual ON COMMIT DROP AS
 SELECT * FROM person.v_state_province_country_region;
 DO $pp$
@@ -24,21 +26,21 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['StateProvinceID', 'StateProvinceCode', 'IsOnlyStateProvinceFlag', 'StateProvinceName', 'TerritoryID', 'CountryRegionCode', 'CountryRegionName']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 01 [A01 case-only variants Us, uS and us of a country code join US', got, ARRAY['StateProvinceID', 'StateProvinceCode', 'IsOnlyStateProvinceFlag', 'StateProvinceName', 'TerritoryID', 'CountryRegionCode', 'CountryRegionName']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 01 [A01 case pairs outside ASCII (üs to ÜS, ?a to ?A) and case plus a trailing space on the country side…', got, ARRAY['StateProvinceID', 'StateProvinceCode', 'IsOnlyStateProvinceFlag', 'StateProvinceName', 'TerritoryID', 'CountryRegionCode', 'CountryRegionName']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
 INSERT INTO pp_expected VALUES
-  ('1', 'S1 ', '0', 'Province 1', '1', 'US', 'United States'),
-  ('2', 'S2 ', '0', 'Province 2', '1', 'US', 'United States'),
-  ('3', 'S3 ', '0', 'Province 3', '1', 'US', 'United States');
+  ('1', 'S1 ', '0', 'Province 1', '1', 'ÜS', 'Country Ü'),
+  ('2', 'S2 ', '0', 'Province 2', '1', 'ΣA', 'Country Σ'),
+  ('3', 'S3 ', '0', 'Province 3', '1', 'ca ', 'Country ca');
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 01 [A01 case-only variants Us, uS and us of a country code join US', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 01 [A01 case pairs outside ASCII (üs to ÜS, ?a to ?A) and case plus a trailing space on the country side…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;
@@ -226,18 +228,19 @@ BEGIN
 END $pp$;
 ROLLBACK;
 
--- @case 7: [A07] nchar(3) province codes: '', 'A', 'AB ', 'ABC', 'abc' and 'é' come back padded to three characters
+-- @case 7: [A07] nchar(3) province codes: '', 'A', 'AB ', 'ABC', 'abc' (in another country) and 'é' come back padded to three characters
 BEGIN;
 DELETE FROM person.country_region;
 DELETE FROM person.state_province;
 INSERT INTO person.country_region ("CountryRegionCode", "Name") VALUES
-  ('US', 'United States');
+  ('US', 'United States'),
+  ('CA', 'Canada');
 INSERT INTO person.state_province ("StateProvinceID", "StateProvinceCode", "CountryRegionCode", "IsOnlyStateProvinceFlag", "Name", "TerritoryID") VALUES
   ('1', '', 'US', '0', 'Province 1', '0'),
   ('2', 'A', 'US', '1', 'Province 2', '1'),
   ('3', 'AB ', 'US', '0', 'Province 3', '2'),
   ('4', 'ABC', 'US', '1', 'Province 4', '3'),
-  ('5', 'abc', 'US', '0', 'Province 5', '4'),
+  ('5', 'abc', 'CA', '0', 'Province 5', '4'),
   ('6', 'é', 'US', '1', 'Province 6', '5');
 CREATE TEMP TABLE pp_actual ON COMMIT DROP AS
 SELECT * FROM person.v_state_province_country_region;
@@ -246,7 +249,7 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['StateProvinceID', 'StateProvinceCode', 'IsOnlyStateProvinceFlag', 'StateProvinceName', 'TerritoryID', 'CountryRegionCode', 'CountryRegionName']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 07 [A07 nchar(3) province codes: , A, AB , ABC, abc and é come back padded to three characters', got, ARRAY['StateProvinceID', 'StateProvinceCode', 'IsOnlyStateProvinceFlag', 'StateProvinceName', 'TerritoryID', 'CountryRegionCode', 'CountryRegionName']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 07 [A07 nchar(3) province codes: , A, AB , ABC, abc (in another country) and é come back padded to three…', got, ARRAY['StateProvinceID', 'StateProvinceCode', 'IsOnlyStateProvinceFlag', 'StateProvinceName', 'TerritoryID', 'CountryRegionCode', 'CountryRegionName']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
@@ -255,7 +258,7 @@ INSERT INTO pp_expected VALUES
   ('2', 'A  ', '1', 'Province 2', '1', 'US', 'United States'),
   ('3', 'AB ', '0', 'Province 3', '2', 'US', 'United States'),
   ('4', 'ABC', '1', 'Province 4', '3', 'US', 'United States'),
-  ('5', 'abc', '0', 'Province 5', '4', 'US', 'United States'),
+  ('5', 'abc', '0', 'Province 5', '4', 'CA', 'Canada'),
   ('6', 'é  ', '1', 'Province 6', '5', 'US', 'United States');
 DO $pp$
 DECLARE missing bigint; extra bigint;
@@ -263,7 +266,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 07 [A07 nchar(3) province codes: , A, AB , ABC, abc and é come back padded to three characters', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 07 [A07 nchar(3) province codes: , A, AB , ABC, abc (in another country) and é come back padded to three…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;

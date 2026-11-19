@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "object": "Website.Customers",
   "database": "WideWorldImporters",
-  "runAt": "2026-11-19T05:28:51.130Z",
+  "runAt": "2026-11-19T06:22:06.394Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "fac801299581dcd86798dac605bfe39aa39d73fcd63ed7a4afb504508f9599fd",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-19T05:20:49.498Z",
+    "at": "2026-11-19T06:00:45.121Z",
     "file": "adversarial/WideWorldImporters/Website.Customers.cases.json",
-    "sha256": "c41a278d049b44483e06a99d145f9eaf2b0419a83f867c31261b8061e4b77aae"
+    "sha256": "1a5b436dd26af2d72dc2519e84372a5256d80cc54b00fec8922690b491914b7e"
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-18T22:23:38.8804730-07:00",
+    "at": "2026-11-19T06:06:57.652Z",
     "file": "adversarial/WideWorldImporters/Website.Customers.audit.json",
-    "sha256": "154f8f7a89034b03b44954d3698a2df6603d8323a98ceba153ac3440d04bb21e"
+    "sha256": "7dc8d4b39b11e9413af1c6c312ee8a9b311ae0aae47ee3d18c21253246efc4f8"
   },
   "sameModel": false,
   "casesAudited": [
@@ -67,11 +67,11 @@
   "cases": [
     {
       "id": "A01",
-      "label": "'' versus NULL in DeliveryRun and RunPosition are kept distinct across the LEFT JOINs",
+      "label": "'' from a joined row versus NULL from a NULL foreign key in the same output column; DeliveryRun and RunPosition '' and NULL the other way round",
       "traps": [
         "null-vs-empty"
       ],
-      "reasoning": "Customer 1 has DeliveryRun '' and RunPosition NULL; the view selects both columns unchanged, so '' must stay '' and NULL stay NULL. A conversion coalescing '' to NULL (or back) would differ.",
+      "reasoning": "Customer 1's buying group and alternate contact exist and are named '' (both name columns are NOT NULL, so '' is their only empty value); customer 2's BuyingGroupID and AlternateContactPersonID are NULL, so the LEFT JOINs give NULL in the same two output columns. DeliveryRun and RunPosition are NULL and '' on customer 1 and the reverse on customer 2 (the hand-derived case has '' and NULL in one order only). A conversion that coalesced joined names to '' or turned '' into NULL would make the two rows agree where SQL Server keeps them apart. Every foreign key points at an existing row or is NULL.",
       "trapChecks": {
         "null-vs-empty": {
           "present": true,
@@ -89,15 +89,15 @@
     },
     {
       "id": "A02",
-      "label": "two customers share a phone number; a missing category/contact/city still yields the row with NULLs",
+      "label": "three customers share phone, fax and website; NULL buying groups and alternate contacts (valid NULL keys) keep their rows; primary and alternate contacts are crossed",
       "traps": [
         "top-ties"
       ],
-      "reasoning": "Customers 1 and 2 share PhoneNumber (a non-key value). Customer 2 points at category/contact/city ids with no matching row, so the LEFT OUTER JOINs must keep it with NULLs. An INNER JOIN conversion would drop customer 2.",
+      "reasoning": "Customers 1, 2 and 3 share PhoneNumber, FaxNumber and WebsiteURL (non-key ties; CustomerName stays unique as in the source). Customers 2 and 3 have no buying group, and customer 3 no alternate contact; these are nullable foreign keys, so the LEFT OUTER JOINs keep the rows with NULL names, and an inner join would drop them. Customer 1's alternate contact is person 2 and customer 2's is person 1, so a conversion that joined the alternate contact on the primary contact id would show the wrong names.",
       "trapChecks": {
         "top-ties": {
           "present": true,
-          "detail": "two rows of Sales.Customers share PhoneNumber = \"(206) 555-9999\""
+          "detail": "two rows of Sales.Customers share CustomerCategoryID = 1"
         }
       },
       "status": "ran",
@@ -170,14 +170,24 @@
       "caseId": "A01",
       "kind": "duplicate",
       "text": "The single hand-derived case already supplies DeliveryRun '' and RunPosition NULL on the same customer and compares both projected values. A01 repeats that exact NULL-versus-empty mechanism with a reduced copy of the same reference data.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A01 now contrasts an empty name from an existing buying-group/contact row with NULL from a nullable foreign key in the same output columns, and reverses the DeliveryRun/RunPosition NULL-empty arrangement. These mechanisms are distinct from the hand-derived projection-only pair.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O02",
       "caseId": "A02",
       "kind": "duplicate",
       "text": "The hand-derived case already keeps a customer whose category, primary contact, delivery method and city all point to missing rows, and its customer rows already share the default phone number. A02 repeats both the LEFT JOIN and non-key-tie conditions.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A02 now uses valid nullable foreign keys only, crosses primary and alternate contacts to expose a wrong self-join, and ties phone, fax, and website values across three rows. It no longer repeats dangling required references.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     }
   ],
   "mutantAdequacy": {
@@ -191,11 +201,8 @@
     "equivalentRecorded": []
   },
   "gate": {
-    "passed": false,
-    "reasons": [
-      "objection O01 is open",
-      "objection O02 is open"
-    ]
+    "passed": true,
+    "reasons": []
   },
   "wording": "4 adversarial cases ran, 0 differed"
 }

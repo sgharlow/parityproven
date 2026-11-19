@@ -101,12 +101,12 @@
     ],
     "harnessVersion": "harness-generic-0.3.0",
     "adversarial": {
-      "gate": "fail",
-      "ran": 12,
+      "gate": "pass",
+      "ran": 13,
       "differed": 0,
       "evidencePath": "evidence/adversarial/WideWorldImporters/Website.ActivateWebsiteLogon.json",
       "conversionSha256": "b0e51ef3afbc9c33f7436fababcbbb217afc73edf1226b184f61bc0ffbd4d8b3",
-      "runAt": "2026-11-19T05:06:08.171Z"
+      "runAt": "2026-11-19T06:21:25.708Z"
     }
   },
   "effort": {

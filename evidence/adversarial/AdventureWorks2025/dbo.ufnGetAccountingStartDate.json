@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "object": "dbo.ufnGetAccountingStartDate",
   "database": "AdventureWorks2025",
-  "runAt": "2026-11-19T02:25:24.894Z",
+  "runAt": "2026-11-19T06:18:56.114Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "3f690fe513c2e8fccd64e57d1f5340011dd5d54f66010520572541bcfc4d6184",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-18T19:13:01-07:00",
+    "at": "2026-11-19T05:46:45.561Z",
     "file": "adversarial/AdventureWorks2025/dbo.ufnGetAccountingStartDate.cases.json",
-    "sha256": "663377d65f1179a5f61745ec455f3ef745f5040076af21ad99f3b667d15d7d34"
+    "sha256": "ec0d2057e333e2e23d89be7ce6afc874cb13ce2fb9703384b36c2b6a11ce5f7e"
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-18T19:19:51.7066204-07:00",
+    "at": "2026-11-19T06:06:57.652Z",
     "file": "adversarial/AdventureWorks2025/dbo.ufnGetAccountingStartDate.audit.json",
-    "sha256": "b3396d96232199aadd56b38c1039592eb0500bb757c8ecb7808e6be540757a4e"
+    "sha256": "3c90f6ef2f9f4c38333c56c8e3aa9890e0f129b677f1704f77abe21ec2cc3ea5"
   },
   "sameModel": false,
   "casesAudited": [
@@ -70,7 +70,7 @@
       "id": "A01",
       "label": "the result keeps datetime's 3-digit precision and midnight exactly (no time-zone shift, no date-only value)",
       "traps": [],
-      "reasoning": "T-SQL CONVERT(datetime, '20030701', 112) gives a datetime at 00:00:00.000. The conversion returns TIMESTAMP '2003-07-01 00:00:00' as timestamp(3). A timestamptz return type, a session time zone, or a date return type would change the value or its type; the result-set comparison checks the value and the column type.",
+      "reasoning": "T-SQL CONVERT(datetime, '20030701', 112) gives a datetime at 00:00:00.000. The conversion returns TIMESTAMP '2003-07-01 00:00:00' as timestamp(3). A timestamptz return type, a session time zone, or a date return type would change the value or its type; the result-set comparison checks the value and the column type. This function has no parameter and reads no table, so the empty call is the only input that exists; the case necessarily repeats the hand-derived case. It is kept because the adversarial gate and its planted-defect check run on the adversarial cases alone, without the hand-derived ones. The planted defect 'start date one day late' is caught only through this call.",
       "trapChecks": {},
       "status": "ran",
       "sqlServer": {
@@ -93,7 +93,12 @@
       "caseId": "A01",
       "kind": "duplicate",
       "text": "A01 sends the same complete payload as the sole hand-derived fixed case: no arguments and no tables. Both cases assert the same midnight timestamp value and type, so A01 adds no distinct attack input.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "The function has exactly one possible input payload. A01 now documents that unavoidable overlap and why the adversarial-only planted-defect check must call the function to observe the date and return type.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     }
   ],
   "mutantAdequacy": {
@@ -106,10 +111,8 @@
     "equivalentRecorded": []
   },
   "gate": {
-    "passed": false,
-    "reasons": [
-      "objection O01 is open"
-    ]
+    "passed": true,
+    "reasons": []
   },
   "wording": "1 adversarial case ran, 0 differed"
 }

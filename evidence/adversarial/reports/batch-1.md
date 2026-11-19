@@ -4,23 +4,21 @@ Built 2026-11-19 by `npm run adversarial -- report --batch 1` from the evidence 
 
 | Object | Cases | Gate | Mutant adequacy | Same model |
 |---|---|---|---|---|
-| AdventureWorks2025 dbo.ufnGetAccountingEndDate | 1 adversarial case ran, 0 differed | FAIL | adequate | no |
-| AdventureWorks2025 dbo.ufnGetAccountingStartDate | 1 adversarial case ran, 0 differed | FAIL | adequate | no |
-| AdventureWorks2025 dbo.ufnGetContactInformation | 12 adversarial cases ran, 0 differed | FAIL | inadequate | no |
-| AdventureWorks2025 dbo.ufnGetDocumentStatusText | 6 adversarial cases ran, 0 differed | FAIL | adequate | no |
+| AdventureWorks2025 dbo.ufnGetAccountingEndDate | 1 adversarial case ran, 0 differed | pass | adequate | no |
+| AdventureWorks2025 dbo.ufnGetAccountingStartDate | 1 adversarial case ran, 0 differed | pass | adequate | no |
+| AdventureWorks2025 dbo.ufnGetContactInformation | 13 adversarial cases ran, 0 differed | pass | adequate | no |
+| AdventureWorks2025 dbo.ufnGetDocumentStatusText | 8 adversarial cases ran, 0 differed | pass | adequate | no |
 | AdventureWorks2025 dbo.ufnGetProductDealerPrice | 19 adversarial cases ran, 6 differed | FAIL | adequate | no |
 | AdventureWorks2025 dbo.ufnGetProductListPrice | 19 adversarial cases ran, 0 differed | pass | adequate | no |
 | AdventureWorks2025 dbo.ufnGetProductStandardCost | 19 adversarial cases ran, 0 differed | pass | adequate | no |
-| AdventureWorks2025 dbo.ufnGetPurchaseOrderStatusText | 6 adversarial cases ran, 0 differed | FAIL | adequate | no |
-| AdventureWorks2025 dbo.ufnGetSalesOrderStatusText | 6 adversarial cases ran, 0 differed | FAIL | inadequate | no |
-| AdventureWorks2025 dbo.ufnGetStock | 7 adversarial cases ran, 0 differed | FAIL | adequate | no |
-| AdventureWorks2025 dbo.ufnLeadingZeros | 8 adversarial cases ran, 0 differed | FAIL | adequate | no |
+| AdventureWorks2025 dbo.ufnGetPurchaseOrderStatusText | 9 adversarial cases ran, 0 differed | pass | adequate | no |
+| AdventureWorks2025 dbo.ufnGetSalesOrderStatusText | 11 adversarial cases ran, 0 differed | pass | adequate | no |
+| AdventureWorks2025 dbo.ufnGetStock | 7 adversarial cases ran, 0 differed | pass | adequate | no |
+| AdventureWorks2025 dbo.ufnLeadingZeros | 8 adversarial cases ran, 0 differed | FAIL | inadequate | no |
 
 ## AdventureWorks2025 dbo.ufnGetAccountingEndDate
 
-1 adversarial case ran, 0 differed. Gate: FAIL. Attacker claude (Kiro subagent; exact model version not exposed to the agent), auditor gpt-5.6-sol. Evidence: `evidence/adversarial/AdventureWorks2025/dbo.ufnGetAccountingEndDate.json`.
-
-- objection O01 is open
+1 adversarial case ran, 0 differed. Gate: pass. Attacker claude (Kiro subagent; exact model version not exposed to the agent), auditor gpt-5.6-sol. Evidence: `evidence/adversarial/AdventureWorks2025/dbo.ufnGetAccountingEndDate.json`.
 
 | Step-5 checklist item | Evidence |
 |---|---|
@@ -36,16 +34,14 @@ Built 2026-11-19 by `npm run adversarial -- report --batch 1` from the evidence 
 | Each agreed test's expected result is what its label says the T-SQL should return (they were captured from the source engine). | owner judgment. Expected results are in tests/AdventureWorks2025/dbo.ufnGetAccountingEndDate.adversarial.expected.json. Cases: A01 midnight minus 2 ms on datetime: the result is the .997 tick, kept at 3 digits (not .998, not rounded to the second) |
 
 Objections:
-- O01 (duplicate, open): A01 sends the same complete payload as the sole hand-derived fixed case: no arguments and no tables. Both cases assert the same .997 datetime result and type, so A01 adds no distinct attack input.
+- O01 (duplicate, resolved, confirmed by gpt-5.6-sol): A01 sends the same complete payload as the sole hand-derived fixed case: no arguments and no tables. Both cases assert the same .997 datetime result and type, so A01 adds no distinct attack input.
 
 Cases:
 - A01 midnight minus 2 ms on datetime: the result is the .997 tick, kept at 3 digits (not .998, not rounded to the second): SQL Server pass, PostgreSQL pass; traps none
 
 ## AdventureWorks2025 dbo.ufnGetAccountingStartDate
 
-1 adversarial case ran, 0 differed. Gate: FAIL. Attacker claude (Kiro subagent; exact model version not exposed to the agent), auditor gpt-5.6-sol. Evidence: `evidence/adversarial/AdventureWorks2025/dbo.ufnGetAccountingStartDate.json`.
-
-- objection O01 is open
+1 adversarial case ran, 0 differed. Gate: pass. Attacker claude (Kiro subagent; exact model version not exposed to the agent), auditor gpt-5.6-sol. Evidence: `evidence/adversarial/AdventureWorks2025/dbo.ufnGetAccountingStartDate.json`.
 
 | Step-5 checklist item | Evidence |
 |---|---|
@@ -61,22 +57,18 @@ Cases:
 | Each agreed test's expected result is what its label says the T-SQL should return (they were captured from the source engine). | owner judgment. Expected results are in tests/AdventureWorks2025/dbo.ufnGetAccountingStartDate.adversarial.expected.json. Cases: A01 the result keeps datetime's 3-digit precision and midnight exactly (no time-zone shift, no date-only value) |
 
 Objections:
-- O01 (duplicate, open): A01 sends the same complete payload as the sole hand-derived fixed case: no arguments and no tables. Both cases assert the same midnight timestamp value and type, so A01 adds no distinct attack input.
+- O01 (duplicate, resolved, confirmed by gpt-5.6-sol): A01 sends the same complete payload as the sole hand-derived fixed case: no arguments and no tables. Both cases assert the same midnight timestamp value and type, so A01 adds no distinct attack input.
 
 Cases:
 - A01 the result keeps datetime's 3-digit precision and midnight exactly (no time-zone shift, no date-only value): SQL Server pass, PostgreSQL pass; traps none
 
 ## AdventureWorks2025 dbo.ufnGetContactInformation
 
-12 adversarial cases ran, 0 differed. Gate: FAIL. Attacker claude (Kiro subagent; exact model version not exposed to the agent), auditor gpt-5.6-sol. Evidence: `evidence/adversarial/AdventureWorks2025/dbo.ufnGetContactInformation.json`.
-
-- objection O01 is open
-- objection O02 is open
-- mutant adequacy is inadequate (unexplained misses: consumer rows include store customers)
+13 adversarial cases ran, 0 differed. Gate: pass. Attacker claude (Kiro subagent; exact model version not exposed to the agent), auditor gpt-5.6-sol. Evidence: `evidence/adversarial/AdventureWorks2025/dbo.ufnGetContactInformation.json`.
 
 | Step-5 checklist item | Evidence |
 |---|---|
-| The conversion does what the T-SQL does for every input the object accepts, not only for the generated ones. | 12 adversarial cases ran, 0 differed (agent-written, run on both engines). Step 3: 200 samples, 417 rows compared, seeds 972221060. owner judgment: whether the inputs cover what the object accepts. |
+| The conversion does what the T-SQL does for every input the object accepts, not only for the generated ones. | 13 adversarial cases ran, 0 differed (agent-written, run on both engines). Step 3: 200 samples, 417 rows compared, seeds 972221060. owner judgment: whether the inputs cover what the object accepts. |
 | NULL versus empty string, including concatenation and ISNULL/COALESCE. | null-vs-empty: attacker says not applicable: No text input column can hold NULL: Person.FirstName, Person.LastName, Employee.JobTitle and ContactType.Name are NOT NULL in the spec (as in AdventureWorks), so a NULL text value cannot be loaded. The NULL-versus-'' contrast exists only in the output and is attacked there by A01: the same person gets an Employee row with JobTitle '' and a Consumer row whose JobTitle is the NULL the function writes. (auditor accepted) |
 | Collation and case sensitivity in comparisons, ORDER BY and GROUP BY. | collation-case: covered by A03 ("ann" and "ANN" differ only in case) |
 | Dates and datetime precision (datetime 3.33 ms rounding, datetime2, time zones, boundary dates). | dates-datetime: not applicable to this object's inputs |
@@ -84,12 +76,12 @@ Cases:
 | Trailing spaces; TOP with and without ties; identity and sequence gaps. | trailing-spaces: covered by A02 ("Ann " ends in a space)<br>top-ties: not applicable to this object's inputs<br>identity-gaps: covered by A05 (Person.Person.BusinessEntityID jumps from 1 to 500) |
 | Every 'not claimed' statement in the notes is acceptable, and nothing else is silently assumed. | owner judgment. Notes: Multi-statement table-valued function: the table variable it fills becomes RETURN QUERY steps in a PL/pgSQL set-returning function. The rows a person gets (one per role) are compared as a multiset; the source does not define their order. / Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step). |
 | The column-type mappings are right for this object. | int NOT NULL -> integer NOT NULL; nvarchar(50) NOT NULL -> varchar(50) NOT NULL; int NULL -> integer |
-| The generated data and fixed cases would catch the mistakes a converter is most likely to make here. | Planted defects on the adversarial cases: inadequate; caught 2, missed 1 (equivalent recorded: 0), not deployable 0. Missed: consumer rows include store customers. |
-| Each agreed test's expected result is what its label says the T-SQL should return (they were captured from the source engine). | owner judgment. Expected results are in tests/AdventureWorks2025/dbo.ufnGetContactInformation.adversarial.expected.json. Cases: A01 one person is an employee with JobTitle '' and a consumer (JobTitle NULL): two rows, '' and NULL kept apart; empty LastName kept; A02 trailing spaces in FirstName, JobTitle and the contact type name, and a LastName of one space, are returned as stored; A03 contact types 'Owner' and 'OWNER' for the same vendor contact give two rows that differ only in case; names keep their case; A04 non-ASCII names and job title (Zoë, 李, Ingénieur, Владелец) come back unchanged; A05 person keys with gaps (1, 500, 2147483647): the int-maximum person is a store contact and an employee; A06 an entity that is both a vendor and a store: one contact row gives a Vendor Contact and a Store Contact row; A07 the same vendor-contact row twice (no key on BusinessEntityContact): two identical Vendor Contact rows; A08 PersonID 0 is an ordinary person (a consumer), not 'no person': one Consumer row; A09 a negative PersonID (-1) who is an employee: one Employee row; A10 a customer row with NULL PersonID and NULL StoreID does not make anyone a consumer: no rows for person 1; A11 names and job title at the 50-character limit come back whole; A12 a store contact through two contact types plus a store customer row: two Store Contact rows, no Consumer row |
+| The generated data and fixed cases would catch the mistakes a converter is most likely to make here. | Planted defects on the adversarial cases: adequate; caught 3, missed 0 (equivalent recorded: 0), not deployable 0. |
+| Each agreed test's expected result is what its label says the T-SQL should return (they were captured from the source engine). | owner judgment. Expected results are in tests/AdventureWorks2025/dbo.ufnGetContactInformation.adversarial.expected.json. Cases: A01 one person is an employee with JobTitle '' and a consumer (JobTitle NULL): two rows, '' and NULL kept apart; empty LastName kept; A02 trailing spaces in FirstName, JobTitle and the contact type name, and a LastName of one space, are returned as stored; A03 contact types 'Owner' and 'OWNER' for the same vendor contact give two rows that differ only in case; names keep their case; A04 non-ASCII names and job title (Zoë, 李, Ingénieur, Владелец) come back unchanged; A05 person keys with gaps (1, 500, 2147483647): the int-maximum person is a store contact and an employee; A06 an entity that is both a vendor and a store: one contact row gives a Vendor Contact and a Store Contact row; A07 one person is a contact of two vendors with the same contact type: two identical Vendor Contact rows; A08 PersonID 0 is an ordinary person (a consumer), not 'no person': one Consumer row; A09 a negative PersonID (-1) who is an employee: one Employee row; A10 a customer row with NULL PersonID and NULL StoreID does not make anyone a consumer: no rows for person 1; A11 names and job title at the 50-character limit come back whole; A12 a store contact through two contact types plus a store customer row: two Store Contact rows, no Consumer row; A13 a person with one consumer account and two store customer accounts: exactly one Consumer row |
 
 Objections:
-- O01 (duplicate, open): The hand-derived person-1 case already makes the vendor and store predicates true in the same call and requires rows from both independent branches. It already catches the ELSIF or early-return defect named for A06; using one entity in both tables does not create a distinct attack on that mechanism.
-- O02 (not-an-attack, open): A07 duplicates the same (BusinessEntityID, PersonID, ContactTypeID) row, but those three columns form the source table's composite primary key. The claim that BusinessEntityContact has no key is false, and this input cannot occur under the source schema preconditions.
+- O01 (duplicate, resolved, confirmed by gpt-5.6-sol): The hand-derived person-1 case already makes the vendor and store predicates true in the same call and requires rows from both independent branches. It already catches the ELSIF or early-return defect named for A06; using one entity in both tables does not create a distinct attack on that mechanism.
+- O02 (not-an-attack, resolved, confirmed by gpt-5.6-sol): A07 duplicates the same (BusinessEntityID, PersonID, ContactTypeID) row, but those three columns form the source table's composite primary key. The claim that BusinessEntityContact has no key is false, and this input cannot occur under the source schema preconditions.
 
 Cases:
 - A01 one person is an employee with JobTitle '' and a consumer (JobTitle NULL): two rows, '' and NULL kept apart; empty LastName kept: SQL Server pass, PostgreSQL pass; traps none
@@ -98,22 +90,21 @@ Cases:
 - A04 non-ASCII names and job title (Zoë, 李, Ingénieur, Владелец) come back unchanged: SQL Server pass, PostgreSQL pass; traps none
 - A05 person keys with gaps (1, 500, 2147483647): the int-maximum person is a store contact and an employee: SQL Server pass, PostgreSQL pass; traps identity-gaps
 - A06 an entity that is both a vendor and a store: one contact row gives a Vendor Contact and a Store Contact row: SQL Server pass, PostgreSQL pass; traps none
-- A07 the same vendor-contact row twice (no key on BusinessEntityContact): two identical Vendor Contact rows: SQL Server pass, PostgreSQL pass; traps none
+- A07 one person is a contact of two vendors with the same contact type: two identical Vendor Contact rows: SQL Server pass, PostgreSQL pass; traps none
 - A08 PersonID 0 is an ordinary person (a consumer), not 'no person': one Consumer row: SQL Server pass, PostgreSQL pass; traps none
 - A09 a negative PersonID (-1) who is an employee: one Employee row: SQL Server pass, PostgreSQL pass; traps none
 - A10 a customer row with NULL PersonID and NULL StoreID does not make anyone a consumer: no rows for person 1: SQL Server pass, PostgreSQL pass; traps none
 - A11 names and job title at the 50-character limit come back whole: SQL Server pass, PostgreSQL pass; traps none
 - A12 a store contact through two contact types plus a store customer row: two Store Contact rows, no Consumer row: SQL Server pass, PostgreSQL pass; traps none
+- A13 a person with one consumer account and two store customer accounts: exactly one Consumer row: SQL Server pass, PostgreSQL pass; traps none
 
 ## AdventureWorks2025 dbo.ufnGetDocumentStatusText
 
-6 adversarial cases ran, 0 differed. Gate: FAIL. Attacker claude (Kiro subagent; exact model version not exposed to the agent), auditor gpt-5.6-sol. Evidence: `evidence/adversarial/AdventureWorks2025/dbo.ufnGetDocumentStatusText.json`.
-
-- objection O01 is open
+8 adversarial cases ran, 0 differed. Gate: pass. Attacker claude (Kiro subagent; exact model version not exposed to the agent), auditor gpt-5.6-sol. Evidence: `evidence/adversarial/AdventureWorks2025/dbo.ufnGetDocumentStatusText.json`.
 
 | Step-5 checklist item | Evidence |
 |---|---|
-| The conversion does what the T-SQL does for every input the object accepts, not only for the generated ones. | 6 adversarial cases ran, 0 differed (agent-written, run on both engines). Step 3: 200 samples, 200 rows compared, seeds 75127072. owner judgment: whether the inputs cover what the object accepts. |
+| The conversion does what the T-SQL does for every input the object accepts, not only for the generated ones. | 8 adversarial cases ran, 0 differed (agent-written, run on both engines). Step 3: 200 samples, 200 rows compared, seeds 75127072. owner judgment: whether the inputs cover what the object accepts. |
 | NULL versus empty string, including concatenation and ISNULL/COALESCE. | null-vs-empty: not applicable to this object's inputs |
 | Collation and case sensitivity in comparisons, ORDER BY and GROUP BY. | collation-case: not applicable to this object's inputs |
 | Dates and datetime precision (datetime 3.33 ms rounding, datetime2, time zones, boundary dates). | dates-datetime: not applicable to this object's inputs |
@@ -122,10 +113,10 @@ Cases:
 | Every 'not claimed' statement in the notes is acceptable, and nothing else is silently assumed. | owner judgment. Notes: Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step). |
 | The column-type mappings are right for this object. | no mappings recorded |
 | The generated data and fixed cases would catch the mistakes a converter is most likely to make here. | Planted defects on the adversarial cases: adequate; caught 1, missed 0 (equivalent recorded: 0), not deployable 0. |
-| Each agreed test's expected result is what its label says the T-SQL should return (they were captured from the source engine). | owner judgment. Expected results are in tests/AdventureWorks2025/dbo.ufnGetDocumentStatusText.adversarial.expected.json. Cases: A01 status 5 (second unmapped value above the last WHEN) is the ELSE text; A02 status 127 (signed 1-byte maximum) is the ELSE text; A03 status 128 (one above the signed 1-byte maximum) is the ELSE text, not an error; A04 status 254 (one below the tinyint maximum) is the ELSE text; A05 status 131 (3 + 128, same low bits as a mapped value) is the ELSE text; A06 status 1 gives the 16-character text exactly at the nvarchar(16) limit, untruncated |
+| Each agreed test's expected result is what its label says the T-SQL should return (they were captured from the source engine). | owner judgment. Expected results are in tests/AdventureWorks2025/dbo.ufnGetDocumentStatusText.adversarial.expected.json. Cases: A01 status 5 (second unmapped value above the last WHEN) is the ELSE text; A02 status 127 (signed 1-byte maximum) is the ELSE text; A03 status 128 (one above the signed 1-byte maximum) is the ELSE text, not an error; A04 status 254 (one below the tinyint maximum) is the ELSE text; A05 status 131 (3 + 128, same low bits as a mapped value) is the ELSE text; A06 status 1 gives the 16-character text exactly at the nvarchar(16) limit, untruncated; A07 status 2 gives 'Approved' (a mapped branch the other adversarial cases do not reach); A08 status 3 gives 'Obsolete' (the last WHEN branch before ELSE) |
 
 Objections:
-- O01 (duplicate, open): A06 sends status 1 with no tables, exactly the same payload as the hand-derived fixed case for the Pending approval mapping. That fixed case already checks the full 16-character return value and its declared result type.
+- O01 (duplicate, resolved, confirmed by gpt-5.6-sol): A06 sends status 1 with no tables, exactly the same payload as the hand-derived fixed case for the Pending approval mapping. That fixed case already checks the full 16-character return value and its declared result type.
 
 Cases:
 - A01 status 5 (second unmapped value above the last WHEN) is the ELSE text: SQL Server pass, PostgreSQL pass; traps none
@@ -134,6 +125,8 @@ Cases:
 - A04 status 254 (one below the tinyint maximum) is the ELSE text: SQL Server pass, PostgreSQL pass; traps none
 - A05 status 131 (3 + 128, same low bits as a mapped value) is the ELSE text: SQL Server pass, PostgreSQL pass; traps none
 - A06 status 1 gives the 16-character text exactly at the nvarchar(16) limit, untruncated: SQL Server pass, PostgreSQL pass; traps none
+- A07 status 2 gives 'Approved' (a mapped branch the other adversarial cases do not reach): SQL Server pass, PostgreSQL pass; traps none
+- A08 status 3 gives 'Obsolete' (the last WHEN branch before ELSE): SQL Server pass, PostgreSQL pass; traps none
 
 ## AdventureWorks2025 dbo.ufnGetProductDealerPrice
 
@@ -258,13 +251,11 @@ Cases:
 
 ## AdventureWorks2025 dbo.ufnGetPurchaseOrderStatusText
 
-6 adversarial cases ran, 0 differed. Gate: FAIL. Attacker claude (Kiro subagent; exact model version not exposed to the agent), auditor gpt-5.6-sol. Evidence: `evidence/adversarial/AdventureWorks2025/dbo.ufnGetPurchaseOrderStatusText.json`.
-
-- objection O01 is open
+9 adversarial cases ran, 0 differed. Gate: pass. Attacker claude (Kiro subagent; exact model version not exposed to the agent), auditor gpt-5.6-sol. Evidence: `evidence/adversarial/AdventureWorks2025/dbo.ufnGetPurchaseOrderStatusText.json`.
 
 | Step-5 checklist item | Evidence |
 |---|---|
-| The conversion does what the T-SQL does for every input the object accepts, not only for the generated ones. | 6 adversarial cases ran, 0 differed (agent-written, run on both engines). Step 3: 200 samples, 200 rows compared, seeds 977334639. owner judgment: whether the inputs cover what the object accepts. |
+| The conversion does what the T-SQL does for every input the object accepts, not only for the generated ones. | 9 adversarial cases ran, 0 differed (agent-written, run on both engines). Step 3: 200 samples, 200 rows compared, seeds 977334639. owner judgment: whether the inputs cover what the object accepts. |
 | NULL versus empty string, including concatenation and ISNULL/COALESCE. | null-vs-empty: not applicable to this object's inputs |
 | Collation and case sensitivity in comparisons, ORDER BY and GROUP BY. | collation-case: not applicable to this object's inputs |
 | Dates and datetime precision (datetime 3.33 ms rounding, datetime2, time zones, boundary dates). | dates-datetime: not applicable to this object's inputs |
@@ -273,10 +264,10 @@ Cases:
 | Every 'not claimed' statement in the notes is acceptable, and nothing else is silently assumed. | owner judgment. Notes: Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step). |
 | The column-type mappings are right for this object. | no mappings recorded |
 | The generated data and fixed cases would catch the mistakes a converter is most likely to make here. | Planted defects on the adversarial cases: adequate; caught 1, missed 0 (equivalent recorded: 0), not deployable 0. |
-| Each agreed test's expected result is what its label says the T-SQL should return (they were captured from the source engine). | owner judgment. Expected results are in tests/AdventureWorks2025/dbo.ufnGetPurchaseOrderStatusText.adversarial.expected.json. Cases: A01 status 6 (second unmapped value above the last WHEN) is the ELSE text; A02 status 127 (signed 1-byte maximum) is the ELSE text; A03 status 128 (one above the signed 1-byte maximum) is the ELSE text, not an error; A04 status 254 (one below the tinyint maximum) is the ELSE text; A05 status 132 (4 + 128, same low bits as 'Complete') is the ELSE text; A06 status 1 gives 'Pending' from a varchar literal in an nvarchar(15) result, with no padding |
+| Each agreed test's expected result is what its label says the T-SQL should return (they were captured from the source engine). | owner judgment. Expected results are in tests/AdventureWorks2025/dbo.ufnGetPurchaseOrderStatusText.adversarial.expected.json. Cases: A01 status 6 (second unmapped value above the last WHEN) is the ELSE text; A02 status 127 (signed 1-byte maximum) is the ELSE text; A03 status 128 (one above the signed 1-byte maximum) is the ELSE text, not an error; A04 status 254 (one below the tinyint maximum) is the ELSE text; A05 status 132 (4 + 128, same low bits as 'Complete') is the ELSE text; A06 status 1 gives 'Pending' from a varchar literal in an nvarchar(15) result, with no padding; A07 status 2 gives 'Approved' (a mapped branch the other adversarial cases do not reach); A08 status 3 gives 'Rejected'; A09 status 4 gives 'Complete' (the last WHEN branch before ELSE) |
 
 Objections:
-- O01 (duplicate, open): A06 sends status 1 with no tables, exactly the same payload as the hand-derived fixed case for the Pending mapping. That fixed case already checks the unpadded return value and the declared result type.
+- O01 (duplicate, resolved, confirmed by gpt-5.6-sol): A06 sends status 1 with no tables, exactly the same payload as the hand-derived fixed case for the Pending mapping. That fixed case already checks the unpadded return value and the declared result type.
 
 Cases:
 - A01 status 6 (second unmapped value above the last WHEN) is the ELSE text: SQL Server pass, PostgreSQL pass; traps none
@@ -285,17 +276,17 @@ Cases:
 - A04 status 254 (one below the tinyint maximum) is the ELSE text: SQL Server pass, PostgreSQL pass; traps none
 - A05 status 132 (4 + 128, same low bits as 'Complete') is the ELSE text: SQL Server pass, PostgreSQL pass; traps none
 - A06 status 1 gives 'Pending' from a varchar literal in an nvarchar(15) result, with no padding: SQL Server pass, PostgreSQL pass; traps none
+- A07 status 2 gives 'Approved' (a mapped branch the other adversarial cases do not reach): SQL Server pass, PostgreSQL pass; traps none
+- A08 status 3 gives 'Rejected': SQL Server pass, PostgreSQL pass; traps none
+- A09 status 4 gives 'Complete' (the last WHEN branch before ELSE): SQL Server pass, PostgreSQL pass; traps none
 
 ## AdventureWorks2025 dbo.ufnGetSalesOrderStatusText
 
-6 adversarial cases ran, 0 differed. Gate: FAIL. Attacker claude (Kiro subagent; exact model version not exposed to the agent), auditor gpt-5.6-sol. Evidence: `evidence/adversarial/AdventureWorks2025/dbo.ufnGetSalesOrderStatusText.json`.
-
-- objection O01 is open
-- mutant adequacy is inadequate (unexplained misses: auto: first CASE result text altered)
+11 adversarial cases ran, 0 differed. Gate: pass. Attacker claude (Kiro subagent; exact model version not exposed to the agent), auditor gpt-5.6-sol. Evidence: `evidence/adversarial/AdventureWorks2025/dbo.ufnGetSalesOrderStatusText.json`.
 
 | Step-5 checklist item | Evidence |
 |---|---|
-| The conversion does what the T-SQL does for every input the object accepts, not only for the generated ones. | 6 adversarial cases ran, 0 differed (agent-written, run on both engines). Step 3: 200 samples, 200 rows compared, seeds 982752042. owner judgment: whether the inputs cover what the object accepts. |
+| The conversion does what the T-SQL does for every input the object accepts, not only for the generated ones. | 11 adversarial cases ran, 0 differed (agent-written, run on both engines). Step 3: 200 samples, 200 rows compared, seeds 982752042. owner judgment: whether the inputs cover what the object accepts. |
 | NULL versus empty string, including concatenation and ISNULL/COALESCE. | null-vs-empty: not applicable to this object's inputs |
 | Collation and case sensitivity in comparisons, ORDER BY and GROUP BY. | collation-case: not applicable to this object's inputs |
 | Dates and datetime precision (datetime 3.33 ms rounding, datetime2, time zones, boundary dates). | dates-datetime: not applicable to this object's inputs |
@@ -303,11 +294,11 @@ Cases:
 | Trailing spaces; TOP with and without ties; identity and sequence gaps. | trailing-spaces: not applicable to this object's inputs<br>top-ties: not applicable to this object's inputs<br>identity-gaps: not applicable to this object's inputs |
 | Every 'not claimed' statement in the notes is acceptable, and nothing else is silently assumed. | owner judgment. Notes: Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step). |
 | The column-type mappings are right for this object. | no mappings recorded |
-| The generated data and fixed cases would catch the mistakes a converter is most likely to make here. | Planted defects on the adversarial cases: inadequate; caught 0, missed 1 (equivalent recorded: 0), not deployable 0. Missed: auto: first CASE result text altered. |
-| Each agreed test's expected result is what its label says the T-SQL should return (they were captured from the source engine). | owner judgment. Expected results are in tests/AdventureWorks2025/dbo.ufnGetSalesOrderStatusText.adversarial.expected.json. Cases: A01 status 8 (second unmapped value above the last WHEN) is the ELSE text; A02 status 127 (signed 1-byte maximum) is the ELSE text; A03 status 128 (one above the signed 1-byte maximum) is the ELSE text, not an error; A04 status 254 (one below the tinyint maximum) is the ELSE text; A05 status 134 (6 + 128, same low bits as 'Cancelled') is the ELSE text; A06 status 3 gives 'Backordered', the longest mapped text (11 characters), from a varchar literal into nvarchar(15) |
+| The generated data and fixed cases would catch the mistakes a converter is most likely to make here. | Planted defects on the adversarial cases: adequate; caught 1, missed 0 (equivalent recorded: 0), not deployable 0. |
+| Each agreed test's expected result is what its label says the T-SQL should return (they were captured from the source engine). | owner judgment. Expected results are in tests/AdventureWorks2025/dbo.ufnGetSalesOrderStatusText.adversarial.expected.json. Cases: A01 status 8 (second unmapped value above the last WHEN) is the ELSE text; A02 status 127 (signed 1-byte maximum) is the ELSE text; A03 status 128 (one above the signed 1-byte maximum) is the ELSE text, not an error; A04 status 254 (one below the tinyint maximum) is the ELSE text; A05 status 134 (6 + 128, same low bits as 'Cancelled') is the ELSE text; A06 status 3 gives 'Backordered', the longest mapped text (11 characters), from a varchar literal into nvarchar(15); A07 status 1 gives 'In process' (the first WHEN branch); A08 status 2 gives 'Approved'; A09 status 4 gives 'Rejected'; A10 status 5 gives 'Shipped'; A11 status 6 gives 'Cancelled' (the last WHEN branch before ELSE) |
 
 Objections:
-- O01 (duplicate, open): A06 sends status 3 with no tables, exactly the same payload as the hand-derived fixed case for the Backordered mapping. That fixed case already checks the longest mapped return text without padding and the declared result type.
+- O01 (duplicate, resolved, confirmed by gpt-5.6-sol): A06 sends status 3 with no tables, exactly the same payload as the hand-derived fixed case for the Backordered mapping. That fixed case already checks the longest mapped return text without padding and the declared result type.
 
 Cases:
 - A01 status 8 (second unmapped value above the last WHEN) is the ELSE text: SQL Server pass, PostgreSQL pass; traps none
@@ -316,14 +307,15 @@ Cases:
 - A04 status 254 (one below the tinyint maximum) is the ELSE text: SQL Server pass, PostgreSQL pass; traps none
 - A05 status 134 (6 + 128, same low bits as 'Cancelled') is the ELSE text: SQL Server pass, PostgreSQL pass; traps none
 - A06 status 3 gives 'Backordered', the longest mapped text (11 characters), from a varchar literal into nvarchar(15): SQL Server pass, PostgreSQL pass; traps none
+- A07 status 1 gives 'In process' (the first WHEN branch): SQL Server pass, PostgreSQL pass; traps none
+- A08 status 2 gives 'Approved': SQL Server pass, PostgreSQL pass; traps none
+- A09 status 4 gives 'Rejected': SQL Server pass, PostgreSQL pass; traps none
+- A10 status 5 gives 'Shipped': SQL Server pass, PostgreSQL pass; traps none
+- A11 status 6 gives 'Cancelled' (the last WHEN branch before ELSE): SQL Server pass, PostgreSQL pass; traps none
 
 ## AdventureWorks2025 dbo.ufnGetStock
 
-7 adversarial cases ran, 0 differed. Gate: FAIL. Attacker claude (Kiro subagent; exact model version not exposed to the agent), auditor gpt-5.6-sol. Evidence: `evidence/adversarial/AdventureWorks2025/dbo.ufnGetStock.json`.
-
-- objection O01 is open
-- objection O02 is open
-- objection O03 is open
+7 adversarial cases ran, 0 differed. Gate: pass. Attacker claude (Kiro subagent; exact model version not exposed to the agent), auditor gpt-5.6-sol. Evidence: `evidence/adversarial/AdventureWorks2025/dbo.ufnGetStock.json`.
 
 | Step-5 checklist item | Evidence |
 |---|---|
@@ -336,17 +328,17 @@ Cases:
 | Every 'not claimed' statement in the notes is acceptable, and nothing else is silently assumed. | owner judgment. Notes: Step 4 finding: SQL Server 2025 inlines this scalar function into the calling query (sys.sql_modules.is_inlineable = 1, Froid). PostgreSQL runs the function once per call, so per-row calls cost about 2x more at 20,000 calls. Equivalence is unaffected; a caller that needs the speed would inline the expression or use a set-based join. A PL/pgSQL version (dbo.ufnGetStock, 2026-11-12) measured slower than the LANGUAGE sql one (160 ms vs 123 ms at 20,000 calls), so the SQL version is kept. / Step 4 factor: 2.5x, not the default 1.5x, agreed by Steve Harlow (project owner, ruling F1) on 2026-11-18 (verification-standard.md, "unless the object's record states a different agreed factor"). Reason: SQL Server 2025 inlines this scalar function into the calling query (Froid); PostgreSQL cannot inline a function that reads a table, and 20,000 calls that read no row at all already take 99-116 ms (measured 2026-11-18), at or above 1.5x before any lookup. An extra or covering index does not help (measured: 110 -> 101 ms, 144 -> 153 ms). Results are the same (step 3); a caller that needs the speed uses a set-based join (7 ms measured). Agreed after the 1.5x measurements, not before. / Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step). |
 | The column-type mappings are right for this object. | int NOT NULL -> integer NOT NULL; smallint NOT NULL -> smallint NOT NULL |
 | The generated data and fixed cases would catch the mistakes a converter is most likely to make here. | Planted defects on the adversarial cases: adequate; caught 1, missed 0 (equivalent recorded: 0), not deployable 0. |
-| Each agreed test's expected result is what its label says the T-SQL should return (they were captured from the source engine). | owner judgment. Expected results are in tests/AdventureWorks2025/dbo.ufnGetStock.adversarial.expected.json. Cases: A01 two rows of 32767 at location 6 sum to 65534, beyond smallint: int result, no overflow; A02 two rows of -32768 at location 6 sum to -65536: a negative int result; A03 +7 and -7 at location 6 sum to 0 (a real zero sum, not the NULL replacement); A04 locations -6, 0, 16, 60 and 32767 are not location 6: only the 4 at location 6 counts; A05 int maximum ProductID 2147483647 with stock at location 6: 9 (other products' rows ignored); A06 ProductID 0 is a real product, not 'no product': its stock 50 is returned; A07 an empty inventory table: 0 |
+| Each agreed test's expected result is what its label says the T-SQL should return (they were captured from the source engine). | owner judgment. Expected results are in tests/AdventureWorks2025/dbo.ufnGetStock.adversarial.expected.json. Cases: A01 32767 at location 6 next to 32767 at locations 1 and 7 for the same product: only location 6 counts; A02 -32768 (smallint minimum) at location 6 next to -32768 at location 1: the negative value is returned as is; A03 -7 at location 6 and +7 at location 1: -7, while an all-locations sum would be the 0 that also stands for no stock; A04 locations -6, 0, 16, 60 and 32767 are not location 6: only the 4 at location 6 counts; A05 int maximum ProductID 2147483647 with stock at location 6: 9 (other products' rows ignored); A06 ProductID 0 is a real product, not 'no product': its stock 50 is returned; A07 an empty inventory table: 0 |
 
 Objections:
-- O01 (not-an-attack, open): A01 inserts two ProductInventory rows with the same (ProductID, LocationID) pair (1, 6), but that pair is the source table's composite primary key. The overflow input cannot occur under the source schema preconditions.
-- O02 (not-an-attack, open): A02 inserts two ProductInventory rows with the same (ProductID, LocationID) pair (2, 6), but that pair is the source table's composite primary key. The negative overflow input cannot occur under the source schema preconditions.
-- O03 (not-an-attack, open): A03 inserts two ProductInventory rows with the same (ProductID, LocationID) pair (3, 6), but that pair is the source table's composite primary key. The cancelling-sum input cannot occur under the source schema preconditions.
+- O01 (not-an-attack, resolved, confirmed by gpt-5.6-sol): A01 inserts two ProductInventory rows with the same (ProductID, LocationID) pair (1, 6), but that pair is the source table's composite primary key. The overflow input cannot occur under the source schema preconditions.
+- O02 (not-an-attack, resolved, confirmed by gpt-5.6-sol): A02 inserts two ProductInventory rows with the same (ProductID, LocationID) pair (2, 6), but that pair is the source table's composite primary key. The negative overflow input cannot occur under the source schema preconditions.
+- O03 (not-an-attack, resolved, confirmed by gpt-5.6-sol): A03 inserts two ProductInventory rows with the same (ProductID, LocationID) pair (3, 6), but that pair is the source table's composite primary key. The cancelling-sum input cannot occur under the source schema preconditions.
 
 Cases:
-- A01 two rows of 32767 at location 6 sum to 65534, beyond smallint: int result, no overflow: SQL Server pass, PostgreSQL pass; traps none
-- A02 two rows of -32768 at location 6 sum to -65536: a negative int result: SQL Server pass, PostgreSQL pass; traps none
-- A03 +7 and -7 at location 6 sum to 0 (a real zero sum, not the NULL replacement): SQL Server pass, PostgreSQL pass; traps none
+- A01 32767 at location 6 next to 32767 at locations 1 and 7 for the same product: only location 6 counts: SQL Server pass, PostgreSQL pass; traps none
+- A02 -32768 (smallint minimum) at location 6 next to -32768 at location 1: the negative value is returned as is: SQL Server pass, PostgreSQL pass; traps none
+- A03 -7 at location 6 and +7 at location 1: -7, while an all-locations sum would be the 0 that also stands for no stock: SQL Server pass, PostgreSQL pass; traps none
 - A04 locations -6, 0, 16, 60 and 32767 are not location 6: only the 4 at location 6 counts: SQL Server pass, PostgreSQL pass; traps none
 - A05 int maximum ProductID 2147483647 with stock at location 6: 9 (other products' rows ignored): SQL Server pass, PostgreSQL pass; traps none
 - A06 ProductID 0 is a real product, not 'no product': its stock 50 is returned: SQL Server pass, PostgreSQL pass; traps none
@@ -356,12 +348,7 @@ Cases:
 
 8 adversarial cases ran, 0 differed. Gate: FAIL. Attacker claude (Kiro subagent; exact model version not exposed to the agent), auditor gpt-5.6-sol. Evidence: `evidence/adversarial/AdventureWorks2025/dbo.ufnLeadingZeros.json`.
 
-- objection O01 is open
-- objection O02 is open
-- objection O03 is open
-- objection O04 is open
-- objection O05 is open
-- objection O06 is open
+- mutant adequacy is inadequate (unexplained misses: auto: strict comparison made inclusive)
 
 | Step-5 checklist item | Evidence |
 |---|---|
@@ -373,26 +360,26 @@ Cases:
 | Trailing spaces; TOP with and without ties; identity and sequence gaps. | trailing-spaces: not applicable to this object's inputs<br>top-ties: not applicable to this object's inputs<br>identity-gaps: not applicable to this object's inputs |
 | Every 'not claimed' statement in the notes is acceptable, and nothing else is silently assumed. | owner judgment. Notes: CONVERT(varchar(8), int) yields '*' when the number needs more than 8 characters; DATALENGTH counts bytes. / Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step). |
 | The column-type mappings are right for this object. | no mappings recorded |
-| The generated data and fixed cases would catch the mistakes a converter is most likely to make here. | Planted defects on the adversarial cases: adequate; caught 1, missed 0 (equivalent recorded: 0), not deployable 0. |
-| Each agreed test's expected result is what its label says the T-SQL should return (they were captured from the source engine). | owner judgment. Expected results are in tests/AdventureWorks2025/dbo.ufnLeadingZeros.adversarial.expected.json. Cases: A01 -1 keeps its sign inside the padding: '000000-1'; A02 -1000000 (exactly 8 characters with the sign) is unchanged; A03 -99999999 (9 characters with the sign) does not fit varchar(8): '0000000*'; A04 10000000 (8 digits, smallest 8-digit value) is unchanged; A05 9999999 (7 digits) gets one leading zero: '09999999'; A06 -10 keeps its sign inside the padding: '00000-10'; A07 2147483646 (one below int maximum) gives '0000000*'; A08 -2147483647 (one above int minimum) gives '0000000*' |
+| The generated data and fixed cases would catch the mistakes a converter is most likely to make here. | Planted defects on the adversarial cases: inadequate; caught 0, missed 1 (equivalent recorded: 0), not deployable 0. Missed: auto: strict comparison made inclusive. |
+| Each agreed test's expected result is what its label says the T-SQL should return (they were captured from the source engine). | owner judgment. Expected results are in tests/AdventureWorks2025/dbo.ufnLeadingZeros.adversarial.expected.json. Cases: A01 -1000 (5 characters with the sign) gets three zeros before the sign: '000-1000'; A02 -100000 (7 characters with the sign) gets one zero before the sign: '0-100000'; A03 -999999999 (10 characters with the sign) does not fit varchar(8): '0000000*'; A04 1000 (4 digits) gets four leading zeros: '00001000'; A05 9999999 (7 digits) gets one leading zero: '09999999'; A06 -10 keeps its sign inside the padding: '00000-10'; A07 100000 (6 digits, an exact power of ten) gets two leading zeros: '00100000'; A08 -10000 (6 characters with the sign) gets two zeros before the sign: '00-10000' |
 
 Objections:
-- O01 (duplicate, open): The hand-derived -5 case already supplies a two-character negative integer and requires the sign after six padding zeros. A01 changes only the digit from 5 to 1 and attacks the same input class and mechanism.
-- O02 (duplicate, open): The hand-derived -9999999 case already supplies an eight-character negative integer, including the sign, and requires it unchanged. A02 is the same length class and attacks the same boundary behavior.
-- O03 (duplicate, open): The hand-derived -10000000 case already supplies a nine-character negative integer and requires CONVERT(varchar(8), int) to produce '*' before padding. A03 attacks the same length and conversion path.
-- O04 (duplicate, open): The hand-derived 12345678 and 99999999 cases already supply eight-character positive integers and require them unchanged. A04 is the same length boundary and does not add a distinct attack mechanism.
-- O05 (duplicate, open): The hand-derived int-maximum case already exercises a positive value above eight characters and requires '0000000*'. Moving one below the maximum uses the same conversion and padding path.
-- O06 (duplicate, open): The hand-derived int-minimum case already exercises a negative value above eight characters and requires '0000000*'. Moving one above the minimum uses the same conversion and padding path.
+- O01 (duplicate, resolved, confirmed by gpt-5.6-sol): The hand-derived -5 case already supplies a two-character negative integer and requires the sign after six padding zeros. A01 changes only the digit from 5 to 1 and attacks the same input class and mechanism.
+- O02 (duplicate, resolved, confirmed by gpt-5.6-sol): The hand-derived -9999999 case already supplies an eight-character negative integer, including the sign, and requires it unchanged. A02 is the same length class and attacks the same boundary behavior.
+- O03 (duplicate, resolved, confirmed by gpt-5.6-sol): The hand-derived -10000000 case already supplies a nine-character negative integer and requires CONVERT(varchar(8), int) to produce '*' before padding. A03 attacks the same length and conversion path.
+- O04 (duplicate, resolved, confirmed by gpt-5.6-sol): The hand-derived 12345678 and 99999999 cases already supply eight-character positive integers and require them unchanged. A04 is the same length boundary and does not add a distinct attack mechanism.
+- O05 (duplicate, resolved, confirmed by gpt-5.6-sol): The hand-derived int-maximum case already exercises a positive value above eight characters and requires '0000000*'. Moving one below the maximum uses the same conversion and padding path.
+- O06 (duplicate, resolved, confirmed by gpt-5.6-sol): The hand-derived int-minimum case already exercises a negative value above eight characters and requires '0000000*'. Moving one above the minimum uses the same conversion and padding path.
 
 Cases:
-- A01 -1 keeps its sign inside the padding: '000000-1': SQL Server pass, PostgreSQL pass; traps none
-- A02 -1000000 (exactly 8 characters with the sign) is unchanged: SQL Server pass, PostgreSQL pass; traps none
-- A03 -99999999 (9 characters with the sign) does not fit varchar(8): '0000000*': SQL Server pass, PostgreSQL pass; traps none
-- A04 10000000 (8 digits, smallest 8-digit value) is unchanged: SQL Server pass, PostgreSQL pass; traps none
+- A01 -1000 (5 characters with the sign) gets three zeros before the sign: '000-1000': SQL Server pass, PostgreSQL pass; traps none
+- A02 -100000 (7 characters with the sign) gets one zero before the sign: '0-100000': SQL Server pass, PostgreSQL pass; traps none
+- A03 -999999999 (10 characters with the sign) does not fit varchar(8): '0000000*': SQL Server pass, PostgreSQL pass; traps none
+- A04 1000 (4 digits) gets four leading zeros: '00001000': SQL Server pass, PostgreSQL pass; traps none
 - A05 9999999 (7 digits) gets one leading zero: '09999999': SQL Server pass, PostgreSQL pass; traps none
 - A06 -10 keeps its sign inside the padding: '00000-10': SQL Server pass, PostgreSQL pass; traps none
-- A07 2147483646 (one below int maximum) gives '0000000*': SQL Server pass, PostgreSQL pass; traps none
-- A08 -2147483647 (one above int minimum) gives '0000000*': SQL Server pass, PostgreSQL pass; traps none
+- A07 100000 (6 digits, an exact power of ten) gets two leading zeros: '00100000': SQL Server pass, PostgreSQL pass; traps none
+- A08 -10000 (6 characters with the sign) gets two zeros before the sign: '00-10000': SQL Server pass, PostgreSQL pass; traps none
 
 ## Approval
 

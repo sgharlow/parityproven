@@ -1,5 +1,5 @@
 {
-  "builtAt": "2026-11-19T05:37:18.854Z",
+  "builtAt": "2026-11-19T06:24:38.519Z",
   "receipts": [
     {
       "database": "AdventureWorks2025",
@@ -376,7 +376,7 @@
       "objectName": "CalculateCustomerPrice",
       "objectClass": "function",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "WideWorldImporters/Website.CalculateCustomerPrice.json"
     },
     {
@@ -385,7 +385,7 @@
       "objectName": "ChangePassword",
       "objectClass": "procedure",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "WideWorldImporters/Website.ChangePassword.json"
     },
     {
@@ -430,7 +430,7 @@
       "objectName": "RecordVehicleTemperature",
       "objectClass": "procedure",
       "tier": "medium",
-      "status": "pending",
+      "status": "verified",
       "path": "WideWorldImporters/Website.RecordVehicleTemperature.json"
     },
     {
@@ -946,8 +946,8 @@
   },
   "summary": {
     "total": 55,
-    "verified": 2,
-    "pending": 41,
+    "verified": 5,
+    "pending": 38,
     "failed": 12,
     "excluded": 17,
     "notAttempted": 26,

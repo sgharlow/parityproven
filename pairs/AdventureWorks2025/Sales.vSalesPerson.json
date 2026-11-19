@@ -136,12 +136,12 @@
     ],
     "harnessVersion": "harness-generic-0.3.0",
     "adversarial": {
-      "gate": "fail",
-      "ran": 9,
+      "gate": "pass",
+      "ran": 10,
       "differed": 0,
       "evidencePath": "evidence/adversarial/AdventureWorks2025/Sales.vSalesPerson.json",
       "conversionSha256": "f5a932f00a10efdc881b577e448bb5e24b4a074a3045fefde601a21ee41a9071",
-      "runAt": "2026-11-19T04:17:37.464Z"
+      "runAt": "2026-11-19T06:18:19.746Z"
     }
   },
   "effort": {

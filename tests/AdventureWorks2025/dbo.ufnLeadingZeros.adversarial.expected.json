@@ -2,11 +2,11 @@
   "object": "dbo.ufnLeadingZeros",
   "database": "AdventureWorks2025",
   "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
-  "capturedAt": "2026-11-19T02:26:42.407Z",
+  "capturedAt": "2026-11-19T06:19:54.342Z",
   "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
   "cases": [
     {
-      "label": "[A01] -1 keeps its sign inside the padding: '000000-1'",
+      "label": "[A01] -1000 (5 characters with the sign) gets three zeros before the sign: '000-1000'",
       "columns": [
         {
           "name": "result",
@@ -15,12 +15,12 @@
       ],
       "rows": [
         [
-          "s:000000-1"
+          "s:000-1000"
         ]
       ]
     },
     {
-      "label": "[A02] -1000000 (exactly 8 characters with the sign) is unchanged",
+      "label": "[A02] -100000 (7 characters with the sign) gets one zero before the sign: '0-100000'",
       "columns": [
         {
           "name": "result",
@@ -29,12 +29,12 @@
       ],
       "rows": [
         [
-          "s:-1000000"
+          "s:0-100000"
         ]
       ]
     },
     {
-      "label": "[A03] -99999999 (9 characters with the sign) does not fit varchar(8): '0000000*'",
+      "label": "[A03] -999999999 (10 characters with the sign) does not fit varchar(8): '0000000*'",
       "columns": [
         {
           "name": "result",
@@ -48,7 +48,7 @@
       ]
     },
     {
-      "label": "[A04] 10000000 (8 digits, smallest 8-digit value) is unchanged",
+      "label": "[A04] 1000 (4 digits) gets four leading zeros: '00001000'",
       "columns": [
         {
           "name": "result",
@@ -57,7 +57,7 @@
       ],
       "rows": [
         [
-          "s:10000000"
+          "s:00001000"
         ]
       ]
     },
@@ -90,7 +90,7 @@
       ]
     },
     {
-      "label": "[A07] 2147483646 (one below int maximum) gives '0000000*'",
+      "label": "[A07] 100000 (6 digits, an exact power of ten) gets two leading zeros: '00100000'",
       "columns": [
         {
           "name": "result",
@@ -99,12 +99,12 @@
       ],
       "rows": [
         [
-          "s:0000000*"
+          "s:00100000"
         ]
       ]
     },
     {
-      "label": "[A08] -2147483647 (one above int minimum) gives '0000000*'",
+      "label": "[A08] -10000 (6 characters with the sign) gets two zeros before the sign: '00-10000'",
       "columns": [
         {
           "name": "result",
@@ -113,7 +113,7 @@
       ],
       "rows": [
         [
-          "s:0000000*"
+          "s:00-10000"
         ]
       ]
     }

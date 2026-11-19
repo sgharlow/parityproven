@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "object": "Integration.GetSaleUpdates",
   "database": "WideWorldImporters",
-  "runAt": "2026-11-19T05:05:25.164Z",
+  "runAt": "2026-11-19T06:20:39.874Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "29eb61ad54858e00ce1b74298d6d938072fc0132dcb5f527cdacf5792a301822",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-19T04:36:25.160Z",
+    "at": "2026-11-19T06:00:45.121Z",
     "file": "adversarial/WideWorldImporters/Integration.GetSaleUpdates.cases.json",
-    "sha256": "846834bff807816f04e7d1822b769f4a7d6f17c776c1b562aa06abbdb30fde7e"
+    "sha256": "28c9979e2bec136f1cf53f3f4fce7af7a3509ef825e3610d6293de4738a2eb37"
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-18T21:39:58.1908526-07:00",
+    "at": "2026-11-19T06:06:57.652Z",
     "file": "adversarial/WideWorldImporters/Integration.GetSaleUpdates.audit.json",
-    "sha256": "c58cf5a717db3747240ca51d0e430c0d527ef7fc734028813ced349eceaf6618"
+    "sha256": "a4703024f56c3e81525a2212543925e58dd57e61c2c601fe74a502b5f48673a3"
   },
   "sameModel": false,
   "casesAudited": [
@@ -116,11 +116,11 @@
     },
     {
       "id": "A03",
-      "label": "decimal arithmetic: Total Excluding Tax = ExtendedPrice - TaxAmount for 0.05 - 0.15, 10.05 - 1.55, 999999999999.99 - (-999999999999.99); a 3-place tax rate ending in 5; negative profit; NULL unit price",
+      "label": "decimal arithmetic: Total Excluding Tax = ExtendedPrice - TaxAmount for 0.05 - 0.15, 10.05 - 1.55, and 5000000000000.05 - (-4999999999999.95), which carries into a 14th integer digit; a 3-place tax rate ending in 5; negative profit; NULL unit price",
       "traps": [
         "numeric-rounding"
       ],
-      "reasoning": "ExtendedPrice - TaxAmount is decimal(18,2) - decimal(18,2) = decimal(19,2) on SQL Server; the large pair needs the extra digit. TaxRate 15.005 and LineProfit -0.05 are passed through; UnitPrice NULL stays NULL.",
+      "reasoning": "ExtendedPrice - TaxAmount is decimal(18,2) - decimal(18,2), typed decimal(19,2) on SQL Server. The large pair has 13 integer digits on each side and its difference, 10000000000000.00, has 14: the .05 + .95 carry ripples through every digit, so a conversion that computed in double precision, or declared the result with fewer than 16 digits of precision, would differ. The decimal(18,2) overflow boundary itself (results of 1e16 and above) is not sent: the harness reads decimals from the SQL Server driver as JS numbers, which hold about 15 significant digits exactly, so such a result could not be captured faithfully. TaxRate 15.005 and LineProfit -0.05 are passed through; UnitPrice NULL stays NULL.",
       "trapChecks": {
         "numeric-rounding": {
           "present": true,
@@ -197,7 +197,12 @@
       "caseId": "A03",
       "kind": "weak",
       "text": "A03 says the subtraction 999999999999.99 - (-999999999999.99) needs the extra precision digit of SQL Server's decimal(19,2) result. The actual result, 1999999999999.98, still fits decimal(18,2), so these values do not attack the stated precision-widening boundary.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A03 now uses 5000000000000.05 - (-4999999999999.95), which carries into a fourteenth integer digit, and no longer claims to reach the decimal(18,2) overflow boundary. Its reasoning explicitly records that the true boundary cannot be captured faithfully by the current SQL Server driver path.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     }
   ],
   "mutantAdequacy": {
@@ -211,10 +216,8 @@
     "equivalentRecorded": []
   },
   "gate": {
-    "passed": false,
-    "reasons": [
-      "objection O01 is open"
-    ]
+    "passed": true,
+    "reasons": []
   },
   "wording": "5 adversarial cases ran, 0 differed"
 }

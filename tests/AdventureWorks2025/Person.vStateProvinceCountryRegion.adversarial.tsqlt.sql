@@ -10,18 +10,20 @@
 GO
 EXEC tSQLt.NewTestClass 'AgreedTests';
 GO
--- case 1: [A01] case-only variants 'Us', 'uS' and 'us ' of a country code join 'US'
-CREATE PROCEDURE [AgreedTests].[test 01 [A01 case-only variants Us, uS and us of a country code join US]
+-- case 1: [A01] case pairs outside ASCII ('üs' to 'ÜS', 'σa' to 'ΣA') and case plus a trailing space on the country side ('CA' to 'ca ')
+CREATE PROCEDURE [AgreedTests].[test 01 [A01 case pairs outside ASCII (üs to ÜS, ?a to ?A) and case plus a trailing space on the country side…]
 AS
 BEGIN
   DELETE FROM [Person].[CountryRegion];
   DELETE FROM [Person].[StateProvince];
   INSERT INTO [Person].[CountryRegion] ([CountryRegionCode], [Name]) VALUES
-    (N'US', N'United States');
+    (N'ÜS', N'Country Ü'),
+    (N'ΣA', N'Country Σ'),
+    (N'ca ', N'Country ca');
   INSERT INTO [Person].[StateProvince] ([StateProvinceID], [StateProvinceCode], [CountryRegionCode], [IsOnlyStateProvinceFlag], [Name], [TerritoryID]) VALUES
-    (1, N'S1', N'Us', 0, N'Province 1', 1),
-    (2, N'S2', N'uS', 0, N'Province 2', 1),
-    (3, N'S3', N'us ', 0, N'Province 3', 1);
+    (1, N'S1', N'üs', 0, N'Province 1', 1),
+    (2, N'S2', N'σa', 0, N'Province 2', 1),
+    (3, N'S3', N'CA', 0, N'Province 3', 1);
   CREATE TABLE #Expected (
     [StateProvinceID] int NULL,
     [StateProvinceCode] char(3) NULL,
@@ -41,9 +43,9 @@ BEGIN
     [CountryRegionName] nvarchar(50) NULL
   );
   INSERT INTO #Expected ([StateProvinceID], [StateProvinceCode], [IsOnlyStateProvinceFlag], [StateProvinceName], [TerritoryID], [CountryRegionCode], [CountryRegionName]) VALUES
-    (1, N'S1 ', 0, N'Province 1', 1, N'US', N'United States'),
-    (2, N'S2 ', 0, N'Province 2', 1, N'US', N'United States'),
-    (3, N'S3 ', 0, N'Province 3', 1, N'US', N'United States');
+    (1, N'S1 ', 0, N'Province 1', 1, N'ÜS', N'Country Ü'),
+    (2, N'S2 ', 0, N'Province 2', 1, N'ΣA', N'Country Σ'),
+    (3, N'S3 ', 0, N'Province 3', 1, N'ca ', N'Country ca');
   INSERT INTO #Actual
   SELECT * FROM Person.vStateProvinceCountryRegion;
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
@@ -247,20 +249,21 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
--- case 7: [A07] nchar(3) province codes: '', 'A', 'AB ', 'ABC', 'abc' and 'é' come back padded to three characters
-CREATE PROCEDURE [AgreedTests].[test 07 [A07 nchar(3) province codes: , A, AB , ABC, abc and é come back padded to three characters]
+-- case 7: [A07] nchar(3) province codes: '', 'A', 'AB ', 'ABC', 'abc' (in another country) and 'é' come back padded to three characters
+CREATE PROCEDURE [AgreedTests].[test 07 [A07 nchar(3) province codes: , A, AB , ABC, abc (in another country) and é come back padded to three…]
 AS
 BEGIN
   DELETE FROM [Person].[CountryRegion];
   DELETE FROM [Person].[StateProvince];
   INSERT INTO [Person].[CountryRegion] ([CountryRegionCode], [Name]) VALUES
-    (N'US', N'United States');
+    (N'US', N'United States'),
+    (N'CA', N'Canada');
   INSERT INTO [Person].[StateProvince] ([StateProvinceID], [StateProvinceCode], [CountryRegionCode], [IsOnlyStateProvinceFlag], [Name], [TerritoryID]) VALUES
     (1, N'', N'US', 0, N'Province 1', 0),
     (2, N'A', N'US', 1, N'Province 2', 1),
     (3, N'AB ', N'US', 0, N'Province 3', 2),
     (4, N'ABC', N'US', 1, N'Province 4', 3),
-    (5, N'abc', N'US', 0, N'Province 5', 4),
+    (5, N'abc', N'CA', 0, N'Province 5', 4),
     (6, N'é', N'US', 1, N'Province 6', 5);
   CREATE TABLE #Expected (
     [StateProvinceID] int NULL,
@@ -285,7 +288,7 @@ BEGIN
     (2, N'A  ', 1, N'Province 2', 1, N'US', N'United States'),
     (3, N'AB ', 0, N'Province 3', 2, N'US', N'United States'),
     (4, N'ABC', 1, N'Province 4', 3, N'US', N'United States'),
-    (5, N'abc', 0, N'Province 5', 4, N'US', N'United States'),
+    (5, N'abc', 0, N'Province 5', 4, N'CA', N'Canada'),
     (6, N'é  ', 1, N'Province 6', 5, N'US', N'United States');
   INSERT INTO #Actual
   SELECT * FROM Person.vStateProvinceCountryRegion;

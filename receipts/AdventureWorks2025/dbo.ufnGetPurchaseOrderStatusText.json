@@ -95,20 +95,18 @@
       "planted defects caught by the agreed tests: 1 of 1"
     ],
     "adversarial": {
-      "gate": "fail",
-      "ran": 6,
+      "gate": "pass",
+      "ran": 9,
       "differed": 0,
       "evidencePath": "evidence/adversarial/AdventureWorks2025/dbo.ufnGetPurchaseOrderStatusText.json",
-      "runAt": "2026-11-19T02:26:24.897Z",
+      "runAt": "2026-11-19T06:19:29.585Z",
       "agentWritten": true,
-      "wording": "6 adversarial cases ran, 0 differed",
+      "wording": "9 adversarial cases ran, 0 differed",
       "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
       "auditorModel": "gpt-5.6-sol",
       "sameModel": false,
       "mutantAdequacy": "adequate",
-      "gateReasons": [
-        "objection O01 is open"
-      ],
+      "gateReasons": [],
       "cases": [
         {
           "id": "A01",
@@ -157,6 +155,30 @@
           "status": "ran",
           "sqlServer": "pass",
           "postgres": "pass"
+        },
+        {
+          "id": "A07",
+          "label": "status 2 gives 'Approved' (a mapped branch the other adversarial cases do not reach)",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A08",
+          "label": "status 3 gives 'Rejected'",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A09",
+          "label": "status 4 gives 'Complete' (the last WHEN branch before ELSE)",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
         }
       ]
     }
@@ -170,5 +192,5 @@
     "p50Hours": 1.5,
     "p90Hours": 4
   },
-  "builtAt": "2026-11-19T05:37:18.786Z"
+  "builtAt": "2026-11-19T06:24:38.451Z"
 }

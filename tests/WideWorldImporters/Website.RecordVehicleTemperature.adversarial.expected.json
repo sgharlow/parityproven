@@ -2,7 +2,7 @@
   "object": "Website.RecordVehicleTemperature",
   "database": "WideWorldImporters",
   "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
-  "capturedAt": "2026-11-19T05:30:01.155Z",
+  "capturedAt": "2026-11-19T06:23:14.167Z",
   "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
   "cases": [
     {
@@ -34,7 +34,7 @@
       }
     },
     {
-      "label": "[A02] duplicate 'rego' key: the first occurrence wins",
+      "label": "[A02] duplicate 'temp' key: the first (1.5) wins; the second is in exponent notation (1e2)",
       "outcome": "completed",
       "tables": {
         "Warehouse.VehicleTemperatures": {
@@ -49,11 +49,11 @@
           ],
           "rows": [
             [
-              "s:first",
+              "s:WWI-2",
               "n:1",
               "t:2016-01-01T07:00:00.000000",
-              "n:1",
-              "s:{\"type\":\"Feature\",\"properties\":{\"rego\":\"first\",\"rego\":\"second\",\"sensor\":1,\"when\":\"2016-01-01T07:00:00\",\"temp\":1}}",
+              "n:1.5",
+              "s:{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-89.76,50.47]},\"properties\":{\"rego\":\"WWI-2\",\"sensor\":1,\"when\":\"2016-01-01T07:00:00\",\"temp\":1.5,\"temp\":1e2}}",
               "b:0",
               "∅"
             ]
@@ -62,7 +62,7 @@
       }
     },
     {
-      "label": "[A03] temperature 3.965 rounds half away from zero to 3.97",
+      "label": "[A03] temperature -3.965 rounds half away from zero to -3.97 (half-up gives -3.96)",
       "outcome": "completed",
       "tables": {
         "Warehouse.VehicleTemperatures": {
@@ -80,8 +80,8 @@
               "s:a",
               "n:1",
               "t:2016-01-01T07:00:00.000000",
-              "n:3.97",
-              "s:{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-89.76,50.47]},\"properties\":{\"rego\":\"a\",\"sensor\":1,\"when\":\"2016-01-01T07:00:00\",\"temp\":3.965}}",
+              "n:-3.97",
+              "s:{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-89.76,50.47]},\"properties\":{\"rego\":\"a\",\"sensor\":1,\"when\":\"2016-01-01T07:00:00\",\"temp\":-3.965}}",
               "b:0",
               "∅"
             ]
@@ -155,8 +155,8 @@
       }
     },
     {
-      "label": "[A06] NULL document: ISJSON(NULL) is NULL, so nothing is inserted and no error is raised",
-      "outcome": "completed",
+      "label": "[A06] the document is the JSON literal null (text 'null', not SQL NULL): not an object or array, so ISJSON is 0 and the call raises",
+      "outcome": "raised",
       "tables": {
         "Warehouse.VehicleTemperatures": {
           "columns": [
@@ -169,6 +169,89 @@
             "CompressedSensorData"
           ],
           "rows": []
+        }
+      }
+    },
+    {
+      "label": "[A07] temperature in upper-case exponent notation with a negative exponent (25E-1) is rejected",
+      "outcome": "raised",
+      "tables": {
+        "Warehouse.VehicleTemperatures": {
+          "columns": [
+            "VehicleRegistration",
+            "ChillerSensorNumber",
+            "RecordedWhen",
+            "Temperature",
+            "FullSensorData",
+            "IsCompressed",
+            "CompressedSensorData"
+          ],
+          "rows": []
+        }
+      }
+    },
+    {
+      "label": "[A08] two recordings, the first with an empty 'when' (1900-01-01) and the second dated normally: both inserted",
+      "outcome": "completed",
+      "tables": {
+        "Warehouse.VehicleTemperatures": {
+          "columns": [
+            "VehicleRegistration",
+            "ChillerSensorNumber",
+            "RecordedWhen",
+            "Temperature",
+            "FullSensorData",
+            "IsCompressed",
+            "CompressedSensorData"
+          ],
+          "rows": [
+            [
+              "s:WWI-8",
+              "n:1",
+              "t:1900-01-01T00:00:00.000000",
+              "n:1.25",
+              "s:{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-89.76,50.47]},\"properties\":{\"rego\":\"WWI-8\",\"sensor\":1,\"when\":\"\",\"temp\":1.25}}",
+              "b:0",
+              "∅"
+            ],
+            [
+              "s:WWI-8b",
+              "n:2",
+              "t:2016-01-01T07:00:00.000000",
+              "n:2",
+              "s:{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-89.76,50.47]},\"properties\":{\"rego\":\"WWI-8b\",\"sensor\":2,\"when\":\"2016-01-01T07:00:00\",\"temp\":2}}",
+              "b:0",
+              "∅"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "label": "[A09] a 1007-character argument whose first 1000 characters are a valid document followed by spaces: truncated to nvarchar(1000), it is valid and inserted",
+      "outcome": "completed",
+      "tables": {
+        "Warehouse.VehicleTemperatures": {
+          "columns": [
+            "VehicleRegistration",
+            "ChillerSensorNumber",
+            "RecordedWhen",
+            "Temperature",
+            "FullSensorData",
+            "IsCompressed",
+            "CompressedSensorData"
+          ],
+          "rows": [
+            [
+              "s:WWI-9",
+              "n:1",
+              "t:2016-01-01T07:00:00.000000",
+              "n:2.5",
+              "s:{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-89.76,50.47]},\"properties\":{\"rego\":\"WWI-9\",\"sensor\":1,\"when\":\"2016-01-01T07:00:00\",\"temp\":2.5}}",
+              "b:0",
+              "∅"
+            ]
+          ]
         }
       }
     }

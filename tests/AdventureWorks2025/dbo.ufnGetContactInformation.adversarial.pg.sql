@@ -271,7 +271,7 @@ BEGIN
 END $pp$;
 ROLLBACK;
 
--- @case 7: [A07] the same vendor-contact row twice (no key on BusinessEntityContact): two identical Vendor Contact rows
+-- @case 7: [A07] one person is a contact of two vendors with the same contact type: two identical Vendor Contact rows
 BEGIN;
 DELETE FROM humanresources.employee;
 DELETE FROM person.business_entity_contact;
@@ -282,13 +282,14 @@ DELETE FROM sales.customer;
 DELETE FROM sales.store;
 INSERT INTO person.business_entity_contact ("BusinessEntityID", "PersonID", "ContactTypeID") VALUES
   ('100', '3', '1'),
-  ('100', '3', '1');
+  ('101', '3', '1');
 INSERT INTO person.contact_type ("ContactTypeID", "Name") VALUES
   ('1', 'Owner');
 INSERT INTO person.person ("BusinessEntityID", "FirstName", "LastName") VALUES
   ('3', 'Cy', 'Oh');
 INSERT INTO purchasing.vendor ("BusinessEntityID") VALUES
-  ('100');
+  ('100'),
+  ('101');
 CREATE TEMP TABLE pp_actual ON COMMIT DROP AS
 SELECT * FROM dbo.ufn_get_contact_information('3'::integer);
 DO $pp$
@@ -296,7 +297,7 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['PersonID', 'FirstName', 'LastName', 'JobTitle', 'BusinessEntityType']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 07 [A07 the same vendor-contact row twice (no key on BusinessEntityContact): two identical Vendor Contac…', got, ARRAY['PersonID', 'FirstName', 'LastName', 'JobTitle', 'BusinessEntityType']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 07 [A07 one person is a contact of two vendors with the same contact type: two identical Vendor Contact…', got, ARRAY['PersonID', 'FirstName', 'LastName', 'JobTitle', 'BusinessEntityType']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
@@ -309,7 +310,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 07 [A07 the same vendor-contact row twice (no key on BusinessEntityContact): two identical Vendor Contac…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 07 [A07 one person is a contact of two vendors with the same contact type: two identical Vendor Contact…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;
@@ -503,6 +504,48 @@ BEGIN
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
   IF missing > 0 OR extra > 0 THEN
     RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 12 [A12 a store contact through two contact types plus a store customer row: two Store Contact rows, no…', missing, extra;
+  END IF;
+END $pp$;
+ROLLBACK;
+
+-- @case 13: [A13] a person with one consumer account and two store customer accounts: exactly one Consumer row
+BEGIN;
+DELETE FROM humanresources.employee;
+DELETE FROM person.business_entity_contact;
+DELETE FROM person.contact_type;
+DELETE FROM person.person;
+DELETE FROM purchasing.vendor;
+DELETE FROM sales.customer;
+DELETE FROM sales.store;
+INSERT INTO person.person ("BusinessEntityID", "FirstName", "LastName") VALUES
+  ('10', 'Jo', 'Wu');
+INSERT INTO sales.customer ("PersonID", "StoreID") VALUES
+  ('10', '200'),
+  ('10', NULL),
+  ('10', '201');
+INSERT INTO sales.store ("BusinessEntityID") VALUES
+  ('200'),
+  ('201');
+CREATE TEMP TABLE pp_actual ON COMMIT DROP AS
+SELECT * FROM dbo.ufn_get_contact_information('10'::integer);
+DO $pp$
+DECLARE got text[];
+BEGIN
+  SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
+  IF got IS DISTINCT FROM ARRAY['PersonID', 'FirstName', 'LastName', 'JobTitle', 'BusinessEntityType']::text[] THEN
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 13 [A13 a person with one consumer account and two store customer accounts: exactly one Consumer row', got, ARRAY['PersonID', 'FirstName', 'LastName', 'JobTitle', 'BusinessEntityType']::text[];
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
+INSERT INTO pp_expected VALUES
+  ('10', 'Jo', 'Wu', NULL, 'Consumer');
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 13 [A13 a person with one consumer account and two store customer accounts: exactly one Consumer row', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;

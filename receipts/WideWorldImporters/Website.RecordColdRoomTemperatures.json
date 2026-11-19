@@ -118,21 +118,18 @@
       "planted defects caught by the agreed tests: 4 of 4"
     ],
     "adversarial": {
-      "gate": "fail",
+      "gate": "pass",
       "ran": 4,
       "differed": 0,
       "evidencePath": "evidence/adversarial/WideWorldImporters/Website.RecordColdRoomTemperatures.json",
-      "runAt": "2026-11-19T05:29:55.966Z",
+      "runAt": "2026-11-19T06:23:06.302Z",
       "agentWritten": true,
       "wording": "4 adversarial cases ran, 0 differed",
       "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
       "auditorModel": "gpt-5.6-sol",
       "sameModel": false,
       "mutantAdequacy": "adequate",
-      "gateReasons": [
-        "objection O01 is open",
-        "objection O02 is open"
-      ],
+      "gateReasons": [],
       "cases": [
         {
           "id": "A01",
@@ -156,7 +153,7 @@
         },
         {
           "id": "A03",
-          "label": "three existing rows for one sensor share a temperature; one reading updates all of them",
+          "label": "three rows for sensor 3 (two equal in every column) are all updated by one reading; rows for sensors 30, 0 and -3 with the same values are left alone",
           "traps": [
             "top-ties"
           ],
@@ -166,7 +163,7 @@
         },
         {
           "id": "A04",
-          "label": "two readings for the same new sensor: the first inserts, the second updates it (loop order preserved)",
+          "label": "readings for a new sensor interleaved with an existing one: the first inserts, the third updates the row the first inserted, the existing sensor is updated",
           "traps": [],
           "status": "ran",
           "sqlServer": "pass",
@@ -184,5 +181,5 @@
     "p50Hours": 3,
     "p90Hours": 6
   },
-  "builtAt": "2026-11-19T05:37:18.806Z"
+  "builtAt": "2026-11-19T06:24:38.468Z"
 }

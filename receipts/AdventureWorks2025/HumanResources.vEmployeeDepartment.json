@@ -118,26 +118,22 @@
       "planted defects caught by the agreed tests: 2 of 2"
     ],
     "adversarial": {
-      "gate": "fail",
+      "gate": "pass",
       "ran": 7,
       "differed": 0,
       "evidencePath": "evidence/adversarial/AdventureWorks2025/HumanResources.vEmployeeDepartment.json",
-      "runAt": "2026-11-19T04:16:24.416Z",
+      "runAt": "2026-11-19T06:16:44.701Z",
       "agentWritten": true,
       "wording": "7 adversarial cases ran, 0 differed",
       "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
       "auditorModel": "gpt-5.6-sol",
       "sameModel": false,
       "mutantAdequacy": "adequate",
-      "gateReasons": [
-        "objection O01 is open",
-        "objection O02 is open",
-        "objection O03 is open"
-      ],
+      "gateReasons": [],
       "cases": [
         {
           "id": "A01",
-          "label": "date boundaries: start dates 0001-01-01, 1752-12-31, 1753-01-01, 2000-02-29 and 9999-12-31; end dates 0001-01-01 and 9999-12-31",
+          "label": "date boundaries: start dates 0001-01-01, 1752-12-31, 1753-01-01, 2000-02-29 and 9999-12-31; end dates 0001-01-01, 1900-01-01 and 9999-12-31",
           "traps": [
             "dates-datetime"
           ],
@@ -147,7 +143,7 @@
         },
         {
           "id": "A02",
-          "label": "an end date before the start date, and an end date equal to it: the view does not compare the two",
+          "label": "an end date equal to the start date, and one a day after it: the view does not compare the two",
           "traps": [
             "dates-datetime"
           ],
@@ -167,7 +163,7 @@
         },
         {
           "id": "A04",
-          "label": "text returned as stored: department names differing only in case, trailing spaces, non-ASCII and an emoji",
+          "label": "text returned as stored: a department name and group names differing only in case, trailing spaces, non-ASCII and an emoji",
           "traps": [
             "collation-case",
             "trailing-spaces"
@@ -216,5 +212,5 @@
     "p50Hours": 0.75,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-19T05:37:18.789Z"
+  "builtAt": "2026-11-19T06:24:38.455Z"
 }

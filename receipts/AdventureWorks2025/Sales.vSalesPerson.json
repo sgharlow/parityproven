@@ -158,27 +158,22 @@
       "planted defects caught by the agreed tests: 3 of 3"
     ],
     "adversarial": {
-      "gate": "fail",
-      "ran": 9,
+      "gate": "pass",
+      "ran": 10,
       "differed": 0,
       "evidencePath": "evidence/adversarial/AdventureWorks2025/Sales.vSalesPerson.json",
-      "runAt": "2026-11-19T04:17:37.464Z",
+      "runAt": "2026-11-19T06:18:19.746Z",
       "agentWritten": true,
-      "wording": "9 adversarial cases ran, 0 differed",
+      "wording": "10 adversarial cases ran, 0 differed",
       "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
       "auditorModel": "gpt-5.6-sol",
       "sameModel": false,
       "mutantAdequacy": "adequate",
-      "gateReasons": [
-        "case A07 is invalid: the original T-SQL raised an undeclared error: money value beyond 900719925474.0992 cannot be captured exactly through the driver for this call shape: SELECT * FROM Sales.vSalesPerson",
-        "objection O01 is open",
-        "objection O02 is open",
-        "objection O03 is open"
-      ],
+      "gateReasons": [],
       "cases": [
         {
           "id": "A01",
-          "label": "case-only variants 'Us', 'uS' and 'us ' of a country code join 'US'",
+          "label": "case pairs outside ASCII ('üs' to 'ÜS', 'σa' to 'ΣA') and case plus a trailing space on the country side ('CA' to 'ca ')",
           "traps": [
             "collation-case",
             "trailing-spaces"
@@ -239,11 +234,13 @@
         },
         {
           "id": "A07",
-          "label": "money extremes passed through: SalesYTD 922337203685477.5807 and -922337203685477.5808, values ending in 5 at the fourth place, NULL quota",
+          "label": "large money values passed through (up to 900719925474.0990), values ending in 5 at the fourth place, zero sales and a NULL quota",
           "traps": [
             "numeric-rounding"
           ],
-          "status": "invalid"
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
         },
         {
           "id": "A08",
@@ -258,7 +255,7 @@
         },
         {
           "id": "A09",
-          "label": "text returned as stored and fan-out: case-only name variants, an emoji, two identical phone rows and an unknown phone type",
+          "label": "text returned as stored and fan-out: case-only name variants, an emoji, the same number under two phone types of one name and an unknown phone type",
           "traps": [
             "collation-case",
             "top-ties"
@@ -289,5 +286,5 @@
     "p50Hours": 0.75,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-19T05:37:18.794Z"
+  "builtAt": "2026-11-19T06:24:38.458Z"
 }

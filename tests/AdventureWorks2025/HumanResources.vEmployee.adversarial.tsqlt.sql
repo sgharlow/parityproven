@@ -8,8 +8,8 @@
 GO
 EXEC tSQLt.NewTestClass 'AgreedTests';
 GO
--- case 1: [A01] case-only variants 'Us', 'uS' and 'us ' of a country code join 'US'
-CREATE PROCEDURE [AgreedTests].[test 01 [A01 case-only variants Us, uS and us of a country code join US]
+-- case 1: [A01] case pairs outside ASCII ('üs' to 'ÜS', 'σa' to 'ΣA') and case plus a trailing space on the country side ('CA' to 'ca ')
+CREATE PROCEDURE [AgreedTests].[test 01 [A01 case pairs outside ASCII (üs to ÜS, ?a to ?A) and case plus a trailing space on the country side…]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[HumanResources].[Employee]';
@@ -34,15 +34,17 @@ BEGIN
     (2, 2),
     (3, 3);
   INSERT INTO [Person].[CountryRegion] ([CountryRegionCode], [Name]) VALUES
-    (N'US', N'United States');
+    (N'ÜS', N'Country Ü'),
+    (N'ΣA', N'Country Σ'),
+    (N'ca ', N'Country ca');
   INSERT INTO [Person].[Person] ([BusinessEntityID], [Title], [FirstName], [MiddleName], [LastName], [Suffix], [EmailPromotion], [AdditionalContactInfo]) VALUES
     (1, NULL, N'First1', NULL, N'Last1', NULL, 0, NULL),
     (2, NULL, N'First2', NULL, N'Last2', NULL, 0, NULL),
     (3, NULL, N'First3', NULL, N'Last3', NULL, 0, NULL);
   INSERT INTO [Person].[StateProvince] ([StateProvinceID], [CountryRegionCode], [Name]) VALUES
-    (1, N'Us', N'Province 1'),
-    (2, N'uS', N'Province 2'),
-    (3, N'us ', N'Province 3');
+    (1, N'üs', N'Province 1'),
+    (2, N'σa', N'Province 2'),
+    (3, N'CA', N'Province 3');
   CREATE TABLE #Expected (
     [BusinessEntityID] int NULL,
     [Title] nvarchar(8) NULL,
@@ -84,9 +86,9 @@ BEGIN
     [AdditionalContactInfo] nvarchar(max) NULL
   );
   INSERT INTO #Expected ([BusinessEntityID], [Title], [FirstName], [MiddleName], [LastName], [Suffix], [JobTitle], [PhoneNumber], [PhoneNumberType], [EmailAddress], [EmailPromotion], [AddressLine1], [AddressLine2], [City], [StateProvinceName], [PostalCode], [CountryRegionName], [AdditionalContactInfo]) VALUES
-    (1, NULL, N'First1', NULL, N'Last1', NULL, N'Job 1', NULL, NULL, NULL, 0, N'1 Main St', NULL, N'Bothell', N'Province 1', N'98011', N'United States', NULL),
-    (2, NULL, N'First2', NULL, N'Last2', NULL, N'Job 2', NULL, NULL, NULL, 0, N'2 Main St', NULL, N'Bothell', N'Province 2', N'98011', N'United States', NULL),
-    (3, NULL, N'First3', NULL, N'Last3', NULL, N'Job 3', NULL, NULL, NULL, 0, N'3 Main St', NULL, N'Bothell', N'Province 3', N'98011', N'United States', NULL);
+    (1, NULL, N'First1', NULL, N'Last1', NULL, N'Job 1', NULL, NULL, NULL, 0, N'1 Main St', NULL, N'Bothell', N'Province 1', N'98011', N'Country Ü', NULL),
+    (2, NULL, N'First2', NULL, N'Last2', NULL, N'Job 2', NULL, NULL, NULL, 0, N'2 Main St', NULL, N'Bothell', N'Province 2', N'98011', N'Country Σ', NULL),
+    (3, NULL, N'First3', NULL, N'Last3', NULL, N'Job 3', NULL, NULL, NULL, 0, N'3 Main St', NULL, N'Bothell', N'Province 3', N'98011', N'Country ca', NULL);
   INSERT INTO #Actual
   SELECT [BusinessEntityID], [Title], [FirstName], [MiddleName], [LastName], [Suffix], [JobTitle], [PhoneNumber], [PhoneNumberType], [EmailAddress], [EmailPromotion], [AddressLine1], [AddressLine2], [City], [StateProvinceName], [PostalCode], [CountryRegionName], CONVERT(nvarchar(max), [AdditionalContactInfo]) AS [AdditionalContactInfo] FROM (SELECT * FROM HumanResources.vEmployee) AS pp_q;
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
@@ -696,8 +698,8 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
--- case 9: [A09] two identical phone rows, two phones of one type and an unknown phone type: one row per phone, duplicates kept
-CREATE PROCEDURE [AgreedTests].[test 09 [A09 two identical phone rows, two phones of one type and an unknown phone type: one row per phone, d…]
+-- case 9: [A09] the same number under two phone types of one name, two phones of one type and an unknown phone type: one row per phone, identical rows kept
+CREATE PROCEDURE [AgreedTests].[test 09 [A09 the same number under two phone types of one name, two phones of one type and an unknown phone t…]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[HumanResources].[Employee]';
@@ -721,11 +723,12 @@ BEGIN
     (1, NULL, N'First1', NULL, N'Last1', NULL, 0, NULL);
   INSERT INTO [Person].[PersonPhone] ([BusinessEntityID], [PhoneNumber], [PhoneNumberTypeID]) VALUES
     (1, N'555-0100', 1),
-    (1, N'555-0100', 1),
+    (1, N'555-0100', 2),
     (1, N'555-0101', 1),
     (1, N'555-0199', 9);
   INSERT INTO [Person].[PhoneNumberType] ([PhoneNumberTypeID], [Name]) VALUES
-    (1, N'Cell');
+    (1, N'Cell'),
+    (2, N'Cell');
   INSERT INTO [Person].[StateProvince] ([StateProvinceID], [CountryRegionCode], [Name]) VALUES
     (1, N'US', N'Province 1');
   CREATE TABLE #Expected (

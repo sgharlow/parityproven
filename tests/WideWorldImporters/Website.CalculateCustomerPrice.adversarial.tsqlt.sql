@@ -8,8 +8,8 @@
 GO
 EXEC tSQLt.NewTestClass 'AgreedTests';
 GO
--- case 1: [A01] percentage discount rounds half away from zero: 1.05 * 0.5 % = 0.00525 -> 0.01, not banker's 0.00
-CREATE PROCEDURE [AgreedTests].[test 01 [A01 percentage discount rounds half away from zero: 1.05 * 0.5 % = 0.00525 -> 0.01, not bankers 0.00]
+-- case 1: [A01] percentage price at an exact half cent: 0.25 * 50 % = 0.125 rounds half away from zero to 0.13 (banker's rounding and truncation give 0.12)
+CREATE PROCEDURE [AgreedTests].[test 01 [A01 percentage price at an exact half cent: 0.25 * 50 % = 0.125 rounds half away from zero to 0.13 (…]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Sales].[Customers]';
@@ -19,9 +19,9 @@ BEGIN
   INSERT INTO [Sales].[Customers] ([CustomerID], [BuyingGroupID], [CustomerCategoryID]) VALUES
     (1, NULL, 1);
   INSERT INTO [Warehouse].[StockItems] ([StockItemID], [UnitPrice]) VALUES
-    (1, 1.05);
+    (1, 0.25);
   INSERT INTO [Sales].[SpecialDeals] ([SpecialDealID], [StockItemID], [CustomerID], [BuyingGroupID], [CustomerCategoryID], [StockGroupID], [StartDate], [EndDate], [DiscountAmount], [DiscountPercentage], [UnitPrice]) VALUES
-    (1, 1, NULL, NULL, NULL, NULL, CAST('2020-01-01' AS date), CAST('2020-01-03' AS date), NULL, 0.500, NULL);
+    (1, 1, NULL, NULL, NULL, NULL, CAST('2020-01-01' AS date), CAST('2020-01-03' AS date), NULL, 50.000, NULL);
   CREATE TABLE #Expected (
     [result] decimal(18,2) NULL
   );
@@ -29,7 +29,7 @@ BEGIN
     [result] decimal(18,2) NULL
   );
   INSERT INTO #Expected ([result]) VALUES
-    (0.01);
+    (0.13);
   INSERT INTO #Actual
   SELECT Website.CalculateCustomerPrice(1, 1, '2020-01-02') AS result;
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
@@ -172,6 +172,35 @@ BEGIN
     (10);
   INSERT INTO #Actual
   SELECT Website.CalculateCustomerPrice(999, 1, '2020-01-02') AS result;
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
+END;
+GO
+-- case 7: [A07] three discount amounts through different deal legs (-1.00, 0.05, 3.15): the highest, 3.15, wins and gives 6.85
+CREATE PROCEDURE [AgreedTests].[test 07 [A07 three discount amounts through different deal legs (-1.00, 0.05, 3.15): the highest, 3.15, wins…]
+AS
+BEGIN
+  EXEC tSQLt.FakeTable @TableName = N'[Sales].[Customers]';
+  EXEC tSQLt.FakeTable @TableName = N'[Warehouse].[StockItems]';
+  EXEC tSQLt.FakeTable @TableName = N'[Sales].[SpecialDeals]';
+  EXEC tSQLt.FakeTable @TableName = N'[Warehouse].[StockItemStockGroups]';
+  INSERT INTO [Sales].[Customers] ([CustomerID], [BuyingGroupID], [CustomerCategoryID]) VALUES
+    (1, 2, 3);
+  INSERT INTO [Warehouse].[StockItems] ([StockItemID], [UnitPrice]) VALUES
+    (1, 10.00);
+  INSERT INTO [Sales].[SpecialDeals] ([SpecialDealID], [StockItemID], [CustomerID], [BuyingGroupID], [CustomerCategoryID], [StockGroupID], [StartDate], [EndDate], [DiscountAmount], [DiscountPercentage], [UnitPrice]) VALUES
+    (2, 1, NULL, NULL, NULL, NULL, CAST('2020-01-01' AS date), CAST('2020-01-03' AS date), 0.05, NULL, NULL),
+    (4, NULL, NULL, 2, NULL, NULL, CAST('2020-01-01' AS date), CAST('2020-01-03' AS date), 3.15, NULL, NULL),
+    (6, NULL, NULL, NULL, 3, NULL, CAST('2020-01-01' AS date), CAST('2020-01-03' AS date), -1.00, NULL, NULL);
+  CREATE TABLE #Expected (
+    [result] decimal(18,2) NULL
+  );
+  CREATE TABLE #Actual (
+    [result] decimal(18,2) NULL
+  );
+  INSERT INTO #Expected ([result]) VALUES
+    (6.85);
+  INSERT INTO #Actual
+  SELECT Website.CalculateCustomerPrice(1, 1, '2020-01-02') AS result;
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO

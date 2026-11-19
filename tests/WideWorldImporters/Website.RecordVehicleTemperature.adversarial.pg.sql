@@ -41,13 +41,13 @@ BEGIN
 END $pp$;
 ROLLBACK;
 
--- @case 2: [A02] duplicate 'rego' key: the first occurrence wins
+-- @case 2: [A02] duplicate 'temp' key: the first (1.5) wins; the second is in exponent notation (1e2)
 BEGIN;
 DELETE FROM warehouse.vehicle_temperatures;
 CREATE TEMP TABLE pp_outcome (outcome text) ON COMMIT DROP;
 DO $pp$
 BEGIN
-  CALL website.record_vehicle_temperature('{"Recordings":[{"type":"Feature","properties":{"rego":"first","rego":"second","sensor":1,"when":"2016-01-01T07:00:00","temp":1}}]}'::text);
+  CALL website.record_vehicle_temperature('{"Recordings":[{"type":"Feature","geometry":{"type":"Point","coordinates":[-89.76,50.47]},"properties":{"rego":"WWI-2","sensor":1,"when":"2016-01-01T07:00:00","temp":1.5,"temp":1e2}}]}'::text);
   INSERT INTO pp_outcome VALUES ('completed');
 EXCEPTION
   WHEN SQLSTATE 'P0001' THEN INSERT INTO pp_outcome VALUES ('raised');
@@ -58,30 +58,30 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT 'completed'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'completed'::text AS outcome)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 02 [A02 duplicate rego key: the first occurrence wins', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 02 [A02 duplicate temp key: the first (1.5) wins; the second is in exponent notation (1e2)', missing, extra;
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected_state_1 ON COMMIT DROP AS SELECT "VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData" FROM warehouse.vehicle_temperatures WITH NO DATA;
 INSERT INTO pp_expected_state_1 ("VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData") VALUES
-  ('first', '1', '2016-01-01 07:00:00.000000', '1', '{"type":"Feature","properties":{"rego":"first","rego":"second","sensor":1,"when":"2016-01-01T07:00:00","temp":1}}', '0', NULL);
+  ('WWI-2', '1', '2016-01-01 07:00:00.000000', '1.5', '{"type":"Feature","geometry":{"type":"Point","coordinates":[-89.76,50.47]},"properties":{"rego":"WWI-2","sensor":1,"when":"2016-01-01T07:00:00","temp":1.5,"temp":1e2}}', '0', NULL);
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN
   SELECT count(*) INTO missing FROM ((SELECT "VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData" FROM pp_expected_state_1) EXCEPT ALL (SELECT "VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData" FROM warehouse.vehicle_temperatures)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT "VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData" FROM warehouse.vehicle_temperatures) EXCEPT ALL (SELECT "VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData" FROM pp_expected_state_1)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in Warehouse.VehicleTemperatures after the call', 'test 02 [A02 duplicate rego key: the first occurrence wins', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in Warehouse.VehicleTemperatures after the call', 'test 02 [A02 duplicate temp key: the first (1.5) wins; the second is in exponent notation (1e2)', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;
 
--- @case 3: [A03] temperature 3.965 rounds half away from zero to 3.97
+-- @case 3: [A03] temperature -3.965 rounds half away from zero to -3.97 (half-up gives -3.96)
 BEGIN;
 DELETE FROM warehouse.vehicle_temperatures;
 CREATE TEMP TABLE pp_outcome (outcome text) ON COMMIT DROP;
 DO $pp$
 BEGIN
-  CALL website.record_vehicle_temperature('{"Recordings":[{"type":"Feature","geometry":{"type":"Point","coordinates":[-89.76,50.47]},"properties":{"rego":"a","sensor":1,"when":"2016-01-01T07:00:00","temp":3.965}}]}'::text);
+  CALL website.record_vehicle_temperature('{"Recordings":[{"type":"Feature","geometry":{"type":"Point","coordinates":[-89.76,50.47]},"properties":{"rego":"a","sensor":1,"when":"2016-01-01T07:00:00","temp":-3.965}}]}'::text);
   INSERT INTO pp_outcome VALUES ('completed');
 EXCEPTION
   WHEN SQLSTATE 'P0001' THEN INSERT INTO pp_outcome VALUES ('raised');
@@ -92,19 +92,19 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT 'completed'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'completed'::text AS outcome)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 03 [A03 temperature 3.965 rounds half away from zero to 3.97', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 03 [A03 temperature -3.965 rounds half away from zero to -3.97 (half-up gives -3.96)', missing, extra;
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected_state_1 ON COMMIT DROP AS SELECT "VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData" FROM warehouse.vehicle_temperatures WITH NO DATA;
 INSERT INTO pp_expected_state_1 ("VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData") VALUES
-  ('a', '1', '2016-01-01 07:00:00.000000', '3.97', '{"type":"Feature","geometry":{"type":"Point","coordinates":[-89.76,50.47]},"properties":{"rego":"a","sensor":1,"when":"2016-01-01T07:00:00","temp":3.965}}', '0', NULL);
+  ('a', '1', '2016-01-01 07:00:00.000000', '-3.97', '{"type":"Feature","geometry":{"type":"Point","coordinates":[-89.76,50.47]},"properties":{"rego":"a","sensor":1,"when":"2016-01-01T07:00:00","temp":-3.965}}', '0', NULL);
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN
   SELECT count(*) INTO missing FROM ((SELECT "VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData" FROM pp_expected_state_1) EXCEPT ALL (SELECT "VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData" FROM warehouse.vehicle_temperatures)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT "VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData" FROM warehouse.vehicle_temperatures) EXCEPT ALL (SELECT "VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData" FROM pp_expected_state_1)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in Warehouse.VehicleTemperatures after the call', 'test 03 [A03 temperature 3.965 rounds half away from zero to 3.97', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in Warehouse.VehicleTemperatures after the call', 'test 03 [A03 temperature -3.965 rounds half away from zero to -3.97 (half-up gives -3.96)', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;
@@ -180,13 +180,77 @@ BEGIN
 END $pp$;
 ROLLBACK;
 
--- @case 6: [A06] NULL document: ISJSON(NULL) is NULL, so nothing is inserted and no error is raised
+-- @case 6: [A06] the document is the JSON literal null (text 'null', not SQL NULL): not an object or array, so ISJSON is 0 and the call raises
 BEGIN;
 DELETE FROM warehouse.vehicle_temperatures;
 CREATE TEMP TABLE pp_outcome (outcome text) ON COMMIT DROP;
 DO $pp$
 BEGIN
-  CALL website.record_vehicle_temperature(NULL::text);
+  CALL website.record_vehicle_temperature('null'::text);
+  INSERT INTO pp_outcome VALUES ('completed');
+EXCEPTION
+  WHEN SQLSTATE 'P0001' THEN INSERT INTO pp_outcome VALUES ('raised');
+END $pp$;
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT 'raised'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'raised'::text AS outcome)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 06 [A06 the document is the JSON literal null (text null, not SQL NULL): not an object or array, so ISJS…', missing, extra;
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected_state_1 ON COMMIT DROP AS SELECT "VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData" FROM warehouse.vehicle_temperatures WITH NO DATA;
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT "VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData" FROM pp_expected_state_1) EXCEPT ALL (SELECT "VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData" FROM warehouse.vehicle_temperatures)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT "VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData" FROM warehouse.vehicle_temperatures) EXCEPT ALL (SELECT "VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData" FROM pp_expected_state_1)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in Warehouse.VehicleTemperatures after the call', 'test 06 [A06 the document is the JSON literal null (text null, not SQL NULL): not an object or array, so ISJS…', missing, extra;
+  END IF;
+END $pp$;
+ROLLBACK;
+
+-- @case 7: [A07] temperature in upper-case exponent notation with a negative exponent (25E-1) is rejected
+BEGIN;
+DELETE FROM warehouse.vehicle_temperatures;
+CREATE TEMP TABLE pp_outcome (outcome text) ON COMMIT DROP;
+DO $pp$
+BEGIN
+  CALL website.record_vehicle_temperature('{"Recordings":[{"type":"Feature","geometry":{"type":"Point","coordinates":[-89.76,50.47]},"properties":{"rego":"WWI-7","sensor":1,"when":"2016-01-01T07:00:00","temp":25E-1}}]}'::text);
+  INSERT INTO pp_outcome VALUES ('completed');
+EXCEPTION
+  WHEN SQLSTATE 'P0001' THEN INSERT INTO pp_outcome VALUES ('raised');
+END $pp$;
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT 'raised'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'raised'::text AS outcome)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 07 [A07 temperature in upper-case exponent notation with a negative exponent (25E-1) is rejected', missing, extra;
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected_state_1 ON COMMIT DROP AS SELECT "VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData" FROM warehouse.vehicle_temperatures WITH NO DATA;
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT "VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData" FROM pp_expected_state_1) EXCEPT ALL (SELECT "VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData" FROM warehouse.vehicle_temperatures)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT "VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData" FROM warehouse.vehicle_temperatures) EXCEPT ALL (SELECT "VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData" FROM pp_expected_state_1)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in Warehouse.VehicleTemperatures after the call', 'test 07 [A07 temperature in upper-case exponent notation with a negative exponent (25E-1) is rejected', missing, extra;
+  END IF;
+END $pp$;
+ROLLBACK;
+
+-- @case 8: [A08] two recordings, the first with an empty 'when' (1900-01-01) and the second dated normally: both inserted
+BEGIN;
+DELETE FROM warehouse.vehicle_temperatures;
+CREATE TEMP TABLE pp_outcome (outcome text) ON COMMIT DROP;
+DO $pp$
+BEGIN
+  CALL website.record_vehicle_temperature('{"Recordings":[{"type":"Feature","geometry":{"type":"Point","coordinates":[-89.76,50.47]},"properties":{"rego":"WWI-8","sensor":1,"when":"","temp":1.25}},{"type":"Feature","geometry":{"type":"Point","coordinates":[-89.76,50.47]},"properties":{"rego":"WWI-8b","sensor":2,"when":"2016-01-01T07:00:00","temp":2}}]}'::text);
   INSERT INTO pp_outcome VALUES ('completed');
 EXCEPTION
   WHEN SQLSTATE 'P0001' THEN INSERT INTO pp_outcome VALUES ('raised');
@@ -197,17 +261,54 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT 'completed'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'completed'::text AS outcome)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 06 [A06 NULL document: ISJSON(NULL) is NULL, so nothing is inserted and no error is raised', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 08 [A08 two recordings, the first with an empty when (1900-01-01) and the second dated normally: both in…', missing, extra;
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected_state_1 ON COMMIT DROP AS SELECT "VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData" FROM warehouse.vehicle_temperatures WITH NO DATA;
+INSERT INTO pp_expected_state_1 ("VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData") VALUES
+  ('WWI-8', '1', '1900-01-01 00:00:00.000000', '1.25', '{"type":"Feature","geometry":{"type":"Point","coordinates":[-89.76,50.47]},"properties":{"rego":"WWI-8","sensor":1,"when":"","temp":1.25}}', '0', NULL),
+  ('WWI-8b', '2', '2016-01-01 07:00:00.000000', '2', '{"type":"Feature","geometry":{"type":"Point","coordinates":[-89.76,50.47]},"properties":{"rego":"WWI-8b","sensor":2,"when":"2016-01-01T07:00:00","temp":2}}', '0', NULL);
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN
   SELECT count(*) INTO missing FROM ((SELECT "VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData" FROM pp_expected_state_1) EXCEPT ALL (SELECT "VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData" FROM warehouse.vehicle_temperatures)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT "VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData" FROM warehouse.vehicle_temperatures) EXCEPT ALL (SELECT "VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData" FROM pp_expected_state_1)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in Warehouse.VehicleTemperatures after the call', 'test 06 [A06 NULL document: ISJSON(NULL) is NULL, so nothing is inserted and no error is raised', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in Warehouse.VehicleTemperatures after the call', 'test 08 [A08 two recordings, the first with an empty when (1900-01-01) and the second dated normally: both in…', missing, extra;
+  END IF;
+END $pp$;
+ROLLBACK;
+
+-- @case 9: [A09] a 1007-character argument whose first 1000 characters are a valid document followed by spaces: truncated to nvarchar(1000), it is valid and inserted
+BEGIN;
+DELETE FROM warehouse.vehicle_temperatures;
+CREATE TEMP TABLE pp_outcome (outcome text) ON COMMIT DROP;
+DO $pp$
+BEGIN
+  CALL website.record_vehicle_temperature('{"Recordings":[{"type":"Feature","geometry":{"type":"Point","coordinates":[-89.76,50.47]},"properties":{"rego":"WWI-9","sensor":1,"when":"2016-01-01T07:00:00","temp":2.5}}]}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           garbage'::text);
+  INSERT INTO pp_outcome VALUES ('completed');
+EXCEPTION
+  WHEN SQLSTATE 'P0001' THEN INSERT INTO pp_outcome VALUES ('raised');
+END $pp$;
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT 'completed'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'completed'::text AS outcome)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 09 [A09 a 1007-character argument whose first 1000 characters are a valid document followed by spaces: t…', missing, extra;
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected_state_1 ON COMMIT DROP AS SELECT "VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData" FROM warehouse.vehicle_temperatures WITH NO DATA;
+INSERT INTO pp_expected_state_1 ("VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData") VALUES
+  ('WWI-9', '1', '2016-01-01 07:00:00.000000', '2.5', '{"type":"Feature","geometry":{"type":"Point","coordinates":[-89.76,50.47]},"properties":{"rego":"WWI-9","sensor":1,"when":"2016-01-01T07:00:00","temp":2.5}}', '0', NULL);
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT "VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData" FROM pp_expected_state_1) EXCEPT ALL (SELECT "VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData" FROM warehouse.vehicle_temperatures)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT "VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData" FROM warehouse.vehicle_temperatures) EXCEPT ALL (SELECT "VehicleRegistration", "ChillerSensorNumber", "RecordedWhen", "Temperature", "FullSensorData", "IsCompressed", "CompressedSensorData" FROM pp_expected_state_1)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in Warehouse.VehicleTemperatures after the call', 'test 09 [A09 a 1007-character argument whose first 1000 characters are a valid document followed by spaces: t…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;

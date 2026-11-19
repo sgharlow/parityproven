@@ -116,15 +116,15 @@
       "ran": 10,
       "differed": 0,
       "evidencePath": "evidence/adversarial/WideWorldImporters/Sequences.ReseedSequenceBeyondTableValues.json",
-      "runAt": "2026-11-19T05:05:55.244Z",
+      "runAt": "2026-11-19T06:21:09.540Z",
       "agentWritten": true,
       "wording": "10 adversarial cases ran, 0 differed",
       "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
       "auditorModel": "gpt-5.6-sol",
       "sameModel": false,
-      "mutantAdequacy": "adequate",
+      "mutantAdequacy": "inadequate",
       "gateReasons": [
-        "objection O01 is open"
+        "mutant adequacy is inadequate (unexplained misses: strictly greater instead of >=)"
       ],
       "cases": [
         {
@@ -196,7 +196,7 @@
         },
         {
           "id": "A08",
-          "label": "table maximum equal to the start value of an unused sequence at 7, while the other sequence was used 3 times: restart at 8",
+          "label": "table maximum equal to the current value of a used sequence (start 5, used 3 times, current 7): restart at 8; an unused sequence starting at 7 is left alone",
           "traps": [],
           "status": "ran",
           "sqlServer": "pass",
@@ -230,5 +230,5 @@
     "p50Hours": 3,
     "p90Hours": 6
   },
-  "builtAt": "2026-11-19T05:37:18.803Z"
+  "builtAt": "2026-11-19T06:24:38.466Z"
 }

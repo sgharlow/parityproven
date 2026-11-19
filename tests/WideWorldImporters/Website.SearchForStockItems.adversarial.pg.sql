@@ -7,18 +7,21 @@
 -- Prerequisites: the spec's tables created and the final conversion deployed.
 -- Each case is one transaction and always rolls back.
 
--- @case 1: [A01] SearchDetails: values differing only in case both match a case-insensitive search and keep their own case in the result
+-- @case 1: [A01] SearchDetails: Cyrillic values differing only in case match a case-insensitive search ('дом' finds 'ДОМ' and 'Дом', not 'дым' or 'ÉCLAIR')
 BEGIN;
 DELETE FROM warehouse.stock_items;
 INSERT INTO warehouse.stock_items ("StockItemID", "StockItemName", "SearchDetails") VALUES
-  ('1', 'Item A', 'ab'),
-  ('3', 'Item B', 'AB');
+  ('1', 'Item 01', 'дом'),
+  ('2', 'Item 02', 'ДОМ'),
+  ('3', 'Item 03', 'Дом'),
+  ('4', 'Item 04', 'ÉCLAIR'),
+  ('5', 'Item 05', 'дым');
 DO $pp$
 DECLARE got jsonb;
 BEGIN
-  SELECT (q.result)::jsonb INTO got FROM (SELECT website.search_for_stock_items('ab'::text, '5'::integer) AS result) AS q;
-  IF got IS DISTINCT FROM '{"StockItems":[{"StockItemID":1,"StockItemName":"Item A"},{"StockItemID":3,"StockItemName":"Item B"}]}'::jsonb THEN
-    RAISE EXCEPTION 'agreed test failed (%): the JSON document differs: %', 'test 01 [A01 SearchDetails: values differing only in case both match a case-insensitive search and keep their…', got;
+  SELECT (q.result)::jsonb INTO got FROM (SELECT website.search_for_stock_items('дом'::text, '5'::integer) AS result) AS q;
+  IF got IS DISTINCT FROM '{"StockItems":[{"StockItemID":1,"StockItemName":"Item 01"},{"StockItemID":2,"StockItemName":"Item 02"},{"StockItemID":3,"StockItemName":"Item 03"}]}'::jsonb THEN
+    RAISE EXCEPTION 'agreed test failed (%): the JSON document differs: %', 'test 01 [A01 SearchDetails: Cyrillic values differing only in case match a case-insensitive search (??? finds…', got;
   END IF;
 END $pp$;
 ROLLBACK;
@@ -39,50 +42,57 @@ BEGIN
 END $pp$;
 ROLLBACK;
 
--- @case 3: [A03] SearchDetails: a trailing space in the data is matched by LIKE '%x%'
+-- @case 3: [A03] SearchDetails: a search text ending in a space ('amy ') matches only values with a space after 'amy'
 BEGIN;
 DELETE FROM warehouse.stock_items;
 INSERT INTO warehouse.stock_items ("StockItemID", "StockItemName", "SearchDetails") VALUES
-  ('1', 'Only', 'abc ');
+  ('1', 'Item 01', 'amy'),
+  ('2', 'Item 02', 'amy '),
+  ('3', 'Item 03', 'amyx'),
+  ('4', 'Item 04', 'amy b');
 DO $pp$
 DECLARE got jsonb;
 BEGIN
-  SELECT (q.result)::jsonb INTO got FROM (SELECT website.search_for_stock_items('abc'::text, '5'::integer) AS result) AS q;
-  IF got IS DISTINCT FROM '{"StockItems":[{"StockItemID":1,"StockItemName":"Only"}]}'::jsonb THEN
-    RAISE EXCEPTION 'agreed test failed (%): the JSON document differs: %', 'test 03 [A03 SearchDetails: a trailing space in the data is matched by LIKE %x%', got;
+  SELECT (q.result)::jsonb INTO got FROM (SELECT website.search_for_stock_items('amy '::text, '5'::integer) AS result) AS q;
+  IF got IS DISTINCT FROM '{"StockItems":[{"StockItemID":2,"StockItemName":"Item 02"},{"StockItemID":4,"StockItemName":"Item 04"}]}'::jsonb THEN
+    RAISE EXCEPTION 'agreed test failed (%): the JSON document differs: %', 'test 03 [A03 SearchDetails: a search text ending in a space (amy ) matches only values with a space after amy', got;
   END IF;
 END $pp$;
 ROLLBACK;
 
--- @case 4: [A04] SearchDetails: character class [a-c] matches one of a, b, c (T-SQL LIKE, not PostgreSQL LIKE)
+-- @case 4: [A04] SearchDetails: a reversed range '[c-a]' (T-SQL accepts it; a regular expression rejects it as an invalid range)
 BEGIN;
 DELETE FROM warehouse.stock_items;
 INSERT INTO warehouse.stock_items ("StockItemID", "StockItemName", "SearchDetails") VALUES
-  ('1', 'I1', 'b'),
-  ('2', 'I2', 'd'),
-  ('3', 'I3', 'aaa');
+  ('1', 'Item 01', 'a'),
+  ('2', 'Item 02', 'b'),
+  ('3', 'Item 03', 'c'),
+  ('4', 'Item 04', '-'),
+  ('5', 'Item 05', 'd');
 DO $pp$
-DECLARE got jsonb;
+DECLARE got text;
 BEGIN
-  SELECT (q.result)::jsonb INTO got FROM (SELECT website.search_for_stock_items('[a-c]'::text, '5'::integer) AS result) AS q;
-  IF got IS DISTINCT FROM '{"StockItems":[{"StockItemID":1,"StockItemName":"I1"},{"StockItemID":3,"StockItemName":"I3"}]}'::jsonb THEN
-    RAISE EXCEPTION 'agreed test failed (%): the JSON document differs: %', 'test 04 [A04 SearchDetails: character class [a-c matches one of a, b, c (T-SQL LIKE, not PostgreSQL LIKE)', got;
+  SELECT (q.result)::text INTO got FROM (SELECT website.search_for_stock_items('[c-a]'::text, '5'::integer) AS result) AS q;
+  IF got IS DISTINCT FROM '' THEN
+    RAISE EXCEPTION 'agreed test failed (%): the JSON document differs: %', 'test 04 [A04 SearchDetails: a reversed range [c-a (T-SQL accepts it; a regular expression rejects it as an in…', got;
   END IF;
 END $pp$;
 ROLLBACK;
 
--- @case 5: [A05] SearchDetails: a backslash is an ordinary character in T-SQL LIKE (no escape)
+-- @case 5: [A05] SearchDetails: a search text ending in a backslash ('a\') is an ordinary character in T-SQL LIKE
 BEGIN;
 DELETE FROM warehouse.stock_items;
 INSERT INTO warehouse.stock_items ("StockItemID", "StockItemName", "SearchDetails") VALUES
-  ('1', 'I1', 'a\b'),
-  ('2', 'I2', 'ab');
+  ('1', 'Item 01', 'a\'),
+  ('2', 'Item 02', 'xa\b'),
+  ('3', 'Item 03', 'ab'),
+  ('4', 'Item 04', 'a');
 DO $pp$
 DECLARE got jsonb;
 BEGIN
-  SELECT (q.result)::jsonb INTO got FROM (SELECT website.search_for_stock_items('a\b'::text, '5'::integer) AS result) AS q;
-  IF got IS DISTINCT FROM '{"StockItems":[{"StockItemID":1,"StockItemName":"I1"}]}'::jsonb THEN
-    RAISE EXCEPTION 'agreed test failed (%): the JSON document differs: %', 'test 05 [A05 SearchDetails: a backslash is an ordinary character in T-SQL LIKE (no escape)', got;
+  SELECT (q.result)::jsonb INTO got FROM (SELECT website.search_for_stock_items('a\'::text, '5'::integer) AS result) AS q;
+  IF got IS DISTINCT FROM '{"StockItems":[{"StockItemID":1,"StockItemName":"Item 01"},{"StockItemID":2,"StockItemName":"Item 02"}]}'::jsonb THEN
+    RAISE EXCEPTION 'agreed test failed (%): the JSON document differs: %', 'test 05 [A05 SearchDetails: a search text ending in a backslash (a\) is an ordinary character in T-SQL LIKE', got;
   END IF;
 END $pp$;
 ROLLBACK;
@@ -117,6 +127,25 @@ BEGIN
   SELECT (q.result)::text INTO got FROM (SELECT website.search_for_stock_items('zzz'::text, '5'::integer) AS result) AS q;
   IF got IS DISTINCT FROM '' THEN
     RAISE EXCEPTION 'agreed test failed (%): the JSON document differs: %', 'test 07 [A07 SearchDetails: no row qualifies, so FOR JSON ... ROOT returns an empty string, not an empty array', got;
+  END IF;
+END $pp$;
+ROLLBACK;
+
+-- @case 8: [A08] SearchDetails: '_' matches a digit, an accented letter and a space ('x_9')
+BEGIN;
+DELETE FROM warehouse.stock_items;
+INSERT INTO warehouse.stock_items ("StockItemID", "StockItemName", "SearchDetails") VALUES
+  ('1', 'Item 01', 'x19'),
+  ('2', 'Item 02', 'xé9'),
+  ('3', 'Item 03', 'x 9'),
+  ('4', 'Item 04', 'xa9'),
+  ('5', 'Item 05', 'x9');
+DO $pp$
+DECLARE got jsonb;
+BEGIN
+  SELECT (q.result)::jsonb INTO got FROM (SELECT website.search_for_stock_items('x_9'::text, '5'::integer) AS result) AS q;
+  IF got IS DISTINCT FROM '{"StockItems":[{"StockItemID":1,"StockItemName":"Item 01"},{"StockItemID":2,"StockItemName":"Item 02"},{"StockItemID":3,"StockItemName":"Item 03"},{"StockItemID":4,"StockItemName":"Item 04"}]}'::jsonb THEN
+    RAISE EXCEPTION 'agreed test failed (%): the JSON document differs: %', 'test 08 [A08 SearchDetails: _ matches a digit, an accented letter and a space (x_9)', got;
   END IF;
 END $pp$;
 ROLLBACK;

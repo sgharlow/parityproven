@@ -2,7 +2,7 @@
   "object": "dbo.ufnGetContactInformation",
   "database": "AdventureWorks2025",
   "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
-  "capturedAt": "2026-11-19T03:10:52.332Z",
+  "capturedAt": "2026-11-19T06:19:02.775Z",
   "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
   "cases": [
     {
@@ -252,7 +252,7 @@
       ]
     },
     {
-      "label": "[A07] the same vendor-contact row twice (no key on BusinessEntityContact): two identical Vendor Contact rows",
+      "label": "[A07] one person is a contact of two vendors with the same contact type: two identical Vendor Contact rows",
       "columns": [
         {
           "name": "PersonID",
@@ -458,6 +458,40 @@
           "s:Vo",
           "s:Purchasing Manager",
           "s:Store Contact"
+        ]
+      ]
+    },
+    {
+      "label": "[A13] a person with one consumer account and two store customer accounts: exactly one Consumer row",
+      "columns": [
+        {
+          "name": "PersonID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "BusinessEntityType",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:10",
+          "s:Jo",
+          "s:Wu",
+          "∅",
+          "s:Consumer"
         ]
       ]
     }

@@ -306,13 +306,13 @@ BEGIN
 END $pp$;
 ROLLBACK;
 
--- @case 6: [A06] an edge ending at 11:59:59.999 duplicates an open edge: SQL Server sums both quantities at 12:00, timestamp only one
+-- @case 6: [A06] an edge ending at 11:59:59.999 overlaps an open edge for the same pair: SQL Server sums both quantities at 12:00, a timestamp that kept .999 only one
 BEGIN;
 DELETE FROM production.bill_of_materials;
 DELETE FROM production.product;
 INSERT INTO production.bill_of_materials ("ProductAssemblyID", "ComponentID", "StartDate", "EndDate", "BOMLevel", "PerAssemblyQty") VALUES
   ('1', '2', '2020-01-01 00:00:00.000000', NULL, '1', '1.00'),
-  ('1', '2', '2020-01-01 00:00:00.000000', '2020-01-02 11:59:59.999000', '1', '2.25');
+  ('1', '2', '2020-01-01 06:00:00.000000', '2020-01-02 11:59:59.999000', '1', '2.25');
 INSERT INTO production.product ("ProductID", "Name", "StandardCost", "ListPrice") VALUES
   ('1', 'P1', '1.5000', '2.2500'),
   ('2', 'P2', '1.5000', '2.2500');
@@ -333,7 +333,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT 'completed'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'completed'::text AS outcome)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 06 [A06 an edge ending at 11:59:59.999 duplicates an open edge: SQL Server sums both quantities at 12:00…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 06 [A06 an edge ending at 11:59:59.999 overlaps an open edge for the same pair: SQL Server sums both qua…', missing, extra;
   END IF;
 END $pp$;
 DO $pp$
@@ -341,7 +341,7 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['ProductAssemblyID', 'ComponentID', 'ComponentDesc', 'TotalQuantity', 'StandardCost', 'ListPrice', 'BOMLevel', 'RecursionLevel']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 06 [A06 an edge ending at 11:59:59.999 duplicates an open edge: SQL Server sums both quantities at 12:00…', got, ARRAY['ProductAssemblyID', 'ComponentID', 'ComponentDesc', 'TotalQuantity', 'StandardCost', 'ListPrice', 'BOMLevel', 'RecursionLevel']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 06 [A06 an edge ending at 11:59:59.999 overlaps an open edge for the same pair: SQL Server sums both qua…', got, ARRAY['ProductAssemblyID', 'ComponentID', 'ComponentDesc', 'TotalQuantity', 'StandardCost', 'ListPrice', 'BOMLevel', 'RecursionLevel']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
@@ -353,7 +353,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 06 [A06 an edge ending at 11:59:59.999 duplicates an open edge: SQL Server sums both quantities at 12:00…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 06 [A06 an edge ending at 11:59:59.999 overlaps an open edge for the same pair: SQL Server sums both qua…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;
@@ -573,17 +573,17 @@ BEGIN;
 DELETE FROM production.bill_of_materials;
 DELETE FROM production.product;
 INSERT INTO production.bill_of_materials ("ProductAssemblyID", "ComponentID", "StartDate", "EndDate", "BOMLevel", "PerAssemblyQty") VALUES
-  ('1', '2', '2020-01-01 00:00:00.000000', NULL, '1', '0.05'),
-  ('1', '3', '2020-01-01 00:00:00.000000', NULL, '1', '0.15'),
-  ('2', '4', '2020-01-01 00:00:00.000000', NULL, '2', '0.25'),
-  ('3', '4', '2020-01-01 00:00:00.000000', NULL, '2', '0.35'),
-  ('4', '5', '2020-01-01 00:00:00.000000', NULL, '3', '0.45');
+  ('1', '2', '2020-01-01 00:00:00.000000', NULL, '1', '1.05'),
+  ('1', '3', '2020-01-01 00:00:00.000000', NULL, '1', '1.15'),
+  ('2', '4', '2020-01-01 00:00:00.000000', NULL, '2', '1.25'),
+  ('3', '4', '2020-01-01 00:00:00.000000', NULL, '2', '1.35'),
+  ('4', '5', '2020-01-01 00:00:00.000000', NULL, '3', '1.45');
 INSERT INTO production.product ("ProductID", "Name", "StandardCost", "ListPrice") VALUES
   ('1', 'P1', '1.5000', '2.2500'),
   ('2', 'P2', '1.5000', '2.2500'),
   ('3', 'P3', '1.5000', '2.2500'),
   ('4', 'P4', '0.0005', '1.0005'),
-  ('5', 'P5', '-0.0005', '0.0015');
+  ('5', 'P5', '0.0005', '0.0015');
 CREATE TEMP TABLE pp_actual ON COMMIT DROP AS
 SELECT * FROM dbo.usp_get_bill_of_materials('1'::integer, '2020-01-02 12:00:00.000000'::timestamp)
 WITH NO DATA;
@@ -614,11 +614,11 @@ BEGIN
 END $pp$;
 CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
 INSERT INTO pp_expected VALUES
-  ('1', '2', 'P2', '0.05', '1.5', '2.25', '1', '0'),
-  ('1', '3', 'P3', '0.15', '1.5', '2.25', '1', '0'),
-  ('2', '4', 'P4', '0.25', '0.0005', '1.0005', '2', '1'),
-  ('3', '4', 'P4', '0.35', '0.0005', '1.0005', '2', '1'),
-  ('4', '5', 'P5', '0.9', '-0.0005', '0.0015', '3', '2');
+  ('1', '2', 'P2', '1.05', '1.5', '2.25', '1', '0'),
+  ('1', '3', 'P3', '1.15', '1.5', '2.25', '1', '0'),
+  ('2', '4', 'P4', '1.25', '0.0005', '1.0005', '2', '1'),
+  ('3', '4', 'P4', '1.35', '0.0005', '1.0005', '2', '1'),
+  ('4', '5', 'P5', '2.9', '0.0005', '0.0015', '3', '2');
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN
@@ -690,18 +690,18 @@ BEGIN
 END $pp$;
 ROLLBACK;
 
--- @case 13: [A13] BOMLevel out of step with depth: 32767, -32768 and 0 (smallint extremes) on a three-edge chain
+-- @case 13: [A13] BOMLevel out of step with depth: 32767 (smallint maximum), 1 and 16384 on a three-edge chain
 BEGIN;
 DELETE FROM production.bill_of_materials;
 DELETE FROM production.product;
 INSERT INTO production.bill_of_materials ("ProductAssemblyID", "ComponentID", "StartDate", "EndDate", "BOMLevel", "PerAssemblyQty") VALUES
   ('1', '2', '2020-01-01 00:00:00.000000', NULL, '32767', '1.00'),
-  ('2', '3', '2020-01-01 00:00:00.000000', NULL, '-32768', '1.00'),
-  ('3', '4', '2020-01-01 00:00:00.000000', NULL, '0', '1.00');
+  ('2', '3', '2020-01-01 00:00:00.000000', NULL, '1', '1.00'),
+  ('3', '4', '2020-01-01 00:00:00.000000', NULL, '16384', '1.00');
 INSERT INTO production.product ("ProductID", "Name", "StandardCost", "ListPrice") VALUES
   ('1', 'P1', '1.5000', '2.2500'),
   ('2', 'P2', '1.5000', '2.2500'),
-  ('3', 'P2', '1.5000', '2.2500'),
+  ('3', 'P3', '1.5000', '2.2500'),
   ('4', 'P4', '1.5000', '2.2500');
 CREATE TEMP TABLE pp_actual ON COMMIT DROP AS
 SELECT * FROM dbo.usp_get_bill_of_materials('1'::integer, '2020-01-02 12:00:00.000000'::timestamp)
@@ -720,7 +720,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT 'completed'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'completed'::text AS outcome)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 13 [A13 BOMLevel out of step with depth: 32767, -32768 and 0 (smallint extremes) on a three-edge chain', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 13 [A13 BOMLevel out of step with depth: 32767 (smallint maximum), 1 and 16384 on a three-edge chain', missing, extra;
   END IF;
 END $pp$;
 DO $pp$
@@ -728,13 +728,13 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['ProductAssemblyID', 'ComponentID', 'ComponentDesc', 'TotalQuantity', 'StandardCost', 'ListPrice', 'BOMLevel', 'RecursionLevel']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 13 [A13 BOMLevel out of step with depth: 32767, -32768 and 0 (smallint extremes) on a three-edge chain', got, ARRAY['ProductAssemblyID', 'ComponentID', 'ComponentDesc', 'TotalQuantity', 'StandardCost', 'ListPrice', 'BOMLevel', 'RecursionLevel']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 13 [A13 BOMLevel out of step with depth: 32767 (smallint maximum), 1 and 16384 on a three-edge chain', got, ARRAY['ProductAssemblyID', 'ComponentID', 'ComponentDesc', 'TotalQuantity', 'StandardCost', 'ListPrice', 'BOMLevel', 'RecursionLevel']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
 INSERT INTO pp_expected VALUES
-  ('2', '3', 'P2', '1', '1.5', '2.25', '-32768', '1'),
-  ('3', '4', 'P4', '1', '1.5', '2.25', '0', '2'),
+  ('2', '3', 'P3', '1', '1.5', '2.25', '1', '1'),
+  ('3', '4', 'P4', '1', '1.5', '2.25', '16384', '2'),
   ('1', '2', 'P2', '1', '1.5', '2.25', '32767', '0');
 DO $pp$
 DECLARE missing bigint; extra bigint;
@@ -742,12 +742,12 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 13 [A13 BOMLevel out of step with depth: 32767, -32768 and 0 (smallint extremes) on a three-edge chain', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 13 [A13 BOMLevel out of step with depth: 32767 (smallint maximum), 1 and 16384 on a three-edge chain', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;
 
--- @case 14: [A14] component names that differ only in case or a trailing space, an empty name and non-ASCII text are returned as stored
+-- @case 14: [A14] product names with a trailing space, an empty name, non-ASCII text and a 50-character name are returned as stored
 BEGIN;
 DELETE FROM production.bill_of_materials;
 DELETE FROM production.product;
@@ -756,16 +756,14 @@ INSERT INTO production.bill_of_materials ("ProductAssemblyID", "ComponentID", "S
   ('1', '3', '2020-01-01 00:00:00.000000', NULL, '1', '1.00'),
   ('1', '4', '2020-01-01 00:00:00.000000', NULL, '1', '1.00'),
   ('1', '5', '2020-01-01 00:00:00.000000', NULL, '1', '1.00'),
-  ('1', '6', '2020-01-01 00:00:00.000000', NULL, '1', '1.00'),
-  ('1', '7', '2020-01-01 00:00:00.000000', NULL, '1', '1.00');
+  ('1', '6', '2020-01-01 00:00:00.000000', NULL, '1', '1.00');
 INSERT INTO production.product ("ProductID", "Name", "StandardCost", "ListPrice") VALUES
   ('1', 'P1', '1.5000', '2.2500'),
   ('2', 'Bolt', '1.5000', '2.2500'),
-  ('3', 'BOLT', '1.5000', '2.2500'),
-  ('4', 'bolt ', '1.5000', '2.2500'),
-  ('5', '', '1.5000', '2.2500'),
-  ('6', 'Écrou 😀', '1.5000', '2.2500'),
-  ('7', 'ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-AB', '1.5000', '2.2500');
+  ('3', 'Nut ', '1.5000', '2.2500'),
+  ('4', '', '1.5000', '2.2500'),
+  ('5', 'Écrou 😀', '1.5000', '2.2500'),
+  ('6', 'ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-AB', '1.5000', '2.2500');
 CREATE TEMP TABLE pp_actual ON COMMIT DROP AS
 SELECT * FROM dbo.usp_get_bill_of_materials('1'::integer, '2020-01-02 12:00:00.000000'::timestamp)
 WITH NO DATA;
@@ -783,7 +781,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT 'completed'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'completed'::text AS outcome)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 14 [A14 component names that differ only in case or a trailing space, an empty name and non-ASCII text a…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 14 [A14 product names with a trailing space, an empty name, non-ASCII text and a 50-character name are r…', missing, extra;
   END IF;
 END $pp$;
 DO $pp$
@@ -791,29 +789,84 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['ProductAssemblyID', 'ComponentID', 'ComponentDesc', 'TotalQuantity', 'StandardCost', 'ListPrice', 'BOMLevel', 'RecursionLevel']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 14 [A14 component names that differ only in case or a trailing space, an empty name and non-ASCII text a…', got, ARRAY['ProductAssemblyID', 'ComponentID', 'ComponentDesc', 'TotalQuantity', 'StandardCost', 'ListPrice', 'BOMLevel', 'RecursionLevel']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 14 [A14 product names with a trailing space, an empty name, non-ASCII text and a 50-character name are r…', got, ARRAY['ProductAssemblyID', 'ComponentID', 'ComponentDesc', 'TotalQuantity', 'StandardCost', 'ListPrice', 'BOMLevel', 'RecursionLevel']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
 INSERT INTO pp_expected VALUES
   ('1', '2', 'Bolt', '1', '1.5', '2.25', '1', '0'),
-  ('1', '3', 'BOLT', '1', '1.5', '2.25', '1', '0'),
-  ('1', '4', 'bolt ', '1', '1.5', '2.25', '1', '0'),
-  ('1', '5', '', '1', '1.5', '2.25', '1', '0'),
-  ('1', '6', 'Écrou 😀', '1', '1.5', '2.25', '1', '0'),
-  ('1', '7', 'ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-AB', '1', '1.5', '2.25', '1', '0');
+  ('1', '3', 'Nut ', '1', '1.5', '2.25', '1', '0'),
+  ('1', '4', '', '1', '1.5', '2.25', '1', '0'),
+  ('1', '5', 'Écrou 😀', '1', '1.5', '2.25', '1', '0'),
+  ('1', '6', 'ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-AB', '1', '1.5', '2.25', '1', '0');
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 14 [A14 component names that differ only in case or a trailing space, an empty name and non-ASCII text a…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 14 [A14 product names with a trailing space, an empty name, non-ASCII text and a 50-character name are r…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;
 
--- @case 15: [A16] product ids with gaps and at the int limits: 1 -> 1000 -> 2147483647, with -2147483648 and 0 unused
+-- @case 15: [A15] a quantity summed past decimal(8,2): three in-use 999999.99 rows for one pair give 2999999.97; large money costs ending in 5
+BEGIN;
+DELETE FROM production.bill_of_materials;
+DELETE FROM production.product;
+INSERT INTO production.bill_of_materials ("ProductAssemblyID", "ComponentID", "StartDate", "EndDate", "BOMLevel", "PerAssemblyQty") VALUES
+  ('1', '2', '2020-01-01 00:00:00.000000', NULL, '1', '999999.99'),
+  ('1', '2', '2020-01-01 06:00:00.000000', NULL, '1', '999999.99'),
+  ('1', '2', '2020-01-01 12:00:00.000000', NULL, '1', '999999.99'),
+  ('1', '3', '2020-01-01 00:00:00.000000', NULL, '1', '1.05');
+INSERT INTO production.product ("ProductID", "Name", "StandardCost", "ListPrice") VALUES
+  ('1', 'P1', '1.5000', '2.2500'),
+  ('2', 'P2', '900719925474.0985', '900719925474.0990'),
+  ('3', 'P3', '0.0005', '0.0000');
+CREATE TEMP TABLE pp_actual ON COMMIT DROP AS
+SELECT * FROM dbo.usp_get_bill_of_materials('1'::integer, '2020-01-02 12:00:00.000000'::timestamp)
+WITH NO DATA;
+CREATE TEMP TABLE pp_outcome (outcome text) ON COMMIT DROP;
+DO $pp$
+BEGIN
+  INSERT INTO pp_actual SELECT * FROM dbo.usp_get_bill_of_materials('1'::integer, '2020-01-02 12:00:00.000000'::timestamp);
+  INSERT INTO pp_outcome VALUES ('completed');
+EXCEPTION
+  WHEN SQLSTATE '54001' THEN INSERT INTO pp_outcome VALUES ('raised: maximum recursion (25) exhausted');
+END $pp$;
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT 'completed'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'completed'::text AS outcome)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 15 [A15 a quantity summed past decimal(8,2): three in-use 999999.99 rows for one pair give 2999999.97; l…', missing, extra;
+  END IF;
+END $pp$;
+DO $pp$
+DECLARE got text[];
+BEGIN
+  SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
+  IF got IS DISTINCT FROM ARRAY['ProductAssemblyID', 'ComponentID', 'ComponentDesc', 'TotalQuantity', 'StandardCost', 'ListPrice', 'BOMLevel', 'RecursionLevel']::text[] THEN
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 15 [A15 a quantity summed past decimal(8,2): three in-use 999999.99 rows for one pair give 2999999.97; l…', got, ARRAY['ProductAssemblyID', 'ComponentID', 'ComponentDesc', 'TotalQuantity', 'StandardCost', 'ListPrice', 'BOMLevel', 'RecursionLevel']::text[];
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
+INSERT INTO pp_expected VALUES
+  ('1', '2', 'P2', '2999999.97', '900719925474.0985', '900719925474.099', '1', '0'),
+  ('1', '3', 'P3', '1.05', '0.0005', '0', '1', '0');
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 15 [A15 a quantity summed past decimal(8,2): three in-use 999999.99 rows for one pair give 2999999.97; l…', missing, extra;
+  END IF;
+END $pp$;
+ROLLBACK;
+
+-- @case 16: [A16] product ids with gaps and at the int limits: 1 -> 1000 -> 2147483647, with -2147483648 and 0 unused
 BEGIN;
 DELETE FROM production.bill_of_materials;
 DELETE FROM production.product;
@@ -844,7 +897,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT 'completed'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'completed'::text AS outcome)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 15 [A16 product ids with gaps and at the int limits: 1 -> 1000 -> 2147483647, with -2147483648 and 0 unu…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 16 [A16 product ids with gaps and at the int limits: 1 -> 1000 -> 2147483647, with -2147483648 and 0 unu…', missing, extra;
   END IF;
 END $pp$;
 DO $pp$
@@ -852,7 +905,7 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['ProductAssemblyID', 'ComponentID', 'ComponentDesc', 'TotalQuantity', 'StandardCost', 'ListPrice', 'BOMLevel', 'RecursionLevel']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 15 [A16 product ids with gaps and at the int limits: 1 -> 1000 -> 2147483647, with -2147483648 and 0 unu…', got, ARRAY['ProductAssemblyID', 'ComponentID', 'ComponentDesc', 'TotalQuantity', 'StandardCost', 'ListPrice', 'BOMLevel', 'RecursionLevel']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 16 [A16 product ids with gaps and at the int limits: 1 -> 1000 -> 2147483647, with -2147483648 and 0 unu…', got, ARRAY['ProductAssemblyID', 'ComponentID', 'ComponentDesc', 'TotalQuantity', 'StandardCost', 'ListPrice', 'BOMLevel', 'RecursionLevel']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
@@ -865,19 +918,19 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 15 [A16 product ids with gaps and at the int limits: 1 -> 1000 -> 2147483647, with -2147483648 and 0 unu…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 16 [A16 product ids with gaps and at the int limits: 1 -> 1000 -> 2147483647, with -2147483648 and 0 unu…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;
 
--- @case 16: [A17] a cycle reached only through an edge that is not in use at the check date, and an unreachable cycle: rows, no recursion error
+-- @case 17: [A17] a cycle reached only through an edge that is not in use at the check date, and an unreachable cycle: rows, no recursion error
 BEGIN;
 DELETE FROM production.bill_of_materials;
 DELETE FROM production.product;
 INSERT INTO production.bill_of_materials ("ProductAssemblyID", "ComponentID", "StartDate", "EndDate", "BOMLevel", "PerAssemblyQty") VALUES
   ('1', '2', '2020-01-01 00:00:00.000000', NULL, '1', '1.00'),
   ('2', '3', '2020-01-01 00:00:00.000000', NULL, '2', '1.00'),
-  ('3', '2', '2020-01-01 00:00:00.000000', '2019-12-31 00:00:00.000000', '3', '1.00'),
+  ('3', '2', '2019-01-01 00:00:00.000000', '2019-12-31 00:00:00.000000', '3', '1.00'),
   ('5', '6', '2020-01-01 00:00:00.000000', NULL, '1', '1.00'),
   ('6', '5', '2020-01-01 00:00:00.000000', NULL, '1', '1.00');
 INSERT INTO production.product ("ProductID", "Name", "StandardCost", "ListPrice") VALUES
@@ -903,7 +956,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT 'completed'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'completed'::text AS outcome)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 16 [A17 a cycle reached only through an edge that is not in use at the check date, and an unreachable cy…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 17 [A17 a cycle reached only through an edge that is not in use at the check date, and an unreachable cy…', missing, extra;
   END IF;
 END $pp$;
 DO $pp$
@@ -911,7 +964,7 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['ProductAssemblyID', 'ComponentID', 'ComponentDesc', 'TotalQuantity', 'StandardCost', 'ListPrice', 'BOMLevel', 'RecursionLevel']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 16 [A17 a cycle reached only through an edge that is not in use at the check date, and an unreachable cy…', got, ARRAY['ProductAssemblyID', 'ComponentID', 'ComponentDesc', 'TotalQuantity', 'StandardCost', 'ListPrice', 'BOMLevel', 'RecursionLevel']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 17 [A17 a cycle reached only through an edge that is not in use at the check date, and an unreachable cy…', got, ARRAY['ProductAssemblyID', 'ComponentID', 'ComponentDesc', 'TotalQuantity', 'StandardCost', 'ListPrice', 'BOMLevel', 'RecursionLevel']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
@@ -924,12 +977,12 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 16 [A17 a cycle reached only through an edge that is not in use at the check date, and an unreachable cy…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 17 [A17 a cycle reached only through an edge that is not in use at the check date, and an unreachable cy…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;
 
--- @case 17: [A18] a product missing in the middle of the walk: its row is dropped and the walk does not continue below it
+-- @case 18: [A18] a product missing in the middle of the walk: its row is dropped and the walk does not continue below it
 BEGIN;
 DELETE FROM production.bill_of_materials;
 DELETE FROM production.product;
@@ -958,7 +1011,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT 'completed'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'completed'::text AS outcome)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 17 [A18 a product missing in the middle of the walk: its row is dropped and the walk does not continue b…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 18 [A18 a product missing in the middle of the walk: its row is dropped and the walk does not continue b…', missing, extra;
   END IF;
 END $pp$;
 DO $pp$
@@ -966,7 +1019,7 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['ProductAssemblyID', 'ComponentID', 'ComponentDesc', 'TotalQuantity', 'StandardCost', 'ListPrice', 'BOMLevel', 'RecursionLevel']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 17 [A18 a product missing in the middle of the walk: its row is dropped and the walk does not continue b…', got, ARRAY['ProductAssemblyID', 'ComponentID', 'ComponentDesc', 'TotalQuantity', 'StandardCost', 'ListPrice', 'BOMLevel', 'RecursionLevel']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 18 [A18 a product missing in the middle of the walk: its row is dropped and the walk does not continue b…', got, ARRAY['ProductAssemblyID', 'ComponentID', 'ComponentDesc', 'TotalQuantity', 'StandardCost', 'ListPrice', 'BOMLevel', 'RecursionLevel']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
@@ -978,7 +1031,133 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 17 [A18 a product missing in the middle of the walk: its row is dropped and the walk does not continue b…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 18 [A18 a product missing in the middle of the walk: its row is dropped and the walk does not continue b…', missing, extra;
+  END IF;
+END $pp$;
+ROLLBACK;
+
+-- @case 19: [A19] 26-edge chain whose last edge is in use only because datetime rounds its end 23:59:59.999 to midnight: exactly 25 recursions, allowed, 26 rows
+BEGIN;
+DELETE FROM production.bill_of_materials;
+DELETE FROM production.product;
+INSERT INTO production.bill_of_materials ("ProductAssemblyID", "ComponentID", "StartDate", "EndDate", "BOMLevel", "PerAssemblyQty") VALUES
+  ('1', '2', '2020-01-01 00:00:00.000000', NULL, '1', '1.00'),
+  ('2', '3', '2020-01-01 00:00:00.000000', NULL, '2', '1.00'),
+  ('3', '4', '2020-01-01 00:00:00.000000', NULL, '3', '1.00'),
+  ('4', '5', '2020-01-01 00:00:00.000000', NULL, '4', '1.00'),
+  ('5', '6', '2020-01-01 00:00:00.000000', NULL, '5', '1.00'),
+  ('6', '7', '2020-01-01 00:00:00.000000', NULL, '6', '1.00'),
+  ('7', '8', '2020-01-01 00:00:00.000000', NULL, '7', '1.00'),
+  ('8', '9', '2020-01-01 00:00:00.000000', NULL, '8', '1.00'),
+  ('9', '10', '2020-01-01 00:00:00.000000', NULL, '9', '1.00'),
+  ('10', '11', '2020-01-01 00:00:00.000000', NULL, '10', '1.00'),
+  ('11', '12', '2020-01-01 00:00:00.000000', NULL, '11', '1.00'),
+  ('12', '13', '2020-01-01 00:00:00.000000', NULL, '12', '1.00'),
+  ('13', '14', '2020-01-01 00:00:00.000000', NULL, '13', '1.00'),
+  ('14', '15', '2020-01-01 00:00:00.000000', NULL, '14', '1.00'),
+  ('15', '16', '2020-01-01 00:00:00.000000', NULL, '15', '1.00'),
+  ('16', '17', '2020-01-01 00:00:00.000000', NULL, '16', '1.00'),
+  ('17', '18', '2020-01-01 00:00:00.000000', NULL, '17', '1.00'),
+  ('18', '19', '2020-01-01 00:00:00.000000', NULL, '18', '1.00'),
+  ('19', '20', '2020-01-01 00:00:00.000000', NULL, '19', '1.00'),
+  ('20', '21', '2020-01-01 00:00:00.000000', NULL, '20', '1.00'),
+  ('21', '22', '2020-01-01 00:00:00.000000', NULL, '21', '1.00'),
+  ('22', '23', '2020-01-01 00:00:00.000000', NULL, '22', '1.00'),
+  ('23', '24', '2020-01-01 00:00:00.000000', NULL, '23', '1.00'),
+  ('24', '25', '2020-01-01 00:00:00.000000', NULL, '24', '1.00'),
+  ('25', '26', '2020-01-01 00:00:00.000000', NULL, '25', '1.00'),
+  ('26', '27', '2020-01-01 00:00:00.000000', '2020-01-01 23:59:59.999000', '26', '1.00');
+INSERT INTO production.product ("ProductID", "Name", "StandardCost", "ListPrice") VALUES
+  ('1', 'P1', '1.5000', '2.2500'),
+  ('2', 'P2', '1.5000', '2.2500'),
+  ('3', 'P3', '1.5000', '2.2500'),
+  ('4', 'P4', '1.5000', '2.2500'),
+  ('5', 'P5', '1.5000', '2.2500'),
+  ('6', 'P6', '1.5000', '2.2500'),
+  ('7', 'P7', '1.5000', '2.2500'),
+  ('8', 'P8', '1.5000', '2.2500'),
+  ('9', 'P9', '1.5000', '2.2500'),
+  ('10', 'P10', '1.5000', '2.2500'),
+  ('11', 'P11', '1.5000', '2.2500'),
+  ('12', 'P12', '1.5000', '2.2500'),
+  ('13', 'P13', '1.5000', '2.2500'),
+  ('14', 'P14', '1.5000', '2.2500'),
+  ('15', 'P15', '1.5000', '2.2500'),
+  ('16', 'P16', '1.5000', '2.2500'),
+  ('17', 'P17', '1.5000', '2.2500'),
+  ('18', 'P18', '1.5000', '2.2500'),
+  ('19', 'P19', '1.5000', '2.2500'),
+  ('20', 'P20', '1.5000', '2.2500'),
+  ('21', 'P21', '1.5000', '2.2500'),
+  ('22', 'P22', '1.5000', '2.2500'),
+  ('23', 'P23', '1.5000', '2.2500'),
+  ('24', 'P24', '1.5000', '2.2500'),
+  ('25', 'P25', '1.5000', '2.2500'),
+  ('26', 'P26', '1.5000', '2.2500'),
+  ('27', 'P27', '1.5000', '2.2500');
+CREATE TEMP TABLE pp_actual ON COMMIT DROP AS
+SELECT * FROM dbo.usp_get_bill_of_materials('1'::integer, '2020-01-02 00:00:00.000000'::timestamp)
+WITH NO DATA;
+CREATE TEMP TABLE pp_outcome (outcome text) ON COMMIT DROP;
+DO $pp$
+BEGIN
+  INSERT INTO pp_actual SELECT * FROM dbo.usp_get_bill_of_materials('1'::integer, '2020-01-02 00:00:00.000000'::timestamp);
+  INSERT INTO pp_outcome VALUES ('completed');
+EXCEPTION
+  WHEN SQLSTATE '54001' THEN INSERT INTO pp_outcome VALUES ('raised: maximum recursion (25) exhausted');
+END $pp$;
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT 'completed'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'completed'::text AS outcome)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 19 [A19 26-edge chain whose last edge is in use only because datetime rounds its end 23:59:59.999 to mid…', missing, extra;
+  END IF;
+END $pp$;
+DO $pp$
+DECLARE got text[];
+BEGIN
+  SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
+  IF got IS DISTINCT FROM ARRAY['ProductAssemblyID', 'ComponentID', 'ComponentDesc', 'TotalQuantity', 'StandardCost', 'ListPrice', 'BOMLevel', 'RecursionLevel']::text[] THEN
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 19 [A19 26-edge chain whose last edge is in use only because datetime rounds its end 23:59:59.999 to mid…', got, ARRAY['ProductAssemblyID', 'ComponentID', 'ComponentDesc', 'TotalQuantity', 'StandardCost', 'ListPrice', 'BOMLevel', 'RecursionLevel']::text[];
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
+INSERT INTO pp_expected VALUES
+  ('1', '2', 'P2', '1', '1.5', '2.25', '1', '0'),
+  ('2', '3', 'P3', '1', '1.5', '2.25', '2', '1'),
+  ('3', '4', 'P4', '1', '1.5', '2.25', '3', '2'),
+  ('4', '5', 'P5', '1', '1.5', '2.25', '4', '3'),
+  ('5', '6', 'P6', '1', '1.5', '2.25', '5', '4'),
+  ('6', '7', 'P7', '1', '1.5', '2.25', '6', '5'),
+  ('7', '8', 'P8', '1', '1.5', '2.25', '7', '6'),
+  ('8', '9', 'P9', '1', '1.5', '2.25', '8', '7'),
+  ('9', '10', 'P10', '1', '1.5', '2.25', '9', '8'),
+  ('10', '11', 'P11', '1', '1.5', '2.25', '10', '9'),
+  ('11', '12', 'P12', '1', '1.5', '2.25', '11', '10'),
+  ('12', '13', 'P13', '1', '1.5', '2.25', '12', '11'),
+  ('13', '14', 'P14', '1', '1.5', '2.25', '13', '12'),
+  ('14', '15', 'P15', '1', '1.5', '2.25', '14', '13'),
+  ('15', '16', 'P16', '1', '1.5', '2.25', '15', '14'),
+  ('16', '17', 'P17', '1', '1.5', '2.25', '16', '15'),
+  ('17', '18', 'P18', '1', '1.5', '2.25', '17', '16'),
+  ('18', '19', 'P19', '1', '1.5', '2.25', '18', '17'),
+  ('19', '20', 'P20', '1', '1.5', '2.25', '19', '18'),
+  ('20', '21', 'P21', '1', '1.5', '2.25', '20', '19'),
+  ('21', '22', 'P22', '1', '1.5', '2.25', '21', '20'),
+  ('22', '23', 'P23', '1', '1.5', '2.25', '22', '21'),
+  ('23', '24', 'P24', '1', '1.5', '2.25', '23', '22'),
+  ('24', '25', 'P25', '1', '1.5', '2.25', '24', '23'),
+  ('25', '26', 'P26', '1', '1.5', '2.25', '25', '24'),
+  ('26', '27', 'P27', '1', '1.5', '2.25', '26', '25');
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 19 [A19 26-edge chain whose last edge is in use only because datetime rounds its end 23:59:59.999 to mid…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;

@@ -294,15 +294,15 @@ BEGIN
   EXEC tSQLt.AssertEqualsString @Expected = N'raised: maximum recursion (25) exhausted', @Actual = @outcome, @Message = N'outcome';
 END;
 GO
--- case 6: [A06] an edge ending at 11:59:59.999 duplicates an open edge: SQL Server sums both quantities at 12:00, timestamp only one
-CREATE PROCEDURE [AgreedTests].[test 06 [A06 an edge ending at 11:59:59.999 duplicates an open edge: SQL Server sums both quantities at 12:00…]
+-- case 6: [A06] an edge ending at 11:59:59.999 overlaps an open edge for the same pair: SQL Server sums both quantities at 12:00, a timestamp that kept .999 only one
+CREATE PROCEDURE [AgreedTests].[test 06 [A06 an edge ending at 11:59:59.999 overlaps an open edge for the same pair: SQL Server sums both qua…]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Production].[BillOfMaterials]';
   EXEC tSQLt.FakeTable @TableName = N'[Production].[Product]';
   INSERT INTO [Production].[BillOfMaterials] ([ProductAssemblyID], [ComponentID], [StartDate], [EndDate], [BOMLevel], [PerAssemblyQty]) VALUES
     (1, 2, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 1, 1.00),
-    (1, 2, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), CAST('2020-01-02T11:59:59.999000' AS datetime2(7)), 1, 2.25);
+    (1, 2, CAST('2020-01-01T06:00:00.000000' AS datetime2(7)), CAST('2020-01-02T11:59:59.999000' AS datetime2(7)), 1, 2.25);
   INSERT INTO [Production].[Product] ([ProductID], [Name], [StandardCost], [ListPrice]) VALUES
     (1, N'P1', 1.5000, 2.2500),
     (2, N'P2', 1.5000, 2.2500);
@@ -533,17 +533,17 @@ BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Production].[BillOfMaterials]';
   EXEC tSQLt.FakeTable @TableName = N'[Production].[Product]';
   INSERT INTO [Production].[BillOfMaterials] ([ProductAssemblyID], [ComponentID], [StartDate], [EndDate], [BOMLevel], [PerAssemblyQty]) VALUES
-    (1, 2, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 1, 0.05),
-    (1, 3, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 1, 0.15),
-    (2, 4, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 2, 0.25),
-    (3, 4, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 2, 0.35),
-    (4, 5, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 3, 0.45);
+    (1, 2, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 1, 1.05),
+    (1, 3, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 1, 1.15),
+    (2, 4, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 2, 1.25),
+    (3, 4, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 2, 1.35),
+    (4, 5, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 3, 1.45);
   INSERT INTO [Production].[Product] ([ProductID], [Name], [StandardCost], [ListPrice]) VALUES
     (1, N'P1', 1.5000, 2.2500),
     (2, N'P2', 1.5000, 2.2500),
     (3, N'P3', 1.5000, 2.2500),
     (4, N'P4', 0.0005, 1.0005),
-    (5, N'P5', -0.0005, 0.0015);
+    (5, N'P5', 0.0005, 0.0015);
   CREATE TABLE #Expected (
     [ProductAssemblyID] int NULL,
     [ComponentID] int NULL,
@@ -565,11 +565,11 @@ BEGIN
     [RecursionLevel] int NULL
   );
   INSERT INTO #Expected ([ProductAssemblyID], [ComponentID], [ComponentDesc], [TotalQuantity], [StandardCost], [ListPrice], [BOMLevel], [RecursionLevel]) VALUES
-    (1, 2, N'P2', 0.05, 1.5, 2.25, 1, 0),
-    (1, 3, N'P3', 0.15, 1.5, 2.25, 1, 0),
-    (2, 4, N'P4', 0.25, 0.0005, 1.0005, 2, 1),
-    (3, 4, N'P4', 0.35, 0.0005, 1.0005, 2, 1),
-    (4, 5, N'P5', 0.9, -0.0005, 0.0015, 3, 2);
+    (1, 2, N'P2', 1.05, 1.5, 2.25, 1, 0),
+    (1, 3, N'P3', 1.15, 1.5, 2.25, 1, 0),
+    (2, 4, N'P4', 1.25, 0.0005, 1.0005, 2, 1),
+    (3, 4, N'P4', 1.35, 0.0005, 1.0005, 2, 1),
+    (4, 5, N'P5', 2.9, 0.0005, 0.0015, 3, 2);
   DECLARE @outcome nvarchar(4000) = N'completed';
   BEGIN TRY
     INSERT INTO #Actual
@@ -636,20 +636,20 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
--- case 13: [A13] BOMLevel out of step with depth: 32767, -32768 and 0 (smallint extremes) on a three-edge chain
-CREATE PROCEDURE [AgreedTests].[test 13 [A13 BOMLevel out of step with depth: 32767, -32768 and 0 (smallint extremes) on a three-edge chain]
+-- case 13: [A13] BOMLevel out of step with depth: 32767 (smallint maximum), 1 and 16384 on a three-edge chain
+CREATE PROCEDURE [AgreedTests].[test 13 [A13 BOMLevel out of step with depth: 32767 (smallint maximum), 1 and 16384 on a three-edge chain]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Production].[BillOfMaterials]';
   EXEC tSQLt.FakeTable @TableName = N'[Production].[Product]';
   INSERT INTO [Production].[BillOfMaterials] ([ProductAssemblyID], [ComponentID], [StartDate], [EndDate], [BOMLevel], [PerAssemblyQty]) VALUES
     (1, 2, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 32767, 1.00),
-    (2, 3, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, -32768, 1.00),
-    (3, 4, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 0, 1.00);
+    (2, 3, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 1, 1.00),
+    (3, 4, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 16384, 1.00);
   INSERT INTO [Production].[Product] ([ProductID], [Name], [StandardCost], [ListPrice]) VALUES
     (1, N'P1', 1.5000, 2.2500),
     (2, N'P2', 1.5000, 2.2500),
-    (3, N'P2', 1.5000, 2.2500),
+    (3, N'P3', 1.5000, 2.2500),
     (4, N'P4', 1.5000, 2.2500);
   CREATE TABLE #Expected (
     [ProductAssemblyID] int NULL,
@@ -672,8 +672,8 @@ BEGIN
     [RecursionLevel] int NULL
   );
   INSERT INTO #Expected ([ProductAssemblyID], [ComponentID], [ComponentDesc], [TotalQuantity], [StandardCost], [ListPrice], [BOMLevel], [RecursionLevel]) VALUES
-    (2, 3, N'P2', 1, 1.5, 2.25, -32768, 1),
-    (3, 4, N'P4', 1, 1.5, 2.25, 0, 2),
+    (2, 3, N'P3', 1, 1.5, 2.25, 1, 1),
+    (3, 4, N'P4', 1, 1.5, 2.25, 16384, 2),
     (1, 2, N'P2', 1, 1.5, 2.25, 32767, 0);
   DECLARE @outcome nvarchar(4000) = N'completed';
   BEGIN TRY
@@ -687,8 +687,8 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
--- case 14: [A14] component names that differ only in case or a trailing space, an empty name and non-ASCII text are returned as stored
-CREATE PROCEDURE [AgreedTests].[test 14 [A14 component names that differ only in case or a trailing space, an empty name and non-ASCII text a…]
+-- case 14: [A14] product names with a trailing space, an empty name, non-ASCII text and a 50-character name are returned as stored
+CREATE PROCEDURE [AgreedTests].[test 14 [A14 product names with a trailing space, an empty name, non-ASCII text and a 50-character name are r…]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Production].[BillOfMaterials]';
@@ -698,16 +698,14 @@ BEGIN
     (1, 3, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 1, 1.00),
     (1, 4, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 1, 1.00),
     (1, 5, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 1, 1.00),
-    (1, 6, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 1, 1.00),
-    (1, 7, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 1, 1.00);
+    (1, 6, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 1, 1.00);
   INSERT INTO [Production].[Product] ([ProductID], [Name], [StandardCost], [ListPrice]) VALUES
     (1, N'P1', 1.5000, 2.2500),
     (2, N'Bolt', 1.5000, 2.2500),
-    (3, N'BOLT', 1.5000, 2.2500),
-    (4, N'bolt ', 1.5000, 2.2500),
-    (5, N'', 1.5000, 2.2500),
-    (6, N'Écrou 😀', 1.5000, 2.2500),
-    (7, N'ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-AB', 1.5000, 2.2500);
+    (3, N'Nut ', 1.5000, 2.2500),
+    (4, N'', 1.5000, 2.2500),
+    (5, N'Écrou 😀', 1.5000, 2.2500),
+    (6, N'ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-AB', 1.5000, 2.2500);
   CREATE TABLE #Expected (
     [ProductAssemblyID] int NULL,
     [ComponentID] int NULL,
@@ -730,11 +728,10 @@ BEGIN
   );
   INSERT INTO #Expected ([ProductAssemblyID], [ComponentID], [ComponentDesc], [TotalQuantity], [StandardCost], [ListPrice], [BOMLevel], [RecursionLevel]) VALUES
     (1, 2, N'Bolt', 1, 1.5, 2.25, 1, 0),
-    (1, 3, N'BOLT', 1, 1.5, 2.25, 1, 0),
-    (1, 4, N'bolt ', 1, 1.5, 2.25, 1, 0),
-    (1, 5, N'', 1, 1.5, 2.25, 1, 0),
-    (1, 6, N'Écrou 😀', 1, 1.5, 2.25, 1, 0),
-    (1, 7, N'ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-AB', 1, 1.5, 2.25, 1, 0);
+    (1, 3, N'Nut ', 1, 1.5, 2.25, 1, 0),
+    (1, 4, N'', 1, 1.5, 2.25, 1, 0),
+    (1, 5, N'Écrou 😀', 1, 1.5, 2.25, 1, 0),
+    (1, 6, N'ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-ÄÖÜäöüß-AB', 1, 1.5, 2.25, 1, 0);
   DECLARE @outcome nvarchar(4000) = N'completed';
   BEGIN TRY
     INSERT INTO #Actual
@@ -747,8 +744,58 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
--- case 15: [A16] product ids with gaps and at the int limits: 1 -> 1000 -> 2147483647, with -2147483648 and 0 unused
-CREATE PROCEDURE [AgreedTests].[test 15 [A16 product ids with gaps and at the int limits: 1 -> 1000 -> 2147483647, with -2147483648 and 0 unu…]
+-- case 15: [A15] a quantity summed past decimal(8,2): three in-use 999999.99 rows for one pair give 2999999.97; large money costs ending in 5
+CREATE PROCEDURE [AgreedTests].[test 15 [A15 a quantity summed past decimal(8,2): three in-use 999999.99 rows for one pair give 2999999.97; l…]
+AS
+BEGIN
+  EXEC tSQLt.FakeTable @TableName = N'[Production].[BillOfMaterials]';
+  EXEC tSQLt.FakeTable @TableName = N'[Production].[Product]';
+  INSERT INTO [Production].[BillOfMaterials] ([ProductAssemblyID], [ComponentID], [StartDate], [EndDate], [BOMLevel], [PerAssemblyQty]) VALUES
+    (1, 2, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 1, 999999.99),
+    (1, 2, CAST('2020-01-01T06:00:00.000000' AS datetime2(7)), NULL, 1, 999999.99),
+    (1, 2, CAST('2020-01-01T12:00:00.000000' AS datetime2(7)), NULL, 1, 999999.99),
+    (1, 3, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 1, 1.05);
+  INSERT INTO [Production].[Product] ([ProductID], [Name], [StandardCost], [ListPrice]) VALUES
+    (1, N'P1', 1.5000, 2.2500),
+    (2, N'P2', 900719925474.0985, 900719925474.0990),
+    (3, N'P3', 0.0005, 0.0000);
+  CREATE TABLE #Expected (
+    [ProductAssemblyID] int NULL,
+    [ComponentID] int NULL,
+    [ComponentDesc] nvarchar(50) NULL,
+    [TotalQuantity] decimal(38,2) NULL,
+    [StandardCost] money NULL,
+    [ListPrice] money NULL,
+    [BOMLevel] smallint NULL,
+    [RecursionLevel] int NULL
+  );
+  CREATE TABLE #Actual (
+    [ProductAssemblyID] int NULL,
+    [ComponentID] int NULL,
+    [ComponentDesc] nvarchar(50) NULL,
+    [TotalQuantity] decimal(38,2) NULL,
+    [StandardCost] money NULL,
+    [ListPrice] money NULL,
+    [BOMLevel] smallint NULL,
+    [RecursionLevel] int NULL
+  );
+  INSERT INTO #Expected ([ProductAssemblyID], [ComponentID], [ComponentDesc], [TotalQuantity], [StandardCost], [ListPrice], [BOMLevel], [RecursionLevel]) VALUES
+    (1, 2, N'P2', 2999999.97, 900719925474.0985, 900719925474.099, 1, 0),
+    (1, 3, N'P3', 1.05, 0.0005, 0, 1, 0);
+  DECLARE @outcome nvarchar(4000) = N'completed';
+  BEGIN TRY
+    INSERT INTO #Actual
+    EXEC dbo.uspGetBillOfMaterials @StartProductID = 1, @CheckDate = '2020-01-02T12:00:00.000';
+  END TRY
+  BEGIN CATCH
+    SET @outcome = CASE WHEN ERROR_NUMBER() IN (530) THEN N'raised: maximum recursion (25) exhausted' ELSE N'unexpected error ' + CAST(ERROR_NUMBER() AS nvarchar(20)) + N': ' + ERROR_MESSAGE() END;
+  END CATCH;
+  EXEC tSQLt.AssertEqualsString @Expected = N'completed', @Actual = @outcome, @Message = N'outcome';
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
+END;
+GO
+-- case 16: [A16] product ids with gaps and at the int limits: 1 -> 1000 -> 2147483647, with -2147483648 and 0 unused
+CREATE PROCEDURE [AgreedTests].[test 16 [A16 product ids with gaps and at the int limits: 1 -> 1000 -> 2147483647, with -2147483648 and 0 unu…]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Production].[BillOfMaterials]';
@@ -798,8 +845,8 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
--- case 16: [A17] a cycle reached only through an edge that is not in use at the check date, and an unreachable cycle: rows, no recursion error
-CREATE PROCEDURE [AgreedTests].[test 16 [A17 a cycle reached only through an edge that is not in use at the check date, and an unreachable cy…]
+-- case 17: [A17] a cycle reached only through an edge that is not in use at the check date, and an unreachable cycle: rows, no recursion error
+CREATE PROCEDURE [AgreedTests].[test 17 [A17 a cycle reached only through an edge that is not in use at the check date, and an unreachable cy…]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Production].[BillOfMaterials]';
@@ -807,7 +854,7 @@ BEGIN
   INSERT INTO [Production].[BillOfMaterials] ([ProductAssemblyID], [ComponentID], [StartDate], [EndDate], [BOMLevel], [PerAssemblyQty]) VALUES
     (1, 2, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 1, 1.00),
     (2, 3, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 2, 1.00),
-    (3, 2, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), CAST('2019-12-31T00:00:00.000000' AS datetime2(7)), 3, 1.00),
+    (3, 2, CAST('2019-01-01T00:00:00.000000' AS datetime2(7)), CAST('2019-12-31T00:00:00.000000' AS datetime2(7)), 3, 1.00),
     (5, 6, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 1, 1.00),
     (6, 5, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 1, 1.00);
   INSERT INTO [Production].[Product] ([ProductID], [Name], [StandardCost], [ListPrice]) VALUES
@@ -851,8 +898,8 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
--- case 17: [A18] a product missing in the middle of the walk: its row is dropped and the walk does not continue below it
-CREATE PROCEDURE [AgreedTests].[test 17 [A18 a product missing in the middle of the walk: its row is dropped and the walk does not continue b…]
+-- case 18: [A18] a product missing in the middle of the walk: its row is dropped and the walk does not continue below it
+CREATE PROCEDURE [AgreedTests].[test 18 [A18 a product missing in the middle of the walk: its row is dropped and the walk does not continue b…]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Production].[BillOfMaterials]';
@@ -891,6 +938,126 @@ BEGIN
   BEGIN TRY
     INSERT INTO #Actual
     EXEC dbo.uspGetBillOfMaterials @StartProductID = 1, @CheckDate = '2020-01-02T12:00:00.000';
+  END TRY
+  BEGIN CATCH
+    SET @outcome = CASE WHEN ERROR_NUMBER() IN (530) THEN N'raised: maximum recursion (25) exhausted' ELSE N'unexpected error ' + CAST(ERROR_NUMBER() AS nvarchar(20)) + N': ' + ERROR_MESSAGE() END;
+  END CATCH;
+  EXEC tSQLt.AssertEqualsString @Expected = N'completed', @Actual = @outcome, @Message = N'outcome';
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
+END;
+GO
+-- case 19: [A19] 26-edge chain whose last edge is in use only because datetime rounds its end 23:59:59.999 to midnight: exactly 25 recursions, allowed, 26 rows
+CREATE PROCEDURE [AgreedTests].[test 19 [A19 26-edge chain whose last edge is in use only because datetime rounds its end 23:59:59.999 to mid…]
+AS
+BEGIN
+  EXEC tSQLt.FakeTable @TableName = N'[Production].[BillOfMaterials]';
+  EXEC tSQLt.FakeTable @TableName = N'[Production].[Product]';
+  INSERT INTO [Production].[BillOfMaterials] ([ProductAssemblyID], [ComponentID], [StartDate], [EndDate], [BOMLevel], [PerAssemblyQty]) VALUES
+    (1, 2, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 1, 1.00),
+    (2, 3, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 2, 1.00),
+    (3, 4, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 3, 1.00),
+    (4, 5, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 4, 1.00),
+    (5, 6, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 5, 1.00),
+    (6, 7, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 6, 1.00),
+    (7, 8, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 7, 1.00),
+    (8, 9, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 8, 1.00),
+    (9, 10, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 9, 1.00),
+    (10, 11, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 10, 1.00),
+    (11, 12, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 11, 1.00),
+    (12, 13, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 12, 1.00),
+    (13, 14, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 13, 1.00),
+    (14, 15, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 14, 1.00),
+    (15, 16, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 15, 1.00),
+    (16, 17, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 16, 1.00),
+    (17, 18, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 17, 1.00),
+    (18, 19, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 18, 1.00),
+    (19, 20, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 19, 1.00),
+    (20, 21, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 20, 1.00),
+    (21, 22, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 21, 1.00),
+    (22, 23, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 22, 1.00),
+    (23, 24, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 23, 1.00),
+    (24, 25, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 24, 1.00),
+    (25, 26, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), NULL, 25, 1.00),
+    (26, 27, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), CAST('2020-01-01T23:59:59.999000' AS datetime2(7)), 26, 1.00);
+  INSERT INTO [Production].[Product] ([ProductID], [Name], [StandardCost], [ListPrice]) VALUES
+    (1, N'P1', 1.5000, 2.2500),
+    (2, N'P2', 1.5000, 2.2500),
+    (3, N'P3', 1.5000, 2.2500),
+    (4, N'P4', 1.5000, 2.2500),
+    (5, N'P5', 1.5000, 2.2500),
+    (6, N'P6', 1.5000, 2.2500),
+    (7, N'P7', 1.5000, 2.2500),
+    (8, N'P8', 1.5000, 2.2500),
+    (9, N'P9', 1.5000, 2.2500),
+    (10, N'P10', 1.5000, 2.2500),
+    (11, N'P11', 1.5000, 2.2500),
+    (12, N'P12', 1.5000, 2.2500),
+    (13, N'P13', 1.5000, 2.2500),
+    (14, N'P14', 1.5000, 2.2500),
+    (15, N'P15', 1.5000, 2.2500),
+    (16, N'P16', 1.5000, 2.2500),
+    (17, N'P17', 1.5000, 2.2500),
+    (18, N'P18', 1.5000, 2.2500),
+    (19, N'P19', 1.5000, 2.2500),
+    (20, N'P20', 1.5000, 2.2500),
+    (21, N'P21', 1.5000, 2.2500),
+    (22, N'P22', 1.5000, 2.2500),
+    (23, N'P23', 1.5000, 2.2500),
+    (24, N'P24', 1.5000, 2.2500),
+    (25, N'P25', 1.5000, 2.2500),
+    (26, N'P26', 1.5000, 2.2500),
+    (27, N'P27', 1.5000, 2.2500);
+  CREATE TABLE #Expected (
+    [ProductAssemblyID] int NULL,
+    [ComponentID] int NULL,
+    [ComponentDesc] nvarchar(50) NULL,
+    [TotalQuantity] decimal(38,2) NULL,
+    [StandardCost] money NULL,
+    [ListPrice] money NULL,
+    [BOMLevel] smallint NULL,
+    [RecursionLevel] int NULL
+  );
+  CREATE TABLE #Actual (
+    [ProductAssemblyID] int NULL,
+    [ComponentID] int NULL,
+    [ComponentDesc] nvarchar(50) NULL,
+    [TotalQuantity] decimal(38,2) NULL,
+    [StandardCost] money NULL,
+    [ListPrice] money NULL,
+    [BOMLevel] smallint NULL,
+    [RecursionLevel] int NULL
+  );
+  INSERT INTO #Expected ([ProductAssemblyID], [ComponentID], [ComponentDesc], [TotalQuantity], [StandardCost], [ListPrice], [BOMLevel], [RecursionLevel]) VALUES
+    (1, 2, N'P2', 1, 1.5, 2.25, 1, 0),
+    (2, 3, N'P3', 1, 1.5, 2.25, 2, 1),
+    (3, 4, N'P4', 1, 1.5, 2.25, 3, 2),
+    (4, 5, N'P5', 1, 1.5, 2.25, 4, 3),
+    (5, 6, N'P6', 1, 1.5, 2.25, 5, 4),
+    (6, 7, N'P7', 1, 1.5, 2.25, 6, 5),
+    (7, 8, N'P8', 1, 1.5, 2.25, 7, 6),
+    (8, 9, N'P9', 1, 1.5, 2.25, 8, 7),
+    (9, 10, N'P10', 1, 1.5, 2.25, 9, 8),
+    (10, 11, N'P11', 1, 1.5, 2.25, 10, 9),
+    (11, 12, N'P12', 1, 1.5, 2.25, 11, 10),
+    (12, 13, N'P13', 1, 1.5, 2.25, 12, 11),
+    (13, 14, N'P14', 1, 1.5, 2.25, 13, 12),
+    (14, 15, N'P15', 1, 1.5, 2.25, 14, 13),
+    (15, 16, N'P16', 1, 1.5, 2.25, 15, 14),
+    (16, 17, N'P17', 1, 1.5, 2.25, 16, 15),
+    (17, 18, N'P18', 1, 1.5, 2.25, 17, 16),
+    (18, 19, N'P19', 1, 1.5, 2.25, 18, 17),
+    (19, 20, N'P20', 1, 1.5, 2.25, 19, 18),
+    (20, 21, N'P21', 1, 1.5, 2.25, 20, 19),
+    (21, 22, N'P22', 1, 1.5, 2.25, 21, 20),
+    (22, 23, N'P23', 1, 1.5, 2.25, 22, 21),
+    (23, 24, N'P24', 1, 1.5, 2.25, 23, 22),
+    (24, 25, N'P25', 1, 1.5, 2.25, 24, 23),
+    (25, 26, N'P26', 1, 1.5, 2.25, 25, 24),
+    (26, 27, N'P27', 1, 1.5, 2.25, 26, 25);
+  DECLARE @outcome nvarchar(4000) = N'completed';
+  BEGIN TRY
+    INSERT INTO #Actual
+    EXEC dbo.uspGetBillOfMaterials @StartProductID = 1, @CheckDate = '2020-01-02T00:00:00.000';
   END TRY
   BEGIN CATCH
     SET @outcome = CASE WHEN ERROR_NUMBER() IN (530) THEN N'raised: maximum recursion (25) exhausted' ELSE N'unexpected error ' + CAST(ERROR_NUMBER() AS nvarchar(20)) + N': ' + ERROR_MESSAGE() END;

@@ -17,12 +17,13 @@ INSERT INTO production.product ("ProductID", "Name", "ProductModelID") VALUES
   ('1', 'Bike', '1');
 INSERT INTO production.product_description ("ProductDescriptionID", "Description") VALUES
   ('1', 'one'),
-  ('2', 'two');
+  ('2', 'two'),
+  ('3', 'three');
 INSERT INTO production.product_model ("ProductModelID", "Name") VALUES
   ('1', 'Road');
 INSERT INTO production.product_model_product_description_culture ("ProductModelID", "ProductDescriptionID", "CultureID") VALUES
   ('1', '1', 'en'),
-  ('1', '1', 'EN'),
+  ('1', '3', 'EN'),
   ('1', '2', 'en '),
   ('1', '2', ''),
   ('1', '2', 'zh-cht');
@@ -39,7 +40,7 @@ END $pp$;
 CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
 INSERT INTO pp_expected VALUES
   ('1', 'Bike', 'Road', 'en    ', 'one'),
-  ('1', 'Bike', 'Road', 'EN    ', 'one'),
+  ('1', 'Bike', 'Road', 'EN    ', 'three'),
   ('1', 'Bike', 'Road', 'en    ', 'two'),
   ('1', 'Bike', 'Road', '      ', 'two'),
   ('1', 'Bike', 'Road', 'zh-cht', 'two');
@@ -109,7 +110,7 @@ BEGIN
 END $pp$;
 ROLLBACK;
 
--- @case 3: [A03] an empty description and names that differ only in case: '' kept, not NULL; 'Chain' and 'CHAIN' are two products
+-- @case 3: [A03] an empty description, and product and model names that differ only in case from each other: '' kept, not NULL
 BEGIN;
 DELETE FROM production.product;
 DELETE FROM production.product_description;
@@ -117,12 +118,12 @@ DELETE FROM production.product_model;
 DELETE FROM production.product_model_product_description_culture;
 INSERT INTO production.product ("ProductID", "Name", "ProductModelID") VALUES
   ('1', 'Chain', '1'),
-  ('2', 'CHAIN', '2');
+  ('2', 'road', '2');
 INSERT INTO production.product_description ("ProductDescriptionID", "Description") VALUES
   ('1', '');
 INSERT INTO production.product_model ("ProductModelID", "Name") VALUES
-  ('1', 'Road'),
-  ('2', 'ROAD');
+  ('1', 'CHAIN'),
+  ('2', 'Road');
 INSERT INTO production.product_model_product_description_culture ("ProductModelID", "ProductDescriptionID", "CultureID") VALUES
   ('1', '1', 'en'),
   ('2', '1', 'en');
@@ -133,25 +134,25 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['ProductID', 'Name', 'ProductModel', 'CultureID', 'Description']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 03 [A03 an empty description and names that differ only in case: kept, not NULL; Chain and CHAIN are two…', got, ARRAY['ProductID', 'Name', 'ProductModel', 'CultureID', 'Description']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 03 [A03 an empty description, and product and model names that differ only in case from each other: kept…', got, ARRAY['ProductID', 'Name', 'ProductModel', 'CultureID', 'Description']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
 INSERT INTO pp_expected VALUES
-  ('1', 'Chain', 'Road', 'en    ', ''),
-  ('2', 'CHAIN', 'ROAD', 'en    ', '');
+  ('1', 'Chain', 'CHAIN', 'en    ', ''),
+  ('2', 'road', 'Road', 'en    ', '');
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 03 [A03 an empty description and names that differ only in case: kept, not NULL; Chain and CHAIN are two…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 03 [A03 an empty description, and product and model names that differ only in case from each other: kept…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;
 
--- @case 4: [A04] duplicate culture rows and two products on one model: rows multiply (2 products x 3 culture rows), duplicates kept
+-- @case 4: [A04] two descriptions with the same text in one culture and two products on one model: rows multiply (2 products x 3 culture rows), identical rows kept
 BEGIN;
 DELETE FROM production.product;
 DELETE FROM production.product_description;
@@ -159,15 +160,16 @@ DELETE FROM production.product_model;
 DELETE FROM production.product_model_product_description_culture;
 INSERT INTO production.product ("ProductID", "Name", "ProductModelID") VALUES
   ('1', 'Bike', '1'),
-  ('2', 'Bike', '1');
+  ('2', 'Trike', '1');
 INSERT INTO production.product_description ("ProductDescriptionID", "Description") VALUES
   ('1', 'same'),
-  ('2', 'other');
+  ('2', 'other'),
+  ('3', 'same');
 INSERT INTO production.product_model ("ProductModelID", "Name") VALUES
   ('1', 'Road');
 INSERT INTO production.product_model_product_description_culture ("ProductModelID", "ProductDescriptionID", "CultureID") VALUES
   ('1', '1', 'en'),
-  ('1', '1', 'en'),
+  ('1', '3', 'en'),
   ('1', '2', 'fr');
 CREATE TEMP TABLE pp_actual ON COMMIT DROP AS
 SELECT * FROM production.v_product_and_description;
@@ -176,7 +178,7 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['ProductID', 'Name', 'ProductModel', 'CultureID', 'Description']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 04 [A04 duplicate culture rows and two products on one model: rows multiply (2 products x 3 culture rows…', got, ARRAY['ProductID', 'Name', 'ProductModel', 'CultureID', 'Description']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 04 [A04 two descriptions with the same text in one culture and two products on one model: rows multiply…', got, ARRAY['ProductID', 'Name', 'ProductModel', 'CultureID', 'Description']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
@@ -184,16 +186,16 @@ INSERT INTO pp_expected VALUES
   ('1', 'Bike', 'Road', 'en    ', 'same'),
   ('1', 'Bike', 'Road', 'en    ', 'same'),
   ('1', 'Bike', 'Road', 'fr    ', 'other'),
-  ('2', 'Bike', 'Road', 'en    ', 'same'),
-  ('2', 'Bike', 'Road', 'en    ', 'same'),
-  ('2', 'Bike', 'Road', 'fr    ', 'other');
+  ('2', 'Trike', 'Road', 'en    ', 'same'),
+  ('2', 'Trike', 'Road', 'en    ', 'same'),
+  ('2', 'Trike', 'Road', 'fr    ', 'other');
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 04 [A04 duplicate culture rows and two products on one model: rows multiply (2 products x 3 culture rows…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 04 [A04 two descriptions with the same text in one culture and two products on one model: rows multiply…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;

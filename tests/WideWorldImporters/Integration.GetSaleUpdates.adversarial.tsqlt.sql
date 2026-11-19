@@ -164,7 +164,7 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
--- case 3: [A03] decimal arithmetic: Total Excluding Tax = ExtendedPrice - TaxAmount for 0.05 - 0.15, 10.05 - 1.55, 999999999999.99 - (-999999999999.99); a 3-place tax rate ending in 5; negative profit; NULL unit price
+-- case 3: [A03] decimal arithmetic: Total Excluding Tax = ExtendedPrice - TaxAmount for 0.05 - 0.15, 10.05 - 1.55, and 5000000000000.05 - (-4999999999999.95), which carries into a 14th integer digit; a 3-place tax rate ending in 5; negative profit; NULL unit price
 CREATE PROCEDURE [AgreedTests].[test 03 [A03 decimal arithmetic: Total Excluding Tax = ExtendedPrice - TaxAmount for 0.05 - 0.15, 10.05 - 1.5…]
 AS
 BEGIN
@@ -178,7 +178,7 @@ BEGIN
   INSERT INTO [Sales].[InvoiceLines] ([InvoiceLineID], [InvoiceID], [StockItemID], [Description], [PackageTypeID], [Quantity], [UnitPrice], [TaxRate], [TaxAmount], [LineProfit], [ExtendedPrice], [LastEditedWhen]) VALUES
     (1, 1, 1, N'item 1', 1, 4, 2.50, 15.000, 0.15, -0.05, 0.05, CAST('2020-06-15T12:00:00.000000' AS datetime2(7))),
     (2, 1, 1, N'item 2', 1, 4, 2.50, 15.005, 1.55, 3.00, 10.05, CAST('2020-06-15T12:00:00.000000' AS datetime2(7))),
-    (3, 1, 1, N'item 3', 1, 4, NULL, 15.000, -999999999999.99, 3.00, 999999999999.99, CAST('2020-06-15T12:00:00.000000' AS datetime2(7)));
+    (3, 1, 1, N'item 3', 1, 4, NULL, 15.000, -4999999999999.95, 3.00, 5000000000000.05, CAST('2020-06-15T12:00:00.000000' AS datetime2(7)));
   INSERT INTO [Warehouse].[StockItems] ([StockItemID], [IsChillerStock]) VALUES
     (1, 0),
     (2, 1);
@@ -233,7 +233,7 @@ BEGIN
   INSERT INTO #Expected ([Invoice Date Key], [Delivery Date Key], [WWI Invoice ID], [Description], [Package], [Quantity], [Unit Price], [Tax Rate], [Total Excluding Tax], [Tax Amount], [Profit], [Total Including Tax], [Total Dry Items], [Total Chiller Items], [WWI City ID], [WWI Customer ID], [WWI Bill To Customer ID], [WWI Stock Item ID], [WWI Saleperson ID], [Last Modified When]) VALUES
     (CAST('2020-06-14' AS date), NULL, 1, N'item 1', N'Each', 4, 2.5, 15, -0.1, 0.15, -0.05, 0.05, 4, 0, 10, 1, 1, 1, 3, CAST('2020-06-15T12:00:00.000000' AS datetime2(7))),
     (CAST('2020-06-14' AS date), NULL, 1, N'item 2', N'Each', 4, 2.5, 15.005, 8.5, 1.55, 3, 10.05, 4, 0, 10, 1, 1, 1, 3, CAST('2020-06-15T12:00:00.000000' AS datetime2(7))),
-    (CAST('2020-06-14' AS date), NULL, 1, N'item 3', N'Each', 4, NULL, 15, 1999999999999.98, -999999999999.99, 3, 999999999999.99, 4, 0, 10, 1, 1, 1, 3, CAST('2020-06-15T12:00:00.000000' AS datetime2(7)));
+    (CAST('2020-06-14' AS date), NULL, 1, N'item 3', N'Each', 4, NULL, 15, 10000000000000, -4999999999999.95, 3, 5000000000000.05, 4, 0, 10, 1, 1, 1, 3, CAST('2020-06-15T12:00:00.000000' AS datetime2(7)));
   INSERT INTO #Actual
   EXEC Integration.GetSaleUpdates @LastCutoff = '2020-06-15T11:00:00.000', @NewCutoff = '2020-06-15T13:00:00.000';
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';

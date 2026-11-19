@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "object": "Purchasing.vVendorWithContacts",
   "database": "AdventureWorks2025",
-  "runAt": "2026-11-19T04:17:09.381Z",
+  "runAt": "2026-11-19T06:17:45.663Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "26672aa5a4dd5bf315f0b412edaa635e50b5c180cb56e0502721f6041934b7e7",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-18T20:21:05-07:00",
+    "at": "2026-11-19T05:51:37.445Z",
     "file": "adversarial/AdventureWorks2025/Purchasing.vVendorWithContacts.cases.json",
-    "sha256": "f3e568ca9d9c78105a3692aeb7585c4ff658a3583243826fb70a6a268c4c8230"
+    "sha256": "3a7a03defe7b19e5e1592c84ac34fd273208fdd1c08165be426b0d2056a01817"
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-18T20:33:12.9525152-07:00",
+    "at": "2026-11-19T06:06:57.652Z",
     "file": "adversarial/AdventureWorks2025/Purchasing.vVendorWithContacts.audit.json",
-    "sha256": "2ec388d97417098709e2d6e0a6de1188db43ca3159b04b63e8453d7ce5d54255"
+    "sha256": "7230fa31a5e1c9123db872acc85d3500b8ea21dcefa10d1f4c6a36ae76bda6bc"
   },
   "sameModel": false,
   "casesAudited": [
@@ -117,11 +117,11 @@
     },
     {
       "id": "A03",
-      "label": "fan-out: a contact with two identical phone rows and an unknown phone type; the same person as contact twice under two types",
+      "label": "fan-out: a contact with the same number under two phone types of one name and an unknown phone type; the same person as contact twice under two types",
       "traps": [
         "top-ties"
       ],
-      "reasoning": "PersonPhone and BusinessEntityContact have no key constraint in the scratch tables, so duplicate rows give duplicate output rows (no DISTINCT). Person 10 is an Owner and a Buyer of vendor 1, with two identical phones and one of type 9 (no PhoneNumberType row: NULL): 2 x 3 = 6 rows.",
+      "reasoning": "PersonPhone keys on (BusinessEntityID, PhoneNumber, PhoneNumberTypeID) and PhoneNumberType keys on PhoneNumberTypeID only, so the same number under types 1 and 2, both named 'Cell', is two valid rows that give two identical output rows; the view has no DISTINCT. Person 10 is an Owner and a Buyer of vendor 1, with two identical phones and one of type 9 (no PhoneNumberType row: NULL): 2 x 3 = 6 rows.",
       "trapChecks": {
         "top-ties": {
           "present": true,
@@ -186,7 +186,12 @@
       "caseId": "A03",
       "kind": "not-an-attack",
       "text": "A03 inserts the identical PersonPhone primary-key tuple (BusinessEntityID 10, PhoneNumber '555-0100', PhoneNumberTypeID 1) twice. The resulting duplicate fan-out cannot occur under the source schema preconditions.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A03 now sends the repeated number under two distinct PhoneNumberTypeID values. Both PersonPhone primary-key tuples are valid, and equal phone-type names retain the identical-row fan-out attack.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     }
   ],
   "mutantAdequacy": {
@@ -200,10 +205,8 @@
     "equivalentRecorded": []
   },
   "gate": {
-    "passed": false,
-    "reasons": [
-      "objection O01 is open"
-    ]
+    "passed": true,
+    "reasons": []
   },
   "wording": "5 adversarial cases ran, 0 differed"
 }

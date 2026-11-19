@@ -7,74 +7,91 @@
 -- Prerequisites: the spec's tables created and the final conversion deployed.
 -- Each case is one transaction and always rolls back.
 
--- @case 1: [A01] SearchName values differing only in case both match; the two rows share PreferredName
+-- @case 1: [A01] SearchName: Cyrillic values differing only in case match a case-insensitive search ('дом' finds 'ДОМ' and 'Дом', not 'дым' or 'ÉCLAIR')
 BEGIN;
 DELETE FROM application.people;
 DELETE FROM sales.customers;
 DELETE FROM purchasing.suppliers;
 INSERT INTO application.people ("PersonID", "FullName", "PreferredName", "IsSalesperson", "IsEmployee", "SearchName") VALUES
-  ('1', 'Q0001', 'Q', '0', '1', 'ab'),
-  ('3', 'Q0003', 'Q', '0', '1', 'AB');
+  ('1', 'Q0001', 'Q', '0', '1', 'дом'),
+  ('2', 'Q0002', 'Q', '0', '1', 'ДОМ'),
+  ('3', 'Q0003', 'Q', '0', '1', 'Дом'),
+  ('4', 'Q0004', 'Q', '0', '1', 'ÉCLAIR'),
+  ('5', 'Q0005', 'Q', '0', '1', 'дым');
+DO $pp$
+DECLARE got jsonb;
+BEGIN
+  SELECT (q.result)::jsonb INTO got FROM (SELECT website.search_for_people('дом'::text, '5'::integer) AS result) AS q;
+  IF got IS DISTINCT FROM '{"People":[{"PersonID":1,"FullName":"Q0001","PreferredName":"Q","Relationship":"Employee","Company":"WWI"},{"PersonID":2,"FullName":"Q0002","PreferredName":"Q","Relationship":"Employee","Company":"WWI"},{"PersonID":3,"FullName":"Q0003","PreferredName":"Q","Relationship":"Employee","Company":"WWI"}]}'::jsonb THEN
+    RAISE EXCEPTION 'agreed test failed (%): the JSON document differs: %', 'test 01 [A01 SearchName: Cyrillic values differing only in case match a case-insensitive search (??? finds ??…', got;
+  END IF;
+END $pp$;
+ROLLBACK;
+
+-- @case 2: [A02] SearchName: a search text ending in a space ('amy ') matches only values with a space after 'amy'
+BEGIN;
+DELETE FROM application.people;
+DELETE FROM sales.customers;
+DELETE FROM purchasing.suppliers;
+INSERT INTO application.people ("PersonID", "FullName", "PreferredName", "IsSalesperson", "IsEmployee", "SearchName") VALUES
+  ('1', 'Q0001', 'Q', '0', '1', 'amy'),
+  ('2', 'Q0002', 'Q', '0', '1', 'amy '),
+  ('3', 'Q0003', 'Q', '0', '1', 'amyx'),
+  ('4', 'Q0004', 'Q', '0', '1', 'amy b');
+DO $pp$
+DECLARE got jsonb;
+BEGIN
+  SELECT (q.result)::jsonb INTO got FROM (SELECT website.search_for_people('amy '::text, '5'::integer) AS result) AS q;
+  IF got IS DISTINCT FROM '{"People":[{"PersonID":2,"FullName":"Q0002","PreferredName":"Q","Relationship":"Employee","Company":"WWI"},{"PersonID":4,"FullName":"Q0004","PreferredName":"Q","Relationship":"Employee","Company":"WWI"}]}'::jsonb THEN
+    RAISE EXCEPTION 'agreed test failed (%): the JSON document differs: %', 'test 02 [A02 SearchName: a search text ending in a space (amy ) matches only values with a space after amy', got;
+  END IF;
+END $pp$;
+ROLLBACK;
+
+-- @case 3: [A03] SearchName: '_' matches a digit, an accented letter and a space, and '[^a-c]' excludes a, b and c in either case ('x_[^a-c]')
+BEGIN;
+DELETE FROM application.people;
+DELETE FROM sales.customers;
+DELETE FROM purchasing.suppliers;
+INSERT INTO application.people ("PersonID", "FullName", "PreferredName", "IsSalesperson", "IsEmployee", "SearchName") VALUES
+  ('1', 'Q0001', 'Q', '0', '1', 'x1d'),
+  ('2', 'Q0002', 'Q', '0', '1', 'xé9'),
+  ('3', 'Q0003', 'Q', '0', '1', 'x d'),
+  ('4', 'Q0004', 'Q', '0', '1', 'xaB'),
+  ('5', 'Q0005', 'Q', '0', '1', 'x1C'),
+  ('6', 'Q0006', 'Q', '0', '1', 'x1');
+DO $pp$
+DECLARE got jsonb;
+BEGIN
+  SELECT (q.result)::jsonb INTO got FROM (SELECT website.search_for_people('x_[^a-c]'::text, '5'::integer) AS result) AS q;
+  IF got IS DISTINCT FROM '{"People":[{"PersonID":1,"FullName":"Q0001","PreferredName":"Q","Relationship":"Employee","Company":"WWI"},{"PersonID":2,"FullName":"Q0002","PreferredName":"Q","Relationship":"Employee","Company":"WWI"},{"PersonID":3,"FullName":"Q0003","PreferredName":"Q","Relationship":"Employee","Company":"WWI"}]}'::jsonb THEN
+    RAISE EXCEPTION 'agreed test failed (%): the JSON document differs: %', 'test 03 [A03 SearchName: _ matches a digit, an accented letter and a space, and [^a-c excludes a, b and c in…', got;
+  END IF;
+END $pp$;
+ROLLBACK;
+
+-- @case 4: [A04] relationship and company for people who are neither salesperson nor employee: customer contact, supplier alternate contact, and no relationship ('WWI')
+BEGIN;
+DELETE FROM application.people;
+DELETE FROM sales.customers;
+DELETE FROM purchasing.suppliers;
+INSERT INTO application.people ("PersonID", "FullName", "PreferredName", "IsSalesperson", "IsEmployee", "SearchName") VALUES
+  ('1', 'Q0001', 'Q', '0', '0', 'ab'),
+  ('2', 'Q0002', 'Q', '0', '0', 'abc'),
+  ('3', 'Q0003', 'Q', '0', '0', 'xab'),
+  ('98', 'Q0098', 'Q', '0', '1', 'zz'),
+  ('99', 'Q0099', 'Q', '0', '1', 'zz');
+INSERT INTO sales.customers ("CustomerID", "CustomerName", "PrimaryContactPersonID") VALUES
+  ('10', 'Cust Ten', '1');
+INSERT INTO purchasing.suppliers ("SupplierID", "SupplierName", "PrimaryContactPersonID", "AlternateContactPersonID") VALUES
+  ('20', 'Sup 20', '99', '1'),
+  ('21', 'Sup 21', '98', '2');
 DO $pp$
 DECLARE got jsonb;
 BEGIN
   SELECT (q.result)::jsonb INTO got FROM (SELECT website.search_for_people('ab'::text, '5'::integer) AS result) AS q;
-  IF got IS DISTINCT FROM '{"People":[{"PersonID":1,"FullName":"Q0001","PreferredName":"Q","Relationship":"Employee","Company":"WWI"},{"PersonID":3,"FullName":"Q0003","PreferredName":"Q","Relationship":"Employee","Company":"WWI"}]}'::jsonb THEN
-    RAISE EXCEPTION 'agreed test failed (%): the JSON document differs: %', 'test 01 [A01 SearchName values differing only in case both match; the two rows share PreferredName', got;
-  END IF;
-END $pp$;
-ROLLBACK;
-
--- @case 2: [A02] a trailing space in SearchName is matched by LIKE '%amy%'
-BEGIN;
-DELETE FROM application.people;
-DELETE FROM sales.customers;
-DELETE FROM purchasing.suppliers;
-INSERT INTO application.people ("PersonID", "FullName", "PreferredName", "IsSalesperson", "IsEmployee", "SearchName") VALUES
-  ('1', 'Q0001', 'Q', '0', '1', 'amy ');
-DO $pp$
-DECLARE got jsonb;
-BEGIN
-  SELECT (q.result)::jsonb INTO got FROM (SELECT website.search_for_people('amy'::text, '5'::integer) AS result) AS q;
-  IF got IS DISTINCT FROM '{"People":[{"PersonID":1,"FullName":"Q0001","PreferredName":"Q","Relationship":"Employee","Company":"WWI"}]}'::jsonb THEN
-    RAISE EXCEPTION 'agreed test failed (%): the JSON document differs: %', 'test 02 [A02 a trailing space in SearchName is matched by LIKE %amy%', got;
-  END IF;
-END $pp$;
-ROLLBACK;
-
--- @case 3: [A03] character class [^a] matches any one character that is not 'a'
-BEGIN;
-DELETE FROM application.people;
-DELETE FROM sales.customers;
-DELETE FROM purchasing.suppliers;
-INSERT INTO application.people ("PersonID", "FullName", "PreferredName", "IsSalesperson", "IsEmployee", "SearchName") VALUES
-  ('1', 'Q0001', 'Q', '0', '1', 'a'),
-  ('2', 'Q0002', 'Q', '0', '1', 'A'),
-  ('3', 'Q0003', 'Q', '0', '1', 'b'),
-  ('4', 'Q0004', 'Q', '0', '1', '');
-DO $pp$
-DECLARE got jsonb;
-BEGIN
-  SELECT (q.result)::jsonb INTO got FROM (SELECT website.search_for_people('[^a]'::text, '5'::integer) AS result) AS q;
-  IF got IS DISTINCT FROM '{"People":[{"PersonID":3,"FullName":"Q0003","PreferredName":"Q","Relationship":"Employee","Company":"WWI"}]}'::jsonb THEN
-    RAISE EXCEPTION 'agreed test failed (%): the JSON document differs: %', 'test 03 [A03 character class [^a matches any one character that is not a', got;
-  END IF;
-END $pp$;
-ROLLBACK;
-
--- @case 4: [A04] relationship precedence: a person flagged both salesperson and employee is reported as 'Salesperson'
-BEGIN;
-DELETE FROM application.people;
-DELETE FROM sales.customers;
-DELETE FROM purchasing.suppliers;
-INSERT INTO application.people ("PersonID", "FullName", "PreferredName", "IsSalesperson", "IsEmployee", "SearchName") VALUES
-  ('1', 'Q0001', 'Q', '1', '1', 'ab');
-DO $pp$
-DECLARE got jsonb;
-BEGIN
-  SELECT (q.result)::jsonb INTO got FROM (SELECT website.search_for_people('ab'::text, '5'::integer) AS result) AS q;
-  IF got IS DISTINCT FROM '{"People":[{"PersonID":1,"FullName":"Q0001","PreferredName":"Q","Relationship":"Salesperson","Company":"WWI"}]}'::jsonb THEN
-    RAISE EXCEPTION 'agreed test failed (%): the JSON document differs: %', 'test 04 [A04 relationship precedence: a person flagged both salesperson and employee is reported as Salespers…', got;
+  IF got IS DISTINCT FROM '{"People":[{"PersonID":1,"FullName":"Q0001","PreferredName":"Q","Relationship":"Customer","Company":"Cust Ten"},{"PersonID":2,"FullName":"Q0002","PreferredName":"Q","Relationship":"Supplier","Company":"Sup 21"},{"PersonID":3,"FullName":"Q0003","PreferredName":"Q","Company":"WWI"}]}'::jsonb THEN
+    RAISE EXCEPTION 'agreed test failed (%): the JSON document differs: %', 'test 04 [A04 relationship and company for people who are neither salesperson nor employee: customer contact,…', got;
   END IF;
 END $pp$;
 ROLLBACK;

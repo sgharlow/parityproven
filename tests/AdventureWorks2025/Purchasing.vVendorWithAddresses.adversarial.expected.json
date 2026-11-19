@@ -2,11 +2,11 @@
   "object": "Purchasing.vVendorWithAddresses",
   "database": "AdventureWorks2025",
   "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
-  "capturedAt": "2026-11-19T04:16:53.644Z",
+  "capturedAt": "2026-11-19T06:17:25.501Z",
   "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
   "cases": [
     {
-      "label": "[A01] case-only variants 'Us', 'uS' and 'us ' of a country code join 'US'",
+      "label": "[A01] case pairs outside ASCII ('üs' to 'ÜS', 'σa' to 'ΣA') and case plus a trailing space on the country side ('CA' to 'ca ')",
       "columns": [
         {
           "name": "BusinessEntityID",
@@ -55,7 +55,7 @@
           "s:Bothell",
           "s:Province 1",
           "s:98011",
-          "s:United States"
+          "s:Country Ü"
         ],
         [
           "n:2",
@@ -66,7 +66,7 @@
           "s:Bothell",
           "s:Province 2",
           "s:98011",
-          "s:United States"
+          "s:Country Σ"
         ],
         [
           "n:3",
@@ -77,7 +77,7 @@
           "s:Bothell",
           "s:Province 3",
           "s:98011",
-          "s:United States"
+          "s:Country ca"
         ]
       ]
     },
@@ -483,7 +483,7 @@
       ]
     },
     {
-      "label": "[A08] one address used twice by a vendor under two address types, a duplicate BusinessEntityAddress row, and an address type of another case",
+      "label": "[A08] one address used by a vendor under two address types and by a second vendor; a vendor name that differs only in case from an address type",
       "columns": [
         {
           "name": "BusinessEntityID",
@@ -537,7 +537,7 @@
         [
           "n:1",
           "s:Vendor 1",
-          "s:SHIPPING",
+          "s:Billing",
           "s:1 Main St",
           "∅",
           "s:Bothell",
@@ -546,9 +546,9 @@
           "s:United States"
         ],
         [
-          "n:1",
-          "s:Vendor 1",
-          "s:SHIPPING",
+          "n:2",
+          "s:shipping",
+          "s:Shipping",
           "s:1 Main St",
           "∅",
           "s:Bothell",
@@ -620,6 +620,60 @@
           "s:Nordrhein-Westfalen",
           "s:98011",
           "s:Germany"
+        ]
+      ]
+    },
+    {
+      "label": "[A10] a vendor address whose address type has no AddressType row is dropped by the inner join",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Name",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AddressType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AddressLine1",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "AddressLine2",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "City",
+          "sqlServerType": "nvarchar(30)"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PostalCode",
+          "sqlServerType": "nvarchar(15)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:Vendor 1",
+          "s:Main Office",
+          "s:1 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 1",
+          "s:98011",
+          "s:United States"
         ]
       ]
     }

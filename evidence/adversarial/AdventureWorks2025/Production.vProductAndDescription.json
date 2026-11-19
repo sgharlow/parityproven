@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "object": "Production.vProductAndDescription",
   "database": "AdventureWorks2025",
-  "runAt": "2026-11-19T04:16:49.738Z",
+  "runAt": "2026-11-19T06:17:18.498Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "b04818b79472d8adae28766cf48e97d95761a9b57595cc0d347097766e317a7a",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-18T20:21:05-07:00",
+    "at": "2026-11-19T05:51:37.445Z",
     "file": "adversarial/AdventureWorks2025/Production.vProductAndDescription.cases.json",
-    "sha256": "3023758368920b2e4fdd68fd322ed5fda4e93435ee0fb25c814316d8c816db3d"
+    "sha256": "38d5e370e2775787367d83f8298680071050ee1c154f9682d47a5bfc5fa697c3"
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-18T20:33:12.9525152-07:00",
+    "at": "2026-11-19T06:06:57.652Z",
     "file": "adversarial/AdventureWorks2025/Production.vProductAndDescription.audit.json",
-    "sha256": "fc4f439fe03600ee55798e628ed595348a60e1d9a4e492476a486f09579746b1"
+    "sha256": "b781f68be7e5cc46e4fac9443c8264f10e60c82263a6869f85463c3e3b43d769"
   },
   "sameModel": false,
   "casesAudited": [
@@ -75,7 +75,7 @@
         "collation-case",
         "trailing-spaces"
       ],
-      "reasoning": "CultureID is nchar(6) and not compared in the view. 'en' and 'EN' are two rows with their own spelling; 'en ' pads to the same value as 'en' (six characters) on both engines; '' pads to six spaces. The scratch table has no key on the culture rows, so case-insensitive duplicates load on both engines.",
+      "reasoning": "CultureID is nchar(6) and not compared in the view. 'en' and 'EN' are two rows with their own spelling, on different descriptions because the source key (ProductModelID, ProductDescriptionID, CultureID) is case-insensitive; 'en ' pads to the same value as 'en' (six characters) on both engines; '' pads to six spaces.",
       "trapChecks": {
         "collation-case": {
           "present": true,
@@ -119,11 +119,11 @@
     },
     {
       "id": "A03",
-      "label": "an empty description and names that differ only in case: '' kept, not NULL; 'Chain' and 'CHAIN' are two products",
+      "label": "an empty description, and product and model names that differ only in case from each other: '' kept, not NULL",
       "traps": [
         "collation-case"
       ],
-      "reasoning": "Every text column is NOT NULL, so '' is the only empty value; it must not become NULL. Product names 'Chain' and 'CHAIN' and model names 'Road' and 'ROAD' are passed through unchanged.",
+      "reasoning": "Every text column is NOT NULL, so '' is the only empty value; it must not become NULL. Product names and model names are each unique in the source, so the case-only pairs are across the two tables: product 'Chain' on model 'CHAIN', product 'road' on model 'Road'. The view compares no text; both spellings are passed through unchanged.",
       "trapChecks": {
         "collation-case": {
           "present": true,
@@ -141,15 +141,15 @@
     },
     {
       "id": "A04",
-      "label": "duplicate culture rows and two products on one model: rows multiply (2 products x 3 culture rows), duplicates kept",
+      "label": "two descriptions with the same text in one culture and two products on one model: rows multiply (2 products x 3 culture rows), identical rows kept",
       "traps": [
         "top-ties"
       ],
-      "reasoning": "The same culture row twice gives two identical rows per product (no DISTINCT, no key in the scratch table); two products of one model fan out over all its culture rows. Compared as a multiset.",
+      "reasoning": "The view does not return ProductDescriptionID, so descriptions 1 and 3, both 'same' and both in culture 'en', give two identical rows per product from distinct source keys; there is no DISTINCT. Two products (distinct names, as the source requires) of one model fan out over all its culture rows. Compared as a multiset.",
       "trapChecks": {
         "top-ties": {
           "present": true,
-          "detail": "two rows of Production.Product share Name = \"Bike\""
+          "detail": "two rows of Production.Product share ProductModelID = 1"
         }
       },
       "status": "ran",
@@ -195,21 +195,36 @@
       "caseId": "A01",
       "kind": "not-an-attack",
       "text": "The rows (ProductModelID 1, ProductDescriptionID 1, CultureID 'en') and the same tuple with CultureID 'EN' collide under the source case-insensitive composite primary key; nchar padding also applies. Both rows cannot coexist under the source schema preconditions.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A01 now assigns 'en' and 'EN' to different ProductDescriptionID values, so the composite keys are distinct while both stored culture spellings are projected.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O02",
       "caseId": "A03",
       "kind": "not-an-attack",
       "text": "Product names 'Chain' and 'CHAIN' collide under the source case-insensitive unique key on Product.Name, and model names 'Road' and 'ROAD' collide under the corresponding ProductModel.Name key. The case-only rows cannot coexist in source data.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A03 now places each case-only pair across Product.Name and ProductModel.Name rather than within one uniquely constrained column. Product names and model names are each unique under the source collation.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O03",
       "caseId": "A04",
       "kind": "not-an-attack",
       "text": "A04 duplicates the exact ProductModelProductDescriptionCulture primary-key tuple (1, 1, 'en'), and the two products both use Name 'Bike' despite the source unique key on Product.Name. The claimed duplicate fan-out input is outside the source schema preconditions.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A04 now uses distinct product names and distinct description ids for the equal description text. Every culture bridge key is distinct, while two descriptions still project identical rows per product.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     }
   ],
   "mutantAdequacy": {
@@ -223,12 +238,8 @@
     "equivalentRecorded": []
   },
   "gate": {
-    "passed": false,
-    "reasons": [
-      "objection O01 is open",
-      "objection O02 is open",
-      "objection O03 is open"
-    ]
+    "passed": true,
+    "reasons": []
   },
   "wording": "5 adversarial cases ran, 0 differed"
 }

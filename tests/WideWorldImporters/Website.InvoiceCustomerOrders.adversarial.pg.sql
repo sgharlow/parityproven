@@ -7,7 +7,7 @@
 -- Prerequisites: the spec's tables created and the final conversion deployed.
 -- Each case is one transaction and always rolls back.
 
--- @case 1: [A01] tax and line amounts round half away from zero: 3 x 0.95 x 0.505 % = 0.01438875 -> 0.01
+-- @case 1: [A01] tax amount at an exact half cent: 1 x 0.25 x 50 % = 0.125 -> 0.13 (half away from zero; banker's rounding and truncation give 0.12)
 BEGIN;
 DELETE FROM sales.orders;
 DELETE FROM sales.order_lines;
@@ -23,7 +23,7 @@ INSERT INTO sales.orders ("OrderID", "CustomerID", "ContactPersonID", "Salespers
   ('1', '1', '3', '7', 'PO-1', '2020-01-01 10:00:00.000000'),
   ('2', '2', '4', '8', NULL, '2020-01-01 10:00:00.000000');
 INSERT INTO sales.order_lines ("OrderLineID", "OrderID", "StockItemID", "Description", "PackageTypeID", "PickedQuantity", "UnitPrice", "TaxRate") VALUES
-  ('1', '1', '1', 'dry', '7', '3', '0.95', '0.505'),
+  ('1', '1', '1', 'dry', '7', '1', '0.25', '50.000'),
   ('2', '1', '2', 'chilled', '9', '2', '10.00', '15.000'),
   ('3', '2', '1', 'dry', '7', '1', '5.55', '10.000');
 INSERT INTO warehouse.stock_items ("StockItemID", "IsChillerStock") VALUES
@@ -58,7 +58,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT 'completed'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'completed'::text AS outcome)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 01 [A01 tax and line amounts round half away from zero: 3 x 0.95 x 0.505 % = 0.01438875 -> 0.01', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 01 [A01 tax amount at an exact half cent: 1 x 0.25 x 50 % = 0.125 -> 0.13 (half away from zero; bankers…', missing, extra;
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_actual_query_1 ON COMMIT DROP AS
@@ -81,7 +81,7 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_1'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['OrderID', 'Invoice', 'CustomerID', 'BillToCustomerID', 'DeliveryMethodID', 'ContactPersonID', 'AccountsPersonID', 'SalespersonPersonID', 'PackedByPersonID', 'InvoiceDate_now', 'InvoiceDate', 'CustomerPurchaseOrderNumber', 'IsCreditNote', 'CreditNoteReason', 'Comments', 'DeliveryInstructions', 'InternalComments', 'TotalDryItems', 'TotalChillerItems', 'DeliveryRun', 'RunPosition', 'ReturnedDeliveryData', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 01 [A01 tax and line amounts round half away from zero: 3 x 0.95 x 0.505 % = 0.01438875 -> 0.01', got, ARRAY['OrderID', 'Invoice', 'CustomerID', 'BillToCustomerID', 'DeliveryMethodID', 'ContactPersonID', 'AccountsPersonID', 'SalespersonPersonID', 'PackedByPersonID', 'InvoiceDate_now', 'InvoiceDate', 'CustomerPurchaseOrderNumber', 'IsCreditNote', 'CreditNoteReason', 'Comments', 'DeliveryInstructions', 'InternalComments', 'TotalDryItems', 'TotalChillerItems', 'DeliveryRun', 'RunPosition', 'ReturnedDeliveryData', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 01 [A01 tax amount at an exact half cent: 1 x 0.25 x 50 % = 0.125 -> 0.13 (half away from zero; bankers…', got, ARRAY['OrderID', 'Invoice', 'CustomerID', 'BillToCustomerID', 'DeliveryMethodID', 'ContactPersonID', 'AccountsPersonID', 'SalespersonPersonID', 'PackedByPersonID', 'InvoiceDate_now', 'InvoiceDate', 'CustomerPurchaseOrderNumber', 'IsCreditNote', 'CreditNoteReason', 'Comments', 'DeliveryInstructions', 'InternalComments', 'TotalDryItems', 'TotalChillerItems', 'DeliveryRun', 'RunPosition', 'ReturnedDeliveryData', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected_query_1 (LIKE pp_actual_query_1) ON COMMIT DROP;
@@ -93,7 +93,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_1) EXCEPT ALL (SELECT * FROM pp_actual_query_1)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_1) EXCEPT ALL (SELECT * FROM pp_expected_query_1)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in invoices', 'test 01 [A01 tax and line amounts round half away from zero: 3 x 0.95 x 0.505 % = 0.01438875 -> 0.01', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in invoices', 'test 01 [A01 tax amount at an exact half cent: 1 x 0.25 x 50 % = 0.125 -> 0.13 (half away from zero; bankers…', missing, extra;
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_actual_query_2 ON COMMIT DROP AS
@@ -105,12 +105,12 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_2'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['InvoiceOrder', 'StockItemID', 'Description', 'PackageTypeID', 'Quantity', 'UnitPrice', 'TaxRate', 'TaxAmount', 'LineProfit', 'ExtendedPrice', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 01 [A01 tax and line amounts round half away from zero: 3 x 0.95 x 0.505 % = 0.01438875 -> 0.01', got, ARRAY['InvoiceOrder', 'StockItemID', 'Description', 'PackageTypeID', 'Quantity', 'UnitPrice', 'TaxRate', 'TaxAmount', 'LineProfit', 'ExtendedPrice', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 01 [A01 tax amount at an exact half cent: 1 x 0.25 x 50 % = 0.125 -> 0.13 (half away from zero; bankers…', got, ARRAY['InvoiceOrder', 'StockItemID', 'Description', 'PackageTypeID', 'Quantity', 'UnitPrice', 'TaxRate', 'TaxAmount', 'LineProfit', 'ExtendedPrice', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected_query_2 (LIKE pp_actual_query_2) ON COMMIT DROP;
 INSERT INTO pp_expected_query_2 VALUES
-  ('1', '1', 'dry', '7', '3', '0.95', '0.505', '0.01', '1.35', '2.86', '9', 'now', NULL),
+  ('1', '1', 'dry', '7', '1', '0.25', '50', '0.13', '-0.25', '0.38', '9', 'now', NULL),
   ('1', '2', 'chilled', '9', '2', '10', '15', '3', '8', '23', '9', 'now', NULL);
 DO $pp$
 DECLARE missing bigint; extra bigint;
@@ -118,7 +118,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_2) EXCEPT ALL (SELECT * FROM pp_actual_query_2)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_2) EXCEPT ALL (SELECT * FROM pp_expected_query_2)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in invoice lines, by their invoice''s order', 'test 01 [A01 tax and line amounts round half away from zero: 3 x 0.95 x 0.505 % = 0.01438875 -> 0.01', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in invoice lines, by their invoice''s order', 'test 01 [A01 tax amount at an exact half cent: 1 x 0.25 x 50 % = 0.125 -> 0.13 (half away from zero; bankers…', missing, extra;
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_actual_query_3 ON COMMIT DROP AS
@@ -130,12 +130,12 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_3'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['InvoiceOrder', 'StockItemID', 'TransactionTypeID', 'CustomerID', 'SupplierID', 'PurchaseOrderID', 'TransactionOccurredWhen_now', 'TransactionOccurredWhen', 'Quantity', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 01 [A01 tax and line amounts round half away from zero: 3 x 0.95 x 0.505 % = 0.01438875 -> 0.01', got, ARRAY['InvoiceOrder', 'StockItemID', 'TransactionTypeID', 'CustomerID', 'SupplierID', 'PurchaseOrderID', 'TransactionOccurredWhen_now', 'TransactionOccurredWhen', 'Quantity', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 01 [A01 tax amount at an exact half cent: 1 x 0.25 x 50 % = 0.125 -> 0.13 (half away from zero; bankers…', got, ARRAY['InvoiceOrder', 'StockItemID', 'TransactionTypeID', 'CustomerID', 'SupplierID', 'PurchaseOrderID', 'TransactionOccurredWhen_now', 'TransactionOccurredWhen', 'Quantity', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected_query_3 (LIKE pp_actual_query_3) ON COMMIT DROP;
 INSERT INTO pp_expected_query_3 VALUES
-  ('1', '1', '10', '1', NULL, NULL, 'now', NULL, '-3', '9', 'now', NULL),
+  ('1', '1', '10', '1', NULL, NULL, 'now', NULL, '-1', '9', 'now', NULL),
   ('1', '2', '10', '1', NULL, NULL, 'now', NULL, '-2', '9', 'now', NULL);
 DO $pp$
 DECLARE missing bigint; extra bigint;
@@ -143,7 +143,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_3) EXCEPT ALL (SELECT * FROM pp_actual_query_3)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_3) EXCEPT ALL (SELECT * FROM pp_expected_query_3)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in stock transactions, by their invoice''s order', 'test 01 [A01 tax and line amounts round half away from zero: 3 x 0.95 x 0.505 % = 0.01438875 -> 0.01', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in stock transactions, by their invoice''s order', 'test 01 [A01 tax amount at an exact half cent: 1 x 0.25 x 50 % = 0.125 -> 0.13 (half away from zero; bankers…', missing, extra;
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_actual_query_4 ON COMMIT DROP AS
@@ -156,19 +156,19 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_4'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['InvoiceOrder', 'CustomerID', 'TransactionTypeID', 'PaymentMethodID', 'TransactionDate_now', 'TransactionDate', 'AmountExcludingTax', 'TaxAmount', 'TransactionAmount', 'OutstandingBalance', 'FinalizationDate', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 01 [A01 tax and line amounts round half away from zero: 3 x 0.95 x 0.505 % = 0.01438875 -> 0.01', got, ARRAY['InvoiceOrder', 'CustomerID', 'TransactionTypeID', 'PaymentMethodID', 'TransactionDate_now', 'TransactionDate', 'AmountExcludingTax', 'TaxAmount', 'TransactionAmount', 'OutstandingBalance', 'FinalizationDate', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 01 [A01 tax amount at an exact half cent: 1 x 0.25 x 50 % = 0.125 -> 0.13 (half away from zero; bankers…', got, ARRAY['InvoiceOrder', 'CustomerID', 'TransactionTypeID', 'PaymentMethodID', 'TransactionDate_now', 'TransactionDate', 'AmountExcludingTax', 'TaxAmount', 'TransactionAmount', 'OutstandingBalance', 'FinalizationDate', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected_query_4 (LIKE pp_actual_query_4) ON COMMIT DROP;
 INSERT INTO pp_expected_query_4 VALUES
-  ('1', '2', '1', NULL, 'today', NULL, '22.85', '3.01', '25.86', '25.86', NULL, '9', 'now', NULL);
+  ('1', '2', '1', NULL, 'today', NULL, '20.25', '3.13', '23.38', '23.38', NULL, '9', 'now', NULL);
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_4) EXCEPT ALL (SELECT * FROM pp_actual_query_4)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_4) EXCEPT ALL (SELECT * FROM pp_expected_query_4)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in customer transactions, by their invoice''s order', 'test 01 [A01 tax and line amounts round half away from zero: 3 x 0.95 x 0.505 % = 0.01438875 -> 0.01', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in customer transactions, by their invoice''s order', 'test 01 [A01 tax amount at an exact half cent: 1 x 0.25 x 50 % = 0.125 -> 0.13 (half away from zero; bankers…', missing, extra;
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_actual_query_5 ON COMMIT DROP AS
@@ -178,12 +178,12 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_5'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['StockItemID', 'QuantityOnHand', 'LastCostPrice', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 01 [A01 tax and line amounts round half away from zero: 3 x 0.95 x 0.505 % = 0.01438875 -> 0.01', got, ARRAY['StockItemID', 'QuantityOnHand', 'LastCostPrice', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 01 [A01 tax amount at an exact half cent: 1 x 0.25 x 50 % = 0.125 -> 0.13 (half away from zero; bankers…', got, ARRAY['StockItemID', 'QuantityOnHand', 'LastCostPrice', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected_query_5 (LIKE pp_actual_query_5) ON COMMIT DROP;
 INSERT INTO pp_expected_query_5 VALUES
-  ('1', '97', '0.5', '9', 'now', NULL),
+  ('1', '99', '0.5', '9', 'now', NULL),
   ('2', '8', '6', '9', 'now', NULL);
 DO $pp$
 DECLARE missing bigint; extra bigint;
@@ -191,7 +191,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_5) EXCEPT ALL (SELECT * FROM pp_actual_query_5)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_5) EXCEPT ALL (SELECT * FROM pp_expected_query_5)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in stock holdings', 'test 01 [A01 tax and line amounts round half away from zero: 3 x 0.95 x 0.505 % = 0.01438875 -> 0.01', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in stock holdings', 'test 01 [A01 tax amount at an exact half cent: 1 x 0.25 x 50 % = 0.125 -> 0.13 (half away from zero; bankers…', missing, extra;
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_actual_query_6 ON COMMIT DROP AS
@@ -204,7 +204,7 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_6'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['Invoices', 'DistinctIDs', 'InRange']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 01 [A01 tax and line amounts round half away from zero: 3 x 0.95 x 0.505 % = 0.01438875 -> 0.01', got, ARRAY['Invoices', 'DistinctIDs', 'InRange']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 01 [A01 tax amount at an exact half cent: 1 x 0.25 x 50 % = 0.125 -> 0.13 (half away from zero; bankers…', got, ARRAY['Invoices', 'DistinctIDs', 'InRange']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected_query_6 (LIKE pp_actual_query_6) ON COMMIT DROP;
@@ -216,7 +216,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_6) EXCEPT ALL (SELECT * FROM pp_actual_query_6)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_6) EXCEPT ALL (SELECT * FROM pp_expected_query_6)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in invoice IDs used', 'test 01 [A01 tax and line amounts round half away from zero: 3 x 0.95 x 0.505 % = 0.01438875 -> 0.01', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in invoice IDs used', 'test 01 [A01 tax amount at an exact half cent: 1 x 0.25 x 50 % = 0.125 -> 0.13 (half away from zero; bankers…', missing, extra;
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_actual_query_7 ON COMMIT DROP AS
@@ -226,7 +226,7 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_7'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['NextInvoiceID']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 01 [A01 tax and line amounts round half away from zero: 3 x 0.95 x 0.505 % = 0.01438875 -> 0.01', got, ARRAY['NextInvoiceID']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 01 [A01 tax amount at an exact half cent: 1 x 0.25 x 50 % = 0.125 -> 0.13 (half away from zero; bankers…', got, ARRAY['NextInvoiceID']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected_query_7 (LIKE pp_actual_query_7) ON COMMIT DROP;
@@ -238,7 +238,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_7) EXCEPT ALL (SELECT * FROM pp_actual_query_7)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_7) EXCEPT ALL (SELECT * FROM pp_expected_query_7)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in next invoice ID', 'test 01 [A01 tax and line amounts round half away from zero: 3 x 0.95 x 0.505 % = 0.01438875 -> 0.01', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in next invoice ID', 'test 01 [A01 tax amount at an exact half cent: 1 x 0.25 x 50 % = 0.125 -> 0.13 (half away from zero; bankers…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;
@@ -479,7 +479,7 @@ BEGIN
 END $pp$;
 ROLLBACK;
 
--- @case 3: [A03] empty DeliveryAddressLine1 with NULL DeliveryAddressLine2 makes DeliveryInstructions NULL (+ semantics)
+-- @case 3: [A03] an empty DeliveryAddressLine1 with a line 2 gives ', Back door'; a NULL line 2 on the other customer makes its instructions NULL
 BEGIN;
 DELETE FROM sales.orders;
 DELETE FROM sales.order_lines;
@@ -505,7 +505,7 @@ INSERT INTO warehouse.stock_item_holdings ("StockItemID", "QuantityOnHand", "Las
   ('1', '100', '0.50', '1', '2020-01-01 00:00:00.000000'),
   ('2', '10', '6.00', '1', '2020-01-01 00:00:00.000000');
 INSERT INTO sales.customers ("CustomerID", "BillToCustomerID", "DeliveryMethodID", "PrimaryContactPersonID", "DeliveryAddressLine1", "DeliveryAddressLine2", "DeliveryRun", "RunPosition") VALUES
-  ('1', '2', '3', '11', '', NULL, 'A', '1'),
+  ('1', '2', '3', '11', '', 'Back door', 'A', '1'),
   ('2', '2', '3', '12', 'Unit 5', NULL, NULL, NULL);
 INSERT INTO application.transaction_types ("TransactionTypeID", "TransactionTypeName") VALUES
   ('1', 'Customer Invoice'),
@@ -530,7 +530,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT 'completed'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'completed'::text AS outcome)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 03 [A03 empty DeliveryAddressLine1 with NULL DeliveryAddressLine2 makes DeliveryInstructions NULL (+ sem…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 03 [A03 an empty DeliveryAddressLine1 with a line 2 gives , Back door; a NULL line 2 on the other custom…', missing, extra;
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_actual_query_1 ON COMMIT DROP AS
@@ -553,19 +553,19 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_1'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['OrderID', 'Invoice', 'CustomerID', 'BillToCustomerID', 'DeliveryMethodID', 'ContactPersonID', 'AccountsPersonID', 'SalespersonPersonID', 'PackedByPersonID', 'InvoiceDate_now', 'InvoiceDate', 'CustomerPurchaseOrderNumber', 'IsCreditNote', 'CreditNoteReason', 'Comments', 'DeliveryInstructions', 'InternalComments', 'TotalDryItems', 'TotalChillerItems', 'DeliveryRun', 'RunPosition', 'ReturnedDeliveryData', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 03 [A03 empty DeliveryAddressLine1 with NULL DeliveryAddressLine2 makes DeliveryInstructions NULL (+ sem…', got, ARRAY['OrderID', 'Invoice', 'CustomerID', 'BillToCustomerID', 'DeliveryMethodID', 'ContactPersonID', 'AccountsPersonID', 'SalespersonPersonID', 'PackedByPersonID', 'InvoiceDate_now', 'InvoiceDate', 'CustomerPurchaseOrderNumber', 'IsCreditNote', 'CreditNoteReason', 'Comments', 'DeliveryInstructions', 'InternalComments', 'TotalDryItems', 'TotalChillerItems', 'DeliveryRun', 'RunPosition', 'ReturnedDeliveryData', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 03 [A03 an empty DeliveryAddressLine1 with a line 2 gives , Back door; a NULL line 2 on the other custom…', got, ARRAY['OrderID', 'Invoice', 'CustomerID', 'BillToCustomerID', 'DeliveryMethodID', 'ContactPersonID', 'AccountsPersonID', 'SalespersonPersonID', 'PackedByPersonID', 'InvoiceDate_now', 'InvoiceDate', 'CustomerPurchaseOrderNumber', 'IsCreditNote', 'CreditNoteReason', 'Comments', 'DeliveryInstructions', 'InternalComments', 'TotalDryItems', 'TotalChillerItems', 'DeliveryRun', 'RunPosition', 'ReturnedDeliveryData', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected_query_1 (LIKE pp_actual_query_1) ON COMMIT DROP;
 INSERT INTO pp_expected_query_1 VALUES
-  ('1', 'new', '1', '2', '3', '3', '12', '7', '5', 'today', NULL, 'PO-1', '0', NULL, NULL, NULL, NULL, '1', '1', 'A', '1', '{"Events": [{ "Event":"Ready for collection","EventTime":"<call time, 20 chars, ends .>","ConNote":"EAN-125-<InvoiceID + 1050>"}]}', '9', 'now', NULL);
+  ('1', 'new', '1', '2', '3', '3', '12', '7', '5', 'today', NULL, 'PO-1', '0', NULL, NULL, ', Back door', NULL, '1', '1', 'A', '1', '{"Events": [{ "Event":"Ready for collection","EventTime":"<call time, 20 chars, ends .>","ConNote":"EAN-125-<InvoiceID + 1050>"}]}', '9', 'now', NULL);
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_1) EXCEPT ALL (SELECT * FROM pp_actual_query_1)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_1) EXCEPT ALL (SELECT * FROM pp_expected_query_1)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in invoices', 'test 03 [A03 empty DeliveryAddressLine1 with NULL DeliveryAddressLine2 makes DeliveryInstructions NULL (+ sem…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in invoices', 'test 03 [A03 an empty DeliveryAddressLine1 with a line 2 gives , Back door; a NULL line 2 on the other custom…', missing, extra;
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_actual_query_2 ON COMMIT DROP AS
@@ -577,7 +577,7 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_2'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['InvoiceOrder', 'StockItemID', 'Description', 'PackageTypeID', 'Quantity', 'UnitPrice', 'TaxRate', 'TaxAmount', 'LineProfit', 'ExtendedPrice', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 03 [A03 empty DeliveryAddressLine1 with NULL DeliveryAddressLine2 makes DeliveryInstructions NULL (+ sem…', got, ARRAY['InvoiceOrder', 'StockItemID', 'Description', 'PackageTypeID', 'Quantity', 'UnitPrice', 'TaxRate', 'TaxAmount', 'LineProfit', 'ExtendedPrice', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 03 [A03 an empty DeliveryAddressLine1 with a line 2 gives , Back door; a NULL line 2 on the other custom…', got, ARRAY['InvoiceOrder', 'StockItemID', 'Description', 'PackageTypeID', 'Quantity', 'UnitPrice', 'TaxRate', 'TaxAmount', 'LineProfit', 'ExtendedPrice', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected_query_2 (LIKE pp_actual_query_2) ON COMMIT DROP;
@@ -590,7 +590,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_2) EXCEPT ALL (SELECT * FROM pp_actual_query_2)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_2) EXCEPT ALL (SELECT * FROM pp_expected_query_2)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in invoice lines, by their invoice''s order', 'test 03 [A03 empty DeliveryAddressLine1 with NULL DeliveryAddressLine2 makes DeliveryInstructions NULL (+ sem…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in invoice lines, by their invoice''s order', 'test 03 [A03 an empty DeliveryAddressLine1 with a line 2 gives , Back door; a NULL line 2 on the other custom…', missing, extra;
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_actual_query_3 ON COMMIT DROP AS
@@ -602,7 +602,7 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_3'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['InvoiceOrder', 'StockItemID', 'TransactionTypeID', 'CustomerID', 'SupplierID', 'PurchaseOrderID', 'TransactionOccurredWhen_now', 'TransactionOccurredWhen', 'Quantity', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 03 [A03 empty DeliveryAddressLine1 with NULL DeliveryAddressLine2 makes DeliveryInstructions NULL (+ sem…', got, ARRAY['InvoiceOrder', 'StockItemID', 'TransactionTypeID', 'CustomerID', 'SupplierID', 'PurchaseOrderID', 'TransactionOccurredWhen_now', 'TransactionOccurredWhen', 'Quantity', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 03 [A03 an empty DeliveryAddressLine1 with a line 2 gives , Back door; a NULL line 2 on the other custom…', got, ARRAY['InvoiceOrder', 'StockItemID', 'TransactionTypeID', 'CustomerID', 'SupplierID', 'PurchaseOrderID', 'TransactionOccurredWhen_now', 'TransactionOccurredWhen', 'Quantity', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected_query_3 (LIKE pp_actual_query_3) ON COMMIT DROP;
@@ -615,7 +615,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_3) EXCEPT ALL (SELECT * FROM pp_actual_query_3)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_3) EXCEPT ALL (SELECT * FROM pp_expected_query_3)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in stock transactions, by their invoice''s order', 'test 03 [A03 empty DeliveryAddressLine1 with NULL DeliveryAddressLine2 makes DeliveryInstructions NULL (+ sem…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in stock transactions, by their invoice''s order', 'test 03 [A03 an empty DeliveryAddressLine1 with a line 2 gives , Back door; a NULL line 2 on the other custom…', missing, extra;
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_actual_query_4 ON COMMIT DROP AS
@@ -628,7 +628,7 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_4'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['InvoiceOrder', 'CustomerID', 'TransactionTypeID', 'PaymentMethodID', 'TransactionDate_now', 'TransactionDate', 'AmountExcludingTax', 'TaxAmount', 'TransactionAmount', 'OutstandingBalance', 'FinalizationDate', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 03 [A03 empty DeliveryAddressLine1 with NULL DeliveryAddressLine2 makes DeliveryInstructions NULL (+ sem…', got, ARRAY['InvoiceOrder', 'CustomerID', 'TransactionTypeID', 'PaymentMethodID', 'TransactionDate_now', 'TransactionDate', 'AmountExcludingTax', 'TaxAmount', 'TransactionAmount', 'OutstandingBalance', 'FinalizationDate', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 03 [A03 an empty DeliveryAddressLine1 with a line 2 gives , Back door; a NULL line 2 on the other custom…', got, ARRAY['InvoiceOrder', 'CustomerID', 'TransactionTypeID', 'PaymentMethodID', 'TransactionDate_now', 'TransactionDate', 'AmountExcludingTax', 'TaxAmount', 'TransactionAmount', 'OutstandingBalance', 'FinalizationDate', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected_query_4 (LIKE pp_actual_query_4) ON COMMIT DROP;
@@ -640,7 +640,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_4) EXCEPT ALL (SELECT * FROM pp_actual_query_4)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_4) EXCEPT ALL (SELECT * FROM pp_expected_query_4)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in customer transactions, by their invoice''s order', 'test 03 [A03 empty DeliveryAddressLine1 with NULL DeliveryAddressLine2 makes DeliveryInstructions NULL (+ sem…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in customer transactions, by their invoice''s order', 'test 03 [A03 an empty DeliveryAddressLine1 with a line 2 gives , Back door; a NULL line 2 on the other custom…', missing, extra;
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_actual_query_5 ON COMMIT DROP AS
@@ -650,7 +650,7 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_5'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['StockItemID', 'QuantityOnHand', 'LastCostPrice', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 03 [A03 empty DeliveryAddressLine1 with NULL DeliveryAddressLine2 makes DeliveryInstructions NULL (+ sem…', got, ARRAY['StockItemID', 'QuantityOnHand', 'LastCostPrice', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 03 [A03 an empty DeliveryAddressLine1 with a line 2 gives , Back door; a NULL line 2 on the other custom…', got, ARRAY['StockItemID', 'QuantityOnHand', 'LastCostPrice', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected_query_5 (LIKE pp_actual_query_5) ON COMMIT DROP;
@@ -663,7 +663,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_5) EXCEPT ALL (SELECT * FROM pp_actual_query_5)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_5) EXCEPT ALL (SELECT * FROM pp_expected_query_5)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in stock holdings', 'test 03 [A03 empty DeliveryAddressLine1 with NULL DeliveryAddressLine2 makes DeliveryInstructions NULL (+ sem…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in stock holdings', 'test 03 [A03 an empty DeliveryAddressLine1 with a line 2 gives , Back door; a NULL line 2 on the other custom…', missing, extra;
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_actual_query_6 ON COMMIT DROP AS
@@ -676,7 +676,7 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_6'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['Invoices', 'DistinctIDs', 'InRange']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 03 [A03 empty DeliveryAddressLine1 with NULL DeliveryAddressLine2 makes DeliveryInstructions NULL (+ sem…', got, ARRAY['Invoices', 'DistinctIDs', 'InRange']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 03 [A03 an empty DeliveryAddressLine1 with a line 2 gives , Back door; a NULL line 2 on the other custom…', got, ARRAY['Invoices', 'DistinctIDs', 'InRange']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected_query_6 (LIKE pp_actual_query_6) ON COMMIT DROP;
@@ -688,7 +688,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_6) EXCEPT ALL (SELECT * FROM pp_actual_query_6)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_6) EXCEPT ALL (SELECT * FROM pp_expected_query_6)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in invoice IDs used', 'test 03 [A03 empty DeliveryAddressLine1 with NULL DeliveryAddressLine2 makes DeliveryInstructions NULL (+ sem…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in invoice IDs used', 'test 03 [A03 an empty DeliveryAddressLine1 with a line 2 gives , Back door; a NULL line 2 on the other custom…', missing, extra;
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_actual_query_7 ON COMMIT DROP AS
@@ -698,7 +698,7 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_7'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['NextInvoiceID']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 03 [A03 empty DeliveryAddressLine1 with NULL DeliveryAddressLine2 makes DeliveryInstructions NULL (+ sem…', got, ARRAY['NextInvoiceID']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 03 [A03 an empty DeliveryAddressLine1 with a line 2 gives , Back door; a NULL line 2 on the other custom…', got, ARRAY['NextInvoiceID']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected_query_7 (LIKE pp_actual_query_7) ON COMMIT DROP;
@@ -710,7 +710,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_7) EXCEPT ALL (SELECT * FROM pp_actual_query_7)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_7) EXCEPT ALL (SELECT * FROM pp_expected_query_7)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in next invoice ID', 'test 03 [A03 empty DeliveryAddressLine1 with NULL DeliveryAddressLine2 makes DeliveryInstructions NULL (+ sem…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in next invoice ID', 'test 03 [A03 an empty DeliveryAddressLine1 with a line 2 gives , Back door; a NULL line 2 on the other custom…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;
@@ -1187,7 +1187,7 @@ BEGIN
 END $pp$;
 ROLLBACK;
 
--- @case 6: [A06] an order with no lines: its customer-transaction sums are NULL, hitting a NOT NULL violation that rolls everything back
+-- @case 6: [A06] two orders requested, the second without lines: the NOT NULL violation on its customer transaction rolls back the first order's invoice too
 BEGIN;
 DELETE FROM sales.orders;
 DELETE FROM sales.order_lines;
@@ -1202,6 +1202,8 @@ DELETE FROM sales.customer_transactions;
 INSERT INTO sales.orders ("OrderID", "CustomerID", "ContactPersonID", "SalespersonPersonID", "CustomerPurchaseOrderNumber", "PickingCompletedWhen") VALUES
   ('1', '1', '3', '7', 'PO-1', '2020-01-01 10:00:00.000000'),
   ('2', '2', '4', '8', NULL, '2020-01-01 10:00:00.000000');
+INSERT INTO sales.order_lines ("OrderLineID", "OrderID", "StockItemID", "Description", "PackageTypeID", "PickedQuantity", "UnitPrice", "TaxRate") VALUES
+  ('1', '1', '1', 'dry', '7', '3', '0.99', '15.000');
 INSERT INTO warehouse.stock_items ("StockItemID", "IsChillerStock") VALUES
   ('1', '0'),
   ('2', '1');
@@ -1220,7 +1222,7 @@ ALTER SEQUENCE sequences."InvoiceID" RESTART WITH 70511;
 CREATE TEMP TABLE pp_outcome (outcome text) ON COMMIT DROP;
 DO $pp$
 BEGIN
-  CALL website.invoice_customer_orders(website.order_id_list_from_json('[{"OrderID":1}]'::jsonb), '5'::integer, '9'::integer);
+  CALL website.invoice_customer_orders(website.order_id_list_from_json('[{"OrderID":1},{"OrderID":2}]'::jsonb), '5'::integer, '9'::integer);
   INSERT INTO pp_outcome VALUES ('completed');
 EXCEPTION
   WHEN SQLSTATE 'P0001' THEN INSERT INTO pp_outcome VALUES ('raised: THROW 51000 (order missing, not picked or already invoiced)');
@@ -1234,7 +1236,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT 'raised: NULL into a NOT NULL column'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'raised: NULL into a NOT NULL column'::text AS outcome)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 06 [A06 an order with no lines: its customer-transaction sums are NULL, hitting a NOT NULL violation tha…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 06 [A06 two orders requested, the second without lines: the NOT NULL violation on its customer transacti…', missing, extra;
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_actual_query_1 ON COMMIT DROP AS
@@ -1257,7 +1259,7 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_1'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['OrderID', 'Invoice', 'CustomerID', 'BillToCustomerID', 'DeliveryMethodID', 'ContactPersonID', 'AccountsPersonID', 'SalespersonPersonID', 'PackedByPersonID', 'InvoiceDate_now', 'InvoiceDate', 'CustomerPurchaseOrderNumber', 'IsCreditNote', 'CreditNoteReason', 'Comments', 'DeliveryInstructions', 'InternalComments', 'TotalDryItems', 'TotalChillerItems', 'DeliveryRun', 'RunPosition', 'ReturnedDeliveryData', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 06 [A06 an order with no lines: its customer-transaction sums are NULL, hitting a NOT NULL violation tha…', got, ARRAY['OrderID', 'Invoice', 'CustomerID', 'BillToCustomerID', 'DeliveryMethodID', 'ContactPersonID', 'AccountsPersonID', 'SalespersonPersonID', 'PackedByPersonID', 'InvoiceDate_now', 'InvoiceDate', 'CustomerPurchaseOrderNumber', 'IsCreditNote', 'CreditNoteReason', 'Comments', 'DeliveryInstructions', 'InternalComments', 'TotalDryItems', 'TotalChillerItems', 'DeliveryRun', 'RunPosition', 'ReturnedDeliveryData', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 06 [A06 two orders requested, the second without lines: the NOT NULL violation on its customer transacti…', got, ARRAY['OrderID', 'Invoice', 'CustomerID', 'BillToCustomerID', 'DeliveryMethodID', 'ContactPersonID', 'AccountsPersonID', 'SalespersonPersonID', 'PackedByPersonID', 'InvoiceDate_now', 'InvoiceDate', 'CustomerPurchaseOrderNumber', 'IsCreditNote', 'CreditNoteReason', 'Comments', 'DeliveryInstructions', 'InternalComments', 'TotalDryItems', 'TotalChillerItems', 'DeliveryRun', 'RunPosition', 'ReturnedDeliveryData', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected_query_1 (LIKE pp_actual_query_1) ON COMMIT DROP;
@@ -1267,7 +1269,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_1) EXCEPT ALL (SELECT * FROM pp_actual_query_1)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_1) EXCEPT ALL (SELECT * FROM pp_expected_query_1)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in invoices', 'test 06 [A06 an order with no lines: its customer-transaction sums are NULL, hitting a NOT NULL violation tha…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in invoices', 'test 06 [A06 two orders requested, the second without lines: the NOT NULL violation on its customer transacti…', missing, extra;
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_actual_query_2 ON COMMIT DROP AS
@@ -1279,7 +1281,7 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_2'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['InvoiceOrder', 'StockItemID', 'Description', 'PackageTypeID', 'Quantity', 'UnitPrice', 'TaxRate', 'TaxAmount', 'LineProfit', 'ExtendedPrice', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 06 [A06 an order with no lines: its customer-transaction sums are NULL, hitting a NOT NULL violation tha…', got, ARRAY['InvoiceOrder', 'StockItemID', 'Description', 'PackageTypeID', 'Quantity', 'UnitPrice', 'TaxRate', 'TaxAmount', 'LineProfit', 'ExtendedPrice', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 06 [A06 two orders requested, the second without lines: the NOT NULL violation on its customer transacti…', got, ARRAY['InvoiceOrder', 'StockItemID', 'Description', 'PackageTypeID', 'Quantity', 'UnitPrice', 'TaxRate', 'TaxAmount', 'LineProfit', 'ExtendedPrice', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected_query_2 (LIKE pp_actual_query_2) ON COMMIT DROP;
@@ -1289,7 +1291,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_2) EXCEPT ALL (SELECT * FROM pp_actual_query_2)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_2) EXCEPT ALL (SELECT * FROM pp_expected_query_2)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in invoice lines, by their invoice''s order', 'test 06 [A06 an order with no lines: its customer-transaction sums are NULL, hitting a NOT NULL violation tha…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in invoice lines, by their invoice''s order', 'test 06 [A06 two orders requested, the second without lines: the NOT NULL violation on its customer transacti…', missing, extra;
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_actual_query_3 ON COMMIT DROP AS
@@ -1301,7 +1303,7 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_3'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['InvoiceOrder', 'StockItemID', 'TransactionTypeID', 'CustomerID', 'SupplierID', 'PurchaseOrderID', 'TransactionOccurredWhen_now', 'TransactionOccurredWhen', 'Quantity', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 06 [A06 an order with no lines: its customer-transaction sums are NULL, hitting a NOT NULL violation tha…', got, ARRAY['InvoiceOrder', 'StockItemID', 'TransactionTypeID', 'CustomerID', 'SupplierID', 'PurchaseOrderID', 'TransactionOccurredWhen_now', 'TransactionOccurredWhen', 'Quantity', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 06 [A06 two orders requested, the second without lines: the NOT NULL violation on its customer transacti…', got, ARRAY['InvoiceOrder', 'StockItemID', 'TransactionTypeID', 'CustomerID', 'SupplierID', 'PurchaseOrderID', 'TransactionOccurredWhen_now', 'TransactionOccurredWhen', 'Quantity', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected_query_3 (LIKE pp_actual_query_3) ON COMMIT DROP;
@@ -1311,7 +1313,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_3) EXCEPT ALL (SELECT * FROM pp_actual_query_3)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_3) EXCEPT ALL (SELECT * FROM pp_expected_query_3)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in stock transactions, by their invoice''s order', 'test 06 [A06 an order with no lines: its customer-transaction sums are NULL, hitting a NOT NULL violation tha…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in stock transactions, by their invoice''s order', 'test 06 [A06 two orders requested, the second without lines: the NOT NULL violation on its customer transacti…', missing, extra;
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_actual_query_4 ON COMMIT DROP AS
@@ -1324,7 +1326,7 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_4'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['InvoiceOrder', 'CustomerID', 'TransactionTypeID', 'PaymentMethodID', 'TransactionDate_now', 'TransactionDate', 'AmountExcludingTax', 'TaxAmount', 'TransactionAmount', 'OutstandingBalance', 'FinalizationDate', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 06 [A06 an order with no lines: its customer-transaction sums are NULL, hitting a NOT NULL violation tha…', got, ARRAY['InvoiceOrder', 'CustomerID', 'TransactionTypeID', 'PaymentMethodID', 'TransactionDate_now', 'TransactionDate', 'AmountExcludingTax', 'TaxAmount', 'TransactionAmount', 'OutstandingBalance', 'FinalizationDate', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 06 [A06 two orders requested, the second without lines: the NOT NULL violation on its customer transacti…', got, ARRAY['InvoiceOrder', 'CustomerID', 'TransactionTypeID', 'PaymentMethodID', 'TransactionDate_now', 'TransactionDate', 'AmountExcludingTax', 'TaxAmount', 'TransactionAmount', 'OutstandingBalance', 'FinalizationDate', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected_query_4 (LIKE pp_actual_query_4) ON COMMIT DROP;
@@ -1334,7 +1336,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_4) EXCEPT ALL (SELECT * FROM pp_actual_query_4)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_4) EXCEPT ALL (SELECT * FROM pp_expected_query_4)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in customer transactions, by their invoice''s order', 'test 06 [A06 an order with no lines: its customer-transaction sums are NULL, hitting a NOT NULL violation tha…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in customer transactions, by their invoice''s order', 'test 06 [A06 two orders requested, the second without lines: the NOT NULL violation on its customer transacti…', missing, extra;
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_actual_query_5 ON COMMIT DROP AS
@@ -1344,7 +1346,7 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_5'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['StockItemID', 'QuantityOnHand', 'LastCostPrice', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 06 [A06 an order with no lines: its customer-transaction sums are NULL, hitting a NOT NULL violation tha…', got, ARRAY['StockItemID', 'QuantityOnHand', 'LastCostPrice', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 06 [A06 two orders requested, the second without lines: the NOT NULL violation on its customer transacti…', got, ARRAY['StockItemID', 'QuantityOnHand', 'LastCostPrice', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected_query_5 (LIKE pp_actual_query_5) ON COMMIT DROP;
@@ -1357,7 +1359,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_5) EXCEPT ALL (SELECT * FROM pp_actual_query_5)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_5) EXCEPT ALL (SELECT * FROM pp_expected_query_5)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in stock holdings', 'test 06 [A06 an order with no lines: its customer-transaction sums are NULL, hitting a NOT NULL violation tha…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in stock holdings', 'test 06 [A06 two orders requested, the second without lines: the NOT NULL violation on its customer transacti…', missing, extra;
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_actual_query_6 ON COMMIT DROP AS
@@ -1370,7 +1372,7 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_6'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['Invoices', 'DistinctIDs', 'InRange']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 06 [A06 an order with no lines: its customer-transaction sums are NULL, hitting a NOT NULL violation tha…', got, ARRAY['Invoices', 'DistinctIDs', 'InRange']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 06 [A06 two orders requested, the second without lines: the NOT NULL violation on its customer transacti…', got, ARRAY['Invoices', 'DistinctIDs', 'InRange']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected_query_6 (LIKE pp_actual_query_6) ON COMMIT DROP;
@@ -1382,7 +1384,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_6) EXCEPT ALL (SELECT * FROM pp_actual_query_6)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_6) EXCEPT ALL (SELECT * FROM pp_expected_query_6)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in invoice IDs used', 'test 06 [A06 an order with no lines: its customer-transaction sums are NULL, hitting a NOT NULL violation tha…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in invoice IDs used', 'test 06 [A06 two orders requested, the second without lines: the NOT NULL violation on its customer transacti…', missing, extra;
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_actual_query_7 ON COMMIT DROP AS
@@ -1392,19 +1394,19 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_7'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['NextInvoiceID']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 06 [A06 an order with no lines: its customer-transaction sums are NULL, hitting a NOT NULL violation tha…', got, ARRAY['NextInvoiceID']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 06 [A06 two orders requested, the second without lines: the NOT NULL violation on its customer transacti…', got, ARRAY['NextInvoiceID']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected_query_7 (LIKE pp_actual_query_7) ON COMMIT DROP;
 INSERT INTO pp_expected_query_7 VALUES
-  ('70512');
+  ('70513');
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_7) EXCEPT ALL (SELECT * FROM pp_actual_query_7)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_7) EXCEPT ALL (SELECT * FROM pp_expected_query_7)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in next invoice ID', 'test 06 [A06 an order with no lines: its customer-transaction sums are NULL, hitting a NOT NULL violation tha…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in next invoice ID', 'test 06 [A06 two orders requested, the second without lines: the NOT NULL violation on its customer transacti…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;
@@ -1645,6 +1647,231 @@ BEGIN
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_7) EXCEPT ALL (SELECT * FROM pp_expected_query_7)) AS d;
   IF missing > 0 OR extra > 0 THEN
     RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in next invoice ID', 'test 07 [A07 two orders with non-contiguous ids 1 and 3 are both invoiced; new invoice ids come from the sequ…', missing, extra;
+  END IF;
+END $pp$;
+ROLLBACK;
+
+-- @case 8: [A08] two orders requested, the second not yet picked: THROW 51000 and nothing is written for either
+BEGIN;
+DELETE FROM sales.orders;
+DELETE FROM sales.order_lines;
+DELETE FROM warehouse.stock_items;
+DELETE FROM warehouse.stock_item_holdings;
+DELETE FROM sales.customers;
+DELETE FROM sales.invoices;
+DELETE FROM sales.invoice_lines;
+DELETE FROM application.transaction_types;
+DELETE FROM warehouse.stock_item_transactions;
+DELETE FROM sales.customer_transactions;
+INSERT INTO sales.orders ("OrderID", "CustomerID", "ContactPersonID", "SalespersonPersonID", "CustomerPurchaseOrderNumber", "PickingCompletedWhen") VALUES
+  ('1', '1', '3', '7', 'PO-1', '2020-01-01 10:00:00.000000'),
+  ('2', '2', '4', '8', NULL, NULL);
+INSERT INTO sales.order_lines ("OrderLineID", "OrderID", "StockItemID", "Description", "PackageTypeID", "PickedQuantity", "UnitPrice", "TaxRate") VALUES
+  ('1', '1', '1', 'dry', '7', '3', '0.99', '15.000'),
+  ('2', '2', '2', 'chilled', '9', '1', '10.00', '15.000');
+INSERT INTO warehouse.stock_items ("StockItemID", "IsChillerStock") VALUES
+  ('1', '0'),
+  ('2', '1');
+INSERT INTO warehouse.stock_item_holdings ("StockItemID", "QuantityOnHand", "LastCostPrice", "LastEditedBy", "LastEditedWhen") VALUES
+  ('1', '100', '0.50', '1', '2020-01-01 00:00:00.000000'),
+  ('2', '10', '6.00', '1', '2020-01-01 00:00:00.000000');
+INSERT INTO sales.customers ("CustomerID", "BillToCustomerID", "DeliveryMethodID", "PrimaryContactPersonID", "DeliveryAddressLine1", "DeliveryAddressLine2", "DeliveryRun", "RunPosition") VALUES
+  ('1', '2', '3', '11', 'Shop 12', '1 Main St', 'A', '1'),
+  ('2', '2', '3', '12', 'Unit 5', NULL, NULL, NULL);
+INSERT INTO application.transaction_types ("TransactionTypeID", "TransactionTypeName") VALUES
+  ('1', 'Customer Invoice'),
+  ('3', 'Customer Payment Received'),
+  ('10', 'Stock Issue'),
+  ('11', 'Stock Receipt');
+ALTER SEQUENCE sequences."InvoiceID" RESTART WITH 70511;
+CREATE TEMP TABLE pp_outcome (outcome text) ON COMMIT DROP;
+DO $pp$
+BEGIN
+  CALL website.invoice_customer_orders(website.order_id_list_from_json('[{"OrderID":1},{"OrderID":2}]'::jsonb), '5'::integer, '9'::integer);
+  INSERT INTO pp_outcome VALUES ('completed');
+EXCEPTION
+  WHEN SQLSTATE 'P0001' THEN INSERT INTO pp_outcome VALUES ('raised: THROW 51000 (order missing, not picked or already invoiced)');
+  WHEN SQLSTATE '23502' THEN INSERT INTO pp_outcome VALUES ('raised: NULL into a NOT NULL column');
+  WHEN SQLSTATE '21000' THEN INSERT INTO pp_outcome VALUES ('raised: scalar subquery returned more than one row');
+  WHEN SQLSTATE '22003' THEN INSERT INTO pp_outcome VALUES ('raised: numeric overflow');
+END $pp$;
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT 'raised: THROW 51000 (order missing, not picked or already invoiced)'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'raised: THROW 51000 (order missing, not picked or already invoiced)'::text AS outcome)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 08 [A08 two orders requested, the second not yet picked: THROW 51000 and nothing is written for either', missing, extra;
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_actual_query_1 ON COMMIT DROP AS
+SELECT i."OrderID", CASE WHEN i."InvoiceID" >= 70511 THEN 'new' ELSE i."InvoiceID"::text END AS "Invoice",
+                       i."CustomerID", i."BillToCustomerID", i."DeliveryMethodID", i."ContactPersonID", i."AccountsPersonID", i."SalespersonPersonID", i."PackedByPersonID",
+                       CASE WHEN i."InvoiceDate" = localtimestamp::date THEN 'today' END AS "InvoiceDate_now", CASE WHEN i."InvoiceDate" = localtimestamp::date THEN NULL ELSE i."InvoiceDate" END AS "InvoiceDate", i."CustomerPurchaseOrderNumber", i."IsCreditNote", i."CreditNoteReason", i."Comments",
+                       i."DeliveryInstructions", i."InternalComments", i."TotalDryItems", i."TotalChillerItems", i."DeliveryRun", i."RunPosition",
+                       CASE WHEN (CASE WHEN i."ReturnedDeliveryData" IS JSON OBJECT THEN i."ReturnedDeliveryData"::json #>> '{Events,0,EventTime}' END) IS NOT NULL THEN
+            replace(replace(i."ReturnedDeliveryData",
+              '"EventTime":"' || (CASE WHEN i."ReturnedDeliveryData" IS JSON OBJECT THEN i."ReturnedDeliveryData"::json #>> '{Events,0,EventTime}' END) || '"',
+              '"EventTime":"' || CASE WHEN (CASE WHEN i."ReturnedDeliveryData" IS JSON OBJECT THEN i."ReturnedDeliveryData"::json #>> '{Events,0,EventTime}' END) ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}'
+                                       AND left((CASE WHEN i."ReturnedDeliveryData" IS JSON OBJECT THEN i."ReturnedDeliveryData"::json #>> '{Events,0,EventTime}' END), 19)::timestamp BETWEEN localtimestamp - interval '5 minutes' AND localtimestamp
+                                     THEN '<call time, ' || length((CASE WHEN i."ReturnedDeliveryData" IS JSON OBJECT THEN i."ReturnedDeliveryData"::json #>> '{Events,0,EventTime}' END)) || ' chars, ends ' || right((CASE WHEN i."ReturnedDeliveryData" IS JSON OBJECT THEN i."ReturnedDeliveryData"::json #>> '{Events,0,EventTime}' END), 1) || '>'
+                                     ELSE (CASE WHEN i."ReturnedDeliveryData" IS JSON OBJECT THEN i."ReturnedDeliveryData"::json #>> '{Events,0,EventTime}' END) END || '"'),
+              '"ConNote":"EAN-125-' || (i."InvoiceID" + 1050) || '"', '"ConNote":"EAN-125-<InvoiceID + 1050>"')
+          ELSE i."ReturnedDeliveryData" END AS "ReturnedDeliveryData", i."LastEditedBy", CASE WHEN i."LastEditedWhen" BETWEEN localtimestamp - interval '5 minutes' AND localtimestamp THEN 'now' END AS "LastEditedWhen_now", CASE WHEN i."LastEditedWhen" BETWEEN localtimestamp - interval '5 minutes' AND localtimestamp THEN NULL ELSE i."LastEditedWhen" END AS "LastEditedWhen"
+                     FROM sales.invoices AS i;
+DO $pp$
+DECLARE got text[];
+BEGIN
+  SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_1'::regclass AND attnum > 0 AND NOT attisdropped;
+  IF got IS DISTINCT FROM ARRAY['OrderID', 'Invoice', 'CustomerID', 'BillToCustomerID', 'DeliveryMethodID', 'ContactPersonID', 'AccountsPersonID', 'SalespersonPersonID', 'PackedByPersonID', 'InvoiceDate_now', 'InvoiceDate', 'CustomerPurchaseOrderNumber', 'IsCreditNote', 'CreditNoteReason', 'Comments', 'DeliveryInstructions', 'InternalComments', 'TotalDryItems', 'TotalChillerItems', 'DeliveryRun', 'RunPosition', 'ReturnedDeliveryData', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[] THEN
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 08 [A08 two orders requested, the second not yet picked: THROW 51000 and nothing is written for either', got, ARRAY['OrderID', 'Invoice', 'CustomerID', 'BillToCustomerID', 'DeliveryMethodID', 'ContactPersonID', 'AccountsPersonID', 'SalespersonPersonID', 'PackedByPersonID', 'InvoiceDate_now', 'InvoiceDate', 'CustomerPurchaseOrderNumber', 'IsCreditNote', 'CreditNoteReason', 'Comments', 'DeliveryInstructions', 'InternalComments', 'TotalDryItems', 'TotalChillerItems', 'DeliveryRun', 'RunPosition', 'ReturnedDeliveryData', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected_query_1 (LIKE pp_actual_query_1) ON COMMIT DROP;
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_1) EXCEPT ALL (SELECT * FROM pp_actual_query_1)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_1) EXCEPT ALL (SELECT * FROM pp_expected_query_1)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in invoices', 'test 08 [A08 two orders requested, the second not yet picked: THROW 51000 and nothing is written for either', missing, extra;
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_actual_query_2 ON COMMIT DROP AS
+SELECT i."OrderID" AS "InvoiceOrder", il."StockItemID", il."Description", il."PackageTypeID", il."Quantity", il."UnitPrice", il."TaxRate", il."TaxAmount",
+                       il."LineProfit", il."ExtendedPrice", il."LastEditedBy", CASE WHEN il."LastEditedWhen" BETWEEN localtimestamp - interval '5 minutes' AND localtimestamp THEN 'now' END AS "LastEditedWhen_now", CASE WHEN il."LastEditedWhen" BETWEEN localtimestamp - interval '5 minutes' AND localtimestamp THEN NULL ELSE il."LastEditedWhen" END AS "LastEditedWhen"
+                     FROM sales.invoice_lines AS il LEFT JOIN sales.invoices AS i ON i."InvoiceID" = il."InvoiceID";
+DO $pp$
+DECLARE got text[];
+BEGIN
+  SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_2'::regclass AND attnum > 0 AND NOT attisdropped;
+  IF got IS DISTINCT FROM ARRAY['InvoiceOrder', 'StockItemID', 'Description', 'PackageTypeID', 'Quantity', 'UnitPrice', 'TaxRate', 'TaxAmount', 'LineProfit', 'ExtendedPrice', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[] THEN
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 08 [A08 two orders requested, the second not yet picked: THROW 51000 and nothing is written for either', got, ARRAY['InvoiceOrder', 'StockItemID', 'Description', 'PackageTypeID', 'Quantity', 'UnitPrice', 'TaxRate', 'TaxAmount', 'LineProfit', 'ExtendedPrice', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected_query_2 (LIKE pp_actual_query_2) ON COMMIT DROP;
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_2) EXCEPT ALL (SELECT * FROM pp_actual_query_2)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_2) EXCEPT ALL (SELECT * FROM pp_expected_query_2)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in invoice lines, by their invoice''s order', 'test 08 [A08 two orders requested, the second not yet picked: THROW 51000 and nothing is written for either', missing, extra;
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_actual_query_3 ON COMMIT DROP AS
+SELECT i."OrderID" AS "InvoiceOrder", t."StockItemID", t."TransactionTypeID", t."CustomerID", t."SupplierID", t."PurchaseOrderID",
+                       CASE WHEN t."TransactionOccurredWhen" BETWEEN localtimestamp - interval '5 minutes' AND localtimestamp THEN 'now' END AS "TransactionOccurredWhen_now", CASE WHEN t."TransactionOccurredWhen" BETWEEN localtimestamp - interval '5 minutes' AND localtimestamp THEN NULL ELSE t."TransactionOccurredWhen" END AS "TransactionOccurredWhen", t."Quantity", t."LastEditedBy", CASE WHEN t."LastEditedWhen" BETWEEN localtimestamp - interval '5 minutes' AND localtimestamp THEN 'now' END AS "LastEditedWhen_now", CASE WHEN t."LastEditedWhen" BETWEEN localtimestamp - interval '5 minutes' AND localtimestamp THEN NULL ELSE t."LastEditedWhen" END AS "LastEditedWhen"
+                     FROM warehouse.stock_item_transactions AS t LEFT JOIN sales.invoices AS i ON i."InvoiceID" = t."InvoiceID";
+DO $pp$
+DECLARE got text[];
+BEGIN
+  SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_3'::regclass AND attnum > 0 AND NOT attisdropped;
+  IF got IS DISTINCT FROM ARRAY['InvoiceOrder', 'StockItemID', 'TransactionTypeID', 'CustomerID', 'SupplierID', 'PurchaseOrderID', 'TransactionOccurredWhen_now', 'TransactionOccurredWhen', 'Quantity', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[] THEN
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 08 [A08 two orders requested, the second not yet picked: THROW 51000 and nothing is written for either', got, ARRAY['InvoiceOrder', 'StockItemID', 'TransactionTypeID', 'CustomerID', 'SupplierID', 'PurchaseOrderID', 'TransactionOccurredWhen_now', 'TransactionOccurredWhen', 'Quantity', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected_query_3 (LIKE pp_actual_query_3) ON COMMIT DROP;
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_3) EXCEPT ALL (SELECT * FROM pp_actual_query_3)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_3) EXCEPT ALL (SELECT * FROM pp_expected_query_3)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in stock transactions, by their invoice''s order', 'test 08 [A08 two orders requested, the second not yet picked: THROW 51000 and nothing is written for either', missing, extra;
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_actual_query_4 ON COMMIT DROP AS
+SELECT i."OrderID" AS "InvoiceOrder", ct."CustomerID", ct."TransactionTypeID", ct."PaymentMethodID", CASE WHEN ct."TransactionDate" = localtimestamp::date THEN 'today' END AS "TransactionDate_now", CASE WHEN ct."TransactionDate" = localtimestamp::date THEN NULL ELSE ct."TransactionDate" END AS "TransactionDate",
+                       ct."AmountExcludingTax", ct."TaxAmount", ct."TransactionAmount", ct."OutstandingBalance", ct."FinalizationDate", ct."LastEditedBy",
+                       CASE WHEN ct."LastEditedWhen" BETWEEN localtimestamp - interval '5 minutes' AND localtimestamp THEN 'now' END AS "LastEditedWhen_now", CASE WHEN ct."LastEditedWhen" BETWEEN localtimestamp - interval '5 minutes' AND localtimestamp THEN NULL ELSE ct."LastEditedWhen" END AS "LastEditedWhen"
+                     FROM sales.customer_transactions AS ct LEFT JOIN sales.invoices AS i ON i."InvoiceID" = ct."InvoiceID";
+DO $pp$
+DECLARE got text[];
+BEGIN
+  SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_4'::regclass AND attnum > 0 AND NOT attisdropped;
+  IF got IS DISTINCT FROM ARRAY['InvoiceOrder', 'CustomerID', 'TransactionTypeID', 'PaymentMethodID', 'TransactionDate_now', 'TransactionDate', 'AmountExcludingTax', 'TaxAmount', 'TransactionAmount', 'OutstandingBalance', 'FinalizationDate', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[] THEN
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 08 [A08 two orders requested, the second not yet picked: THROW 51000 and nothing is written for either', got, ARRAY['InvoiceOrder', 'CustomerID', 'TransactionTypeID', 'PaymentMethodID', 'TransactionDate_now', 'TransactionDate', 'AmountExcludingTax', 'TaxAmount', 'TransactionAmount', 'OutstandingBalance', 'FinalizationDate', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected_query_4 (LIKE pp_actual_query_4) ON COMMIT DROP;
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_4) EXCEPT ALL (SELECT * FROM pp_actual_query_4)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_4) EXCEPT ALL (SELECT * FROM pp_expected_query_4)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in customer transactions, by their invoice''s order', 'test 08 [A08 two orders requested, the second not yet picked: THROW 51000 and nothing is written for either', missing, extra;
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_actual_query_5 ON COMMIT DROP AS
+SELECT h."StockItemID", h."QuantityOnHand", h."LastCostPrice", h."LastEditedBy", CASE WHEN h."LastEditedWhen" BETWEEN localtimestamp - interval '5 minutes' AND localtimestamp THEN 'now' END AS "LastEditedWhen_now", CASE WHEN h."LastEditedWhen" BETWEEN localtimestamp - interval '5 minutes' AND localtimestamp THEN NULL ELSE h."LastEditedWhen" END AS "LastEditedWhen" FROM warehouse.stock_item_holdings AS h;
+DO $pp$
+DECLARE got text[];
+BEGIN
+  SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_5'::regclass AND attnum > 0 AND NOT attisdropped;
+  IF got IS DISTINCT FROM ARRAY['StockItemID', 'QuantityOnHand', 'LastCostPrice', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[] THEN
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 08 [A08 two orders requested, the second not yet picked: THROW 51000 and nothing is written for either', got, ARRAY['StockItemID', 'QuantityOnHand', 'LastCostPrice', 'LastEditedBy', 'LastEditedWhen_now', 'LastEditedWhen']::text[];
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected_query_5 (LIKE pp_actual_query_5) ON COMMIT DROP;
+INSERT INTO pp_expected_query_5 VALUES
+  ('1', '100', '0.5', '1', NULL, '2020-01-01 00:00:00.000000'),
+  ('2', '10', '6', '1', NULL, '2020-01-01 00:00:00.000000');
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_5) EXCEPT ALL (SELECT * FROM pp_actual_query_5)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_5) EXCEPT ALL (SELECT * FROM pp_expected_query_5)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in stock holdings', 'test 08 [A08 two orders requested, the second not yet picked: THROW 51000 and nothing is written for either', missing, extra;
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_actual_query_6 ON COMMIT DROP AS
+SELECT COUNT(*) AS "Invoices", COUNT(DISTINCT "InvoiceID") AS "DistinctIDs",
+                       CASE WHEN COUNT(*) = 0 OR MAX("InvoiceID") < (SELECT last_value FROM sequences."InvoiceID") + 1
+                            THEN 'within the allocated range' ELSE 'outside' END AS "InRange"
+                     FROM sales.invoices WHERE "InvoiceID" >= 70511;
+DO $pp$
+DECLARE got text[];
+BEGIN
+  SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_6'::regclass AND attnum > 0 AND NOT attisdropped;
+  IF got IS DISTINCT FROM ARRAY['Invoices', 'DistinctIDs', 'InRange']::text[] THEN
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 08 [A08 two orders requested, the second not yet picked: THROW 51000 and nothing is written for either', got, ARRAY['Invoices', 'DistinctIDs', 'InRange']::text[];
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected_query_6 (LIKE pp_actual_query_6) ON COMMIT DROP;
+INSERT INTO pp_expected_query_6 VALUES
+  ('0', '0', 'within the allocated range');
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_6) EXCEPT ALL (SELECT * FROM pp_actual_query_6)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_6) EXCEPT ALL (SELECT * FROM pp_expected_query_6)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in invoice IDs used', 'test 08 [A08 two orders requested, the second not yet picked: THROW 51000 and nothing is written for either', missing, extra;
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_actual_query_7 ON COMMIT DROP AS
+SELECT nextval('sequences."InvoiceID"') AS "NextInvoiceID";
+DO $pp$
+DECLARE got text[];
+BEGIN
+  SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_7'::regclass AND attnum > 0 AND NOT attisdropped;
+  IF got IS DISTINCT FROM ARRAY['NextInvoiceID']::text[] THEN
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 08 [A08 two orders requested, the second not yet picked: THROW 51000 and nothing is written for either', got, ARRAY['NextInvoiceID']::text[];
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected_query_7 (LIKE pp_actual_query_7) ON COMMIT DROP;
+INSERT INTO pp_expected_query_7 VALUES
+  ('70512');
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_7) EXCEPT ALL (SELECT * FROM pp_actual_query_7)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_7) EXCEPT ALL (SELECT * FROM pp_expected_query_7)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in next invoice ID', 'test 08 [A08 two orders requested, the second not yet picked: THROW 51000 and nothing is written for either', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;

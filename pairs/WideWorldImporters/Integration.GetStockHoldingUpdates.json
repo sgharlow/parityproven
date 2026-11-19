@@ -82,7 +82,7 @@
       "differed": 0,
       "evidencePath": "evidence/adversarial/WideWorldImporters/Integration.GetStockHoldingUpdates.json",
       "conversionSha256": "eb2a3aed3e96b8909687d5b94bc43bdc3a1fea2531165a8ca18e6857f748b854",
-      "runAt": "2026-11-19T05:05:32.898Z"
+      "runAt": "2026-11-19T06:24:02.904Z"
     }
   },
   "effort": {

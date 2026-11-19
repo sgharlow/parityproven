@@ -8,8 +8,8 @@
 GO
 EXEC tSQLt.NewTestClass 'AgreedTests';
 GO
--- case 1: [A01] SupplierReference '' versus NULL kept distinct; NULL DeliveryMethodID yields a NULL method via LEFT JOIN
-CREATE PROCEDURE [AgreedTests].[test 01 [A01 SupplierReference versus NULL kept distinct; NULL DeliveryMethodID yields a NULL method via LEFT…]
+-- case 1: [A01] '' from a joined delivery method versus NULL from a NULL DeliveryMethodID in the same output column; SupplierReference NULL and '' the other way round
+CREATE PROCEDURE [AgreedTests].[test 01 [A01 from a joined delivery method versus NULL from a NULL DeliveryMethodID in the same output column…]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Purchasing].[Suppliers]';
@@ -18,15 +18,15 @@ BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Application].[DeliveryMethods]';
   EXEC tSQLt.FakeTable @TableName = N'[Application].[Cities]';
   INSERT INTO [Purchasing].[Suppliers] ([SupplierID], [SupplierName], [SupplierCategoryID], [PrimaryContactPersonID], [AlternateContactPersonID], [DeliveryMethodID], [DeliveryCityID], [SupplierReference], [PhoneNumber], [FaxNumber], [WebsiteURL], [DeliveryLocation]) VALUES
-    (1, N'Supplier 1', 1, 1, 2, NULL, 1, N'', N'(415) 555-0100', N'(415) 555-0101', N'http://x', NULL),
-    (3, N'Supplier 3', 1, 1, 2, 1, 1, NULL, N'(415) 555-0100', N'(415) 555-0101', N'http://x', NULL);
+    (1, N'Supplier 1', 1, 1, 2, NULL, 1, NULL, N'(415) 555-0100', N'(415) 555-0101', N'http://x', NULL),
+    (3, N'Supplier 3', 1, 1, 2, 1, 1, N'', N'(415) 555-0100', N'(415) 555-0101', N'http://x', NULL);
   INSERT INTO [Purchasing].[SupplierCategories] ([SupplierCategoryID], [SupplierCategoryName]) VALUES
     (1, N'Toy Supplier');
   INSERT INTO [Application].[People] ([PersonID], [FullName]) VALUES
     (1, N'Ann Lee'),
     (2, N'Bo Ng');
   INSERT INTO [Application].[DeliveryMethods] ([DeliveryMethodID], [DeliveryMethodName]) VALUES
-    (1, N'Air Freight');
+    (1, N'');
   INSERT INTO [Application].[Cities] ([CityID], [CityName]) VALUES
     (1, N'Auckland');
   CREATE TABLE #Expected (
@@ -58,15 +58,15 @@ BEGIN
     [SupplierReference] nvarchar(20) NULL
   );
   INSERT INTO #Expected ([SupplierID], [SupplierName], [SupplierCategoryName], [PrimaryContact], [AlternateContact], [PhoneNumber], [FaxNumber], [WebsiteURL], [DeliveryMethod], [CityName], [DeliveryLocation], [SupplierReference]) VALUES
-    (1, N'Supplier 1', N'Toy Supplier', N'Ann Lee', N'Bo Ng', N'(415) 555-0100', N'(415) 555-0101', N'http://x', NULL, N'Auckland', NULL, N''),
-    (3, N'Supplier 3', N'Toy Supplier', N'Ann Lee', N'Bo Ng', N'(415) 555-0100', N'(415) 555-0101', N'http://x', N'Air Freight', N'Auckland', NULL, NULL);
+    (1, N'Supplier 1', N'Toy Supplier', N'Ann Lee', N'Bo Ng', N'(415) 555-0100', N'(415) 555-0101', N'http://x', NULL, N'Auckland', NULL, NULL),
+    (3, N'Supplier 3', N'Toy Supplier', N'Ann Lee', N'Bo Ng', N'(415) 555-0100', N'(415) 555-0101', N'http://x', N'', N'Auckland', NULL, N'');
   INSERT INTO #Actual
   SELECT SupplierID, SupplierName, SupplierCategoryName, PrimaryContact, AlternateContact, PhoneNumber, FaxNumber, WebsiteURL, DeliveryMethod, CityName, DeliveryLocation.STAsText() AS DeliveryLocation, SupplierReference FROM Website.Suppliers;
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
--- case 2: [A02] two suppliers share a fax number; a supplier with unmatched category/contacts/city keeps NULLs
-CREATE PROCEDURE [AgreedTests].[test 02 [A02 two suppliers share a fax number; a supplier with unmatched category/contacts/city keeps NULLs]
+-- case 2: [A02] two suppliers share phone, fax and website; a NULL delivery method keeps its row; primary and alternate contacts are crossed
+CREATE PROCEDURE [AgreedTests].[test 02 [A02 two suppliers share phone, fax and website; a NULL delivery method keeps its row; primary and al…]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Purchasing].[Suppliers]';
@@ -75,8 +75,8 @@ BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Application].[DeliveryMethods]';
   EXEC tSQLt.FakeTable @TableName = N'[Application].[Cities]';
   INSERT INTO [Purchasing].[Suppliers] ([SupplierID], [SupplierName], [SupplierCategoryID], [PrimaryContactPersonID], [AlternateContactPersonID], [DeliveryMethodID], [DeliveryCityID], [SupplierReference], [PhoneNumber], [FaxNumber], [WebsiteURL], [DeliveryLocation]) VALUES
-    (1, N'Supplier 1', 1, 1, 2, NULL, 1, NULL, N'(415) 555-0100', N'(415) 555-7777', N'http://x', NULL),
-    (2, N'Supplier 2', 99, 98, 99, NULL, 99, NULL, N'(415) 555-0100', N'(415) 555-7777', N'http://x', NULL);
+    (1, N'Supplier 1', 1, 1, 2, 1, 1, N'R1', N'(415) 555-0100', N'(415) 555-7777', N'http://same', NULL),
+    (2, N'Supplier 2', 1, 2, 1, NULL, 1, N'R2', N'(415) 555-0100', N'(415) 555-7777', N'http://same', NULL);
   INSERT INTO [Purchasing].[SupplierCategories] ([SupplierCategoryID], [SupplierCategoryName]) VALUES
     (1, N'Toy Supplier');
   INSERT INTO [Application].[People] ([PersonID], [FullName]) VALUES
@@ -115,8 +115,8 @@ BEGIN
     [SupplierReference] nvarchar(20) NULL
   );
   INSERT INTO #Expected ([SupplierID], [SupplierName], [SupplierCategoryName], [PrimaryContact], [AlternateContact], [PhoneNumber], [FaxNumber], [WebsiteURL], [DeliveryMethod], [CityName], [DeliveryLocation], [SupplierReference]) VALUES
-    (1, N'Supplier 1', N'Toy Supplier', N'Ann Lee', N'Bo Ng', N'(415) 555-0100', N'(415) 555-7777', N'http://x', NULL, N'Auckland', NULL, NULL),
-    (2, N'Supplier 2', NULL, NULL, NULL, N'(415) 555-0100', N'(415) 555-7777', N'http://x', NULL, NULL, NULL, NULL);
+    (1, N'Supplier 1', N'Toy Supplier', N'Ann Lee', N'Bo Ng', N'(415) 555-0100', N'(415) 555-7777', N'http://same', N'Air Freight', N'Auckland', NULL, N'R1'),
+    (2, N'Supplier 2', N'Toy Supplier', N'Bo Ng', N'Ann Lee', N'(415) 555-0100', N'(415) 555-7777', N'http://same', NULL, N'Auckland', NULL, N'R2');
   INSERT INTO #Actual
   SELECT SupplierID, SupplierName, SupplierCategoryName, PrimaryContact, AlternateContact, PhoneNumber, FaxNumber, WebsiteURL, DeliveryMethod, CityName, DeliveryLocation.STAsText() AS DeliveryLocation, SupplierReference FROM Website.Suppliers;
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';

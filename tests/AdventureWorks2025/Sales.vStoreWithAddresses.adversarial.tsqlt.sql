@@ -382,8 +382,8 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
--- case 7: [A07] NULL versus '' in AddressLine2, an empty vendor name, address type name and city, and a single-space AddressLine2
-CREATE PROCEDURE [AgreedTests].[test 07 [A07 NULL versus in AddressLine2, an empty vendor name, address type name and city, and a single-spac…]
+-- case 7: [A07] NULL versus '' in AddressLine2, an empty store name, address type name and city, and a single-space AddressLine2
+CREATE PROCEDURE [AgreedTests].[test 07 [A07 NULL versus in AddressLine2, an empty store name, address type name and city, and a single-space…]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Person].[Address]';
@@ -441,8 +441,8 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
--- case 8: [A08] keys with gaps and at the int limits: vendor 2147483647, address -2147483648, address type 0; text with an emoji and full length
-CREATE PROCEDURE [AgreedTests].[test 08 [A08 keys with gaps and at the int limits: vendor 2147483647, address -2147483648, address type 0; te…]
+-- case 8: [A08] keys with gaps and at the int limits: store 2147483647, address -2147483648, address type 0; text with an emoji and full length
+CREATE PROCEDURE [AgreedTests].[test 08 [A08 keys with gaps and at the int limits: store 2147483647, address -2147483648, address type 0; tex…]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Person].[Address]';

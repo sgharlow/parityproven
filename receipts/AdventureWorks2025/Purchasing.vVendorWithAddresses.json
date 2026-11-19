@@ -127,25 +127,23 @@
     ],
     "adversarial": {
       "gate": "fail",
-      "ran": 9,
+      "ran": 10,
       "differed": 0,
       "evidencePath": "evidence/adversarial/AdventureWorks2025/Purchasing.vVendorWithAddresses.json",
-      "runAt": "2026-11-19T04:17:00.372Z",
+      "runAt": "2026-11-19T06:17:32.872Z",
       "agentWritten": true,
-      "wording": "9 adversarial cases ran, 0 differed",
+      "wording": "10 adversarial cases ran, 0 differed",
       "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
       "auditorModel": "gpt-5.6-sol",
       "sameModel": false,
-      "mutantAdequacy": "inadequate",
+      "mutantAdequacy": "adequate",
       "gateReasons": [
-        "objection O01 is open",
-        "objection O02 is open",
-        "mutant adequacy is inadequate (unexplained misses: inner join to address type made a left join (unknown address types kept))"
+        "objection O03 is open"
       ],
       "cases": [
         {
           "id": "A01",
-          "label": "case-only variants 'Us', 'uS' and 'us ' of a country code join 'US'",
+          "label": "case pairs outside ASCII ('üs' to 'ÜS', 'σa' to 'ΣA') and case plus a trailing space on the country side ('CA' to 'ca ')",
           "traps": [
             "collation-case",
             "trailing-spaces"
@@ -217,7 +215,7 @@
         },
         {
           "id": "A08",
-          "label": "one address used twice by a vendor under two address types, a duplicate BusinessEntityAddress row, and an address type of another case",
+          "label": "one address used by a vendor under two address types and by a second vendor; a vendor name that differs only in case from an address type",
           "traps": [
             "top-ties",
             "collation-case"
@@ -235,6 +233,14 @@
           "status": "ran",
           "sqlServer": "pass",
           "postgres": "pass"
+        },
+        {
+          "id": "A10",
+          "label": "a vendor address whose address type has no AddressType row is dropped by the inner join",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
         }
       ]
     }
@@ -248,5 +254,5 @@
     "p50Hours": 0.75,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-19T05:37:18.792Z"
+  "builtAt": "2026-11-19T06:24:38.457Z"
 }

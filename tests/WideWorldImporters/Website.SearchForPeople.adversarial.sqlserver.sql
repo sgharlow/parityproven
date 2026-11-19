@@ -8,45 +8,62 @@
 -- tSQLt.ResultSetFilter (error 6549). agreed-tests runs each case below through the client, joins the chunk rows the
 -- procedure streams back in arrival order, and compares the document exactly with the expected one.
 GO
--- case 1: [A01] SearchName values differing only in case both match; the two rows share PreferredName
+-- case 1: [A01] SearchName: Cyrillic values differing only in case match a case-insensitive search ('дом' finds 'ДОМ' and 'Дом', not 'дым' or 'ÉCLAIR')
 DELETE FROM [Application].[People];
 DELETE FROM [Sales].[Customers];
 DELETE FROM [Purchasing].[Suppliers];
 INSERT INTO [Application].[People] ([PersonID], [FullName], [PreferredName], [IsSalesperson], [IsEmployee], [SearchName]) VALUES
-  (1, N'Q0001', N'Q', 0, 1, N'ab'),
-  (3, N'Q0003', N'Q', 0, 1, N'AB');
+  (1, N'Q0001', N'Q', 0, 1, N'дом'),
+  (2, N'Q0002', N'Q', 0, 1, N'ДОМ'),
+  (3, N'Q0003', N'Q', 0, 1, N'Дом'),
+  (4, N'Q0004', N'Q', 0, 1, N'ÉCLAIR'),
+  (5, N'Q0005', N'Q', 0, 1, N'дым');
+EXEC Website.SearchForPeople @SearchText = N'дом', @MaximumRowsToReturn = 5;
+-- expected document: {"People":[{"PersonID":1,"FullName":"Q0001","PreferredName":"Q","Relationship":"Employee","Company":"WWI"},{"PersonID":2,"FullName":"Q0002","PreferredName":"Q","Relationship":"Employee","Company":"WWI"},{"PersonID":3,"FullName":"Q0003","PreferredName":"Q","Relationship":"Employee","Company":"WWI"}]}
+GO
+-- case 2: [A02] SearchName: a search text ending in a space ('amy ') matches only values with a space after 'amy'
+DELETE FROM [Application].[People];
+DELETE FROM [Sales].[Customers];
+DELETE FROM [Purchasing].[Suppliers];
+INSERT INTO [Application].[People] ([PersonID], [FullName], [PreferredName], [IsSalesperson], [IsEmployee], [SearchName]) VALUES
+  (1, N'Q0001', N'Q', 0, 1, N'amy'),
+  (2, N'Q0002', N'Q', 0, 1, N'amy '),
+  (3, N'Q0003', N'Q', 0, 1, N'amyx'),
+  (4, N'Q0004', N'Q', 0, 1, N'amy b');
+EXEC Website.SearchForPeople @SearchText = N'amy ', @MaximumRowsToReturn = 5;
+-- expected document: {"People":[{"PersonID":2,"FullName":"Q0002","PreferredName":"Q","Relationship":"Employee","Company":"WWI"},{"PersonID":4,"FullName":"Q0004","PreferredName":"Q","Relationship":"Employee","Company":"WWI"}]}
+GO
+-- case 3: [A03] SearchName: '_' matches a digit, an accented letter and a space, and '[^a-c]' excludes a, b and c in either case ('x_[^a-c]')
+DELETE FROM [Application].[People];
+DELETE FROM [Sales].[Customers];
+DELETE FROM [Purchasing].[Suppliers];
+INSERT INTO [Application].[People] ([PersonID], [FullName], [PreferredName], [IsSalesperson], [IsEmployee], [SearchName]) VALUES
+  (1, N'Q0001', N'Q', 0, 1, N'x1d'),
+  (2, N'Q0002', N'Q', 0, 1, N'xé9'),
+  (3, N'Q0003', N'Q', 0, 1, N'x d'),
+  (4, N'Q0004', N'Q', 0, 1, N'xaB'),
+  (5, N'Q0005', N'Q', 0, 1, N'x1C'),
+  (6, N'Q0006', N'Q', 0, 1, N'x1');
+EXEC Website.SearchForPeople @SearchText = N'x_[^a-c]', @MaximumRowsToReturn = 5;
+-- expected document: {"People":[{"PersonID":1,"FullName":"Q0001","PreferredName":"Q","Relationship":"Employee","Company":"WWI"},{"PersonID":2,"FullName":"Q0002","PreferredName":"Q","Relationship":"Employee","Company":"WWI"},{"PersonID":3,"FullName":"Q0003","PreferredName":"Q","Relationship":"Employee","Company":"WWI"}]}
+GO
+-- case 4: [A04] relationship and company for people who are neither salesperson nor employee: customer contact, supplier alternate contact, and no relationship ('WWI')
+DELETE FROM [Application].[People];
+DELETE FROM [Sales].[Customers];
+DELETE FROM [Purchasing].[Suppliers];
+INSERT INTO [Application].[People] ([PersonID], [FullName], [PreferredName], [IsSalesperson], [IsEmployee], [SearchName]) VALUES
+  (1, N'Q0001', N'Q', 0, 0, N'ab'),
+  (2, N'Q0002', N'Q', 0, 0, N'abc'),
+  (3, N'Q0003', N'Q', 0, 0, N'xab'),
+  (98, N'Q0098', N'Q', 0, 1, N'zz'),
+  (99, N'Q0099', N'Q', 0, 1, N'zz');
+INSERT INTO [Sales].[Customers] ([CustomerID], [CustomerName], [PrimaryContactPersonID]) VALUES
+  (10, N'Cust Ten', 1);
+INSERT INTO [Purchasing].[Suppliers] ([SupplierID], [SupplierName], [PrimaryContactPersonID], [AlternateContactPersonID]) VALUES
+  (20, N'Sup 20', 99, 1),
+  (21, N'Sup 21', 98, 2);
 EXEC Website.SearchForPeople @SearchText = N'ab', @MaximumRowsToReturn = 5;
--- expected document: {"People":[{"PersonID":1,"FullName":"Q0001","PreferredName":"Q","Relationship":"Employee","Company":"WWI"},{"PersonID":3,"FullName":"Q0003","PreferredName":"Q","Relationship":"Employee","Company":"WWI"}]}
-GO
--- case 2: [A02] a trailing space in SearchName is matched by LIKE '%amy%'
-DELETE FROM [Application].[People];
-DELETE FROM [Sales].[Customers];
-DELETE FROM [Purchasing].[Suppliers];
-INSERT INTO [Application].[People] ([PersonID], [FullName], [PreferredName], [IsSalesperson], [IsEmployee], [SearchName]) VALUES
-  (1, N'Q0001', N'Q', 0, 1, N'amy ');
-EXEC Website.SearchForPeople @SearchText = N'amy', @MaximumRowsToReturn = 5;
--- expected document: {"People":[{"PersonID":1,"FullName":"Q0001","PreferredName":"Q","Relationship":"Employee","Company":"WWI"}]}
-GO
--- case 3: [A03] character class [^a] matches any one character that is not 'a'
-DELETE FROM [Application].[People];
-DELETE FROM [Sales].[Customers];
-DELETE FROM [Purchasing].[Suppliers];
-INSERT INTO [Application].[People] ([PersonID], [FullName], [PreferredName], [IsSalesperson], [IsEmployee], [SearchName]) VALUES
-  (1, N'Q0001', N'Q', 0, 1, N'a'),
-  (2, N'Q0002', N'Q', 0, 1, N'A'),
-  (3, N'Q0003', N'Q', 0, 1, N'b'),
-  (4, N'Q0004', N'Q', 0, 1, N'');
-EXEC Website.SearchForPeople @SearchText = N'[^a]', @MaximumRowsToReturn = 5;
--- expected document: {"People":[{"PersonID":3,"FullName":"Q0003","PreferredName":"Q","Relationship":"Employee","Company":"WWI"}]}
-GO
--- case 4: [A04] relationship precedence: a person flagged both salesperson and employee is reported as 'Salesperson'
-DELETE FROM [Application].[People];
-DELETE FROM [Sales].[Customers];
-DELETE FROM [Purchasing].[Suppliers];
-INSERT INTO [Application].[People] ([PersonID], [FullName], [PreferredName], [IsSalesperson], [IsEmployee], [SearchName]) VALUES
-  (1, N'Q0001', N'Q', 1, 1, N'ab');
-EXEC Website.SearchForPeople @SearchText = N'ab', @MaximumRowsToReturn = 5;
--- expected document: {"People":[{"PersonID":1,"FullName":"Q0001","PreferredName":"Q","Relationship":"Salesperson","Company":"WWI"}]}
+-- expected document: {"People":[{"PersonID":1,"FullName":"Q0001","PreferredName":"Q","Relationship":"Customer","Company":"Cust Ten"},{"PersonID":2,"FullName":"Q0002","PreferredName":"Q","Relationship":"Supplier","Company":"Sup 21"},{"PersonID":3,"FullName":"Q0003","PreferredName":"Q","Company":"WWI"}]}
 GO
 -- case 5: [A05] TOP(2) of five hits, ordered by the Windows collation; person ids are non-contiguous
 DELETE FROM [Application].[People];

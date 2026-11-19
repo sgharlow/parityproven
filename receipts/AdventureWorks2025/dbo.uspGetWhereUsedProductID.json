@@ -142,28 +142,18 @@
       "planted defects caught by the agreed tests: 4 of 4"
     ],
     "adversarial": {
-      "gate": "fail",
-      "ran": 17,
+      "gate": "pass",
+      "ran": 19,
       "differed": 0,
       "evidencePath": "evidence/adversarial/AdventureWorks2025/dbo.uspGetWhereUsedProductID.json",
-      "runAt": "2026-11-19T04:16:00.835Z",
+      "runAt": "2026-11-19T06:20:27.566Z",
       "agentWritten": true,
-      "wording": "17 adversarial cases ran, 0 differed",
+      "wording": "19 adversarial cases ran, 0 differed",
       "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
       "auditorModel": "gpt-5.6-sol",
       "sameModel": false,
-      "mutantAdequacy": "inadequate",
-      "gateReasons": [
-        "case A15 is invalid: the original T-SQL raised an undeclared error: money value beyond 900719925474.0992 cannot be captured exactly through the driver for this call shape: EXEC dbo.uspGetWhereUsedProductID @StartProductID = 1, @CheckDate = '2020-01-02T12:00:00.000'",
-        "objection O01 is open",
-        "objection O02 is open",
-        "objection O03 is open",
-        "objection O04 is open",
-        "objection O05 is open",
-        "objection O06 is open",
-        "objection O07 is open",
-        "mutant adequacy is inadequate (unexplained misses: limit one level too low)"
-      ],
+      "mutantAdequacy": "adequate",
+      "gateReasons": [],
       "cases": [
         {
           "id": "A01",
@@ -217,7 +207,7 @@
         },
         {
           "id": "A06",
-          "label": "an edge ending at 11:59:59.999 duplicates an open edge: SQL Server sums both quantities at 12:00, timestamp only one",
+          "label": "an edge ending at 11:59:59.999 overlaps an open edge for the same pair: SQL Server sums both quantities at 12:00, a timestamp that kept .999 only one",
           "traps": [
             "dates-datetime",
             "numeric-rounding",
@@ -286,7 +276,7 @@
         },
         {
           "id": "A13",
-          "label": "BOMLevel out of step with depth: 32767, -32768 and 0 (smallint extremes) on a three-edge chain",
+          "label": "BOMLevel out of step with depth: 32767 (smallint maximum), 1 and 16384 on a three-edge chain",
           "traps": [
             "top-ties"
           ],
@@ -296,9 +286,8 @@
         },
         {
           "id": "A14",
-          "label": "component names that differ only in case or a trailing space, an empty name and non-ASCII text are returned as stored",
+          "label": "product names with a trailing space, an empty name, non-ASCII text and a 50-character name are returned as stored",
           "traps": [
-            "collation-case",
             "trailing-spaces"
           ],
           "status": "ran",
@@ -307,12 +296,14 @@
         },
         {
           "id": "A15",
-          "label": "money extremes and a quantity summed past decimal(8,2): three identical 999999.99 rows give 2999999.97",
+          "label": "a quantity summed past decimal(8,2): three in-use 999999.99 rows for one pair give 2999999.97; large money costs ending in 5",
           "traps": [
             "numeric-rounding",
             "top-ties"
           ],
-          "status": "invalid"
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
         },
         {
           "id": "A16",
@@ -339,6 +330,16 @@
           "status": "ran",
           "sqlServer": "pass",
           "postgres": "pass"
+        },
+        {
+          "id": "A19",
+          "label": "26-edge chain whose last edge is in use only because datetime rounds its end 23:59:59.999 to midnight: exactly 25 recursions, allowed, 26 rows",
+          "traps": [
+            "dates-datetime"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
         }
       ]
     }
@@ -352,5 +353,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-19T05:37:18.788Z"
+  "builtAt": "2026-11-19T06:24:38.454Z"
 }

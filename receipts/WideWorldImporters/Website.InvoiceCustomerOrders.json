@@ -172,27 +172,22 @@
       "planted defects caught by the agreed tests: 7 of 7"
     ],
     "adversarial": {
-      "gate": "fail",
-      "ran": 7,
+      "gate": "pass",
+      "ran": 8,
       "differed": 0,
       "evidencePath": "evidence/adversarial/WideWorldImporters/Website.InvoiceCustomerOrders.json",
-      "runAt": "2026-11-19T05:29:37.745Z",
+      "runAt": "2026-11-19T06:22:48.764Z",
       "agentWritten": true,
-      "wording": "7 adversarial cases ran, 0 differed",
+      "wording": "8 adversarial cases ran, 0 differed",
       "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
       "auditorModel": "gpt-5.6-sol",
       "sameModel": false,
-      "mutantAdequacy": "inadequate",
-      "gateReasons": [
-        "objection O01 is open",
-        "objection O02 is open",
-        "objection O03 is open",
-        "mutant adequacy is inadequate (unexplained misses: unpicked orders are invoiced)"
-      ],
+      "mutantAdequacy": "adequate",
+      "gateReasons": [],
       "cases": [
         {
           "id": "A01",
-          "label": "tax and line amounts round half away from zero: 3 x 0.95 x 0.505 % = 0.01438875 -> 0.01",
+          "label": "tax amount at an exact half cent: 1 x 0.25 x 50 % = 0.125 -> 0.13 (half away from zero; banker's rounding and truncation give 0.12)",
           "traps": [
             "numeric-rounding"
           ],
@@ -212,7 +207,7 @@
         },
         {
           "id": "A03",
-          "label": "empty DeliveryAddressLine1 with NULL DeliveryAddressLine2 makes DeliveryInstructions NULL (+ semantics)",
+          "label": "an empty DeliveryAddressLine1 with a line 2 gives ', Back door'; a NULL line 2 on the other customer makes its instructions NULL",
           "traps": [
             "null-vs-empty"
           ],
@@ -243,7 +238,7 @@
         },
         {
           "id": "A06",
-          "label": "an order with no lines: its customer-transaction sums are NULL, hitting a NOT NULL violation that rolls everything back",
+          "label": "two orders requested, the second without lines: the NOT NULL violation on its customer transaction rolls back the first order's invoice too",
           "traps": [],
           "status": "ran",
           "sqlServer": "pass",
@@ -255,6 +250,14 @@
           "traps": [
             "identity-gaps"
           ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A08",
+          "label": "two orders requested, the second not yet picked: THROW 51000 and nothing is written for either",
+          "traps": [],
           "status": "ran",
           "sqlServer": "pass",
           "postgres": "pass"
@@ -271,5 +274,5 @@
     "p50Hours": 3,
     "p90Hours": 6
   },
-  "builtAt": "2026-11-19T05:37:18.806Z"
+  "builtAt": "2026-11-19T06:24:38.468Z"
 }

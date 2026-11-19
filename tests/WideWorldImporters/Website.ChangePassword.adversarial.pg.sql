@@ -45,16 +45,16 @@ BEGIN
 END $pp$;
 ROLLBACK;
 
--- @case 2: [A02] old and new passwords differ only in case; the stored hash is compared as bytes
+-- @case 2: [A02] the new password differs from the old one only in case: the new hash is of 'PW', not of 'pw'
 BEGIN;
 DELETE FROM application.people;
 INSERT INTO application.people ("PersonID", "FullName", "IsPermittedToLogon", "LogonName", "HashedPassword", "UserPreferences") VALUES
   ('1', 'Person 1', '0', NULL, NULL, NULL),
-  ('2', 'amy', '0', NULL, '\x00ff10', NULL);
+  ('2', 'amy', '0', NULL, '\x2288b9a49d5366ea09ace5cd9989b3b3a2004e6e85fa2c124febd5fd2b0f3edf', NULL);
 CREATE TEMP TABLE pp_outcome (outcome text) ON COMMIT DROP;
 DO $pp$
 BEGIN
-  CALL website.change_password('2'::integer, 'PW'::text, 'pw'::text);
+  CALL website.change_password('2'::integer, 'pw'::text, 'PW'::text);
   INSERT INTO pp_outcome VALUES ('completed');
 EXCEPTION
   WHEN SQLSTATE 'P0001' THEN INSERT INTO pp_outcome VALUES ('raised');
@@ -62,23 +62,23 @@ END $pp$;
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN
-  SELECT count(*) INTO missing FROM ((SELECT 'raised'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
-  SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'raised'::text AS outcome)) AS d;
+  SELECT count(*) INTO missing FROM ((SELECT 'completed'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'completed'::text AS outcome)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 02 [A02 old and new passwords differ only in case; the stored hash is compared as bytes', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 02 [A02 the new password differs from the old one only in case: the new hash is of PW, not of pw', missing, extra;
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected_state_1 ON COMMIT DROP AS SELECT "PersonID", "FullName", "IsPermittedToLogon", "LogonName", "HashedPassword", "UserPreferences" FROM application.people WITH NO DATA;
 INSERT INTO pp_expected_state_1 ("PersonID", "FullName", "IsPermittedToLogon", "LogonName", "HashedPassword", "UserPreferences") VALUES
   ('1', 'Person 1', '0', NULL, NULL, NULL),
-  ('2', 'amy', '0', NULL, '\x00ff10', NULL);
+  ('2', 'amy', '1', NULL, '\x84d2c604d3b6d69ca9e7f448cb2504ed18f815f372e45fbdb37c16e72d3c28fc', NULL);
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN
   SELECT count(*) INTO missing FROM ((SELECT "PersonID", "FullName", "IsPermittedToLogon", "LogonName", "HashedPassword", "UserPreferences" FROM pp_expected_state_1) EXCEPT ALL (SELECT "PersonID", "FullName", "IsPermittedToLogon", "LogonName", "HashedPassword", "UserPreferences" FROM application.people)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT "PersonID", "FullName", "IsPermittedToLogon", "LogonName", "HashedPassword", "UserPreferences" FROM application.people) EXCEPT ALL (SELECT "PersonID", "FullName", "IsPermittedToLogon", "LogonName", "HashedPassword", "UserPreferences" FROM pp_expected_state_1)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in Application.People after the call', 'test 02 [A02 old and new passwords differ only in case; the stored hash is compared as bytes', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in Application.People after the call', 'test 02 [A02 the new password differs from the old one only in case: the new hash is of PW, not of pw', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;
@@ -88,8 +88,8 @@ BEGIN;
 DELETE FROM application.people;
 INSERT INTO application.people ("PersonID", "FullName", "IsPermittedToLogon", "LogonName", "HashedPassword", "UserPreferences") VALUES
   ('1', 'Amy', '0', NULL, NULL, NULL),
-  ('2', 'amy', '0', NULL, '\xaa', NULL),
-  ('3', 'amy', '0', NULL, '\xaa', NULL);
+  ('2', 'amy', '0', NULL, '\x2288b9a49d5366ea09ace5cd9989b3b3a2004e6e85fa2c124febd5fd2b0f3edf', NULL),
+  ('3', 'amy', '0', NULL, '\x2288b9a49d5366ea09ace5cd9989b3b3a2004e6e85fa2c124febd5fd2b0f3edf', NULL);
 CREATE TEMP TABLE pp_outcome (outcome text) ON COMMIT DROP;
 DO $pp$
 BEGIN
@@ -101,8 +101,8 @@ END $pp$;
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN
-  SELECT count(*) INTO missing FROM ((SELECT 'raised'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
-  SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'raised'::text AS outcome)) AS d;
+  SELECT count(*) INTO missing FROM ((SELECT 'completed'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'completed'::text AS outcome)) AS d;
   IF missing > 0 OR extra > 0 THEN
     RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 03 [A03 two people share a full name and both have the same stored hash; only the requested PersonID cha…', missing, extra;
   END IF;
@@ -110,8 +110,8 @@ END $pp$;
 CREATE TEMP TABLE pp_expected_state_1 ON COMMIT DROP AS SELECT "PersonID", "FullName", "IsPermittedToLogon", "LogonName", "HashedPassword", "UserPreferences" FROM application.people WITH NO DATA;
 INSERT INTO pp_expected_state_1 ("PersonID", "FullName", "IsPermittedToLogon", "LogonName", "HashedPassword", "UserPreferences") VALUES
   ('1', 'Amy', '0', NULL, NULL, NULL),
-  ('2', 'amy', '0', NULL, '\xaa', NULL),
-  ('3', 'amy', '0', NULL, '\xaa', NULL);
+  ('2', 'amy', '1', NULL, '\xa61b0e5025e1d923dceebae78308a0506827314fa81da4f1793c8d113669eb49', NULL),
+  ('3', 'amy', '0', NULL, '\x2288b9a49d5366ea09ace5cd9989b3b3a2004e6e85fa2c124febd5fd2b0f3edf', NULL);
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN
@@ -123,12 +123,12 @@ BEGIN
 END $pp$;
 ROLLBACK;
 
--- @case 4: [A04] NULL new password with an empty-string preference present: hash becomes NULL, '' preference stays ''
+-- @case 4: [A04] NULL new password with an empty full name: NULL + '' is NULL, so the hash becomes NULL (concat would hash ''); an '' preference stays ''
 BEGIN;
 DELETE FROM application.people;
 INSERT INTO application.people ("PersonID", "FullName", "IsPermittedToLogon", "LogonName", "HashedPassword", "UserPreferences") VALUES
   ('1', 'Person 1', '0', NULL, NULL, ''),
-  ('2', 'x', '0', NULL, '\x00ff10', NULL);
+  ('2', '', '0', NULL, '\x96936e717bb7c5deca64c3b19d5a1fda0a45b95386e37ba86ecfd9f0f7d57a8f', NULL);
 CREATE TEMP TABLE pp_outcome (outcome text) ON COMMIT DROP;
 DO $pp$
 BEGIN
@@ -140,23 +140,23 @@ END $pp$;
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN
-  SELECT count(*) INTO missing FROM ((SELECT 'raised'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
-  SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'raised'::text AS outcome)) AS d;
+  SELECT count(*) INTO missing FROM ((SELECT 'completed'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'completed'::text AS outcome)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 04 [A04 NULL new password with an empty-string preference present: hash becomes NULL, preference stays', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 04 [A04 NULL new password with an empty full name: NULL + is NULL, so the hash becomes NULL (concat woul…', missing, extra;
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected_state_1 ON COMMIT DROP AS SELECT "PersonID", "FullName", "IsPermittedToLogon", "LogonName", "HashedPassword", "UserPreferences" FROM application.people WITH NO DATA;
 INSERT INTO pp_expected_state_1 ("PersonID", "FullName", "IsPermittedToLogon", "LogonName", "HashedPassword", "UserPreferences") VALUES
   ('1', 'Person 1', '0', NULL, NULL, ''),
-  ('2', 'x', '0', NULL, '\x00ff10', NULL);
+  ('2', '', '1', NULL, NULL, NULL);
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN
   SELECT count(*) INTO missing FROM ((SELECT "PersonID", "FullName", "IsPermittedToLogon", "LogonName", "HashedPassword", "UserPreferences" FROM pp_expected_state_1) EXCEPT ALL (SELECT "PersonID", "FullName", "IsPermittedToLogon", "LogonName", "HashedPassword", "UserPreferences" FROM application.people)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT "PersonID", "FullName", "IsPermittedToLogon", "LogonName", "HashedPassword", "UserPreferences" FROM application.people) EXCEPT ALL (SELECT "PersonID", "FullName", "IsPermittedToLogon", "LogonName", "HashedPassword", "UserPreferences" FROM pp_expected_state_1)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in Application.People after the call', 'test 04 [A04 NULL new password with an empty-string preference present: hash becomes NULL, preference stays', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in Application.People after the call', 'test 04 [A04 NULL new password with an empty full name: NULL + is NULL, so the hash becomes NULL (concat woul…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;
@@ -165,7 +165,7 @@ ROLLBACK;
 BEGIN;
 DELETE FROM application.people;
 INSERT INTO application.people ("PersonID", "FullName", "IsPermittedToLogon", "LogonName", "HashedPassword", "UserPreferences") VALUES
-  ('1', 'root', '0', NULL, '\x00ff10', NULL),
+  ('1', 'root', '0', NULL, '\x53607c6dea58e5a9392e7e58d09da361a9bfc5e631c49ff2bf95d6381d7aeac8', NULL),
   ('3', 'Person 3', '0', NULL, NULL, NULL);
 CREATE TEMP TABLE pp_outcome (outcome text) ON COMMIT DROP;
 DO $pp$
@@ -186,7 +186,7 @@ BEGIN
 END $pp$;
 CREATE TEMP TABLE pp_expected_state_1 ON COMMIT DROP AS SELECT "PersonID", "FullName", "IsPermittedToLogon", "LogonName", "HashedPassword", "UserPreferences" FROM application.people WITH NO DATA;
 INSERT INTO pp_expected_state_1 ("PersonID", "FullName", "IsPermittedToLogon", "LogonName", "HashedPassword", "UserPreferences") VALUES
-  ('1', 'root', '0', NULL, '\x00ff10', NULL),
+  ('1', 'root', '0', NULL, '\x53607c6dea58e5a9392e7e58d09da361a9bfc5e631c49ff2bf95d6381d7aeac8', NULL),
   ('3', 'Person 3', '0', NULL, NULL, NULL);
 DO $pp$
 DECLARE missing bigint; extra bigint;
@@ -204,7 +204,7 @@ BEGIN;
 DELETE FROM application.people;
 INSERT INTO application.people ("PersonID", "FullName", "IsPermittedToLogon", "LogonName", "HashedPassword", "UserPreferences") VALUES
   ('1', 'Person 1', '0', NULL, NULL, NULL),
-  ('2', 'Ab ', '0', NULL, '\x00ff10', NULL);
+  ('2', 'Ab ', '0', NULL, '\x300e84189da044147dc5fc6fb587e3223e37daa6fda2250301d7729516451c8d', NULL);
 CREATE TEMP TABLE pp_outcome (outcome text) ON COMMIT DROP;
 DO $pp$
 BEGIN
@@ -216,8 +216,8 @@ END $pp$;
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN
-  SELECT count(*) INTO missing FROM ((SELECT 'raised'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
-  SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'raised'::text AS outcome)) AS d;
+  SELECT count(*) INTO missing FROM ((SELECT 'completed'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'completed'::text AS outcome)) AS d;
   IF missing > 0 OR extra > 0 THEN
     RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 06 [A06 a full name with a trailing space changes the hashed bytes', missing, extra;
   END IF;
@@ -225,7 +225,7 @@ END $pp$;
 CREATE TEMP TABLE pp_expected_state_1 ON COMMIT DROP AS SELECT "PersonID", "FullName", "IsPermittedToLogon", "LogonName", "HashedPassword", "UserPreferences" FROM application.people WITH NO DATA;
 INSERT INTO pp_expected_state_1 ("PersonID", "FullName", "IsPermittedToLogon", "LogonName", "HashedPassword", "UserPreferences") VALUES
   ('1', 'Person 1', '0', NULL, NULL, NULL),
-  ('2', 'Ab ', '0', NULL, '\x00ff10', NULL);
+  ('2', 'Ab ', '1', NULL, '\xd0d3e8291a6bac9a88b66b788535cc5115416e2c901807e12abd9106a6189ed0', NULL);
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN

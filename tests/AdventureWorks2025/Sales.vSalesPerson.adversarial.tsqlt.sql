@@ -8,8 +8,8 @@
 GO
 EXEC tSQLt.NewTestClass 'AgreedTests';
 GO
--- case 1: [A01] case-only variants 'Us', 'uS' and 'us ' of a country code join 'US'
-CREATE PROCEDURE [AgreedTests].[test 01 [A01 case-only variants Us, uS and us of a country code join US]
+-- case 1: [A01] case pairs outside ASCII ('üs' to 'ÜS', 'σa' to 'ΣA') and case plus a trailing space on the country side ('CA' to 'ca ')
+CREATE PROCEDURE [AgreedTests].[test 01 [A01 case pairs outside ASCII (üs to ÜS, ?a to ?A) and case plus a trailing space on the country side…]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[HumanResources].[Employee]';
@@ -36,15 +36,17 @@ BEGIN
     (2, 2),
     (3, 3);
   INSERT INTO [Person].[CountryRegion] ([CountryRegionCode], [Name]) VALUES
-    (N'US', N'United States');
+    (N'ÜS', N'Country Ü'),
+    (N'ΣA', N'Country Σ'),
+    (N'ca ', N'Country ca');
   INSERT INTO [Person].[Person] ([BusinessEntityID], [Title], [FirstName], [MiddleName], [LastName], [Suffix], [EmailPromotion]) VALUES
     (1, NULL, N'First1', NULL, N'Last1', NULL, 0),
     (2, NULL, N'First2', NULL, N'Last2', NULL, 0),
     (3, NULL, N'First3', NULL, N'Last3', NULL, 0);
   INSERT INTO [Person].[StateProvince] ([StateProvinceID], [CountryRegionCode], [Name]) VALUES
-    (1, N'Us', N'Province 1'),
-    (2, N'uS', N'Province 2'),
-    (3, N'us ', N'Province 3');
+    (1, N'üs', N'Province 1'),
+    (2, N'σa', N'Province 2'),
+    (3, N'CA', N'Province 3');
   INSERT INTO [Sales].[SalesPerson] ([BusinessEntityID], [TerritoryID], [SalesQuota], [SalesYTD], [SalesLastYear]) VALUES
     (1, NULL, NULL, 0.0000, 0.0000),
     (2, NULL, NULL, 0.0000, 0.0000),
@@ -98,9 +100,9 @@ BEGIN
     [SalesLastYear] money NULL
   );
   INSERT INTO #Expected ([BusinessEntityID], [Title], [FirstName], [MiddleName], [LastName], [Suffix], [JobTitle], [PhoneNumber], [PhoneNumberType], [EmailAddress], [EmailPromotion], [AddressLine1], [AddressLine2], [City], [StateProvinceName], [PostalCode], [CountryRegionName], [TerritoryName], [TerritoryGroup], [SalesQuota], [SalesYTD], [SalesLastYear]) VALUES
-    (1, NULL, N'First1', NULL, N'Last1', NULL, N'Sales Representative', NULL, NULL, NULL, 0, N'1 Main St', NULL, N'Bothell', N'Province 1', N'98011', N'United States', NULL, NULL, NULL, 0, 0),
-    (2, NULL, N'First2', NULL, N'Last2', NULL, N'Sales Representative', NULL, NULL, NULL, 0, N'2 Main St', NULL, N'Bothell', N'Province 2', N'98011', N'United States', NULL, NULL, NULL, 0, 0),
-    (3, NULL, N'First3', NULL, N'Last3', NULL, N'Sales Representative', NULL, NULL, NULL, 0, N'3 Main St', NULL, N'Bothell', N'Province 3', N'98011', N'United States', NULL, NULL, NULL, 0, 0);
+    (1, NULL, N'First1', NULL, N'Last1', NULL, N'Sales Representative', NULL, NULL, NULL, 0, N'1 Main St', NULL, N'Bothell', N'Province 1', N'98011', N'Country Ü', NULL, NULL, NULL, 0, 0),
+    (2, NULL, N'First2', NULL, N'Last2', NULL, N'Sales Representative', NULL, NULL, NULL, 0, N'2 Main St', NULL, N'Bothell', N'Province 2', N'98011', N'Country Σ', NULL, NULL, NULL, 0, 0),
+    (3, NULL, N'First3', NULL, N'Last3', NULL, N'Sales Representative', NULL, NULL, NULL, 0, N'3 Main St', NULL, N'Bothell', N'Province 3', N'98011', N'Country ca', NULL, NULL, NULL, 0, 0);
   INSERT INTO #Actual
   SELECT * FROM Sales.vSalesPerson;
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
@@ -614,8 +616,106 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
--- case 7: [A08] territory: TerritoryID NULL, a missing territory (LEFT JOIN NULL), a territory named '' and a group with a trailing space
-CREATE PROCEDURE [AgreedTests].[test 07 [A08 territory: TerritoryID NULL, a missing territory (LEFT JOIN NULL), a territory named and a group…]
+-- case 7: [A07] large money values passed through (up to 900719925474.0990), values ending in 5 at the fourth place, zero sales and a NULL quota
+CREATE PROCEDURE [AgreedTests].[test 07 [A07 large money values passed through (up to 900719925474.0990), values ending in 5 at the fourth pl…]
+AS
+BEGIN
+  EXEC tSQLt.FakeTable @TableName = N'[HumanResources].[Employee]';
+  EXEC tSQLt.FakeTable @TableName = N'[Person].[Address]';
+  EXEC tSQLt.FakeTable @TableName = N'[Person].[BusinessEntityAddress]';
+  EXEC tSQLt.FakeTable @TableName = N'[Person].[CountryRegion]';
+  EXEC tSQLt.FakeTable @TableName = N'[Person].[EmailAddress]';
+  EXEC tSQLt.FakeTable @TableName = N'[Person].[Person]';
+  EXEC tSQLt.FakeTable @TableName = N'[Person].[PersonPhone]';
+  EXEC tSQLt.FakeTable @TableName = N'[Person].[PhoneNumberType]';
+  EXEC tSQLt.FakeTable @TableName = N'[Person].[StateProvince]';
+  EXEC tSQLt.FakeTable @TableName = N'[Sales].[SalesPerson]';
+  EXEC tSQLt.FakeTable @TableName = N'[Sales].[SalesTerritory]';
+  INSERT INTO [HumanResources].[Employee] ([BusinessEntityID], [JobTitle]) VALUES
+    (1, N'Sales Representative'),
+    (2, N'Sales Representative'),
+    (3, N'Sales Representative');
+  INSERT INTO [Person].[Address] ([AddressID], [AddressLine1], [AddressLine2], [City], [StateProvinceID], [PostalCode]) VALUES
+    (1, N'1 Main St', NULL, N'Bothell', 1, N'98011'),
+    (2, N'2 Main St', NULL, N'Bothell', 2, N'98011'),
+    (3, N'3 Main St', NULL, N'Bothell', 3, N'98011');
+  INSERT INTO [Person].[BusinessEntityAddress] ([BusinessEntityID], [AddressID]) VALUES
+    (1, 1),
+    (2, 2),
+    (3, 3);
+  INSERT INTO [Person].[CountryRegion] ([CountryRegionCode], [Name]) VALUES
+    (N'US', N'United States');
+  INSERT INTO [Person].[Person] ([BusinessEntityID], [Title], [FirstName], [MiddleName], [LastName], [Suffix], [EmailPromotion]) VALUES
+    (1, NULL, N'First1', NULL, N'Last1', NULL, 0),
+    (2, NULL, N'First2', NULL, N'Last2', NULL, 0),
+    (3, NULL, N'First3', NULL, N'Last3', NULL, 0);
+  INSERT INTO [Person].[StateProvince] ([StateProvinceID], [CountryRegionCode], [Name]) VALUES
+    (1, N'US', N'Province 1'),
+    (2, N'US', N'Province 2'),
+    (3, N'US', N'Province 3');
+  INSERT INTO [Sales].[SalesPerson] ([BusinessEntityID], [TerritoryID], [SalesQuota], [SalesYTD], [SalesLastYear]) VALUES
+    (1, NULL, NULL, 900719925474.0985, 900719925474.0990),
+    (2, NULL, 0.0005, 0.0005, 0.0015),
+    (3, NULL, 123456789012.3455, 0.0000, 899999999999.9995);
+  CREATE TABLE #Expected (
+    [BusinessEntityID] int NULL,
+    [Title] nvarchar(8) NULL,
+    [FirstName] nvarchar(50) NULL,
+    [MiddleName] nvarchar(50) NULL,
+    [LastName] nvarchar(50) NULL,
+    [Suffix] nvarchar(10) NULL,
+    [JobTitle] nvarchar(50) NULL,
+    [PhoneNumber] nvarchar(25) NULL,
+    [PhoneNumberType] nvarchar(50) NULL,
+    [EmailAddress] nvarchar(50) NULL,
+    [EmailPromotion] int NULL,
+    [AddressLine1] nvarchar(60) NULL,
+    [AddressLine2] nvarchar(60) NULL,
+    [City] nvarchar(30) NULL,
+    [StateProvinceName] nvarchar(50) NULL,
+    [PostalCode] nvarchar(15) NULL,
+    [CountryRegionName] nvarchar(50) NULL,
+    [TerritoryName] nvarchar(50) NULL,
+    [TerritoryGroup] nvarchar(50) NULL,
+    [SalesQuota] money NULL,
+    [SalesYTD] money NULL,
+    [SalesLastYear] money NULL
+  );
+  CREATE TABLE #Actual (
+    [BusinessEntityID] int NULL,
+    [Title] nvarchar(8) NULL,
+    [FirstName] nvarchar(50) NULL,
+    [MiddleName] nvarchar(50) NULL,
+    [LastName] nvarchar(50) NULL,
+    [Suffix] nvarchar(10) NULL,
+    [JobTitle] nvarchar(50) NULL,
+    [PhoneNumber] nvarchar(25) NULL,
+    [PhoneNumberType] nvarchar(50) NULL,
+    [EmailAddress] nvarchar(50) NULL,
+    [EmailPromotion] int NULL,
+    [AddressLine1] nvarchar(60) NULL,
+    [AddressLine2] nvarchar(60) NULL,
+    [City] nvarchar(30) NULL,
+    [StateProvinceName] nvarchar(50) NULL,
+    [PostalCode] nvarchar(15) NULL,
+    [CountryRegionName] nvarchar(50) NULL,
+    [TerritoryName] nvarchar(50) NULL,
+    [TerritoryGroup] nvarchar(50) NULL,
+    [SalesQuota] money NULL,
+    [SalesYTD] money NULL,
+    [SalesLastYear] money NULL
+  );
+  INSERT INTO #Expected ([BusinessEntityID], [Title], [FirstName], [MiddleName], [LastName], [Suffix], [JobTitle], [PhoneNumber], [PhoneNumberType], [EmailAddress], [EmailPromotion], [AddressLine1], [AddressLine2], [City], [StateProvinceName], [PostalCode], [CountryRegionName], [TerritoryName], [TerritoryGroup], [SalesQuota], [SalesYTD], [SalesLastYear]) VALUES
+    (1, NULL, N'First1', NULL, N'Last1', NULL, N'Sales Representative', NULL, NULL, NULL, 0, N'1 Main St', NULL, N'Bothell', N'Province 1', N'98011', N'United States', NULL, NULL, NULL, 900719925474.0985, 900719925474.099),
+    (2, NULL, N'First2', NULL, N'Last2', NULL, N'Sales Representative', NULL, NULL, NULL, 0, N'2 Main St', NULL, N'Bothell', N'Province 2', N'98011', N'United States', NULL, NULL, 0.0005, 0.0005, 0.0015),
+    (3, NULL, N'First3', NULL, N'Last3', NULL, N'Sales Representative', NULL, NULL, NULL, 0, N'3 Main St', NULL, N'Bothell', N'Province 3', N'98011', N'United States', NULL, NULL, 123456789012.3455, 0, 899999999999.9995);
+  INSERT INTO #Actual
+  SELECT * FROM Sales.vSalesPerson;
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
+END;
+GO
+-- case 8: [A08] territory: TerritoryID NULL, a missing territory (LEFT JOIN NULL), a territory named '' and a group with a trailing space
+CREATE PROCEDURE [AgreedTests].[test 08 [A08 territory: TerritoryID NULL, a missing territory (LEFT JOIN NULL), a territory named and a group…]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[HumanResources].[Employee]';
@@ -714,8 +814,8 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
--- case 8: [A09] text returned as stored and fan-out: case-only name variants, an emoji, two identical phone rows and an unknown phone type
-CREATE PROCEDURE [AgreedTests].[test 08 [A09 text returned as stored and fan-out: case-only name variants, an emoji, two identical phone rows…]
+-- case 9: [A09] text returned as stored and fan-out: case-only name variants, an emoji, the same number under two phone types of one name and an unknown phone type
+CREATE PROCEDURE [AgreedTests].[test 09 [A09 text returned as stored and fan-out: case-only name variants, an emoji, the same number under tw…]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[HumanResources].[Employee]';
@@ -749,10 +849,11 @@ BEGIN
     (3, NULL, N'ann', NULL, N'Last3', NULL, 0);
   INSERT INTO [Person].[PersonPhone] ([BusinessEntityID], [PhoneNumber], [PhoneNumberTypeID]) VALUES
     (1, N'555-0100', 1),
-    (1, N'555-0100', 1),
+    (1, N'555-0100', 2),
     (1, N'555-0199', 9);
   INSERT INTO [Person].[PhoneNumberType] ([PhoneNumberTypeID], [Name]) VALUES
-    (1, N'Cell');
+    (1, N'Cell'),
+    (2, N'Cell');
   INSERT INTO [Person].[StateProvince] ([StateProvinceID], [CountryRegionCode], [Name]) VALUES
     (1, N'US', N'Province 1'),
     (2, N'US', N'Province 2'),
@@ -820,8 +921,8 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
--- case 9: [A10] keys with gaps and at the int limits: sales persons 0 and 2147483647, territory -2147483648, a sales person without an Employee row
-CREATE PROCEDURE [AgreedTests].[test 09 [A10 keys with gaps and at the int limits: sales persons 0 and 2147483647, territory -2147483648, a s…]
+-- case 10: [A10] keys with gaps and at the int limits: sales persons 0 and 2147483647, territory -2147483648, a sales person without an Employee row
+CREATE PROCEDURE [AgreedTests].[test 10 [A10 keys with gaps and at the int limits: sales persons 0 and 2147483647, territory -2147483648, a s…]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[HumanResources].[Employee]';

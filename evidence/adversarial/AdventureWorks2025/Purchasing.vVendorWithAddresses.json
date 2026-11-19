@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "object": "Purchasing.vVendorWithAddresses",
   "database": "AdventureWorks2025",
-  "runAt": "2026-11-19T04:17:00.372Z",
+  "runAt": "2026-11-19T06:17:32.872Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "4b355893ca70ec3718151f81cce63b8e674e0a782da97f1a9b9bf92ce199f64c",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-18T20:21:05-07:00",
+    "at": "2026-11-19T05:51:37.445Z",
     "file": "adversarial/AdventureWorks2025/Purchasing.vVendorWithAddresses.cases.json",
-    "sha256": "39b40d73f4e8578efc2da50dbea975045e258d1d9d4c6bee0edd69f90024be5d"
+    "sha256": "afe5a405008f5a468c2625dd7c428e0c5f36febe27d4d72c7707b7930a2f3aba"
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-18T20:33:12.9525152-07:00",
+    "at": "2026-11-19T06:06:57.652Z",
     "file": "adversarial/AdventureWorks2025/Purchasing.vVendorWithAddresses.audit.json",
-    "sha256": "44b1e3af9660902640aa6bf3faae3cc4752c3211d1a6790a764c04b332dbfb8f"
+    "sha256": "9fd4d60790d62fb163b8a23bec8c2fa908503b8b81547b62e70e36207b4ebf79"
   },
   "sameModel": false,
   "casesAudited": [
@@ -27,7 +27,8 @@
     "A06",
     "A07",
     "A08",
-    "A09"
+    "A09",
+    "A10"
   ],
   "traps": {
     "null-vs-empty": {
@@ -79,20 +80,20 @@
   "cases": [
     {
       "id": "A01",
-      "label": "case-only variants 'Us', 'uS' and 'us ' of a country code join 'US'",
+      "label": "case pairs outside ASCII ('üs' to 'ÜS', 'σa' to 'ΣA') and case plus a trailing space on the country side ('CA' to 'ca ')",
       "traps": [
         "collation-case",
         "trailing-spaces"
       ],
-      "reasoning": "CI_AS ignores case and SQL Server equality ignores trailing spaces, so all three province codes join country 'US'. The conversion uses rtrim under an ICU level-2 collation; this checks mixed case and case plus trailing space together.",
+      "reasoning": "The hand-derived cases join an ASCII lowercase province code to an uppercase country and a province code with a trailing space; both differences sit on the province side. Here the case pairs are Latin-1 (ü/Ü) and Greek (σ/Σ), which CI_AS folds through its Unicode case tables, and the country row itself is lowercase with a trailing space ('ca '), so the rtrim and the case-insensitive comparison must apply to the country side too. A conversion that lower()ed only ASCII, folded with a byte-wise or C-collation upper(), or trimmed only the province side would drop rows that SQL Server keeps. These are valid source rows: CountryRegion keys 'ÜS', 'ΣA' and 'ca ' are distinct under the case-insensitive key, and each province code references its country under that collation.",
       "trapChecks": {
         "collation-case": {
           "present": true,
-          "detail": "\"Us\" and \"uS\" differ only in case"
+          "detail": "\"üs\" and \"ÜS\" differ only in case"
         },
         "trailing-spaces": {
           "present": true,
-          "detail": "\"us \" ends in a space"
+          "detail": "\"ca \" ends in a space"
         }
       },
       "status": "ran",
@@ -243,12 +244,12 @@
     },
     {
       "id": "A08",
-      "label": "one address used twice by a vendor under two address types, a duplicate BusinessEntityAddress row, and an address type of another case",
+      "label": "one address used by a vendor under two address types and by a second vendor; a vendor name that differs only in case from an address type",
       "traps": [
         "top-ties",
         "collation-case"
       ],
-      "reasoning": "BusinessEntityAddress has no key constraint in the scratch tables: the same (vendor, address, type) twice gives two identical rows. Address types 'Shipping' and 'SHIPPING' are separate rows, joined by id, and passed through with their own spelling.",
+      "reasoning": "BusinessEntityAddress keys on (BusinessEntityID, AddressID, AddressTypeID): address 1 is linked to vendor 1 as Shipping and as Billing and to vendor 2 as Shipping, three valid rows that share every address column. The view has no DISTINCT and compares no text; vendor 2 is named 'shipping' and address type 1 'Shipping', which CI_AS would treat as equal, and both are passed through with their own spelling.",
       "trapChecks": {
         "top-ties": {
           "present": true,
@@ -256,7 +257,7 @@
         },
         "collation-case": {
           "present": true,
-          "detail": "\"Shipping\" and \"SHIPPING\" differ only in case"
+          "detail": "\"shipping\" and \"Shipping\" differ only in case"
         }
       },
       "status": "ran",
@@ -289,10 +290,25 @@
         "passed": true
       },
       "differed": false
+    },
+    {
+      "id": "A10",
+      "label": "a vendor address whose address type has no AddressType row is dropped by the inner join",
+      "traps": [],
+      "reasoning": "The view joins AddressType with INNER JOIN, so the BusinessEntityAddress row with address type 9 gives no row; a conversion that made that join outer would list it with a NULL AddressType (the planted defect 'inner join to address type made a left join'). The source has a foreign key from BusinessEntityAddress.AddressTypeID to AddressType, so the auditor may judge this input outside the source preconditions; it is the only input that can show that defect, and Sales.vStoreWithAddresses A09 uses the same input.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
     }
   ],
   "summary": {
-    "ran": 9,
+    "ran": 10,
     "differed": 0,
     "invalid": 0
   },
@@ -302,35 +318,49 @@
       "caseId": "A01",
       "kind": "duplicate",
       "text": "The hand-derived fixed cases already test a lowercase province code joining 'US' under CI_AS and a province code with a trailing space joining 'US'. Additional mixed-case spellings and combining case with the trailing space attack the same two join mechanisms.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A01 now uses non-ASCII Latin-1 and Greek case pairs and puts the combined case/trailing-space variant on the country side, exercising Unicode folding and asymmetric trimming paths absent from the hand-derived inputs.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O02",
       "caseId": "A08",
       "kind": "not-an-attack",
       "text": "A08 duplicates the exact BusinessEntityAddress primary-key tuple (vendor 1, address 1, address type 2). It also sends AddressType names 'Shipping' and 'SHIPPING', which collide under the source case-insensitive unique key. The duplicate fan-out input is not valid source data.",
+      "status": "resolved",
+      "resolution": "A08 now uses three distinct BusinessEntityAddress primary-key tuples and distinct AddressType names. Its case-only pair crosses Vendor.Name and AddressType.Name, avoiding both unique constraints.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
+    },
+    {
+      "id": "O03",
+      "caseId": "A10",
+      "kind": "not-an-attack",
+      "text": "A10 sends BusinessEntityAddress.AddressTypeID 9 without a matching AddressType row. The source foreign key requires that match, so the new case is outside the source schema preconditions. The inner-to-left-join mutant is unobservable for valid source inputs and is recorded in equivalentMutants instead.",
       "status": "open"
     }
   ],
   "mutantAdequacy": {
-    "verdict": "inadequate",
+    "verdict": "adequate",
     "caught": [
       "join is case-sensitive (collation dropped)",
-      "trailing spaces count in the join (rtrim dropped)"
-    ],
-    "missed": [
+      "trailing spaces count in the join (rtrim dropped)",
       "inner join to address type made a left join (unknown address types kept)"
     ],
+    "missed": [],
     "skipped": [],
     "equivalentRecorded": []
   },
   "gate": {
     "passed": false,
     "reasons": [
-      "objection O01 is open",
-      "objection O02 is open",
-      "mutant adequacy is inadequate (unexplained misses: inner join to address type made a left join (unknown address types kept))"
+      "objection O03 is open"
     ]
   },
-  "wording": "9 adversarial cases ran, 0 differed"
+  "wording": "10 adversarial cases ran, 0 differed"
 }

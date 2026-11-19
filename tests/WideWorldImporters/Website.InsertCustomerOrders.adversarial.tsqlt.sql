@@ -947,3 +947,305 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedQuery4', @Actual = N'#ActualQuery4', @Message = N'next order ID';
 END;
 GO
+-- case 7: [A07] lines are priced on today's date, not the expected delivery date: a deal valid today applies, one valid only on the delivery date 9999-12-31 does not
+--[@tSQLt:NoTransaction](DEFAULT)
+CREATE PROCEDURE [AgreedTests].[test 07 [A07 lines are priced on todays date, not the expected delivery date: a deal valid today applies, one…]
+AS
+BEGIN
+  DELETE FROM [Sales].[Orders];
+  DELETE FROM [Sales].[OrderLines];
+  DELETE FROM [Warehouse].[StockItems];
+  DELETE FROM [Sales].[Customers];
+  DELETE FROM [Sales].[SpecialDeals];
+  DELETE FROM [Warehouse].[StockItemStockGroups];
+  INSERT INTO [Warehouse].[StockItems] ([StockItemID], [UnitPackageID], [TaxRate], [UnitPrice]) VALUES
+    (1, 7, 15.000, 10.00),
+    (2, 9, 10.000, 99.99);
+  INSERT INTO [Sales].[Customers] ([CustomerID], [BuyingGroupID], [CustomerCategoryID]) VALUES
+    (1, NULL, 1),
+    (2, 1, 2);
+  INSERT INTO [Sales].[SpecialDeals] ([SpecialDealID], [StockItemID], [CustomerID], [BuyingGroupID], [CustomerCategoryID], [StockGroupID], [StartDate], [EndDate], [DiscountAmount], [DiscountPercentage], [UnitPrice]) VALUES
+    (1, 1, NULL, NULL, NULL, NULL, CAST('2000-01-01' AS date), CAST('9999-12-30' AS date), NULL, NULL, 7.55),
+    (2, 1, NULL, NULL, NULL, NULL, CAST('9999-12-31' AS date), CAST('9999-12-31' AS date), NULL, NULL, 1.05);
+  ALTER SEQUENCE Sequences.OrderID RESTART WITH 73596;
+  DECLARE @outcome nvarchar(4000) = N'completed';
+  BEGIN TRY
+    DECLARE @tvp0 [Website].[OrderList];
+  INSERT INTO @tvp0 ([OrderReference], [CustomerID], [ContactPersonID], [ExpectedDeliveryDate], [CustomerPurchaseOrderNumber], [IsUndersupplyBackordered], [Comments], [DeliveryInstructions]) VALUES (1, 1, 3, CAST('9999-12-31' AS date), N'PO-1', 0, NULL, NULL);
+  DECLARE @tvp1 [Website].[OrderLineList];
+  INSERT INTO @tvp1 ([OrderReference], [StockItemID], [Description], [Quantity]) VALUES (1, 1, N'line 1/1', 2);
+  EXEC Website.InsertCustomerOrders @Orders = @tvp0, @OrderLines = @tvp1, @OrdersCreatedByPersonID = 1, @SalespersonPersonID = 2;
+  END TRY
+  BEGIN CATCH
+    SET @outcome = CASE WHEN ERROR_NUMBER() IN (515) THEN N'raised: NULL into a NOT NULL column' WHEN ERROR_NUMBER() IN (8152, 2628) THEN N'raised: string truncation' WHEN ERROR_NUMBER() IN (8115) THEN N'raised: numeric overflow' ELSE N'unexpected error ' + CAST(ERROR_NUMBER() AS nvarchar(20)) + N': ' + ERROR_MESSAGE() END;
+    -- a procedure that fails inside its own transaction can leave it open (and uncommittable); the test is outside
+    -- tSQLt's transaction (NoTransaction), so this undoes only the procedure's work, as SQL Server does at batch end
+    IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+  END CATCH;
+  CREATE TABLE #ExpectedQuery1 (
+    [CustomerID] int NULL,
+    [SalespersonPersonID] int NULL,
+    [PickedByPersonID] int NULL,
+    [ContactPersonID] int NULL,
+    [BackorderOrderID] int NULL,
+    [OrderDate_now] nvarchar(5) NULL,
+    [OrderDate] date NULL,
+    [ExpectedDeliveryDate] date NULL,
+    [CustomerPurchaseOrderNumber] nvarchar(20) NULL,
+    [IsUndersupplyBackordered] bit NULL,
+    [Comments] nvarchar(400) NULL,
+    [DeliveryInstructions] nvarchar(400) NULL,
+    [InternalComments] nvarchar(400) NULL,
+    [PickingCompletedWhen] datetime2(7) NULL,
+    [LastEditedBy] int NULL,
+    [LastEditedWhen_now] nvarchar(3) NULL,
+    [LastEditedWhen] datetime2(7) NULL
+  );
+  CREATE TABLE #ActualQuery1 (
+    [CustomerID] int NULL,
+    [SalespersonPersonID] int NULL,
+    [PickedByPersonID] int NULL,
+    [ContactPersonID] int NULL,
+    [BackorderOrderID] int NULL,
+    [OrderDate_now] nvarchar(5) NULL,
+    [OrderDate] date NULL,
+    [ExpectedDeliveryDate] date NULL,
+    [CustomerPurchaseOrderNumber] nvarchar(20) NULL,
+    [IsUndersupplyBackordered] bit NULL,
+    [Comments] nvarchar(400) NULL,
+    [DeliveryInstructions] nvarchar(400) NULL,
+    [InternalComments] nvarchar(400) NULL,
+    [PickingCompletedWhen] datetime2(7) NULL,
+    [LastEditedBy] int NULL,
+    [LastEditedWhen_now] nvarchar(3) NULL,
+    [LastEditedWhen] datetime2(7) NULL
+  );
+  INSERT INTO #ExpectedQuery1 ([CustomerID], [SalespersonPersonID], [PickedByPersonID], [ContactPersonID], [BackorderOrderID], [OrderDate_now], [OrderDate], [ExpectedDeliveryDate], [CustomerPurchaseOrderNumber], [IsUndersupplyBackordered], [Comments], [DeliveryInstructions], [InternalComments], [PickingCompletedWhen], [LastEditedBy], [LastEditedWhen_now], [LastEditedWhen]) VALUES
+    (1, 2, NULL, 3, NULL, N'today', NULL, CAST('9999-12-31' AS date), N'PO-1', 0, NULL, NULL, NULL, NULL, 1, N'now', NULL);
+  INSERT INTO #ActualQuery1
+  SELECT o.CustomerID, o.SalespersonPersonID, o.PickedByPersonID, o.ContactPersonID, o.BackorderOrderID, CASE WHEN o.OrderDate = CAST(SYSDATETIME() AS date) THEN N'today' END AS [OrderDate_now], CASE WHEN o.OrderDate = CAST(SYSDATETIME() AS date) THEN NULL ELSE o.OrderDate END AS [OrderDate],
+                          o.ExpectedDeliveryDate, o.CustomerPurchaseOrderNumber, o.IsUndersupplyBackordered, o.Comments, o.DeliveryInstructions, o.InternalComments,
+                          o.PickingCompletedWhen, o.LastEditedBy, CASE WHEN o.LastEditedWhen BETWEEN DATEADD(minute, -5, SYSDATETIME()) AND SYSDATETIME() THEN N'now' END AS [LastEditedWhen_now], CASE WHEN o.LastEditedWhen BETWEEN DATEADD(minute, -5, SYSDATETIME()) AND SYSDATETIME() THEN NULL ELSE o.LastEditedWhen END AS [LastEditedWhen]
+                        FROM Sales.Orders AS o;
+  CREATE TABLE #ExpectedQuery2 (
+    [OrderPO] nvarchar(20) NULL,
+    [OrderCustomer] int NULL,
+    [HasOrder] nvarchar(6) NULL,
+    [StockItemID] int NULL,
+    [Description] nvarchar(100) NULL,
+    [PackageTypeID] int NULL,
+    [Quantity] int NULL,
+    [UnitPrice] decimal(18,2) NULL,
+    [TaxRate] decimal(18,3) NULL,
+    [PickedQuantity] int NULL,
+    [PickingCompletedWhen] datetime2(7) NULL,
+    [LastEditedBy] int NULL,
+    [LastEditedWhen_now] nvarchar(3) NULL,
+    [LastEditedWhen] datetime2(7) NULL
+  );
+  CREATE TABLE #ActualQuery2 (
+    [OrderPO] nvarchar(20) NULL,
+    [OrderCustomer] int NULL,
+    [HasOrder] nvarchar(6) NULL,
+    [StockItemID] int NULL,
+    [Description] nvarchar(100) NULL,
+    [PackageTypeID] int NULL,
+    [Quantity] int NULL,
+    [UnitPrice] decimal(18,2) NULL,
+    [TaxRate] decimal(18,3) NULL,
+    [PickedQuantity] int NULL,
+    [PickingCompletedWhen] datetime2(7) NULL,
+    [LastEditedBy] int NULL,
+    [LastEditedWhen_now] nvarchar(3) NULL,
+    [LastEditedWhen] datetime2(7) NULL
+  );
+  INSERT INTO #ExpectedQuery2 ([OrderPO], [OrderCustomer], [HasOrder], [StockItemID], [Description], [PackageTypeID], [Quantity], [UnitPrice], [TaxRate], [PickedQuantity], [PickingCompletedWhen], [LastEditedBy], [LastEditedWhen_now], [LastEditedWhen]) VALUES
+    (N'PO-1', 1, N'ok', 1, N'line 1/1', 7, 2, 7.55, 15, 0, NULL, 1, N'now', NULL);
+  INSERT INTO #ActualQuery2
+  SELECT o.CustomerPurchaseOrderNumber AS OrderPO, o.CustomerID AS OrderCustomer, CASE WHEN o.OrderID IS NULL THEN N'orphan' ELSE N'ok' END AS HasOrder,
+                          ol.StockItemID, ol.Description, ol.PackageTypeID, ol.Quantity, ol.UnitPrice, ol.TaxRate, ol.PickedQuantity, ol.PickingCompletedWhen,
+                          ol.LastEditedBy, CASE WHEN ol.LastEditedWhen BETWEEN DATEADD(minute, -5, SYSDATETIME()) AND SYSDATETIME() THEN N'now' END AS [LastEditedWhen_now], CASE WHEN ol.LastEditedWhen BETWEEN DATEADD(minute, -5, SYSDATETIME()) AND SYSDATETIME() THEN NULL ELSE ol.LastEditedWhen END AS [LastEditedWhen]
+                        FROM Sales.OrderLines AS ol LEFT JOIN Sales.Orders AS o ON o.OrderID = ol.OrderID;
+  CREATE TABLE #ExpectedQuery3 (
+    [Orders] int NULL,
+    [DistinctIDs] int NULL,
+    [FirstID] int NULL,
+    [LastID] int NULL
+  );
+  CREATE TABLE #ActualQuery3 (
+    [Orders] int NULL,
+    [DistinctIDs] int NULL,
+    [FirstID] int NULL,
+    [LastID] int NULL
+  );
+  INSERT INTO #ExpectedQuery3 ([Orders], [DistinctIDs], [FirstID], [LastID]) VALUES
+    (1, 1, 73596, 73596);
+  INSERT INTO #ActualQuery3
+  SELECT COUNT(*) AS Orders, COUNT(DISTINCT OrderID) AS DistinctIDs, MIN(OrderID) AS FirstID, MAX(OrderID) AS LastID FROM Sales.Orders;
+  CREATE TABLE #ExpectedQuery4 (
+    [NextOrderID] int NULL
+  );
+  CREATE TABLE #ActualQuery4 (
+    [NextOrderID] int NULL
+  );
+  INSERT INTO #ExpectedQuery4 ([NextOrderID]) VALUES
+    (73597);
+  INSERT INTO #ActualQuery4
+  SELECT NEXT VALUE FOR Sequences.OrderID AS NextOrderID;
+  EXEC tSQLt.AssertEqualsString @Expected = N'completed', @Actual = @outcome, @Message = N'outcome';
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedQuery1', @Actual = N'#ActualQuery1', @Message = N'orders';
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedQuery2', @Actual = N'#ActualQuery2', @Message = N'order lines, with their order';
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedQuery3', @Actual = N'#ActualQuery3', @Message = N'order IDs allocated';
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedQuery4', @Actual = N'#ActualQuery4', @Message = N'next order ID';
+END;
+GO
+-- case 8: [A08] an order line for a stock item with no Warehouse.StockItems row is not inserted; the order and its other line are
+--[@tSQLt:NoTransaction](DEFAULT)
+CREATE PROCEDURE [AgreedTests].[test 08 [A08 an order line for a stock item with no Warehouse.StockItems row is not inserted; the order and i…]
+AS
+BEGIN
+  DELETE FROM [Sales].[Orders];
+  DELETE FROM [Sales].[OrderLines];
+  DELETE FROM [Warehouse].[StockItems];
+  DELETE FROM [Sales].[Customers];
+  DELETE FROM [Sales].[SpecialDeals];
+  DELETE FROM [Warehouse].[StockItemStockGroups];
+  INSERT INTO [Warehouse].[StockItems] ([StockItemID], [UnitPackageID], [TaxRate], [UnitPrice]) VALUES
+    (1, 7, 15.000, 10.00),
+    (2, 9, 10.000, 99.99);
+  INSERT INTO [Sales].[Customers] ([CustomerID], [BuyingGroupID], [CustomerCategoryID]) VALUES
+    (1, NULL, 1),
+    (2, 1, 2);
+  ALTER SEQUENCE Sequences.OrderID RESTART WITH 73596;
+  DECLARE @outcome nvarchar(4000) = N'completed';
+  BEGIN TRY
+    DECLARE @tvp0 [Website].[OrderList];
+  INSERT INTO @tvp0 ([OrderReference], [CustomerID], [ContactPersonID], [ExpectedDeliveryDate], [CustomerPurchaseOrderNumber], [IsUndersupplyBackordered], [Comments], [DeliveryInstructions]) VALUES (1, 1, 3, CAST('2030-01-01' AS date), N'PO-1', 0, NULL, NULL);
+  DECLARE @tvp1 [Website].[OrderLineList];
+  INSERT INTO @tvp1 ([OrderReference], [StockItemID], [Description], [Quantity]) VALUES (1, 1, N'line 1/1', 2);
+  INSERT INTO @tvp1 ([OrderReference], [StockItemID], [Description], [Quantity]) VALUES (1, 42, N'line 1/2 (unknown item)', 1);
+  EXEC Website.InsertCustomerOrders @Orders = @tvp0, @OrderLines = @tvp1, @OrdersCreatedByPersonID = 1, @SalespersonPersonID = 2;
+  END TRY
+  BEGIN CATCH
+    SET @outcome = CASE WHEN ERROR_NUMBER() IN (515) THEN N'raised: NULL into a NOT NULL column' WHEN ERROR_NUMBER() IN (8152, 2628) THEN N'raised: string truncation' WHEN ERROR_NUMBER() IN (8115) THEN N'raised: numeric overflow' ELSE N'unexpected error ' + CAST(ERROR_NUMBER() AS nvarchar(20)) + N': ' + ERROR_MESSAGE() END;
+    -- a procedure that fails inside its own transaction can leave it open (and uncommittable); the test is outside
+    -- tSQLt's transaction (NoTransaction), so this undoes only the procedure's work, as SQL Server does at batch end
+    IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+  END CATCH;
+  CREATE TABLE #ExpectedQuery1 (
+    [CustomerID] int NULL,
+    [SalespersonPersonID] int NULL,
+    [PickedByPersonID] int NULL,
+    [ContactPersonID] int NULL,
+    [BackorderOrderID] int NULL,
+    [OrderDate_now] nvarchar(5) NULL,
+    [OrderDate] date NULL,
+    [ExpectedDeliveryDate] date NULL,
+    [CustomerPurchaseOrderNumber] nvarchar(20) NULL,
+    [IsUndersupplyBackordered] bit NULL,
+    [Comments] nvarchar(400) NULL,
+    [DeliveryInstructions] nvarchar(400) NULL,
+    [InternalComments] nvarchar(400) NULL,
+    [PickingCompletedWhen] datetime2(7) NULL,
+    [LastEditedBy] int NULL,
+    [LastEditedWhen_now] nvarchar(3) NULL,
+    [LastEditedWhen] datetime2(7) NULL
+  );
+  CREATE TABLE #ActualQuery1 (
+    [CustomerID] int NULL,
+    [SalespersonPersonID] int NULL,
+    [PickedByPersonID] int NULL,
+    [ContactPersonID] int NULL,
+    [BackorderOrderID] int NULL,
+    [OrderDate_now] nvarchar(5) NULL,
+    [OrderDate] date NULL,
+    [ExpectedDeliveryDate] date NULL,
+    [CustomerPurchaseOrderNumber] nvarchar(20) NULL,
+    [IsUndersupplyBackordered] bit NULL,
+    [Comments] nvarchar(400) NULL,
+    [DeliveryInstructions] nvarchar(400) NULL,
+    [InternalComments] nvarchar(400) NULL,
+    [PickingCompletedWhen] datetime2(7) NULL,
+    [LastEditedBy] int NULL,
+    [LastEditedWhen_now] nvarchar(3) NULL,
+    [LastEditedWhen] datetime2(7) NULL
+  );
+  INSERT INTO #ExpectedQuery1 ([CustomerID], [SalespersonPersonID], [PickedByPersonID], [ContactPersonID], [BackorderOrderID], [OrderDate_now], [OrderDate], [ExpectedDeliveryDate], [CustomerPurchaseOrderNumber], [IsUndersupplyBackordered], [Comments], [DeliveryInstructions], [InternalComments], [PickingCompletedWhen], [LastEditedBy], [LastEditedWhen_now], [LastEditedWhen]) VALUES
+    (1, 2, NULL, 3, NULL, N'today', NULL, CAST('2030-01-01' AS date), N'PO-1', 0, NULL, NULL, NULL, NULL, 1, N'now', NULL);
+  INSERT INTO #ActualQuery1
+  SELECT o.CustomerID, o.SalespersonPersonID, o.PickedByPersonID, o.ContactPersonID, o.BackorderOrderID, CASE WHEN o.OrderDate = CAST(SYSDATETIME() AS date) THEN N'today' END AS [OrderDate_now], CASE WHEN o.OrderDate = CAST(SYSDATETIME() AS date) THEN NULL ELSE o.OrderDate END AS [OrderDate],
+                          o.ExpectedDeliveryDate, o.CustomerPurchaseOrderNumber, o.IsUndersupplyBackordered, o.Comments, o.DeliveryInstructions, o.InternalComments,
+                          o.PickingCompletedWhen, o.LastEditedBy, CASE WHEN o.LastEditedWhen BETWEEN DATEADD(minute, -5, SYSDATETIME()) AND SYSDATETIME() THEN N'now' END AS [LastEditedWhen_now], CASE WHEN o.LastEditedWhen BETWEEN DATEADD(minute, -5, SYSDATETIME()) AND SYSDATETIME() THEN NULL ELSE o.LastEditedWhen END AS [LastEditedWhen]
+                        FROM Sales.Orders AS o;
+  CREATE TABLE #ExpectedQuery2 (
+    [OrderPO] nvarchar(20) NULL,
+    [OrderCustomer] int NULL,
+    [HasOrder] nvarchar(6) NULL,
+    [StockItemID] int NULL,
+    [Description] nvarchar(100) NULL,
+    [PackageTypeID] int NULL,
+    [Quantity] int NULL,
+    [UnitPrice] decimal(18,2) NULL,
+    [TaxRate] decimal(18,3) NULL,
+    [PickedQuantity] int NULL,
+    [PickingCompletedWhen] datetime2(7) NULL,
+    [LastEditedBy] int NULL,
+    [LastEditedWhen_now] nvarchar(3) NULL,
+    [LastEditedWhen] datetime2(7) NULL
+  );
+  CREATE TABLE #ActualQuery2 (
+    [OrderPO] nvarchar(20) NULL,
+    [OrderCustomer] int NULL,
+    [HasOrder] nvarchar(6) NULL,
+    [StockItemID] int NULL,
+    [Description] nvarchar(100) NULL,
+    [PackageTypeID] int NULL,
+    [Quantity] int NULL,
+    [UnitPrice] decimal(18,2) NULL,
+    [TaxRate] decimal(18,3) NULL,
+    [PickedQuantity] int NULL,
+    [PickingCompletedWhen] datetime2(7) NULL,
+    [LastEditedBy] int NULL,
+    [LastEditedWhen_now] nvarchar(3) NULL,
+    [LastEditedWhen] datetime2(7) NULL
+  );
+  INSERT INTO #ExpectedQuery2 ([OrderPO], [OrderCustomer], [HasOrder], [StockItemID], [Description], [PackageTypeID], [Quantity], [UnitPrice], [TaxRate], [PickedQuantity], [PickingCompletedWhen], [LastEditedBy], [LastEditedWhen_now], [LastEditedWhen]) VALUES
+    (N'PO-1', 1, N'ok', 1, N'line 1/1', 7, 2, 10, 15, 0, NULL, 1, N'now', NULL);
+  INSERT INTO #ActualQuery2
+  SELECT o.CustomerPurchaseOrderNumber AS OrderPO, o.CustomerID AS OrderCustomer, CASE WHEN o.OrderID IS NULL THEN N'orphan' ELSE N'ok' END AS HasOrder,
+                          ol.StockItemID, ol.Description, ol.PackageTypeID, ol.Quantity, ol.UnitPrice, ol.TaxRate, ol.PickedQuantity, ol.PickingCompletedWhen,
+                          ol.LastEditedBy, CASE WHEN ol.LastEditedWhen BETWEEN DATEADD(minute, -5, SYSDATETIME()) AND SYSDATETIME() THEN N'now' END AS [LastEditedWhen_now], CASE WHEN ol.LastEditedWhen BETWEEN DATEADD(minute, -5, SYSDATETIME()) AND SYSDATETIME() THEN NULL ELSE ol.LastEditedWhen END AS [LastEditedWhen]
+                        FROM Sales.OrderLines AS ol LEFT JOIN Sales.Orders AS o ON o.OrderID = ol.OrderID;
+  CREATE TABLE #ExpectedQuery3 (
+    [Orders] int NULL,
+    [DistinctIDs] int NULL,
+    [FirstID] int NULL,
+    [LastID] int NULL
+  );
+  CREATE TABLE #ActualQuery3 (
+    [Orders] int NULL,
+    [DistinctIDs] int NULL,
+    [FirstID] int NULL,
+    [LastID] int NULL
+  );
+  INSERT INTO #ExpectedQuery3 ([Orders], [DistinctIDs], [FirstID], [LastID]) VALUES
+    (1, 1, 73596, 73596);
+  INSERT INTO #ActualQuery3
+  SELECT COUNT(*) AS Orders, COUNT(DISTINCT OrderID) AS DistinctIDs, MIN(OrderID) AS FirstID, MAX(OrderID) AS LastID FROM Sales.Orders;
+  CREATE TABLE #ExpectedQuery4 (
+    [NextOrderID] int NULL
+  );
+  CREATE TABLE #ActualQuery4 (
+    [NextOrderID] int NULL
+  );
+  INSERT INTO #ExpectedQuery4 ([NextOrderID]) VALUES
+    (73597);
+  INSERT INTO #ActualQuery4
+  SELECT NEXT VALUE FOR Sequences.OrderID AS NextOrderID;
+  EXEC tSQLt.AssertEqualsString @Expected = N'completed', @Actual = @outcome, @Message = N'outcome';
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedQuery1', @Actual = N'#ActualQuery1', @Message = N'orders';
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedQuery2', @Actual = N'#ActualQuery2', @Message = N'order lines, with their order';
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedQuery3', @Actual = N'#ActualQuery3', @Message = N'order IDs allocated';
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedQuery4', @Actual = N'#ActualQuery4', @Message = N'next order ID';
+END;
+GO

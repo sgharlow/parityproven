@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "object": "dbo.ufnGetPurchaseOrderStatusText",
   "database": "AdventureWorks2025",
-  "runAt": "2026-11-19T02:26:24.897Z",
+  "runAt": "2026-11-19T06:19:29.585Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "3f430beb1a9ddcd9bd4134aba3a4c8cbdfe2cc9640e3070e3cc1c7aa79113e0b",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-18T19:13:01-07:00",
+    "at": "2026-11-19T05:46:45.561Z",
     "file": "adversarial/AdventureWorks2025/dbo.ufnGetPurchaseOrderStatusText.cases.json",
-    "sha256": "1590ca48422725cffeaf0c4cc8b8b3fa36d7bdf782b59e9c7cc5faa3af9ae129"
+    "sha256": "315a95fbe807e8e9c63e51dfb1700bc540bd9a22a39c823be2e008f2ead4af61"
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-18T19:19:51.7066204-07:00",
+    "at": "2026-11-19T06:06:57.652Z",
     "file": "adversarial/AdventureWorks2025/dbo.ufnGetPurchaseOrderStatusText.audit.json",
-    "sha256": "f977b7bf2ed12e9d1becbb8a6ac56cab1d0ff4492ddcde5fb0263214a9ee5c14"
+    "sha256": "757e18e6ccc9e5e674f2d0a5e76f36fe43fcbaa60b8dd0e37cc2a5fbcc48274c"
   },
   "sameModel": false,
   "casesAudited": [
@@ -24,7 +24,10 @@
     "A03",
     "A04",
     "A05",
-    "A06"
+    "A06",
+    "A07",
+    "A08",
+    "A09"
   ],
   "traps": {
     "null-vs-empty": {
@@ -150,7 +153,52 @@
       "id": "A06",
       "label": "status 1 gives 'Pending' from a varchar literal in an nvarchar(15) result, with no padding",
       "traps": [],
-      "reasoning": "The T-SQL WHEN branches are varchar literals ('Pending', no N prefix) assigned to nvarchar(15). A char(15) mapping on PostgreSQL would pad 'Pending' with trailing spaces; SQL Server returns 7 characters.",
+      "reasoning": "The T-SQL WHEN branches are varchar literals ('Pending', no N prefix) assigned to nvarchar(15). A char(15) mapping on PostgreSQL would pad 'Pending' with trailing spaces; SQL Server returns 7 characters. The parameter is a tinyint and only 4 values (1, 2, 3, 4) reach a WHEN branch; every one of them is already a hand-derived case, so no mapped input exists that the hand-derived cases do not use. The case is kept because the adversarial gate and its planted-defect check run on the adversarial cases alone: without a mapped value among them, a defect that alters a WHEN text would go unseen by the gate.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A07",
+      "label": "status 2 gives 'Approved' (a mapped branch the other adversarial cases do not reach)",
+      "traps": [],
+      "reasoning": "Second WHEN branch. The parameter is a tinyint and only 4 values (1, 2, 3, 4) reach a WHEN branch; every one of them is already a hand-derived case, so no mapped input exists that the hand-derived cases do not use. The case is kept because the adversarial gate and its planted-defect check run on the adversarial cases alone: without a mapped value among them, a defect that alters a WHEN text would go unseen by the gate.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A08",
+      "label": "status 3 gives 'Rejected'",
+      "traps": [],
+      "reasoning": "Third WHEN branch. The parameter is a tinyint and only 4 values (1, 2, 3, 4) reach a WHEN branch; every one of them is already a hand-derived case, so no mapped input exists that the hand-derived cases do not use. The case is kept because the adversarial gate and its planted-defect check run on the adversarial cases alone: without a mapped value among them, a defect that alters a WHEN text would go unseen by the gate.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A09",
+      "label": "status 4 gives 'Complete' (the last WHEN branch before ELSE)",
+      "traps": [],
+      "reasoning": "Last WHEN branch; a range-based mapping (status >= 4 -> ELSE) would differ here. The parameter is a tinyint and only 4 values (1, 2, 3, 4) reach a WHEN branch; every one of them is already a hand-derived case, so no mapped input exists that the hand-derived cases do not use. The case is kept because the adversarial gate and its planted-defect check run on the adversarial cases alone: without a mapped value among them, a defect that alters a WHEN text would go unseen by the gate.",
       "trapChecks": {},
       "status": "ran",
       "sqlServer": {
@@ -163,7 +211,7 @@
     }
   ],
   "summary": {
-    "ran": 6,
+    "ran": 9,
     "differed": 0,
     "invalid": 0
   },
@@ -173,7 +221,12 @@
       "caseId": "A06",
       "kind": "duplicate",
       "text": "A06 sends status 1 with no tables, exactly the same payload as the hand-derived fixed case for the Pending mapping. That fixed case already checks the unpadded return value and the declared result type.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "Every mapped status is already hand-derived, so overlap is unavoidable. A06-A09 now cover every mapped branch and document why the adversarial-only planted-defect check needs those values.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     }
   ],
   "mutantAdequacy": {
@@ -186,10 +239,8 @@
     "equivalentRecorded": []
   },
   "gate": {
-    "passed": false,
-    "reasons": [
-      "objection O01 is open"
-    ]
+    "passed": true,
+    "reasons": []
   },
-  "wording": "6 adversarial cases ran, 0 differed"
+  "wording": "9 adversarial cases ran, 0 differed"
 }

@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "object": "dbo.ufnGetDocumentStatusText",
   "database": "AdventureWorks2025",
-  "runAt": "2026-11-19T02:25:45.810Z",
+  "runAt": "2026-11-19T06:19:20.104Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "5fd1792d7e2063853f86abb27285c424e6143777f67429290c3bf5e801490431",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-18T19:13:01-07:00",
+    "at": "2026-11-19T05:46:45.561Z",
     "file": "adversarial/AdventureWorks2025/dbo.ufnGetDocumentStatusText.cases.json",
-    "sha256": "3ca70c0f1731fda2d983905ff87ba0cb7d04d90b127ad2b86ee698c8fad754f6"
+    "sha256": "8b5877d94f094b880e53e4131ccbe247b9329f1602205728d4b0cbfacf649f89"
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-18T19:19:51.7066204-07:00",
+    "at": "2026-11-19T06:06:57.652Z",
     "file": "adversarial/AdventureWorks2025/dbo.ufnGetDocumentStatusText.audit.json",
-    "sha256": "31994ffc939997af00f4ba39168a7a7d23d81b69c60a7abe3548d814ad6a6f48"
+    "sha256": "ec3d4f1a402c5b5edaf6811a231941e8665163a3c9fbd7cd6825b0150493fb79"
   },
   "sameModel": false,
   "casesAudited": [
@@ -24,7 +24,9 @@
     "A03",
     "A04",
     "A05",
-    "A06"
+    "A06",
+    "A07",
+    "A08"
   ],
   "traps": {
     "null-vs-empty": {
@@ -150,7 +152,37 @@
       "id": "A06",
       "label": "status 1 gives the 16-character text exactly at the nvarchar(16) limit, untruncated",
       "traps": [],
-      "reasoning": "'Pending approval' is exactly 16 characters, the declared length of @ret and the return type. A varchar(15) or a padded char(16) return on PostgreSQL would cut or pad it; SQL Server returns it whole.",
+      "reasoning": "'Pending approval' is exactly 16 characters, the declared length of @ret and the return type. A varchar(15) or a padded char(16) return on PostgreSQL would cut or pad it; SQL Server returns it whole. The parameter is a tinyint and only 3 values (1, 2, 3) reach a WHEN branch; every one of them is already a hand-derived case, so no mapped input exists that the hand-derived cases do not use. The case is kept because the adversarial gate and its planted-defect check run on the adversarial cases alone: without a mapped value among them, a defect that alters a WHEN text would go unseen by the gate.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A07",
+      "label": "status 2 gives 'Approved' (a mapped branch the other adversarial cases do not reach)",
+      "traps": [],
+      "reasoning": "Second WHEN branch. The parameter is a tinyint and only 3 values (1, 2, 3) reach a WHEN branch; every one of them is already a hand-derived case, so no mapped input exists that the hand-derived cases do not use. The case is kept because the adversarial gate and its planted-defect check run on the adversarial cases alone: without a mapped value among them, a defect that alters a WHEN text would go unseen by the gate.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A08",
+      "label": "status 3 gives 'Obsolete' (the last WHEN branch before ELSE)",
+      "traps": [],
+      "reasoning": "Last WHEN branch; a conversion that ordered branches by range (status >= 3 -> ELSE) would differ here. The parameter is a tinyint and only 3 values (1, 2, 3) reach a WHEN branch; every one of them is already a hand-derived case, so no mapped input exists that the hand-derived cases do not use. The case is kept because the adversarial gate and its planted-defect check run on the adversarial cases alone: without a mapped value among them, a defect that alters a WHEN text would go unseen by the gate.",
       "trapChecks": {},
       "status": "ran",
       "sqlServer": {
@@ -163,7 +195,7 @@
     }
   ],
   "summary": {
-    "ran": 6,
+    "ran": 8,
     "differed": 0,
     "invalid": 0
   },
@@ -173,7 +205,12 @@
       "caseId": "A06",
       "kind": "duplicate",
       "text": "A06 sends status 1 with no tables, exactly the same payload as the hand-derived fixed case for the Pending approval mapping. That fixed case already checks the full 16-character return value and its declared result type.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "Every mapped status is already hand-derived, so overlap is unavoidable. A06-A08 now cover every mapped branch and document why the adversarial-only planted-defect check needs those values.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     }
   ],
   "mutantAdequacy": {
@@ -186,10 +223,8 @@
     "equivalentRecorded": []
   },
   "gate": {
-    "passed": false,
-    "reasons": [
-      "objection O01 is open"
-    ]
+    "passed": true,
+    "reasons": []
   },
-  "wording": "6 adversarial cases ran, 0 differed"
+  "wording": "8 adversarial cases ran, 0 differed"
 }

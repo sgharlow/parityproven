@@ -8,8 +8,8 @@
 GO
 EXEC tSQLt.NewTestClass 'AgreedTests';
 GO
--- case 1: [A01] case-only variants 'Us', 'uS' and 'us ' of a country code join 'US'
-CREATE PROCEDURE [AgreedTests].[test 01 [A01 case-only variants Us, uS and us of a country code join US]
+-- case 1: [A01] case pairs outside ASCII ('üs' to 'ÜS', 'σa' to 'ΣA') and case plus a trailing space on the country side ('CA' to 'ca ')
+CREATE PROCEDURE [AgreedTests].[test 01 [A01 case pairs outside ASCII (üs to ÜS, ?a to ?A) and case plus a trailing space on the country side…]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Person].[Address]';
@@ -33,15 +33,17 @@ BEGIN
     (2, 2, 1),
     (3, 3, 1);
   INSERT INTO [Person].[CountryRegion] ([CountryRegionCode], [Name]) VALUES
-    (N'US', N'United States');
+    (N'ÜS', N'Country Ü'),
+    (N'ΣA', N'Country Σ'),
+    (N'ca ', N'Country ca');
   INSERT INTO [Person].[Person] ([BusinessEntityID], [Title], [FirstName], [MiddleName], [LastName], [Suffix], [EmailPromotion], [Demographics]) VALUES
     (1, NULL, N'First1', NULL, N'Last1', NULL, 0, NULL),
     (2, NULL, N'First2', NULL, N'Last2', NULL, 0, NULL),
     (3, NULL, N'First3', NULL, N'Last3', NULL, 0, NULL);
   INSERT INTO [Person].[StateProvince] ([StateProvinceID], [CountryRegionCode], [Name]) VALUES
-    (1, N'Us', N'Province 1'),
-    (2, N'uS', N'Province 2'),
-    (3, N'us ', N'Province 3');
+    (1, N'üs', N'Province 1'),
+    (2, N'σa', N'Province 2'),
+    (3, N'CA', N'Province 3');
   INSERT INTO [Sales].[Customer] ([PersonID], [StoreID]) VALUES
     (1, NULL),
     (2, NULL),
@@ -87,9 +89,9 @@ BEGIN
     [Demographics] nvarchar(max) NULL
   );
   INSERT INTO #Expected ([BusinessEntityID], [Title], [FirstName], [MiddleName], [LastName], [Suffix], [PhoneNumber], [PhoneNumberType], [EmailAddress], [EmailPromotion], [AddressType], [AddressLine1], [AddressLine2], [City], [StateProvinceName], [PostalCode], [CountryRegionName], [Demographics]) VALUES
-    (1, NULL, N'First1', NULL, N'Last1', NULL, NULL, NULL, NULL, 0, N'Home', N'1 Main St', NULL, N'Bothell', N'Province 1', N'98011', N'United States', NULL),
-    (2, NULL, N'First2', NULL, N'Last2', NULL, NULL, NULL, NULL, 0, N'Home', N'2 Main St', NULL, N'Bothell', N'Province 2', N'98011', N'United States', NULL),
-    (3, NULL, N'First3', NULL, N'Last3', NULL, NULL, NULL, NULL, 0, N'Home', N'3 Main St', NULL, N'Bothell', N'Province 3', N'98011', N'United States', NULL);
+    (1, NULL, N'First1', NULL, N'Last1', NULL, NULL, NULL, NULL, 0, N'Home', N'1 Main St', NULL, N'Bothell', N'Province 1', N'98011', N'Country Ü', NULL),
+    (2, NULL, N'First2', NULL, N'Last2', NULL, NULL, NULL, NULL, 0, N'Home', N'2 Main St', NULL, N'Bothell', N'Province 2', N'98011', N'Country Σ', NULL),
+    (3, NULL, N'First3', NULL, N'Last3', NULL, NULL, NULL, NULL, 0, N'Home', N'3 Main St', NULL, N'Bothell', N'Province 3', N'98011', N'Country ca', NULL);
   INSERT INTO #Actual
   SELECT [BusinessEntityID], [Title], [FirstName], [MiddleName], [LastName], [Suffix], [PhoneNumber], [PhoneNumberType], [EmailAddress], [EmailPromotion], [AddressType], [AddressLine1], [AddressLine2], [City], [StateProvinceName], [PostalCode], [CountryRegionName], CONVERT(nvarchar(max), [Demographics]) AS [Demographics] FROM (SELECT * FROM Sales.vIndividualCustomer) AS pp_q;
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
@@ -626,8 +628,8 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
--- case 8: [A08] a person with two individual customer rows and two identical phones: rows multiply (2 x 2), duplicates kept
-CREATE PROCEDURE [AgreedTests].[test 08 [A08 a person with two individual customer rows and two identical phones: rows multiply (2 x 2), dupl…]
+-- case 8: [A08] a person with two individual customer rows and the same number under two phone types of one name: rows multiply (2 x 2), identical rows kept
+CREATE PROCEDURE [AgreedTests].[test 08 [A08 a person with two individual customer rows and the same number under two phone types of one name…]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Person].[Address]';
@@ -652,9 +654,10 @@ BEGIN
     (1, NULL, N'First1', NULL, N'Last1', NULL, 0, NULL);
   INSERT INTO [Person].[PersonPhone] ([BusinessEntityID], [PhoneNumber], [PhoneNumberTypeID]) VALUES
     (1, N'555-0100', 1),
-    (1, N'555-0100', 1);
+    (1, N'555-0100', 2);
   INSERT INTO [Person].[PhoneNumberType] ([PhoneNumberTypeID], [Name]) VALUES
-    (1, N'Cell');
+    (1, N'Cell'),
+    (2, N'Cell');
   INSERT INTO [Person].[StateProvince] ([StateProvinceID], [CountryRegionCode], [Name]) VALUES
     (1, N'US', N'Province 1');
   INSERT INTO [Sales].[Customer] ([PersonID], [StoreID]) VALUES

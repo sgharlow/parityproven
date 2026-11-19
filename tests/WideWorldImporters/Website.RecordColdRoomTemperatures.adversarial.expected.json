@@ -2,7 +2,7 @@
   "object": "Website.RecordColdRoomTemperatures",
   "database": "WideWorldImporters",
   "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
-  "capturedAt": "2026-11-19T05:29:48.825Z",
+  "capturedAt": "2026-11-19T06:23:00.387Z",
   "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
   "cases": [
     {
@@ -45,7 +45,7 @@
       }
     },
     {
-      "label": "[A03] three existing rows for one sensor share a temperature; one reading updates all of them",
+      "label": "[A03] three rows for sensor 3 (two equal in every column) are all updated by one reading; rows for sensors 30, 0 and -3 with the same values are left alone",
       "outcome": "completed",
       "tables": {
         "Warehouse.ColdRoomTemperatures": {
@@ -55,6 +55,21 @@
             "Temperature"
           ],
           "rows": [
+            [
+              "n:30",
+              "t:2020-01-01T00:00:00.000000",
+              "n:1"
+            ],
+            [
+              "n:0",
+              "t:2020-01-01T00:00:00.000000",
+              "n:1"
+            ],
+            [
+              "n:-3",
+              "t:2020-01-01T00:00:00.000000",
+              "n:1"
+            ],
             [
               "n:3",
               "t:2020-01-02T00:00:00.000000",
@@ -75,7 +90,7 @@
       }
     },
     {
-      "label": "[A04] two readings for the same new sensor: the first inserts, the second updates it (loop order preserved)",
+      "label": "[A04] readings for a new sensor interleaved with an existing one: the first inserts, the third updates the row the first inserted, the existing sensor is updated",
       "outcome": "completed",
       "tables": {
         "Warehouse.ColdRoomTemperatures": {
@@ -85,6 +100,11 @@
             "Temperature"
           ],
           "rows": [
+            [
+              "n:5",
+              "t:2020-01-01T00:00:01.000000",
+              "n:5.5"
+            ],
             [
               "n:4",
               "t:2020-01-01T00:00:05.123456",

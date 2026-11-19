@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "object": "dbo.ufnGetAccountingEndDate",
   "database": "AdventureWorks2025",
-  "runAt": "2026-11-19T02:25:17.547Z",
+  "runAt": "2026-11-19T06:18:46.925Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "3d090c0149df680b1a9e8fc5bb52e850aaf90a219e347a6eda61f1f03a914196",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-18T19:13:01-07:00",
+    "at": "2026-11-19T05:46:45.561Z",
     "file": "adversarial/AdventureWorks2025/dbo.ufnGetAccountingEndDate.cases.json",
-    "sha256": "51f8bcd7508cf832e234febabf91695be85ac0515905c8189e2173539c35689d"
+    "sha256": "48d4b9ef578de73d07d7315627e672d2f75f79cec8804fd78ec89b27a4874b3d"
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-18T19:19:51.7066204-07:00",
+    "at": "2026-11-19T06:06:57.652Z",
     "file": "adversarial/AdventureWorks2025/dbo.ufnGetAccountingEndDate.audit.json",
-    "sha256": "b0337a4bf2cffa989af27cb7b9e87c807461004f83d76e38a75e4593fa09780c"
+    "sha256": "410504383f561a7afdb0ded0919f7101a94ed0937c164cbc26d184251e9baa42"
   },
   "sameModel": false,
   "casesAudited": [
@@ -70,7 +70,7 @@
       "id": "A01",
       "label": "midnight minus 2 ms on datetime: the result is the .997 tick, kept at 3 digits (not .998, not rounded to the second)",
       "traps": [],
-      "reasoning": "T-SQL DATEADD(millisecond, -2, datetime '2004-07-01') lands on the datetime tick .997 (3.33 ms resolution). PostgreSQL interval arithmetic would give .998; the conversion hard-codes .997 and returns timestamp(3). A timestamp(0) or a date return type, or the exact -2 ms, would differ from the value SQL Server returns.",
+      "reasoning": "T-SQL DATEADD(millisecond, -2, datetime '2004-07-01') lands on the datetime tick .997 (3.33 ms resolution). PostgreSQL interval arithmetic would give .998; the conversion hard-codes .997 and returns timestamp(3). A timestamp(0) or a date return type, or the exact -2 ms, would differ from the value SQL Server returns. This function has no parameter and reads no table, so the empty call is the only input that exists; the case necessarily repeats the hand-derived case. It is kept because the adversarial gate and its planted-defect check run on the adversarial cases alone, without the hand-derived ones. The planted defect 'end date is exactly 2 ms before midnight' is caught only through this call.",
       "trapChecks": {},
       "status": "ran",
       "sqlServer": {
@@ -93,7 +93,12 @@
       "caseId": "A01",
       "kind": "duplicate",
       "text": "A01 sends the same complete payload as the sole hand-derived fixed case: no arguments and no tables. Both cases assert the same .997 datetime result and type, so A01 adds no distinct attack input.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "The function has exactly one possible input payload. A01 now documents that unavoidable overlap and why the adversarial-only planted-defect check must call the function to observe the .997 result.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     }
   ],
   "mutantAdequacy": {
@@ -106,10 +111,8 @@
     "equivalentRecorded": []
   },
   "gate": {
-    "passed": false,
-    "reasons": [
-      "objection O01 is open"
-    ]
+    "passed": true,
+    "reasons": []
   },
   "wording": "1 adversarial case ran, 0 differed"
 }

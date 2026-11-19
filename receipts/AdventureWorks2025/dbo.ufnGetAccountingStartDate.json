@@ -81,20 +81,18 @@
       "planted defects caught by the agreed tests: 1 of 1"
     ],
     "adversarial": {
-      "gate": "fail",
+      "gate": "pass",
       "ran": 1,
       "differed": 0,
       "evidencePath": "evidence/adversarial/AdventureWorks2025/dbo.ufnGetAccountingStartDate.json",
-      "runAt": "2026-11-19T02:25:24.894Z",
+      "runAt": "2026-11-19T06:18:56.114Z",
       "agentWritten": true,
       "wording": "1 adversarial case ran, 0 differed",
       "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
       "auditorModel": "gpt-5.6-sol",
       "sameModel": false,
       "mutantAdequacy": "adequate",
-      "gateReasons": [
-        "objection O01 is open"
-      ],
+      "gateReasons": [],
       "cases": [
         {
           "id": "A01",
@@ -116,5 +114,5 @@
     "p50Hours": 1.5,
     "p90Hours": 4
   },
-  "builtAt": "2026-11-19T05:37:18.782Z"
+  "builtAt": "2026-11-19T06:24:38.449Z"
 }

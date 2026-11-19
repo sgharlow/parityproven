@@ -7,7 +7,7 @@
 -- Prerequisites: the spec's tables created and the final conversion deployed.
 -- Each case is one transaction and always rolls back.
 
--- @case 1: [A01] case-only variants 'Us', 'uS' and 'us ' of a country code join 'US'
+-- @case 1: [A01] case pairs outside ASCII ('üs' to 'ÜS', 'σa' to 'ΣA') and case plus a trailing space on the country side ('CA' to 'ca ')
 BEGIN;
 DELETE FROM humanresources.employee;
 DELETE FROM person.address;
@@ -33,15 +33,17 @@ INSERT INTO person.business_entity_address ("BusinessEntityID", "AddressID") VAL
   ('2', '2'),
   ('3', '3');
 INSERT INTO person.country_region ("CountryRegionCode", "Name") VALUES
-  ('US', 'United States');
+  ('ÜS', 'Country Ü'),
+  ('ΣA', 'Country Σ'),
+  ('ca ', 'Country ca');
 INSERT INTO person.person ("BusinessEntityID", "Title", "FirstName", "MiddleName", "LastName", "Suffix", "EmailPromotion") VALUES
   ('1', NULL, 'First1', NULL, 'Last1', NULL, '0'),
   ('2', NULL, 'First2', NULL, 'Last2', NULL, '0'),
   ('3', NULL, 'First3', NULL, 'Last3', NULL, '0');
 INSERT INTO person.state_province ("StateProvinceID", "CountryRegionCode", "Name") VALUES
-  ('1', 'Us', 'Province 1'),
-  ('2', 'uS', 'Province 2'),
-  ('3', 'us ', 'Province 3');
+  ('1', 'üs', 'Province 1'),
+  ('2', 'σa', 'Province 2'),
+  ('3', 'CA', 'Province 3');
 INSERT INTO sales.sales_person ("BusinessEntityID", "TerritoryID", "SalesQuota", "SalesYTD", "SalesLastYear") VALUES
   ('1', NULL, NULL, '0.0000', '0.0000'),
   ('2', NULL, NULL, '0.0000', '0.0000'),
@@ -53,21 +55,21 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['BusinessEntityID', 'Title', 'FirstName', 'MiddleName', 'LastName', 'Suffix', 'JobTitle', 'PhoneNumber', 'PhoneNumberType', 'EmailAddress', 'EmailPromotion', 'AddressLine1', 'AddressLine2', 'City', 'StateProvinceName', 'PostalCode', 'CountryRegionName', 'TerritoryName', 'TerritoryGroup', 'SalesQuota', 'SalesYTD', 'SalesLastYear']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 01 [A01 case-only variants Us, uS and us of a country code join US', got, ARRAY['BusinessEntityID', 'Title', 'FirstName', 'MiddleName', 'LastName', 'Suffix', 'JobTitle', 'PhoneNumber', 'PhoneNumberType', 'EmailAddress', 'EmailPromotion', 'AddressLine1', 'AddressLine2', 'City', 'StateProvinceName', 'PostalCode', 'CountryRegionName', 'TerritoryName', 'TerritoryGroup', 'SalesQuota', 'SalesYTD', 'SalesLastYear']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 01 [A01 case pairs outside ASCII (üs to ÜS, ?a to ?A) and case plus a trailing space on the country side…', got, ARRAY['BusinessEntityID', 'Title', 'FirstName', 'MiddleName', 'LastName', 'Suffix', 'JobTitle', 'PhoneNumber', 'PhoneNumberType', 'EmailAddress', 'EmailPromotion', 'AddressLine1', 'AddressLine2', 'City', 'StateProvinceName', 'PostalCode', 'CountryRegionName', 'TerritoryName', 'TerritoryGroup', 'SalesQuota', 'SalesYTD', 'SalesLastYear']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
 INSERT INTO pp_expected VALUES
-  ('1', NULL, 'First1', NULL, 'Last1', NULL, 'Sales Representative', NULL, NULL, NULL, '0', '1 Main St', NULL, 'Bothell', 'Province 1', '98011', 'United States', NULL, NULL, NULL, '0', '0'),
-  ('2', NULL, 'First2', NULL, 'Last2', NULL, 'Sales Representative', NULL, NULL, NULL, '0', '2 Main St', NULL, 'Bothell', 'Province 2', '98011', 'United States', NULL, NULL, NULL, '0', '0'),
-  ('3', NULL, 'First3', NULL, 'Last3', NULL, 'Sales Representative', NULL, NULL, NULL, '0', '3 Main St', NULL, 'Bothell', 'Province 3', '98011', 'United States', NULL, NULL, NULL, '0', '0');
+  ('1', NULL, 'First1', NULL, 'Last1', NULL, 'Sales Representative', NULL, NULL, NULL, '0', '1 Main St', NULL, 'Bothell', 'Province 1', '98011', 'Country Ü', NULL, NULL, NULL, '0', '0'),
+  ('2', NULL, 'First2', NULL, 'Last2', NULL, 'Sales Representative', NULL, NULL, NULL, '0', '2 Main St', NULL, 'Bothell', 'Province 2', '98011', 'Country Σ', NULL, NULL, NULL, '0', '0'),
+  ('3', NULL, 'First3', NULL, 'Last3', NULL, 'Sales Representative', NULL, NULL, NULL, '0', '3 Main St', NULL, 'Bothell', 'Province 3', '98011', 'Country ca', NULL, NULL, NULL, '0', '0');
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 01 [A01 case-only variants Us, uS and us of a country code join US', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 01 [A01 case pairs outside ASCII (üs to ÜS, ?a to ?A) and case plus a trailing space on the country side…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;
@@ -415,7 +417,72 @@ BEGIN
 END $pp$;
 ROLLBACK;
 
--- @case 7: [A08] territory: TerritoryID NULL, a missing territory (LEFT JOIN NULL), a territory named '' and a group with a trailing space
+-- @case 7: [A07] large money values passed through (up to 900719925474.0990), values ending in 5 at the fourth place, zero sales and a NULL quota
+BEGIN;
+DELETE FROM humanresources.employee;
+DELETE FROM person.address;
+DELETE FROM person.business_entity_address;
+DELETE FROM person.country_region;
+DELETE FROM person.email_address;
+DELETE FROM person.person;
+DELETE FROM person.person_phone;
+DELETE FROM person.phone_number_type;
+DELETE FROM person.state_province;
+DELETE FROM sales.sales_person;
+DELETE FROM sales.sales_territory;
+INSERT INTO humanresources.employee ("BusinessEntityID", "JobTitle") VALUES
+  ('1', 'Sales Representative'),
+  ('2', 'Sales Representative'),
+  ('3', 'Sales Representative');
+INSERT INTO person.address ("AddressID", "AddressLine1", "AddressLine2", "City", "StateProvinceID", "PostalCode") VALUES
+  ('1', '1 Main St', NULL, 'Bothell', '1', '98011'),
+  ('2', '2 Main St', NULL, 'Bothell', '2', '98011'),
+  ('3', '3 Main St', NULL, 'Bothell', '3', '98011');
+INSERT INTO person.business_entity_address ("BusinessEntityID", "AddressID") VALUES
+  ('1', '1'),
+  ('2', '2'),
+  ('3', '3');
+INSERT INTO person.country_region ("CountryRegionCode", "Name") VALUES
+  ('US', 'United States');
+INSERT INTO person.person ("BusinessEntityID", "Title", "FirstName", "MiddleName", "LastName", "Suffix", "EmailPromotion") VALUES
+  ('1', NULL, 'First1', NULL, 'Last1', NULL, '0'),
+  ('2', NULL, 'First2', NULL, 'Last2', NULL, '0'),
+  ('3', NULL, 'First3', NULL, 'Last3', NULL, '0');
+INSERT INTO person.state_province ("StateProvinceID", "CountryRegionCode", "Name") VALUES
+  ('1', 'US', 'Province 1'),
+  ('2', 'US', 'Province 2'),
+  ('3', 'US', 'Province 3');
+INSERT INTO sales.sales_person ("BusinessEntityID", "TerritoryID", "SalesQuota", "SalesYTD", "SalesLastYear") VALUES
+  ('1', NULL, NULL, '900719925474.0985', '900719925474.0990'),
+  ('2', NULL, '0.0005', '0.0005', '0.0015'),
+  ('3', NULL, '123456789012.3455', '0.0000', '899999999999.9995');
+CREATE TEMP TABLE pp_actual ON COMMIT DROP AS
+SELECT * FROM sales.v_sales_person;
+DO $pp$
+DECLARE got text[];
+BEGIN
+  SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
+  IF got IS DISTINCT FROM ARRAY['BusinessEntityID', 'Title', 'FirstName', 'MiddleName', 'LastName', 'Suffix', 'JobTitle', 'PhoneNumber', 'PhoneNumberType', 'EmailAddress', 'EmailPromotion', 'AddressLine1', 'AddressLine2', 'City', 'StateProvinceName', 'PostalCode', 'CountryRegionName', 'TerritoryName', 'TerritoryGroup', 'SalesQuota', 'SalesYTD', 'SalesLastYear']::text[] THEN
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 07 [A07 large money values passed through (up to 900719925474.0990), values ending in 5 at the fourth pl…', got, ARRAY['BusinessEntityID', 'Title', 'FirstName', 'MiddleName', 'LastName', 'Suffix', 'JobTitle', 'PhoneNumber', 'PhoneNumberType', 'EmailAddress', 'EmailPromotion', 'AddressLine1', 'AddressLine2', 'City', 'StateProvinceName', 'PostalCode', 'CountryRegionName', 'TerritoryName', 'TerritoryGroup', 'SalesQuota', 'SalesYTD', 'SalesLastYear']::text[];
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
+INSERT INTO pp_expected VALUES
+  ('1', NULL, 'First1', NULL, 'Last1', NULL, 'Sales Representative', NULL, NULL, NULL, '0', '1 Main St', NULL, 'Bothell', 'Province 1', '98011', 'United States', NULL, NULL, NULL, '900719925474.0985', '900719925474.099'),
+  ('2', NULL, 'First2', NULL, 'Last2', NULL, 'Sales Representative', NULL, NULL, NULL, '0', '2 Main St', NULL, 'Bothell', 'Province 2', '98011', 'United States', NULL, NULL, '0.0005', '0.0005', '0.0015'),
+  ('3', NULL, 'First3', NULL, 'Last3', NULL, 'Sales Representative', NULL, NULL, NULL, '0', '3 Main St', NULL, 'Bothell', 'Province 3', '98011', 'United States', NULL, NULL, '123456789012.3455', '0', '899999999999.9995');
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 07 [A07 large money values passed through (up to 900719925474.0990), values ending in 5 at the fourth pl…', missing, extra;
+  END IF;
+END $pp$;
+ROLLBACK;
+
+-- @case 8: [A08] territory: TerritoryID NULL, a missing territory (LEFT JOIN NULL), a territory named '' and a group with a trailing space
 BEGIN;
 DELETE FROM humanresources.employee;
 DELETE FROM person.address;
@@ -463,7 +530,7 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['BusinessEntityID', 'Title', 'FirstName', 'MiddleName', 'LastName', 'Suffix', 'JobTitle', 'PhoneNumber', 'PhoneNumberType', 'EmailAddress', 'EmailPromotion', 'AddressLine1', 'AddressLine2', 'City', 'StateProvinceName', 'PostalCode', 'CountryRegionName', 'TerritoryName', 'TerritoryGroup', 'SalesQuota', 'SalesYTD', 'SalesLastYear']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 07 [A08 territory: TerritoryID NULL, a missing territory (LEFT JOIN NULL), a territory named and a group…', got, ARRAY['BusinessEntityID', 'Title', 'FirstName', 'MiddleName', 'LastName', 'Suffix', 'JobTitle', 'PhoneNumber', 'PhoneNumberType', 'EmailAddress', 'EmailPromotion', 'AddressLine1', 'AddressLine2', 'City', 'StateProvinceName', 'PostalCode', 'CountryRegionName', 'TerritoryName', 'TerritoryGroup', 'SalesQuota', 'SalesYTD', 'SalesLastYear']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 08 [A08 territory: TerritoryID NULL, a missing territory (LEFT JOIN NULL), a territory named and a group…', got, ARRAY['BusinessEntityID', 'Title', 'FirstName', 'MiddleName', 'LastName', 'Suffix', 'JobTitle', 'PhoneNumber', 'PhoneNumberType', 'EmailAddress', 'EmailPromotion', 'AddressLine1', 'AddressLine2', 'City', 'StateProvinceName', 'PostalCode', 'CountryRegionName', 'TerritoryName', 'TerritoryGroup', 'SalesQuota', 'SalesYTD', 'SalesLastYear']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
@@ -477,12 +544,12 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 07 [A08 territory: TerritoryID NULL, a missing territory (LEFT JOIN NULL), a territory named and a group…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 08 [A08 territory: TerritoryID NULL, a missing territory (LEFT JOIN NULL), a territory named and a group…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;
 
--- @case 8: [A09] text returned as stored and fan-out: case-only name variants, an emoji, two identical phone rows and an unknown phone type
+-- @case 9: [A09] text returned as stored and fan-out: case-only name variants, an emoji, the same number under two phone types of one name and an unknown phone type
 BEGIN;
 DELETE FROM humanresources.employee;
 DELETE FROM person.address;
@@ -515,10 +582,11 @@ INSERT INTO person.person ("BusinessEntityID", "Title", "FirstName", "MiddleName
   ('3', NULL, 'ann', NULL, 'Last3', NULL, '0');
 INSERT INTO person.person_phone ("BusinessEntityID", "PhoneNumber", "PhoneNumberTypeID") VALUES
   ('1', '555-0100', '1'),
-  ('1', '555-0100', '1'),
+  ('1', '555-0100', '2'),
   ('1', '555-0199', '9');
 INSERT INTO person.phone_number_type ("PhoneNumberTypeID", "Name") VALUES
-  ('1', 'Cell');
+  ('1', 'Cell'),
+  ('2', 'Cell');
 INSERT INTO person.state_province ("StateProvinceID", "CountryRegionCode", "Name") VALUES
   ('1', 'US', 'Province 1'),
   ('2', 'US', 'Province 2'),
@@ -534,7 +602,7 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['BusinessEntityID', 'Title', 'FirstName', 'MiddleName', 'LastName', 'Suffix', 'JobTitle', 'PhoneNumber', 'PhoneNumberType', 'EmailAddress', 'EmailPromotion', 'AddressLine1', 'AddressLine2', 'City', 'StateProvinceName', 'PostalCode', 'CountryRegionName', 'TerritoryName', 'TerritoryGroup', 'SalesQuota', 'SalesYTD', 'SalesLastYear']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 08 [A09 text returned as stored and fan-out: case-only name variants, an emoji, two identical phone rows…', got, ARRAY['BusinessEntityID', 'Title', 'FirstName', 'MiddleName', 'LastName', 'Suffix', 'JobTitle', 'PhoneNumber', 'PhoneNumberType', 'EmailAddress', 'EmailPromotion', 'AddressLine1', 'AddressLine2', 'City', 'StateProvinceName', 'PostalCode', 'CountryRegionName', 'TerritoryName', 'TerritoryGroup', 'SalesQuota', 'SalesYTD', 'SalesLastYear']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 09 [A09 text returned as stored and fan-out: case-only name variants, an emoji, the same number under tw…', got, ARRAY['BusinessEntityID', 'Title', 'FirstName', 'MiddleName', 'LastName', 'Suffix', 'JobTitle', 'PhoneNumber', 'PhoneNumberType', 'EmailAddress', 'EmailPromotion', 'AddressLine1', 'AddressLine2', 'City', 'StateProvinceName', 'PostalCode', 'CountryRegionName', 'TerritoryName', 'TerritoryGroup', 'SalesQuota', 'SalesYTD', 'SalesLastYear']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
@@ -550,12 +618,12 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 08 [A09 text returned as stored and fan-out: case-only name variants, an emoji, two identical phone rows…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 09 [A09 text returned as stored and fan-out: case-only name variants, an emoji, the same number under tw…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;
 
--- @case 9: [A10] keys with gaps and at the int limits: sales persons 0 and 2147483647, territory -2147483648, a sales person without an Employee row
+-- @case 10: [A10] keys with gaps and at the int limits: sales persons 0 and 2147483647, territory -2147483648, a sales person without an Employee row
 BEGIN;
 DELETE FROM humanresources.employee;
 DELETE FROM person.address;
@@ -598,7 +666,7 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['BusinessEntityID', 'Title', 'FirstName', 'MiddleName', 'LastName', 'Suffix', 'JobTitle', 'PhoneNumber', 'PhoneNumberType', 'EmailAddress', 'EmailPromotion', 'AddressLine1', 'AddressLine2', 'City', 'StateProvinceName', 'PostalCode', 'CountryRegionName', 'TerritoryName', 'TerritoryGroup', 'SalesQuota', 'SalesYTD', 'SalesLastYear']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 09 [A10 keys with gaps and at the int limits: sales persons 0 and 2147483647, territory -2147483648, a s…', got, ARRAY['BusinessEntityID', 'Title', 'FirstName', 'MiddleName', 'LastName', 'Suffix', 'JobTitle', 'PhoneNumber', 'PhoneNumberType', 'EmailAddress', 'EmailPromotion', 'AddressLine1', 'AddressLine2', 'City', 'StateProvinceName', 'PostalCode', 'CountryRegionName', 'TerritoryName', 'TerritoryGroup', 'SalesQuota', 'SalesYTD', 'SalesLastYear']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 10 [A10 keys with gaps and at the int limits: sales persons 0 and 2147483647, territory -2147483648, a s…', got, ARRAY['BusinessEntityID', 'Title', 'FirstName', 'MiddleName', 'LastName', 'Suffix', 'JobTitle', 'PhoneNumber', 'PhoneNumberType', 'EmailAddress', 'EmailPromotion', 'AddressLine1', 'AddressLine2', 'City', 'StateProvinceName', 'PostalCode', 'CountryRegionName', 'TerritoryName', 'TerritoryGroup', 'SalesQuota', 'SalesYTD', 'SalesLastYear']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
@@ -611,7 +679,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 09 [A10 keys with gaps and at the int limits: sales persons 0 and 2147483647, territory -2147483648, a s…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 10 [A10 keys with gaps and at the int limits: sales persons 0 and 2147483647, territory -2147483648, a s…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;

@@ -2,7 +2,7 @@
   "object": "Website.ActivateWebsiteLogon",
   "database": "WideWorldImporters",
   "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
-  "capturedAt": "2026-11-19T05:05:59.049Z",
+  "capturedAt": "2026-11-19T06:21:16.193Z",
   "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
   "cases": [
     {
@@ -432,6 +432,40 @@
               "s:amy",
               "x:00ff10",
               "s:mine"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "label": "[A13] a disabled person who still holds an old logon name and hash is activated: both are replaced",
+      "outcome": "completed",
+      "tables": {
+        "Application.People": {
+          "columns": [
+            "PersonID",
+            "FullName",
+            "IsPermittedToLogon",
+            "LogonName",
+            "HashedPassword",
+            "UserPreferences"
+          ],
+          "rows": [
+            [
+              "n:1",
+              "s:Person 1",
+              "b:1",
+              "∅",
+              "∅",
+              "s:{\"theme\":\"green\"}"
+            ],
+            [
+              "n:2",
+              "s:Person 2",
+              "b:1",
+              "s:new@example.com",
+              "x:d1beeae20716eea18a0cce3a0e032e63028a3a68b1bec3ccb5855b2faa412c69",
+              "s:{\"theme\":\"green\"}"
             ]
           ]
         }

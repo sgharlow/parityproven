@@ -124,25 +124,22 @@
       "planted defects caught by the agreed tests: 2 of 2"
     ],
     "adversarial": {
-      "gate": "fail",
+      "gate": "pass",
       "ran": 4,
       "differed": 0,
       "evidencePath": "evidence/adversarial/WideWorldImporters/Website.Suppliers.json",
-      "runAt": "2026-11-19T05:30:30.850Z",
+      "runAt": "2026-11-19T06:23:52.305Z",
       "agentWritten": true,
       "wording": "4 adversarial cases ran, 0 differed",
       "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
       "auditorModel": "gpt-5.6-sol",
       "sameModel": false,
       "mutantAdequacy": "adequate",
-      "gateReasons": [
-        "objection O01 is open",
-        "objection O02 is open"
-      ],
+      "gateReasons": [],
       "cases": [
         {
           "id": "A01",
-          "label": "SupplierReference '' versus NULL kept distinct; NULL DeliveryMethodID yields a NULL method via LEFT JOIN",
+          "label": "'' from a joined delivery method versus NULL from a NULL DeliveryMethodID in the same output column; SupplierReference NULL and '' the other way round",
           "traps": [
             "null-vs-empty"
           ],
@@ -152,7 +149,7 @@
         },
         {
           "id": "A02",
-          "label": "two suppliers share a fax number; a supplier with unmatched category/contacts/city keeps NULLs",
+          "label": "two suppliers share phone, fax and website; a NULL delivery method keeps its row; primary and alternate contacts are crossed",
           "traps": [
             "top-ties"
           ],
@@ -193,5 +190,5 @@
     "p50Hours": 0.75,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-19T05:37:18.808Z"
+  "builtAt": "2026-11-19T06:24:38.471Z"
 }

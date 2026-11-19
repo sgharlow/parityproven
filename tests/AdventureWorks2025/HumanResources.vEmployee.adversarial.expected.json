@@ -2,11 +2,11 @@
   "object": "HumanResources.vEmployee",
   "database": "AdventureWorks2025",
   "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
-  "capturedAt": "2026-11-19T04:16:05.106Z",
+  "capturedAt": "2026-11-19T06:16:13.386Z",
   "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
   "cases": [
     {
-      "label": "[A01] case-only variants 'Us', 'uS' and 'us ' of a country code join 'US'",
+      "label": "[A01] case pairs outside ASCII ('üs' to 'ÜS', 'σa' to 'ΣA') and case plus a trailing space on the country side ('CA' to 'ca ')",
       "columns": [
         {
           "name": "BusinessEntityID",
@@ -99,7 +99,7 @@
           "s:Bothell",
           "s:Province 1",
           "s:98011",
-          "s:United States",
+          "s:Country Ü",
           "∅"
         ],
         [
@@ -119,7 +119,7 @@
           "s:Bothell",
           "s:Province 2",
           "s:98011",
-          "s:United States",
+          "s:Country Σ",
           "∅"
         ],
         [
@@ -139,7 +139,7 @@
           "s:Bothell",
           "s:Province 3",
           "s:98011",
-          "s:United States",
+          "s:Country ca",
           "∅"
         ]
       ]
@@ -1018,7 +1018,7 @@
       ]
     },
     {
-      "label": "[A09] two identical phone rows, two phones of one type and an unknown phone type: one row per phone, duplicates kept",
+      "label": "[A09] the same number under two phone types of one name, two phones of one type and an unknown phone type: one row per phone, identical rows kept",
       "columns": [
         {
           "name": "BusinessEntityID",

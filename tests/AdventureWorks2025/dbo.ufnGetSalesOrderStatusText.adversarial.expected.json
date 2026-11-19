@@ -2,7 +2,7 @@
   "object": "dbo.ufnGetSalesOrderStatusText",
   "database": "AdventureWorks2025",
   "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
-  "capturedAt": "2026-11-19T02:26:27.418Z",
+  "capturedAt": "2026-11-19T06:19:34.609Z",
   "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
   "cases": [
     {
@@ -86,6 +86,76 @@
       "rows": [
         [
           "s:Backordered"
+        ]
+      ]
+    },
+    {
+      "label": "[A07] status 1 gives 'In process' (the first WHEN branch)",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(15)"
+        }
+      ],
+      "rows": [
+        [
+          "s:In process"
+        ]
+      ]
+    },
+    {
+      "label": "[A08] status 2 gives 'Approved'",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(15)"
+        }
+      ],
+      "rows": [
+        [
+          "s:Approved"
+        ]
+      ]
+    },
+    {
+      "label": "[A09] status 4 gives 'Rejected'",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(15)"
+        }
+      ],
+      "rows": [
+        [
+          "s:Rejected"
+        ]
+      ]
+    },
+    {
+      "label": "[A10] status 5 gives 'Shipped'",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(15)"
+        }
+      ],
+      "rows": [
+        [
+          "s:Shipped"
+        ]
+      ]
+    },
+    {
+      "label": "[A11] status 6 gives 'Cancelled' (the last WHEN branch before ELSE)",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(15)"
+        }
+      ],
+      "rows": [
+        [
+          "s:Cancelled"
         ]
       ]
     }

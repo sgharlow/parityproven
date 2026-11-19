@@ -102,26 +102,22 @@
       "planted defects caught by the agreed tests: 1 of 1"
     ],
     "adversarial": {
-      "gate": "fail",
+      "gate": "pass",
       "ran": 7,
       "differed": 0,
       "evidencePath": "evidence/adversarial/AdventureWorks2025/dbo.ufnGetStock.json",
-      "runAt": "2026-11-19T02:26:39.618Z",
+      "runAt": "2026-11-19T06:19:49.325Z",
       "agentWritten": true,
       "wording": "7 adversarial cases ran, 0 differed",
       "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
       "auditorModel": "gpt-5.6-sol",
       "sameModel": false,
       "mutantAdequacy": "adequate",
-      "gateReasons": [
-        "objection O01 is open",
-        "objection O02 is open",
-        "objection O03 is open"
-      ],
+      "gateReasons": [],
       "cases": [
         {
           "id": "A01",
-          "label": "two rows of 32767 at location 6 sum to 65534, beyond smallint: int result, no overflow",
+          "label": "32767 at location 6 next to 32767 at locations 1 and 7 for the same product: only location 6 counts",
           "traps": [],
           "status": "ran",
           "sqlServer": "pass",
@@ -129,7 +125,7 @@
         },
         {
           "id": "A02",
-          "label": "two rows of -32768 at location 6 sum to -65536: a negative int result",
+          "label": "-32768 (smallint minimum) at location 6 next to -32768 at location 1: the negative value is returned as is",
           "traps": [],
           "status": "ran",
           "sqlServer": "pass",
@@ -137,7 +133,7 @@
         },
         {
           "id": "A03",
-          "label": "+7 and -7 at location 6 sum to 0 (a real zero sum, not the NULL replacement)",
+          "label": "-7 at location 6 and +7 at location 1: -7, while an all-locations sum would be the 0 that also stands for no stock",
           "traps": [],
           "status": "ran",
           "sqlServer": "pass",
@@ -187,5 +183,5 @@
     "p50Hours": 1.5,
     "p90Hours": 4
   },
-  "builtAt": "2026-11-19T05:37:18.787Z"
+  "builtAt": "2026-11-19T06:24:38.453Z"
 }

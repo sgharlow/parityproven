@@ -121,27 +121,23 @@
     ],
     "adversarial": {
       "gate": "fail",
-      "ran": 7,
+      "ran": 8,
       "differed": 0,
       "evidencePath": "evidence/adversarial/WideWorldImporters/Website.SearchForStockItems.json",
-      "runAt": "2026-11-19T05:36:30.597Z",
+      "runAt": "2026-11-19T06:23:34.690Z",
       "agentWritten": true,
-      "wording": "7 adversarial cases ran, 0 differed",
+      "wording": "8 adversarial cases ran, 0 differed",
       "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
       "auditorModel": "gpt-5.6-sol",
       "sameModel": false,
       "mutantAdequacy": "inadequate",
       "gateReasons": [
-        "objection O01 is open",
-        "objection O02 is open",
-        "objection O03 is open",
-        "objection O04 is open",
-        "mutant adequacy is inadequate (unexplained misses: '_' matches a letter only)"
+        "mutant adequacy is inadequate (unexplained misses: '[..]' treated as literal characters)"
       ],
       "cases": [
         {
           "id": "A01",
-          "label": "SearchDetails: values differing only in case both match a case-insensitive search and keep their own case in the result",
+          "label": "SearchDetails: Cyrillic values differing only in case match a case-insensitive search ('дом' finds 'ДОМ' and 'Дом', not 'дым' or 'ÉCLAIR')",
           "traps": [
             "collation-case"
           ],
@@ -161,7 +157,7 @@
         },
         {
           "id": "A03",
-          "label": "SearchDetails: a trailing space in the data is matched by LIKE '%x%'",
+          "label": "SearchDetails: a search text ending in a space ('amy ') matches only values with a space after 'amy'",
           "traps": [
             "trailing-spaces"
           ],
@@ -171,7 +167,7 @@
         },
         {
           "id": "A04",
-          "label": "SearchDetails: character class [a-c] matches one of a, b, c (T-SQL LIKE, not PostgreSQL LIKE)",
+          "label": "SearchDetails: a reversed range '[c-a]' (T-SQL accepts it; a regular expression rejects it as an invalid range)",
           "traps": [],
           "status": "ran",
           "sqlServer": "pass",
@@ -179,7 +175,7 @@
         },
         {
           "id": "A05",
-          "label": "SearchDetails: a backslash is an ordinary character in T-SQL LIKE (no escape)",
+          "label": "SearchDetails: a search text ending in a backslash ('a\\') is an ordinary character in T-SQL LIKE",
           "traps": [],
           "status": "ran",
           "sqlServer": "pass",
@@ -202,6 +198,14 @@
           "status": "ran",
           "sqlServer": "pass",
           "postgres": "pass"
+        },
+        {
+          "id": "A08",
+          "label": "SearchDetails: '_' matches a digit, an accented letter and a space ('x_9')",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
         }
       ]
     }
@@ -215,5 +219,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-19T05:37:18.808Z"
+  "builtAt": "2026-11-19T06:24:38.470Z"
 }

@@ -329,11 +329,13 @@ BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Sales].[Invoices]';
   EXEC tSQLt.FakeTable @TableName = N'[Purchasing].[SupplierTransactions]';
   INSERT INTO [Sales].[CustomerTransactions] ([CustomerTransactionID], [CustomerID], [TransactionTypeID], [InvoiceID], [PaymentMethodID], [TransactionDate], [AmountExcludingTax], [TaxAmount], [TransactionAmount], [OutstandingBalance], [IsFinalized], [LastEditedWhen]) VALUES
-    (1, 5, 1, NULL, NULL, CAST('2020-06-15' AS date), 100.00, 15.00, 115.00, 0.00, 1, CAST('0001-01-01T00:00:00.000000' AS datetime2(7))),
-    (2, 5, 1, NULL, NULL, CAST('9999-12-31' AS date), 100.00, 15.00, 115.00, 0.00, 1, CAST('9999-12-31T23:59:59.999999' AS datetime2(7)));
+    (1, 5, 1, NULL, NULL, CAST('1753-01-01' AS date), 100.00, 15.00, 115.00, 0.00, 1, CAST('0001-01-01T00:00:00.000000' AS datetime2(7))),
+    (2, 5, 1, NULL, NULL, CAST('9999-12-31' AS date), 100.00, 15.00, 115.00, 0.00, 1, CAST('9999-12-31T23:59:59.999999' AS datetime2(7))),
+    (3, 5, 1, NULL, NULL, CAST('1753-01-01' AS date), 100.00, 15.00, 115.00, 0.00, 1, CAST('0001-01-01T00:00:00.000001' AS datetime2(7)));
   INSERT INTO [Purchasing].[SupplierTransactions] ([SupplierTransactionID], [SupplierID], [TransactionTypeID], [PurchaseOrderID], [PaymentMethodID], [SupplierInvoiceNumber], [TransactionDate], [AmountExcludingTax], [TaxAmount], [TransactionAmount], [OutstandingBalance], [IsFinalized], [LastEditedWhen]) VALUES
     (1, 4, 5, NULL, 2, N'INV-1', CAST('1753-01-01' AS date), -50.00, -7.50, -57.50, 0.00, 0, CAST('0001-01-01T00:00:00.000001' AS datetime2(7))),
-    (2, 4, 5, NULL, 2, N'INV-2', CAST('2020-06-15' AS date), -50.00, -7.50, -57.50, 0.00, 0, CAST('0001-01-01T00:00:00.000000' AS datetime2(7)));
+    (2, 4, 5, NULL, 2, N'INV-2', CAST('2020-06-15' AS date), -50.00, -7.50, -57.50, 0.00, 0, CAST('0001-01-01T00:00:00.000000' AS datetime2(7))),
+    (3, 4, 5, NULL, 2, N'INV-3', CAST('9999-12-31' AS date), -50.00, -7.50, -57.50, 0.00, 0, CAST('9999-12-31T23:59:59.999999' AS datetime2(7)));
   CREATE TABLE #Expected (
     [Date Key] date NULL,
     [WWI Customer Transaction ID] int NULL,
@@ -374,7 +376,9 @@ BEGIN
   );
   INSERT INTO #Expected ([Date Key], [WWI Customer Transaction ID], [WWI Supplier Transaction ID], [WWI Invoice ID], [WWI Purchase Order ID], [Supplier Invoice Number], [Total Excluding Tax], [Tax Amount], [Total Including Tax], [Outstanding Balance], [Is Finalized], [WWI Customer ID], [WWI Bill To Customer ID], [WWI Supplier ID], [WWI Transaction Type ID], [WWI Payment Method ID], [Last Modified When]) VALUES
     (CAST('9999-12-31' AS date), 2, NULL, NULL, NULL, NULL, 100, 15, 115, 0, 1, 5, 5, NULL, 1, NULL, CAST('9999-12-31T23:59:59.999999' AS datetime2(7))),
-    (CAST('1753-01-01' AS date), NULL, 1, NULL, NULL, N'INV-1', -50, -7.5, -57.5, 0, 0, NULL, NULL, 4, 5, 2, CAST('0001-01-01T00:00:00.000001' AS datetime2(7)));
+    (CAST('1753-01-01' AS date), 3, NULL, NULL, NULL, NULL, 100, 15, 115, 0, 1, 5, 5, NULL, 1, NULL, CAST('0001-01-01T00:00:00.000001' AS datetime2(7))),
+    (CAST('1753-01-01' AS date), NULL, 1, NULL, NULL, N'INV-1', -50, -7.5, -57.5, 0, 0, NULL, NULL, 4, 5, 2, CAST('0001-01-01T00:00:00.000001' AS datetime2(7))),
+    (CAST('9999-12-31' AS date), NULL, 3, NULL, NULL, N'INV-3', -50, -7.5, -57.5, 0, 0, NULL, NULL, 4, 5, 2, CAST('9999-12-31T23:59:59.999999' AS datetime2(7)));
   INSERT INTO #Actual
   EXEC Integration.GetTransactionUpdates @LastCutoff = '0001-01-01T00:00:00.000', @NewCutoff = '9999-12-31T23:59:59.999999';
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';

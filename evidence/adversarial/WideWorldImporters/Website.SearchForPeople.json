@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "object": "Website.SearchForPeople",
   "database": "WideWorldImporters",
-  "runAt": "2026-11-19T05:36:12.238Z",
+  "runAt": "2026-11-19T06:23:28.819Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "ccbeeb76bd739e4f53ebbec023b5353bb95f68f05ca65e1774582ea33385a895",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-19T05:20:49.498Z",
+    "at": "2026-11-19T06:00:45.121Z",
     "file": "adversarial/WideWorldImporters/Website.SearchForPeople.cases.json",
-    "sha256": "903913fbfe564012509a6755450c23e19af42bee046f4f85b8eca2058c879878"
+    "sha256": "10cb296434650a08e88e39431ee66121fac65a3083c1650757b1a9e6ffd47eab"
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-18T22:23:38.8804730-07:00",
+    "at": "2026-11-19T06:06:57.652Z",
     "file": "adversarial/WideWorldImporters/Website.SearchForPeople.audit.json",
-    "sha256": "5b6faa7be8693d1bd0e7957b42330442ace876e10229cf468169541258c6f34a"
+    "sha256": "3dea5af5dbdb3ce64d3a1bf8d4a42f9677a7e207ff8f2ed40b389ba145649022"
   },
   "sameModel": false,
   "casesAudited": [
@@ -69,16 +69,16 @@
   "cases": [
     {
       "id": "A01",
-      "label": "SearchName values differing only in case both match; the two rows share PreferredName",
+      "label": "SearchName: Cyrillic values differing only in case match a case-insensitive search ('дом' finds 'ДОМ' and 'Дом', not 'дым' or 'ÉCLAIR')",
       "traps": [
         "collation-case",
         "top-ties"
       ],
-      "reasoning": "LIKE under CI_AS is case-insensitive, so 'ab' matches SearchName 'ab' and 'AB' (the conversion uses ~*). Both rows share PreferredName 'Q' (a non-key tie) but have distinct FullName, so order is well-defined and both appear.",
+      "reasoning": "LIKE under CI_AS folds case through Unicode tables, not just ASCII; the hand-derived case-only values are ASCII. PostgreSQL's ~* folds case through the database's ctype; under a C or POSIX ctype it folds ASCII only, so 'ДОМ' and 'Дом' would not match. 'дым' differs by a letter and 'ÉCLAIR' shares no letters, so both must stay out. The rows share PreferredName 'Q', a non-key tie.",
       "trapChecks": {
         "collation-case": {
           "present": true,
-          "detail": "\"ab\" and \"AB\" differ only in case"
+          "detail": "\"дом\" and \"ДОМ\" differ only in case"
         },
         "top-ties": {
           "present": true,
@@ -96,11 +96,11 @@
     },
     {
       "id": "A02",
-      "label": "a trailing space in SearchName is matched by LIKE '%amy%'",
+      "label": "SearchName: a search text ending in a space ('amy ') matches only values with a space after 'amy'",
       "traps": [
         "trailing-spaces"
       ],
-      "reasoning": "SearchName 'amy ' ends in a space; LIKE N'%amy%' matches it on SQL Server and the translated regex matches it too. The person is returned on both engines.",
+      "reasoning": "For nvarchar, trailing spaces in a LIKE pattern are significant, so '%amy %' matches 'amy ' and 'amy b' but not 'amy' or 'amyx'. A conversion that rtrimmed the search text, or compared with the trailing-space-insensitive '=' semantics, would also return 'amy' and 'amyx'. The earlier case put the space in the data, where both readings match.",
       "trapChecks": {
         "trailing-spaces": {
           "present": true,
@@ -118,9 +118,9 @@
     },
     {
       "id": "A03",
-      "label": "character class [^a] matches any one character that is not 'a'",
+      "label": "SearchName: '_' matches a digit, an accented letter and a space, and '[^a-c]' excludes a, b and c in either case ('x_[^a-c]')",
       "traps": [],
-      "reasoning": "T-SQL LIKE negated class [^a] matches a single non-'a' character; PostgreSQL LIKE has no classes, so the conversion must translate it. 'b' matches, 'a' and 'A' do not (case-insensitive), '' does not.",
+      "reasoning": "T-SQL LIKE '_' matches any single character and '[^a-c]' any single character outside a-c (case-insensitively under CI_AS). 'x1d', 'xé9' and 'x d' match; 'xaB' and 'x1C' do not (B and C are in the class under case-insensitive comparison); 'x1' is too short. A translation that mapped '_' to a letter class, or made the negated range case-sensitive, would differ. The hand-derived '[^a]' case uses a single-character class and no '_'.",
       "trapChecks": {},
       "status": "ran",
       "sqlServer": {
@@ -133,9 +133,9 @@
     },
     {
       "id": "A04",
-      "label": "relationship precedence: a person flagged both salesperson and employee is reported as 'Salesperson'",
+      "label": "relationship and company for people who are neither salesperson nor employee: customer contact, supplier alternate contact, and no relationship ('WWI')",
       "traps": [],
-      "reasoning": "The CASE tests IsSalesperson before IsEmployee; a person with both bits set must be 'Salesperson'. A conversion that reordered the WHEN branches would report 'Employee'.",
+      "reasoning": "After IsSalesperson and IsEmployee the CASE tests, in order, a customer whose primary contact is the person, a supplier's primary contact and a supplier's alternate contact, and Company is COALESCE(customer name, primary supplier name, alternate supplier name, 'WWI'). Person 1 is a customer's primary contact and a supplier's alternate contact: 'Customer', company 'Cust Ten'. Person 2 is only a supplier's alternate contact: 'Supplier', company 'Sup 21'. Person 3 has no relationship: no Relationship key (NULL is omitted by FOR JSON) and company 'WWI'. The hand-derived precedence case covers only the first two WHEN branches.",
       "trapChecks": {},
       "status": "ran",
       "sqlServer": {
@@ -195,28 +195,48 @@
       "caseId": "A01",
       "kind": "duplicate",
       "text": "The hand-derived five-hit case already includes SearchName values 'ab' and 'AB', gives every row PreferredName 'Q', and exercises the same case-insensitive matching and non-key tie. A01 reduces that existing input to two rows without adding a new mechanism.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A01 now uses Cyrillic lower-, upper-, and title-case values plus nonmatching Cyrillic and accented controls. It tests Unicode case folding beyond the hand-derived ASCII inputs while retaining the tie.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O02",
       "caseId": "A02",
       "kind": "weak",
       "text": "Searching for 'amy' matches SearchName 'amy ' both before and after trimming its trailing space, and SearchName is not returned in the JSON. The supplied case therefore cannot expose trailing-space loss despite claiming that trap.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A02 now puts the trailing space in the search text. The pattern '%amy %' distinguishes 'amy ' and 'amy b' from 'amy' and 'amyx', so trimming the argument changes the selected rows.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O03",
       "caseId": "A03",
       "kind": "duplicate",
       "text": "The hand-derived LIKE '[^a]' case already supplies SearchName values 'a', 'A', 'b' and '' with the same search term. A03 repeats that pattern-semantics attack.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A03 now combines '_' with a multi-character negated range and includes digit, accented-letter, space, case-folded range, and too-short controls. It attacks wildcard character classes absent from the hand-derived case and exposes the missed letter-only '_' defect.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O04",
       "caseId": "A04",
       "kind": "duplicate",
       "text": "The hand-derived relationship-precedence case already supplies people marked both salesperson and employee and requires 'Salesperson'. Reducing it to one matching person does not attack a different CASE branch.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A04 now targets the later customer, supplier-alternate-contact, and no-relationship branches, including a person who has both customer and supplier links. Those branches and COALESCE precedence are absent from the hand-derived salesperson/employee case.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     }
   ],
   "mutantAdequacy": {
@@ -224,13 +244,13 @@
     "caught": [
       "match is case-sensitive",
       "'[..]' treated as literal characters",
+      "'_' matches a letter only",
       "one row too many returned",
       "results in descending order",
-      "employee tested before salesperson",
       "company defaults to empty instead of 'WWI'"
     ],
     "missed": [
-      "'_' matches a letter only"
+      "employee tested before salesperson"
     ],
     "skipped": [],
     "equivalentRecorded": []
@@ -238,11 +258,7 @@
   "gate": {
     "passed": false,
     "reasons": [
-      "objection O01 is open",
-      "objection O02 is open",
-      "objection O03 is open",
-      "objection O04 is open",
-      "mutant adequacy is inadequate (unexplained misses: '_' matches a letter only)"
+      "mutant adequacy is inadequate (unexplained misses: employee tested before salesperson)"
     ]
   },
   "wording": "6 adversarial cases ran, 0 differed"

@@ -7,12 +7,13 @@
 -- Prerequisites: the spec's tables created and the final conversion deployed.
 -- Each case is one transaction and always rolls back.
 
--- @case 1: [A01] two rows of 32767 at location 6 sum to 65534, beyond smallint: int result, no overflow
+-- @case 1: [A01] 32767 at location 6 next to 32767 at locations 1 and 7 for the same product: only location 6 counts
 BEGIN;
 DELETE FROM production.product_inventory;
 INSERT INTO production.product_inventory ("ProductID", "LocationID", "Quantity") VALUES
   ('1', '6', '32767'),
-  ('1', '6', '32767');
+  ('1', '1', '32767'),
+  ('1', '7', '32767');
 CREATE TEMP TABLE pp_actual ON COMMIT DROP AS
 SELECT dbo.ufn_get_stock('1'::integer) AS result;
 DO $pp$
@@ -20,29 +21,29 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['result']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 01 [A01 two rows of 32767 at location 6 sum to 65534, beyond smallint: int result, no overflow', got, ARRAY['result']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 01 [A01 32767 at location 6 next to 32767 at locations 1 and 7 for the same product: only location 6 cou…', got, ARRAY['result']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
 INSERT INTO pp_expected VALUES
-  ('65534');
+  ('32767');
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 01 [A01 two rows of 32767 at location 6 sum to 65534, beyond smallint: int result, no overflow', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 01 [A01 32767 at location 6 next to 32767 at locations 1 and 7 for the same product: only location 6 cou…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;
 
--- @case 2: [A02] two rows of -32768 at location 6 sum to -65536: a negative int result
+-- @case 2: [A02] -32768 (smallint minimum) at location 6 next to -32768 at location 1: the negative value is returned as is
 BEGIN;
 DELETE FROM production.product_inventory;
 INSERT INTO production.product_inventory ("ProductID", "LocationID", "Quantity") VALUES
   ('2', '6', '-32768'),
-  ('2', '6', '-32768');
+  ('2', '1', '-32768');
 CREATE TEMP TABLE pp_actual ON COMMIT DROP AS
 SELECT dbo.ufn_get_stock('2'::integer) AS result;
 DO $pp$
@@ -50,29 +51,29 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['result']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 02 [A02 two rows of -32768 at location 6 sum to -65536: a negative int result', got, ARRAY['result']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 02 [A02 -32768 (smallint minimum) at location 6 next to -32768 at location 1: the negative value is retu…', got, ARRAY['result']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
 INSERT INTO pp_expected VALUES
-  ('-65536');
+  ('-32768');
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 02 [A02 two rows of -32768 at location 6 sum to -65536: a negative int result', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 02 [A02 -32768 (smallint minimum) at location 6 next to -32768 at location 1: the negative value is retu…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;
 
--- @case 3: [A03] +7 and -7 at location 6 sum to 0 (a real zero sum, not the NULL replacement)
+-- @case 3: [A03] -7 at location 6 and +7 at location 1: -7, while an all-locations sum would be the 0 that also stands for no stock
 BEGIN;
 DELETE FROM production.product_inventory;
 INSERT INTO production.product_inventory ("ProductID", "LocationID", "Quantity") VALUES
-  ('3', '6', '7'),
-  ('3', '6', '-7');
+  ('3', '6', '-7'),
+  ('3', '1', '7');
 CREATE TEMP TABLE pp_actual ON COMMIT DROP AS
 SELECT dbo.ufn_get_stock('3'::integer) AS result;
 DO $pp$
@@ -80,19 +81,19 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['result']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 03 [A03 +7 and -7 at location 6 sum to 0 (a real zero sum, not the NULL replacement)', got, ARRAY['result']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 03 [A03 -7 at location 6 and +7 at location 1: -7, while an all-locations sum would be the 0 that also s…', got, ARRAY['result']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
 INSERT INTO pp_expected VALUES
-  ('0');
+  ('-7');
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 03 [A03 +7 and -7 at location 6 sum to 0 (a real zero sum, not the NULL replacement)', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 03 [A03 -7 at location 6 and +7 at location 1: -7, while an all-locations sum would be the 0 that also s…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;

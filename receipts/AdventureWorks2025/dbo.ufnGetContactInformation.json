@@ -118,22 +118,18 @@
       "planted defects caught by the agreed tests: 3 of 3"
     ],
     "adversarial": {
-      "gate": "fail",
-      "ran": 12,
+      "gate": "pass",
+      "ran": 13,
       "differed": 0,
       "evidencePath": "evidence/adversarial/AdventureWorks2025/dbo.ufnGetContactInformation.json",
-      "runAt": "2026-11-19T03:11:02.691Z",
+      "runAt": "2026-11-19T06:19:09.994Z",
       "agentWritten": true,
-      "wording": "12 adversarial cases ran, 0 differed",
+      "wording": "13 adversarial cases ran, 0 differed",
       "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
       "auditorModel": "gpt-5.6-sol",
       "sameModel": false,
-      "mutantAdequacy": "inadequate",
-      "gateReasons": [
-        "objection O01 is open",
-        "objection O02 is open",
-        "mutant adequacy is inadequate (unexplained misses: consumer rows include store customers)"
-      ],
+      "mutantAdequacy": "adequate",
+      "gateReasons": [],
       "cases": [
         {
           "id": "A01",
@@ -191,7 +187,7 @@
         },
         {
           "id": "A07",
-          "label": "the same vendor-contact row twice (no key on BusinessEntityContact): two identical Vendor Contact rows",
+          "label": "one person is a contact of two vendors with the same contact type: two identical Vendor Contact rows",
           "traps": [],
           "status": "ran",
           "sqlServer": "pass",
@@ -236,6 +232,14 @@
           "status": "ran",
           "sqlServer": "pass",
           "postgres": "pass"
+        },
+        {
+          "id": "A13",
+          "label": "a person with one consumer account and two store customer accounts: exactly one Consumer row",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
         }
       ]
     }
@@ -249,5 +253,5 @@
     "p50Hours": 1.5,
     "p90Hours": 4
   },
-  "builtAt": "2026-11-19T05:37:18.783Z"
+  "builtAt": "2026-11-19T06:24:38.449Z"
 }

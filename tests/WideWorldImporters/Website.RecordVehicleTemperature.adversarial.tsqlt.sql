@@ -35,18 +35,18 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedState1', @Actual = N'#ActualState1', @Message = N'Warehouse.VehicleTemperatures after the call';
 END;
 GO
--- case 2: [A02] duplicate 'rego' key: the first occurrence wins
+-- case 2: [A02] duplicate 'temp' key: the first (1.5) wins; the second is in exponent notation (1e2)
 --[@tSQLt:NoTransaction](DEFAULT)
-CREATE PROCEDURE [AgreedTests].[test 02 [A02 duplicate rego key: the first occurrence wins]
+CREATE PROCEDURE [AgreedTests].[test 02 [A02 duplicate temp key: the first (1.5) wins; the second is in exponent notation (1e2)]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Warehouse].[VehicleTemperatures]';
   SELECT TOP (0) [VehicleRegistration], [ChillerSensorNumber], [RecordedWhen], [Temperature], [FullSensorData], [IsCompressed], [CompressedSensorData] INTO #ExpectedState1 FROM [Warehouse].[VehicleTemperatures];
   INSERT INTO #ExpectedState1 ([VehicleRegistration], [ChillerSensorNumber], [RecordedWhen], [Temperature], [FullSensorData], [IsCompressed], [CompressedSensorData]) VALUES
-    (N'first', 1, CAST('2016-01-01T07:00:00.000000' AS datetime2(7)), 1, N'{"type":"Feature","properties":{"rego":"first","rego":"second","sensor":1,"when":"2016-01-01T07:00:00","temp":1}}', 0, NULL);
+    (N'WWI-2', 1, CAST('2016-01-01T07:00:00.000000' AS datetime2(7)), 1.5, N'{"type":"Feature","geometry":{"type":"Point","coordinates":[-89.76,50.47]},"properties":{"rego":"WWI-2","sensor":1,"when":"2016-01-01T07:00:00","temp":1.5,"temp":1e2}}', 0, NULL);
   DECLARE @outcome nvarchar(4000) = N'completed';
   BEGIN TRY
-    EXEC Website.RecordVehicleTemperature @FullSensorDataArray = N'{"Recordings":[{"type":"Feature","properties":{"rego":"first","rego":"second","sensor":1,"when":"2016-01-01T07:00:00","temp":1}}]}';
+    EXEC Website.RecordVehicleTemperature @FullSensorDataArray = N'{"Recordings":[{"type":"Feature","geometry":{"type":"Point","coordinates":[-89.76,50.47]},"properties":{"rego":"WWI-2","sensor":1,"when":"2016-01-01T07:00:00","temp":1.5,"temp":1e2}}]}';
   END TRY
   BEGIN CATCH
     SET @outcome = CASE WHEN ERROR_NUMBER() IN (51000) THEN N'raised' ELSE N'unexpected error ' + CAST(ERROR_NUMBER() AS nvarchar(20)) + N': ' + ERROR_MESSAGE() END;
@@ -59,18 +59,18 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedState1', @Actual = N'#ActualState1', @Message = N'Warehouse.VehicleTemperatures after the call';
 END;
 GO
--- case 3: [A03] temperature 3.965 rounds half away from zero to 3.97
+-- case 3: [A03] temperature -3.965 rounds half away from zero to -3.97 (half-up gives -3.96)
 --[@tSQLt:NoTransaction](DEFAULT)
-CREATE PROCEDURE [AgreedTests].[test 03 [A03 temperature 3.965 rounds half away from zero to 3.97]
+CREATE PROCEDURE [AgreedTests].[test 03 [A03 temperature -3.965 rounds half away from zero to -3.97 (half-up gives -3.96)]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Warehouse].[VehicleTemperatures]';
   SELECT TOP (0) [VehicleRegistration], [ChillerSensorNumber], [RecordedWhen], [Temperature], [FullSensorData], [IsCompressed], [CompressedSensorData] INTO #ExpectedState1 FROM [Warehouse].[VehicleTemperatures];
   INSERT INTO #ExpectedState1 ([VehicleRegistration], [ChillerSensorNumber], [RecordedWhen], [Temperature], [FullSensorData], [IsCompressed], [CompressedSensorData]) VALUES
-    (N'a', 1, CAST('2016-01-01T07:00:00.000000' AS datetime2(7)), 3.97, N'{"type":"Feature","geometry":{"type":"Point","coordinates":[-89.76,50.47]},"properties":{"rego":"a","sensor":1,"when":"2016-01-01T07:00:00","temp":3.965}}', 0, NULL);
+    (N'a', 1, CAST('2016-01-01T07:00:00.000000' AS datetime2(7)), -3.97, N'{"type":"Feature","geometry":{"type":"Point","coordinates":[-89.76,50.47]},"properties":{"rego":"a","sensor":1,"when":"2016-01-01T07:00:00","temp":-3.965}}', 0, NULL);
   DECLARE @outcome nvarchar(4000) = N'completed';
   BEGIN TRY
-    EXEC Website.RecordVehicleTemperature @FullSensorDataArray = N'{"Recordings":[{"type":"Feature","geometry":{"type":"Point","coordinates":[-89.76,50.47]},"properties":{"rego":"a","sensor":1,"when":"2016-01-01T07:00:00","temp":3.965}}]}';
+    EXEC Website.RecordVehicleTemperature @FullSensorDataArray = N'{"Recordings":[{"type":"Feature","geometry":{"type":"Point","coordinates":[-89.76,50.47]},"properties":{"rego":"a","sensor":1,"when":"2016-01-01T07:00:00","temp":-3.965}}]}';
   END TRY
   BEGIN CATCH
     SET @outcome = CASE WHEN ERROR_NUMBER() IN (51000) THEN N'raised' ELSE N'unexpected error ' + CAST(ERROR_NUMBER() AS nvarchar(20)) + N': ' + ERROR_MESSAGE() END;
@@ -134,16 +134,87 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedState1', @Actual = N'#ActualState1', @Message = N'Warehouse.VehicleTemperatures after the call';
 END;
 GO
--- case 6: [A06] NULL document: ISJSON(NULL) is NULL, so nothing is inserted and no error is raised
+-- case 6: [A06] the document is the JSON literal null (text 'null', not SQL NULL): not an object or array, so ISJSON is 0 and the call raises
 --[@tSQLt:NoTransaction](DEFAULT)
-CREATE PROCEDURE [AgreedTests].[test 06 [A06 NULL document: ISJSON(NULL) is NULL, so nothing is inserted and no error is raised]
+CREATE PROCEDURE [AgreedTests].[test 06 [A06 the document is the JSON literal null (text null, not SQL NULL): not an object or array, so ISJS…]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Warehouse].[VehicleTemperatures]';
   SELECT TOP (0) [VehicleRegistration], [ChillerSensorNumber], [RecordedWhen], [Temperature], [FullSensorData], [IsCompressed], [CompressedSensorData] INTO #ExpectedState1 FROM [Warehouse].[VehicleTemperatures];
   DECLARE @outcome nvarchar(4000) = N'completed';
   BEGIN TRY
-    EXEC Website.RecordVehicleTemperature @FullSensorDataArray = NULL;
+    EXEC Website.RecordVehicleTemperature @FullSensorDataArray = N'null';
+  END TRY
+  BEGIN CATCH
+    SET @outcome = CASE WHEN ERROR_NUMBER() IN (51000) THEN N'raised' ELSE N'unexpected error ' + CAST(ERROR_NUMBER() AS nvarchar(20)) + N': ' + ERROR_MESSAGE() END;
+    -- a procedure that fails inside its own transaction can leave it open (and uncommittable); the test is outside
+    -- tSQLt's transaction (NoTransaction), so this undoes only the procedure's work, as SQL Server does at batch end
+    IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+  END CATCH;
+  SELECT [VehicleRegistration], [ChillerSensorNumber], [RecordedWhen], [Temperature], [FullSensorData], [IsCompressed], [CompressedSensorData] INTO #ActualState1 FROM [Warehouse].[VehicleTemperatures];
+  EXEC tSQLt.AssertEqualsString @Expected = N'raised', @Actual = @outcome, @Message = N'outcome';
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedState1', @Actual = N'#ActualState1', @Message = N'Warehouse.VehicleTemperatures after the call';
+END;
+GO
+-- case 7: [A07] temperature in upper-case exponent notation with a negative exponent (25E-1) is rejected
+--[@tSQLt:NoTransaction](DEFAULT)
+CREATE PROCEDURE [AgreedTests].[test 07 [A07 temperature in upper-case exponent notation with a negative exponent (25E-1) is rejected]
+AS
+BEGIN
+  EXEC tSQLt.FakeTable @TableName = N'[Warehouse].[VehicleTemperatures]';
+  SELECT TOP (0) [VehicleRegistration], [ChillerSensorNumber], [RecordedWhen], [Temperature], [FullSensorData], [IsCompressed], [CompressedSensorData] INTO #ExpectedState1 FROM [Warehouse].[VehicleTemperatures];
+  DECLARE @outcome nvarchar(4000) = N'completed';
+  BEGIN TRY
+    EXEC Website.RecordVehicleTemperature @FullSensorDataArray = N'{"Recordings":[{"type":"Feature","geometry":{"type":"Point","coordinates":[-89.76,50.47]},"properties":{"rego":"WWI-7","sensor":1,"when":"2016-01-01T07:00:00","temp":25E-1}}]}';
+  END TRY
+  BEGIN CATCH
+    SET @outcome = CASE WHEN ERROR_NUMBER() IN (51000) THEN N'raised' ELSE N'unexpected error ' + CAST(ERROR_NUMBER() AS nvarchar(20)) + N': ' + ERROR_MESSAGE() END;
+    -- a procedure that fails inside its own transaction can leave it open (and uncommittable); the test is outside
+    -- tSQLt's transaction (NoTransaction), so this undoes only the procedure's work, as SQL Server does at batch end
+    IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+  END CATCH;
+  SELECT [VehicleRegistration], [ChillerSensorNumber], [RecordedWhen], [Temperature], [FullSensorData], [IsCompressed], [CompressedSensorData] INTO #ActualState1 FROM [Warehouse].[VehicleTemperatures];
+  EXEC tSQLt.AssertEqualsString @Expected = N'raised', @Actual = @outcome, @Message = N'outcome';
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedState1', @Actual = N'#ActualState1', @Message = N'Warehouse.VehicleTemperatures after the call';
+END;
+GO
+-- case 8: [A08] two recordings, the first with an empty 'when' (1900-01-01) and the second dated normally: both inserted
+--[@tSQLt:NoTransaction](DEFAULT)
+CREATE PROCEDURE [AgreedTests].[test 08 [A08 two recordings, the first with an empty when (1900-01-01) and the second dated normally: both in…]
+AS
+BEGIN
+  EXEC tSQLt.FakeTable @TableName = N'[Warehouse].[VehicleTemperatures]';
+  SELECT TOP (0) [VehicleRegistration], [ChillerSensorNumber], [RecordedWhen], [Temperature], [FullSensorData], [IsCompressed], [CompressedSensorData] INTO #ExpectedState1 FROM [Warehouse].[VehicleTemperatures];
+  INSERT INTO #ExpectedState1 ([VehicleRegistration], [ChillerSensorNumber], [RecordedWhen], [Temperature], [FullSensorData], [IsCompressed], [CompressedSensorData]) VALUES
+    (N'WWI-8', 1, CAST('1900-01-01T00:00:00.000000' AS datetime2(7)), 1.25, N'{"type":"Feature","geometry":{"type":"Point","coordinates":[-89.76,50.47]},"properties":{"rego":"WWI-8","sensor":1,"when":"","temp":1.25}}', 0, NULL),
+    (N'WWI-8b', 2, CAST('2016-01-01T07:00:00.000000' AS datetime2(7)), 2, N'{"type":"Feature","geometry":{"type":"Point","coordinates":[-89.76,50.47]},"properties":{"rego":"WWI-8b","sensor":2,"when":"2016-01-01T07:00:00","temp":2}}', 0, NULL);
+  DECLARE @outcome nvarchar(4000) = N'completed';
+  BEGIN TRY
+    EXEC Website.RecordVehicleTemperature @FullSensorDataArray = N'{"Recordings":[{"type":"Feature","geometry":{"type":"Point","coordinates":[-89.76,50.47]},"properties":{"rego":"WWI-8","sensor":1,"when":"","temp":1.25}},{"type":"Feature","geometry":{"type":"Point","coordinates":[-89.76,50.47]},"properties":{"rego":"WWI-8b","sensor":2,"when":"2016-01-01T07:00:00","temp":2}}]}';
+  END TRY
+  BEGIN CATCH
+    SET @outcome = CASE WHEN ERROR_NUMBER() IN (51000) THEN N'raised' ELSE N'unexpected error ' + CAST(ERROR_NUMBER() AS nvarchar(20)) + N': ' + ERROR_MESSAGE() END;
+    -- a procedure that fails inside its own transaction can leave it open (and uncommittable); the test is outside
+    -- tSQLt's transaction (NoTransaction), so this undoes only the procedure's work, as SQL Server does at batch end
+    IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+  END CATCH;
+  SELECT [VehicleRegistration], [ChillerSensorNumber], [RecordedWhen], [Temperature], [FullSensorData], [IsCompressed], [CompressedSensorData] INTO #ActualState1 FROM [Warehouse].[VehicleTemperatures];
+  EXEC tSQLt.AssertEqualsString @Expected = N'completed', @Actual = @outcome, @Message = N'outcome';
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedState1', @Actual = N'#ActualState1', @Message = N'Warehouse.VehicleTemperatures after the call';
+END;
+GO
+-- case 9: [A09] a 1007-character argument whose first 1000 characters are a valid document followed by spaces: truncated to nvarchar(1000), it is valid and inserted
+--[@tSQLt:NoTransaction](DEFAULT)
+CREATE PROCEDURE [AgreedTests].[test 09 [A09 a 1007-character argument whose first 1000 characters are a valid document followed by spaces: t…]
+AS
+BEGIN
+  EXEC tSQLt.FakeTable @TableName = N'[Warehouse].[VehicleTemperatures]';
+  SELECT TOP (0) [VehicleRegistration], [ChillerSensorNumber], [RecordedWhen], [Temperature], [FullSensorData], [IsCompressed], [CompressedSensorData] INTO #ExpectedState1 FROM [Warehouse].[VehicleTemperatures];
+  INSERT INTO #ExpectedState1 ([VehicleRegistration], [ChillerSensorNumber], [RecordedWhen], [Temperature], [FullSensorData], [IsCompressed], [CompressedSensorData]) VALUES
+    (N'WWI-9', 1, CAST('2016-01-01T07:00:00.000000' AS datetime2(7)), 2.5, N'{"type":"Feature","geometry":{"type":"Point","coordinates":[-89.76,50.47]},"properties":{"rego":"WWI-9","sensor":1,"when":"2016-01-01T07:00:00","temp":2.5}}', 0, NULL);
+  DECLARE @outcome nvarchar(4000) = N'completed';
+  BEGIN TRY
+    EXEC Website.RecordVehicleTemperature @FullSensorDataArray = N'{"Recordings":[{"type":"Feature","geometry":{"type":"Point","coordinates":[-89.76,50.47]},"properties":{"rego":"WWI-9","sensor":1,"when":"2016-01-01T07:00:00","temp":2.5}}]}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           garbage';
   END TRY
   BEGIN CATCH
     SET @outcome = CASE WHEN ERROR_NUMBER() IN (51000) THEN N'raised' ELSE N'unexpected error ' + CAST(ERROR_NUMBER() AS nvarchar(20)) + N': ' + ERROR_MESSAGE() END;

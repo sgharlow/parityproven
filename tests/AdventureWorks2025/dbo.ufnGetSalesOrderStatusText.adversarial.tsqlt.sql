@@ -110,3 +110,88 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
+-- case 7: [A07] status 1 gives 'In process' (the first WHEN branch)
+CREATE PROCEDURE [AgreedTests].[test 07 [A07 status 1 gives In process (the first WHEN branch)]
+AS
+BEGIN
+  CREATE TABLE #Expected (
+    [result] nvarchar(15) NULL
+  );
+  CREATE TABLE #Actual (
+    [result] nvarchar(15) NULL
+  );
+  INSERT INTO #Expected ([result]) VALUES
+    (N'In process');
+  INSERT INTO #Actual
+  SELECT dbo.ufnGetSalesOrderStatusText(1) AS result;
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
+END;
+GO
+-- case 8: [A08] status 2 gives 'Approved'
+CREATE PROCEDURE [AgreedTests].[test 08 [A08 status 2 gives Approved]
+AS
+BEGIN
+  CREATE TABLE #Expected (
+    [result] nvarchar(15) NULL
+  );
+  CREATE TABLE #Actual (
+    [result] nvarchar(15) NULL
+  );
+  INSERT INTO #Expected ([result]) VALUES
+    (N'Approved');
+  INSERT INTO #Actual
+  SELECT dbo.ufnGetSalesOrderStatusText(2) AS result;
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
+END;
+GO
+-- case 9: [A09] status 4 gives 'Rejected'
+CREATE PROCEDURE [AgreedTests].[test 09 [A09 status 4 gives Rejected]
+AS
+BEGIN
+  CREATE TABLE #Expected (
+    [result] nvarchar(15) NULL
+  );
+  CREATE TABLE #Actual (
+    [result] nvarchar(15) NULL
+  );
+  INSERT INTO #Expected ([result]) VALUES
+    (N'Rejected');
+  INSERT INTO #Actual
+  SELECT dbo.ufnGetSalesOrderStatusText(4) AS result;
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
+END;
+GO
+-- case 10: [A10] status 5 gives 'Shipped'
+CREATE PROCEDURE [AgreedTests].[test 10 [A10 status 5 gives Shipped]
+AS
+BEGIN
+  CREATE TABLE #Expected (
+    [result] nvarchar(15) NULL
+  );
+  CREATE TABLE #Actual (
+    [result] nvarchar(15) NULL
+  );
+  INSERT INTO #Expected ([result]) VALUES
+    (N'Shipped');
+  INSERT INTO #Actual
+  SELECT dbo.ufnGetSalesOrderStatusText(5) AS result;
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
+END;
+GO
+-- case 11: [A11] status 6 gives 'Cancelled' (the last WHEN branch before ELSE)
+CREATE PROCEDURE [AgreedTests].[test 11 [A11 status 6 gives Cancelled (the last WHEN branch before ELSE)]
+AS
+BEGIN
+  CREATE TABLE #Expected (
+    [result] nvarchar(15) NULL
+  );
+  CREATE TABLE #Actual (
+    [result] nvarchar(15) NULL
+  );
+  INSERT INTO #Expected ([result]) VALUES
+    (N'Cancelled');
+  INSERT INTO #Actual
+  SELECT dbo.ufnGetSalesOrderStatusText(6) AS result;
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
+END;
+GO

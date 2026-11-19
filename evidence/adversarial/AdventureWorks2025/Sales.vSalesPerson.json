@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "object": "Sales.vSalesPerson",
   "database": "AdventureWorks2025",
-  "runAt": "2026-11-19T04:17:37.464Z",
+  "runAt": "2026-11-19T06:18:19.746Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "f5a932f00a10efdc881b577e448bb5e24b4a074a3045fefde601a21ee41a9071",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-18T20:21:05-07:00",
+    "at": "2026-11-19T05:51:37.445Z",
     "file": "adversarial/AdventureWorks2025/Sales.vSalesPerson.cases.json",
-    "sha256": "69a06e274fa43c015ee0c74ac64e8d5167e1d0a87bbdb78914c9c77601bd1e20"
+    "sha256": "0031dc129b4d5acbdd3d3f7652267ae82869cfc630c06c38418241f00e365835"
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-18T20:33:12.9525152-07:00",
+    "at": "2026-11-19T06:06:57.652Z",
     "file": "adversarial/AdventureWorks2025/Sales.vSalesPerson.audit.json",
-    "sha256": "798f58ba73d4a0fe1d83d4831697f8eeca6ed92ac25dd1d1bb246fc74d92b556"
+    "sha256": "e176611da282eecf01ce6a208b12df6069df99416fd0b52e9797317e2d37871b"
   },
   "sameModel": false,
   "casesAudited": [
@@ -82,20 +82,20 @@
   "cases": [
     {
       "id": "A01",
-      "label": "case-only variants 'Us', 'uS' and 'us ' of a country code join 'US'",
+      "label": "case pairs outside ASCII ('üs' to 'ÜS', 'σa' to 'ΣA') and case plus a trailing space on the country side ('CA' to 'ca ')",
       "traps": [
         "collation-case",
         "trailing-spaces"
       ],
-      "reasoning": "CI_AS ignores case and SQL Server equality ignores trailing spaces, so all three province codes join country 'US'. The conversion uses rtrim under an ICU level-2 collation; this checks mixed case and case plus trailing space together.",
+      "reasoning": "The hand-derived cases join an ASCII lowercase province code to an uppercase country and a province code with a trailing space; both differences sit on the province side. Here the case pairs are Latin-1 (ü/Ü) and Greek (σ/Σ), which CI_AS folds through its Unicode case tables, and the country row itself is lowercase with a trailing space ('ca '), so the rtrim and the case-insensitive comparison must apply to the country side too. A conversion that lower()ed only ASCII, folded with a byte-wise or C-collation upper(), or trimmed only the province side would drop rows that SQL Server keeps. These are valid source rows: CountryRegion keys 'ÜS', 'ΣA' and 'ca ' are distinct under the case-insensitive key, and each province code references its country under that collation.",
       "trapChecks": {
         "collation-case": {
           "present": true,
-          "detail": "\"Us\" and \"uS\" differ only in case"
+          "detail": "\"üs\" and \"ÜS\" differ only in case"
         },
         "trailing-spaces": {
           "present": true,
-          "detail": "\"us \" ends in a space"
+          "detail": "\"ca \" ends in a space"
         }
       },
       "status": "ran",
@@ -219,19 +219,24 @@
     },
     {
       "id": "A07",
-      "label": "money extremes passed through: SalesYTD 922337203685477.5807 and -922337203685477.5808, values ending in 5 at the fourth place, NULL quota",
+      "label": "large money values passed through (up to 900719925474.0990), values ending in 5 at the fourth place, zero sales and a NULL quota",
       "traps": [
         "numeric-rounding"
       ],
-      "reasoning": "SalesQuota, SalesYTD and SalesLastYear are money (numeric(19,4) on PostgreSQL) and are only passed through. The money limits, 0.0005 and -0.0005 check the mapping and both clients: a client that reads money as a float would lose the last digits of the limits.",
+      "reasoning": "SalesQuota, SalesYTD and SalesLastYear are money (numeric(19,4) on PostgreSQL) and are only passed through. Values respect the source checks (quota > 0 or NULL, sales >= 0) and stay within the largest money value the harness captures exactly. 900719925474.0985 and 899999999999.9995 need 16 significant digits, so a client or mapping that read money as a float would change the last digit; 0.0005 and 0.0015 check the fourth decimal place; 0.0000 checks that a zero is not turned into NULL.",
       "trapChecks": {
         "numeric-rounding": {
           "present": true,
-          "detail": "0.0005 in SalesQuota ends in a 5"
+          "detail": "900719925474.0985 in SalesYTD ends in a 5"
         }
       },
-      "status": "invalid",
-      "invalidReason": "the original T-SQL raised an undeclared error: money value beyond 900719925474.0992 cannot be captured exactly through the driver for this call shape: SELECT * FROM Sales.vSalesPerson",
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
       "differed": false
     },
     {
@@ -263,12 +268,12 @@
     },
     {
       "id": "A09",
-      "label": "text returned as stored and fan-out: case-only name variants, an emoji, two identical phone rows and an unknown phone type",
+      "label": "text returned as stored and fan-out: case-only name variants, an emoji, the same number under two phone types of one name and an unknown phone type",
       "traps": [
         "collation-case",
         "top-ties"
       ],
-      "reasoning": "Names 'Ann', 'ANN' and 'ann' are passed through. PersonPhone has no key in the scratch tables, so two identical phone rows give two identical output rows; a phone of type 9 has no PhoneNumberType row (NULL).",
+      "reasoning": "Names 'Ann', 'ANN' and 'ann' are passed through. PersonPhone keys on (BusinessEntityID, PhoneNumber, PhoneNumberTypeID) and PhoneNumberType keys on PhoneNumberTypeID only, so the same number under types 1 and 2, both named 'Cell', is two valid rows that give two identical output rows; the view has no DISTINCT; a phone of type 9 has no PhoneNumberType row (NULL).",
       "trapChecks": {
         "collation-case": {
           "present": true,
@@ -312,9 +317,9 @@
     }
   ],
   "summary": {
-    "ran": 9,
+    "ran": 10,
     "differed": 0,
-    "invalid": 1
+    "invalid": 0
   },
   "objections": [
     {
@@ -322,21 +327,36 @@
       "caseId": "A01",
       "kind": "duplicate",
       "text": "The hand-derived fixed cases already test a lowercase province code joining 'US' under CI_AS and a province code with a trailing space joining 'US'. Additional mixed-case spellings and combining case with the trailing space attack the same two join mechanisms.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A01 now uses non-ASCII Latin-1 and Greek case pairs and puts the combined case/trailing-space variant on the country side, exercising Unicode folding and asymmetric trimming paths absent from the hand-derived inputs.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O02",
       "caseId": "A07",
       "kind": "not-an-attack",
       "text": "A07 sends negative SalesYTD and SalesLastYear values and a zero SalesQuota. Those values violate the source SalesPerson nonnegative/positive check constraints, so the money-extremes input is outside the source schema preconditions.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A07 now sends only nonnegative sales values and a positive or NULL quota. The large and half-unit money values retain the mapping attack while satisfying the SalesPerson checks.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O03",
       "caseId": "A09",
       "kind": "not-an-attack",
       "text": "A09 inserts the identical PersonPhone primary-key tuple (BusinessEntityID 1, PhoneNumber '555-0100', PhoneNumberTypeID 1) twice. The duplicate fan-out cannot occur under the source schema preconditions.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A09 now sends the same number under two distinct PhoneNumberTypeID values. The PersonPhone keys are valid, and equal type names still create identical projected rows.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     }
   ],
   "mutantAdequacy": {
@@ -351,13 +371,8 @@
     "equivalentRecorded": []
   },
   "gate": {
-    "passed": false,
-    "reasons": [
-      "case A07 is invalid: the original T-SQL raised an undeclared error: money value beyond 900719925474.0992 cannot be captured exactly through the driver for this call shape: SELECT * FROM Sales.vSalesPerson",
-      "objection O01 is open",
-      "objection O02 is open",
-      "objection O03 is open"
-    ]
+    "passed": true,
+    "reasons": []
   },
-  "wording": "9 adversarial cases ran, 0 differed"
+  "wording": "10 adversarial cases ran, 0 differed"
 }

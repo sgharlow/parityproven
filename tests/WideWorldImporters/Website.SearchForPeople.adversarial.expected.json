@@ -2,11 +2,11 @@
   "object": "Website.SearchForPeople",
   "database": "WideWorldImporters",
   "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
-  "capturedAt": "2026-11-19T05:36:11.532Z",
+  "capturedAt": "2026-11-19T06:23:28.086Z",
   "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
   "cases": [
     {
-      "label": "[A01] SearchName values differing only in case both match; the two rows share PreferredName",
+      "label": "[A01] SearchName: Cyrillic values differing only in case match a case-insensitive search ('дом' finds 'ДОМ' and 'Дом', not 'дым' or 'ÉCLAIR')",
       "columns": [
         {
           "name": "result",
@@ -15,12 +15,12 @@
       ],
       "rows": [
         [
-          "s:{\"People\":[{\"PersonID\":1,\"FullName\":\"Q0001\",\"PreferredName\":\"Q\",\"Relationship\":\"Employee\",\"Company\":\"WWI\"},{\"PersonID\":3,\"FullName\":\"Q0003\",\"PreferredName\":\"Q\",\"Relationship\":\"Employee\",\"Company\":\"WWI\"}]}"
+          "s:{\"People\":[{\"PersonID\":1,\"FullName\":\"Q0001\",\"PreferredName\":\"Q\",\"Relationship\":\"Employee\",\"Company\":\"WWI\"},{\"PersonID\":2,\"FullName\":\"Q0002\",\"PreferredName\":\"Q\",\"Relationship\":\"Employee\",\"Company\":\"WWI\"},{\"PersonID\":3,\"FullName\":\"Q0003\",\"PreferredName\":\"Q\",\"Relationship\":\"Employee\",\"Company\":\"WWI\"}]}"
         ]
       ]
     },
     {
-      "label": "[A02] a trailing space in SearchName is matched by LIKE '%amy%'",
+      "label": "[A02] SearchName: a search text ending in a space ('amy ') matches only values with a space after 'amy'",
       "columns": [
         {
           "name": "result",
@@ -29,12 +29,12 @@
       ],
       "rows": [
         [
-          "s:{\"People\":[{\"PersonID\":1,\"FullName\":\"Q0001\",\"PreferredName\":\"Q\",\"Relationship\":\"Employee\",\"Company\":\"WWI\"}]}"
+          "s:{\"People\":[{\"PersonID\":2,\"FullName\":\"Q0002\",\"PreferredName\":\"Q\",\"Relationship\":\"Employee\",\"Company\":\"WWI\"},{\"PersonID\":4,\"FullName\":\"Q0004\",\"PreferredName\":\"Q\",\"Relationship\":\"Employee\",\"Company\":\"WWI\"}]}"
         ]
       ]
     },
     {
-      "label": "[A03] character class [^a] matches any one character that is not 'a'",
+      "label": "[A03] SearchName: '_' matches a digit, an accented letter and a space, and '[^a-c]' excludes a, b and c in either case ('x_[^a-c]')",
       "columns": [
         {
           "name": "result",
@@ -43,12 +43,12 @@
       ],
       "rows": [
         [
-          "s:{\"People\":[{\"PersonID\":3,\"FullName\":\"Q0003\",\"PreferredName\":\"Q\",\"Relationship\":\"Employee\",\"Company\":\"WWI\"}]}"
+          "s:{\"People\":[{\"PersonID\":1,\"FullName\":\"Q0001\",\"PreferredName\":\"Q\",\"Relationship\":\"Employee\",\"Company\":\"WWI\"},{\"PersonID\":2,\"FullName\":\"Q0002\",\"PreferredName\":\"Q\",\"Relationship\":\"Employee\",\"Company\":\"WWI\"},{\"PersonID\":3,\"FullName\":\"Q0003\",\"PreferredName\":\"Q\",\"Relationship\":\"Employee\",\"Company\":\"WWI\"}]}"
         ]
       ]
     },
     {
-      "label": "[A04] relationship precedence: a person flagged both salesperson and employee is reported as 'Salesperson'",
+      "label": "[A04] relationship and company for people who are neither salesperson nor employee: customer contact, supplier alternate contact, and no relationship ('WWI')",
       "columns": [
         {
           "name": "result",
@@ -57,7 +57,7 @@
       ],
       "rows": [
         [
-          "s:{\"People\":[{\"PersonID\":1,\"FullName\":\"Q0001\",\"PreferredName\":\"Q\",\"Relationship\":\"Salesperson\",\"Company\":\"WWI\"}]}"
+          "s:{\"People\":[{\"PersonID\":1,\"FullName\":\"Q0001\",\"PreferredName\":\"Q\",\"Relationship\":\"Customer\",\"Company\":\"Cust Ten\"},{\"PersonID\":2,\"FullName\":\"Q0002\",\"PreferredName\":\"Q\",\"Relationship\":\"Supplier\",\"Company\":\"Sup 21\"},{\"PersonID\":3,\"FullName\":\"Q0003\",\"PreferredName\":\"Q\",\"Company\":\"WWI\"}]}"
         ]
       ]
     },

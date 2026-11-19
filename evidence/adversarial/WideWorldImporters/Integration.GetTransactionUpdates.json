@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "object": "Integration.GetTransactionUpdates",
   "database": "WideWorldImporters",
-  "runAt": "2026-11-19T05:05:41.734Z",
+  "runAt": "2026-11-19T06:20:52.604Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "22e158bec18b504431ad015b32a6c413dfe8a5ee8e7080e5443803e850b872cb",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-19T04:36:25.160Z",
+    "at": "2026-11-19T06:00:45.121Z",
     "file": "adversarial/WideWorldImporters/Integration.GetTransactionUpdates.cases.json",
-    "sha256": "efb217ada682f764ee0eb20f7cd68cc5883bd1921a1024dc3a46d17eca4f6e41"
+    "sha256": "0c7415eba413ac953c431d82670fc44799aed2817776c7e508a9511244275deb"
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-18T21:39:58.1908526-07:00",
+    "at": "2026-11-19T06:06:57.652Z",
     "file": "adversarial/WideWorldImporters/Integration.GetTransactionUpdates.audit.json",
-    "sha256": "e7a158bee7e7a9b06c14931298e94db85245530390f0aa28b476e1966184599c"
+    "sha256": "f2a3da12239158ce1b2fb18b6524c2039abdde9705b1728429e971a66615220a"
   },
   "sameModel": false,
   "casesAudited": [
@@ -198,11 +198,11 @@
       "traps": [
         "dates-datetime"
       ],
-      "reasoning": "@LastCutoff 0001-01-01 00:00:00 and @NewCutoff 9999-12-31 23:59:59.999999: a row at each instant tests both bounds at the ends of the range. TransactionDate is passed through CAST(... AS date).",
+      "reasoning": "@LastCutoff 0001-01-01 00:00:00 and @NewCutoff 9999-12-31 23:59:59.999999: on each UNION ALL half a row sits at the new cutoff (included, <=) and one just after or at the last cutoff (> excludes the row at exactly 0001-01-01 00:00:00), so both bounds are tested at the ends of the range. Each half sends TransactionDate 1753-01-01 and 9999-12-31, passed through CAST(... AS date).",
       "trapChecks": {
         "dates-datetime": {
           "present": true,
-          "detail": "boundary date \"9999-12-31\" in TransactionDate"
+          "detail": "boundary date \"1753-01-01\" in TransactionDate"
         }
       },
       "status": "ran",
@@ -226,7 +226,12 @@
       "caseId": "A06",
       "kind": "label-mismatch",
       "text": "A06's label says transaction dates 1753-01-01 and 9999-12-31 are sent on both UNION ALL halves. The customer half sends 2020-06-15 and 9999-12-31, while the supplier half sends 1753-01-01 and 2020-06-15; neither half receives both boundary dates.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A06 now sends both 1753-01-01 and 9999-12-31 as TransactionDate values on each UNION ALL half. The label and reasoning match the revised rows.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     }
   ],
   "mutantAdequacy": {
@@ -240,10 +245,8 @@
     "equivalentRecorded": []
   },
   "gate": {
-    "passed": false,
-    "reasons": [
-      "objection O01 is open"
-    ]
+    "passed": true,
+    "reasons": []
   },
   "wording": "6 adversarial cases ran, 0 differed"
 }

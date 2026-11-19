@@ -2,11 +2,11 @@
   "object": "dbo.ufnGetStock",
   "database": "AdventureWorks2025",
   "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
-  "capturedAt": "2026-11-19T02:26:34.426Z",
+  "capturedAt": "2026-11-19T06:19:44.253Z",
   "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
   "cases": [
     {
-      "label": "[A01] two rows of 32767 at location 6 sum to 65534, beyond smallint: int result, no overflow",
+      "label": "[A01] 32767 at location 6 next to 32767 at locations 1 and 7 for the same product: only location 6 counts",
       "columns": [
         {
           "name": "result",
@@ -15,12 +15,12 @@
       ],
       "rows": [
         [
-          "n:65534"
+          "n:32767"
         ]
       ]
     },
     {
-      "label": "[A02] two rows of -32768 at location 6 sum to -65536: a negative int result",
+      "label": "[A02] -32768 (smallint minimum) at location 6 next to -32768 at location 1: the negative value is returned as is",
       "columns": [
         {
           "name": "result",
@@ -29,12 +29,12 @@
       ],
       "rows": [
         [
-          "n:-65536"
+          "n:-32768"
         ]
       ]
     },
     {
-      "label": "[A03] +7 and -7 at location 6 sum to 0 (a real zero sum, not the NULL replacement)",
+      "label": "[A03] -7 at location 6 and +7 at location 1: -7, while an all-locations sum would be the 0 that also stands for no stock",
       "columns": [
         {
           "name": "result",
@@ -43,7 +43,7 @@
       ],
       "rows": [
         [
-          "n:0"
+          "n:-7"
         ]
       ]
     },

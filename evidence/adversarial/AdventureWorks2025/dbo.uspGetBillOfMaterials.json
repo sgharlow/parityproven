@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "object": "dbo.uspGetBillOfMaterials",
   "database": "AdventureWorks2025",
-  "runAt": "2026-11-19T04:15:49.324Z",
+  "runAt": "2026-11-19T06:20:13.010Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "a5cc0d47499f0f6cd7bee9ad9f0d10c88b48b957561f22c9bffe97d381ad47f9",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-18T20:21:05-07:00",
+    "at": "2026-11-19T05:46:45.561Z",
     "file": "adversarial/AdventureWorks2025/dbo.uspGetBillOfMaterials.cases.json",
-    "sha256": "bc7ed845b159f39d6c702f832b82a1a168e448fa0b4ba046c7a9c3fa63124504"
+    "sha256": "77f7106bcc6d16803a4030cf823488d9bbecb058b88e460f9bb7abe246d097a5"
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-18T20:33:12.9525152-07:00",
+    "at": "2026-11-19T06:06:57.652Z",
     "file": "adversarial/AdventureWorks2025/dbo.uspGetBillOfMaterials.audit.json",
-    "sha256": "1c861e59764fa8d6818b96b5461153becd38b88d6c9b1392a1890db7a6c4fe27"
+    "sha256": "c5ef451c79214205d80e56c9400839e386798641165a06b4b36ecac5a5441ce7"
   },
   "sameModel": false,
   "casesAudited": [
@@ -36,7 +36,8 @@
     "A15",
     "A16",
     "A17",
-    "A18"
+    "A18",
+    "A19"
   ],
   "traps": {
     "null-vs-empty": {
@@ -47,9 +48,9 @@
     },
     "collation-case": {
       "applicable": true,
-      "coveredBy": [
-        "A14"
-      ]
+      "coveredBy": [],
+      "notApplicableReason": "The only text input is Production.Product.Name, which the source keeps unique under its case-insensitive collation (AK_Product_Name), so two products whose names differ only in case cannot exist. The procedure compares no text: it joins and filters on integer keys and dates.",
+      "accepted": true
     },
     "trailing-spaces": {
       "applicable": true,
@@ -67,7 +68,8 @@
         "A05",
         "A06",
         "A07",
-        "A08"
+        "A08",
+        "A19"
       ]
     },
     "numeric-rounding": {
@@ -190,7 +192,7 @@
       "traps": [
         "dates-datetime"
       ],
-      "reasoning": "Whether MAXRECURSION 25 is exceeded depends on the date filter of the 27th edge. SQL Server stores its EndDate as the next midnight, so the edge is in use at the check date and the walk needs 26 recursions (error 530). PostgreSQL keeps .999, drops the edge and returns 27 rows instead of raising.",
+      "reasoning": "Whether MAXRECURSION 25 is exceeded depends on the date filter of the 27th edge. SQL Server stores its EndDate 23:59:59.999 as the next midnight, so the edge is in use at the check date and the walk needs 26 recursions (error 530). A PostgreSQL column or parameter that kept .999 would drop that edge, need only 25 recursions, and return 26 rows (one per remaining edge) instead of raising.",
       "trapChecks": {
         "dates-datetime": {
           "present": true,
@@ -208,13 +210,13 @@
     },
     {
       "id": "A06",
-      "label": "an edge ending at 11:59:59.999 duplicates an open edge: SQL Server sums both quantities at 12:00, timestamp only one",
+      "label": "an edge ending at 11:59:59.999 overlaps an open edge for the same pair: SQL Server sums both quantities at 12:00, a timestamp that kept .999 only one",
       "traps": [
         "dates-datetime",
         "numeric-rounding",
         "top-ties"
       ],
-      "reasoning": "Two BillOfMaterials rows for the same pair: one open (1.00), one ending 2020-01-02 11:59:59.999, which datetime stores as 12:00:00.000. At a 12:00 check date SQL Server keeps both and TotalQuantity is 3.25; PostgreSQL drops the second and returns 1.00.",
+      "reasoning": "Two BillOfMaterials rows for the same pair with different StartDates (00:00 and 06:00, as the source unique key on assembly, component and start date requires): one open (1.00), one from 06:00 ending 2020-01-02 11:59:59.999, which datetime stores as 12:00:00.000. At a 12:00 check date SQL Server keeps both and TotalQuantity is 3.25; a conversion that kept .999 would drop the second row and return 1.00.",
       "trapChecks": {
         "dates-datetime": {
           "present": true,
@@ -319,11 +321,11 @@
         "numeric-rounding",
         "top-ties"
       ],
-      "reasoning": "Both paths reach the 4 -> 5 edge at recursion level 2 with the same BOMLevel, cost and price, so GROUP BY merges them and SUM(PerAssemblyQty) adds 0.45 twice (0.90). Quantities end in 5 (0.05, 0.15, 0.25, 0.35, 0.45) and costs in .0005, so any rounding of the decimal(8,2) sum or the money columns would show.",
+      "reasoning": "Both paths reach the 4 -> 5 edge at recursion level 2 with the same BOMLevel, cost and price, so GROUP BY merges them and SUM(PerAssemblyQty) adds 1.45 twice (2.90). Quantities are at or above the source minimum 1.00 and end in 5 (1.05, 1.15, 1.25, 1.35, 1.45); costs end in .0005 and are not negative. Any rounding of the decimal(8,2) sum or of the money columns would show.",
       "trapChecks": {
         "numeric-rounding": {
           "present": true,
-          "detail": "0.05 in PerAssemblyQty ends in a 5"
+          "detail": "1.05 in PerAssemblyQty ends in a 5"
         },
         "top-ties": {
           "present": true,
@@ -363,11 +365,11 @@
     },
     {
       "id": "A13",
-      "label": "BOMLevel out of step with depth: 32767, -32768 and 0 (smallint extremes) on a three-edge chain",
+      "label": "BOMLevel out of step with depth: 32767 (smallint maximum), 1 and 16384 on a three-edge chain",
       "traps": [
         "top-ties"
       ],
-      "reasoning": "ORDER BY BOMLevel uses the stored value, not the depth, so the deepest row (-32768) sorts first. smallint extremes check the column mapping; two products share a Name so a non-key value repeats.",
+      "reasoning": "ORDER BY BOMLevel uses the stored value, not the depth, so the depth-2 row (BOMLevel 1) sorts first and the depth-1 row (32767) last; a conversion that ordered by recursion level would differ. 32767 checks the smallint mapping; the source requires BOMLevel >= 1 for a row with an assembly, so no lower extreme is sent. Product names are distinct (unique in the source); the products share StandardCost and ListPrice, a non-key tie.",
       "trapChecks": {
         "top-ties": {
           "present": true,
@@ -385,20 +387,15 @@
     },
     {
       "id": "A14",
-      "label": "component names that differ only in case or a trailing space, an empty name and non-ASCII text are returned as stored",
+      "label": "product names with a trailing space, an empty name, non-ASCII text and a 50-character name are returned as stored",
       "traps": [
-        "collation-case",
         "trailing-spaces"
       ],
-      "reasoning": "ComponentDesc is the component (b.ComponentID)'s Name and is in the GROUP BY. Under CI_AS 'Bolt', 'BOLT' and 'bolt ' compare equal, but they belong to different ProductIDs, so they must stay three rows with their own spelling; a conversion that grouped or deduplicated on a case-folded or trimmed name would merge them. '' (empty, not NULL), an accent, an emoji and a 50-character name check the nvarchar(50) -> varchar(50) mapping.",
+      "reasoning": "ComponentDesc is the component (b.ComponentID)'s Name and is in the GROUP BY. 'Nut ' ends in a space that SQL Server returns (it ignores it only in comparisons); a char(n) mapping or an rtrim would drop it. '' (empty, not NULL), an accent, an emoji and a 50-character name check the nvarchar(50) -> varchar(50) mapping. Names differing only in case are not sent: Production.Product.Name is unique under the case-insensitive source collation, so two such products cannot exist (see notApplicable).",
       "trapChecks": {
-        "collation-case": {
-          "present": true,
-          "detail": "\"Bolt\" and \"BOLT\" differ only in case"
-        },
         "trailing-spaces": {
           "present": true,
-          "detail": "\"bolt \" ends in a space"
+          "detail": "\"Nut \" ends in a space"
         }
       },
       "status": "ran",
@@ -412,24 +409,29 @@
     },
     {
       "id": "A15",
-      "label": "money extremes and a quantity summed past decimal(8,2): three identical 999999.99 rows give 2999999.97",
+      "label": "a quantity summed past decimal(8,2): three in-use 999999.99 rows for one pair give 2999999.97; large money costs ending in 5",
       "traps": [
         "numeric-rounding",
         "top-ties"
       ],
-      "reasoning": "SUM(decimal(8,2)) is decimal(38,2) in T-SQL, so three 999999.99 rows sum to 2999999.97; a conversion that kept numeric(8,2) for the sum would overflow. StandardCost and ListPrice at the money maximum and minimum (922337203685477.5807, -922337203685477.5808) check money -> numeric(19,4), and a negative quantity and a cost ending in 5 are included.",
+      "reasoning": "SUM(decimal(8,2)) is decimal(38,2) in T-SQL, so three 999999.99 rows (same pair, StartDates 00:00, 06:00 and 12:00 on 2020-01-01, all in use at the check date) sum to 2999999.97; a conversion that kept numeric(8,2) for the sum would overflow. StandardCost 900719925474.0985 and ListPrice 900719925474.0990 are large non-negative money values (the source requires >= 0) that the harness can capture exactly; they check money -> numeric(19,4) without rounding the last digit. The second component has quantity 1.05 and cost 0.0005.",
       "trapChecks": {
         "numeric-rounding": {
           "present": true,
-          "detail": "0.0005 in StandardCost ends in a 5"
+          "detail": "1.05 in PerAssemblyQty ends in a 5"
         },
         "top-ties": {
           "present": true,
           "detail": "two rows of Production.BillOfMaterials share ProductAssemblyID = 1"
         }
       },
-      "status": "invalid",
-      "invalidReason": "the original T-SQL raised an undeclared error: money value beyond 900719925474.0992 cannot be captured exactly through the driver for this call shape: EXEC dbo.uspGetBillOfMaterials @StartProductID = 1, @CheckDate = '2020-01-02T12:00:00.000'",
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
       "differed": false
     },
     {
@@ -458,7 +460,7 @@
       "id": "A17",
       "label": "a cycle reached only through an edge that is not in use at the check date, and an unreachable cycle: rows, no recursion error",
       "traps": [],
-      "reasoning": "2 -> 3 -> 2 would be a cycle, but 3 -> 2 ended on 2019-12-31; 5 <-> 6 is a cycle the walk never reaches. SQL Server applies the date filter in the recursive member, so it never recurses past level 1. The PostgreSQL walk must apply the same filter before counting levels, or it raises 54001.",
+      "reasoning": "2 -> 3 -> 2 would be a cycle, but 3 -> 2 was in use only from 2019-01-01 to 2019-12-31; 5 <-> 6 is a cycle the walk never reaches. SQL Server applies the date filter in the recursive member, so it never recurses past level 1. The PostgreSQL walk must apply the same filter before counting levels, or it raises 54001.",
       "trapChecks": {},
       "status": "ran",
       "sqlServer": {
@@ -483,12 +485,34 @@
         "passed": true
       },
       "differed": false
+    },
+    {
+      "id": "A19",
+      "label": "26-edge chain whose last edge is in use only because datetime rounds its end 23:59:59.999 to midnight: exactly 25 recursions, allowed, 26 rows",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "MAXRECURSION 25 allows 25 recursions; this walk needs exactly 25 when the 26th edge is in use. Its EndDate 2020-01-01 23:59:59.999 is stored by datetime as 2020-01-02 00:00:00.000, equal to the check date, so SQL Server keeps it and returns 26 rows without error. A conversion that counted the limit one level too low would raise; one that kept .999 would drop the edge and return 25 rows.",
+      "trapChecks": {
+        "dates-datetime": {
+          "present": true,
+          "detail": "datetime value \"2020-01-01T23:59:59.999\" is off the .000/.003/.007 grid"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
     }
   ],
   "summary": {
-    "ran": 17,
+    "ran": 19,
     "differed": 0,
-    "invalid": 1
+    "invalid": 0
   },
   "objections": [
     {
@@ -496,77 +520,101 @@
       "caseId": "A05",
       "kind": "label-mismatch",
       "text": "The reasoning says PostgreSQL drops the final edge and returns 27 rows. The input contains 27 edges, so dropping the final edge leaves 26 result rows. The case remains a date-rounding/MAXRECURSION attack, but its stated non-error outcome does not match the values sent.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A05 now states that dropping the final edge leaves 26 rows. Its edge count and MAXRECURSION outcome match the sent chain.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O02",
       "caseId": "A06",
       "kind": "not-an-attack",
       "text": "The two rows for assembly 1, component 2 have the same StartDate. They violate the source table's unique key on ProductAssemblyID, ComponentID and StartDate, so this input is outside the source schema preconditions.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A06 now gives the two same-pair rows different StartDate values, so the source unique key is satisfied while the overlapping-row sum remains visible.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O03",
       "caseId": "A11",
       "kind": "not-an-attack",
       "text": "The BillOfMaterials quantities 0.05 through 0.45 violate the source check requiring PerAssemblyQty >= 1.00, and product 5 has a negative StandardCost contrary to the source Product check. The diamond input is not valid source data.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A11 now uses quantities 1.05 through 1.45 and nonnegative costs. The diamond satisfies the source checks and retains the grouped-sum rounding attack.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O04",
       "caseId": "A13",
       "kind": "not-an-attack",
       "text": "Products 2 and 3 both use Name 'P2'. Production.Product has a case-insensitive unique key on Name, so the repeated value used to satisfy the top-ties claim cannot occur under the source schema preconditions.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A13 now gives every product a distinct name and creates its non-key tie with shared StandardCost and ListPrice values.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O05",
       "caseId": "A14",
       "kind": "not-an-attack",
       "text": "Product names 'Bolt', 'BOLT' and 'bolt ' collide under the source case-insensitive, trailing-space-insensitive unique key on Production.Product.Name. The input cannot be loaded into the source table with its constraints.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A14 now uses distinct names and removes the impossible case-only variants. It retains empty, trailing-space, non-ASCII, emoji, and maximum-length text inputs.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O06",
       "caseId": "A15",
       "kind": "not-an-attack",
       "text": "The three identical BillOfMaterials rows violate the source unique key; the negative PerAssemblyQty violates its >= 1.00 check; and the negative Product.ListPrice violates the source Product check. This overflow case is outside the source schema preconditions.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A15 now separates the same-pair rows by StartDate, uses positive quantities, and uses nonnegative product prices. It still drives SUM(decimal(8,2)) beyond the input precision.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O07",
       "caseId": "A17",
       "kind": "not-an-attack",
       "text": "The 3 -> 2 row ends on 2019-12-31 but starts on 2020-01-01. That violates the source BillOfMaterials check requiring EndDate after StartDate (or NULL), so the filtered-cycle input is not valid source data.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A17 now starts the expired 3 -> 2 edge on 2019-01-01, before its 2019-12-31 end date. The filtered cycle is valid source data.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     }
   ],
   "mutantAdequacy": {
-    "verdict": "inadequate",
+    "verdict": "adequate",
     "caught": [
       "no recursion limit check (rows returned up to the depth guard)",
+      "limit one level too low",
       "open-ended components excluded (ISNULL(EndDate, @CheckDate) dropped)",
       "quantities not summed"
     ],
-    "missed": [
-      "limit one level too low"
-    ],
+    "missed": [],
     "skipped": [],
     "equivalentRecorded": []
   },
   "gate": {
-    "passed": false,
-    "reasons": [
-      "case A15 is invalid: the original T-SQL raised an undeclared error: money value beyond 900719925474.0992 cannot be captured exactly through the driver for this call shape: EXEC dbo.uspGetBillOfMaterials @StartProductID = 1, @CheckDate = '2020-01-02T12:00:00.000'",
-      "objection O01 is open",
-      "objection O02 is open",
-      "objection O03 is open",
-      "objection O04 is open",
-      "objection O05 is open",
-      "objection O06 is open",
-      "objection O07 is open",
-      "mutant adequacy is inadequate (unexplained misses: limit one level too low)"
-    ]
+    "passed": true,
+    "reasons": []
   },
-  "wording": "17 adversarial cases ran, 0 differed"
+  "wording": "19 adversarial cases ran, 0 differed"
 }

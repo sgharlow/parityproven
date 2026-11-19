@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "object": "dbo.ufnGetStock",
   "database": "AdventureWorks2025",
-  "runAt": "2026-11-19T02:26:39.618Z",
+  "runAt": "2026-11-19T06:19:49.325Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "137959416026468b762e5070fc3a2d52999e54e5be5e965f8e0c57e709c337ce",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-18T19:13:01-07:00",
+    "at": "2026-11-19T05:46:45.561Z",
     "file": "adversarial/AdventureWorks2025/dbo.ufnGetStock.cases.json",
-    "sha256": "8080eada39ea78b40cb4ae82dbfd927532b96a01da5504d4dc3542a5d3e96b54"
+    "sha256": "83ee9c2f380a906e4e73c992445c9f9d213dc90c5749566b480d7c1a6ee0570f"
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-18T19:19:51.7066204-07:00",
+    "at": "2026-11-19T06:06:57.652Z",
     "file": "adversarial/AdventureWorks2025/dbo.ufnGetStock.audit.json",
-    "sha256": "e0320fd0650fd5dc7540417ce97f4acd1989f37e0d3299824863f19eac4506d5"
+    "sha256": "422c5b55dcce477a5a9a04e6af86a89249a44dfd0e666c8058ac4f7fffffa7e2"
   },
   "sameModel": false,
   "casesAudited": [
@@ -74,9 +74,9 @@
   "cases": [
     {
       "id": "A01",
-      "label": "two rows of 32767 at location 6 sum to 65534, beyond smallint: int result, no overflow",
+      "label": "32767 at location 6 next to 32767 at locations 1 and 7 for the same product: only location 6 counts",
       "traps": [],
-      "reasoning": "T-SQL SUM(smallint) returns int, so 32767 + 32767 = 65534. PostgreSQL SUM(smallint) is bigint, cast to integer. A conversion that cast the sum (or each value) to smallint would overflow or wrap.",
+      "reasoning": "One row per (ProductID, LocationID), as the source primary key requires. The other locations hold the same smallint maximum, so a conversion that summed before filtering, or summed in smallint, would overflow (3 * 32767 > 32767) or return 98301. T-SQL SUM(smallint) over the one location-6 row returns int 32767.",
       "trapChecks": {},
       "status": "ran",
       "sqlServer": {
@@ -89,9 +89,9 @@
     },
     {
       "id": "A02",
-      "label": "two rows of -32768 at location 6 sum to -65536: a negative int result",
+      "label": "-32768 (smallint minimum) at location 6 next to -32768 at location 1: the negative value is returned as is",
       "traps": [],
-      "reasoning": "Negative smallint minimum twice; checks the sign and width of the sum on both engines, and that a negative total is returned as is (the source only replaces NULL with 0, not values below 0).",
+      "reasoning": "One row per (ProductID, LocationID). The source replaces only a NULL sum with 0, not a negative one; a conversion using GREATEST(sum, 0) or NULLIF would differ. The second row at location 1 makes an unfiltered sum -65536, outside smallint.",
       "trapChecks": {},
       "status": "ran",
       "sqlServer": {
@@ -104,9 +104,9 @@
     },
     {
       "id": "A03",
-      "label": "+7 and -7 at location 6 sum to 0 (a real zero sum, not the NULL replacement)",
+      "label": "-7 at location 6 and +7 at location 1: -7, while an all-locations sum would be the 0 that also stands for no stock",
       "traps": [],
-      "reasoning": "The T-SQL replaces only a NULL sum with 0. A conversion that used NULLIF or treated 0 as missing would differ; here SUM is 0 from two rows.",
+      "reasoning": "One row per (ProductID, LocationID). The location filter must apply before SUM: an unfiltered sum is 0, indistinguishable from the ISNULL replacement, while the source returns -7.",
       "trapChecks": {},
       "status": "ran",
       "sqlServer": {
@@ -189,21 +189,36 @@
       "caseId": "A01",
       "kind": "not-an-attack",
       "text": "A01 inserts two ProductInventory rows with the same (ProductID, LocationID) pair (1, 6), but that pair is the source table's composite primary key. The overflow input cannot occur under the source schema preconditions.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A01 now uses one row at location 6 and equal maximum quantities at locations 1 and 7. Every composite key is distinct, while summing before applying the location filter remains observable.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O02",
       "caseId": "A02",
       "kind": "not-an-attack",
       "text": "A02 inserts two ProductInventory rows with the same (ProductID, LocationID) pair (2, 6), but that pair is the source table's composite primary key. The negative overflow input cannot occur under the source schema preconditions.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A02 now uses distinct locations 6 and 1 for the minimum quantities, satisfying the composite key and retaining the filter-before-sum attack.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O03",
       "caseId": "A03",
       "kind": "not-an-attack",
       "text": "A03 inserts two ProductInventory rows with the same (ProductID, LocationID) pair (3, 6), but that pair is the source table's composite primary key. The cancelling-sum input cannot occur under the source schema preconditions.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A03 now places -7 at location 6 and +7 at location 1. The keys are valid, and an unfiltered sum still collapses to the no-stock sentinel zero.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     }
   ],
   "mutantAdequacy": {
@@ -216,12 +231,8 @@
     "equivalentRecorded": []
   },
   "gate": {
-    "passed": false,
-    "reasons": [
-      "objection O01 is open",
-      "objection O02 is open",
-      "objection O03 is open"
-    ]
+    "passed": true,
+    "reasons": []
   },
   "wording": "7 adversarial cases ran, 0 differed"
 }

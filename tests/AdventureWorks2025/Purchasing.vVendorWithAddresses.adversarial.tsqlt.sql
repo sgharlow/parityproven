@@ -8,8 +8,8 @@
 GO
 EXEC tSQLt.NewTestClass 'AgreedTests';
 GO
--- case 1: [A01] case-only variants 'Us', 'uS' and 'us ' of a country code join 'US'
-CREATE PROCEDURE [AgreedTests].[test 01 [A01 case-only variants Us, uS and us of a country code join US]
+-- case 1: [A01] case pairs outside ASCII ('üs' to 'ÜS', 'σa' to 'ΣA') and case plus a trailing space on the country side ('CA' to 'ca ')
+CREATE PROCEDURE [AgreedTests].[test 01 [A01 case pairs outside ASCII (üs to ÜS, ?a to ?A) and case plus a trailing space on the country side…]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Person].[Address]';
@@ -29,11 +29,13 @@ BEGIN
     (2, 2, 1),
     (3, 3, 1);
   INSERT INTO [Person].[CountryRegion] ([CountryRegionCode], [Name]) VALUES
-    (N'US', N'United States');
+    (N'ÜS', N'Country Ü'),
+    (N'ΣA', N'Country Σ'),
+    (N'ca ', N'Country ca');
   INSERT INTO [Person].[StateProvince] ([StateProvinceID], [CountryRegionCode], [Name]) VALUES
-    (1, N'Us', N'Province 1'),
-    (2, N'uS', N'Province 2'),
-    (3, N'us ', N'Province 3');
+    (1, N'üs', N'Province 1'),
+    (2, N'σa', N'Province 2'),
+    (3, N'CA', N'Province 3');
   INSERT INTO [Purchasing].[Vendor] ([BusinessEntityID], [Name]) VALUES
     (1, N'Vendor 1'),
     (2, N'Vendor 2'),
@@ -61,9 +63,9 @@ BEGIN
     [CountryRegionName] nvarchar(50) NULL
   );
   INSERT INTO #Expected ([BusinessEntityID], [Name], [AddressType], [AddressLine1], [AddressLine2], [City], [StateProvinceName], [PostalCode], [CountryRegionName]) VALUES
-    (1, N'Vendor 1', N'Main Office', N'1 Main St', NULL, N'Bothell', N'Province 1', N'98011', N'United States'),
-    (2, N'Vendor 2', N'Main Office', N'2 Main St', NULL, N'Bothell', N'Province 2', N'98011', N'United States'),
-    (3, N'Vendor 3', N'Main Office', N'3 Main St', NULL, N'Bothell', N'Province 3', N'98011', N'United States');
+    (1, N'Vendor 1', N'Main Office', N'1 Main St', NULL, N'Bothell', N'Province 1', N'98011', N'Country Ü'),
+    (2, N'Vendor 2', N'Main Office', N'2 Main St', NULL, N'Bothell', N'Province 2', N'98011', N'Country Σ'),
+    (3, N'Vendor 3', N'Main Office', N'3 Main St', NULL, N'Bothell', N'Province 3', N'98011', N'Country ca');
   INSERT INTO #Actual
   SELECT * FROM Purchasing.vVendorWithAddresses;
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
@@ -445,8 +447,8 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
--- case 8: [A08] one address used twice by a vendor under two address types, a duplicate BusinessEntityAddress row, and an address type of another case
-CREATE PROCEDURE [AgreedTests].[test 08 [A08 one address used twice by a vendor under two address types, a duplicate BusinessEntityAddress ro…]
+-- case 8: [A08] one address used by a vendor under two address types and by a second vendor; a vendor name that differs only in case from an address type
+CREATE PROCEDURE [AgreedTests].[test 08 [A08 one address used by a vendor under two address types and by a second vendor; a vendor name that…]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Person].[Address]';
@@ -459,17 +461,18 @@ BEGIN
     (1, N'1 Main St', NULL, N'Bothell', 1, N'98011');
   INSERT INTO [Person].[AddressType] ([AddressTypeID], [Name]) VALUES
     (1, N'Shipping'),
-    (2, N'SHIPPING');
+    (2, N'Billing');
   INSERT INTO [Person].[BusinessEntityAddress] ([BusinessEntityID], [AddressID], [AddressTypeID]) VALUES
     (1, 1, 1),
     (1, 1, 2),
-    (1, 1, 2);
+    (2, 1, 1);
   INSERT INTO [Person].[CountryRegion] ([CountryRegionCode], [Name]) VALUES
     (N'US', N'United States');
   INSERT INTO [Person].[StateProvince] ([StateProvinceID], [CountryRegionCode], [Name]) VALUES
     (1, N'US', N'Province 1');
   INSERT INTO [Purchasing].[Vendor] ([BusinessEntityID], [Name]) VALUES
-    (1, N'Vendor 1');
+    (1, N'Vendor 1'),
+    (2, N'shipping');
   CREATE TABLE #Expected (
     [BusinessEntityID] int NULL,
     [Name] nvarchar(50) NULL,
@@ -494,8 +497,8 @@ BEGIN
   );
   INSERT INTO #Expected ([BusinessEntityID], [Name], [AddressType], [AddressLine1], [AddressLine2], [City], [StateProvinceName], [PostalCode], [CountryRegionName]) VALUES
     (1, N'Vendor 1', N'Shipping', N'1 Main St', NULL, N'Bothell', N'Province 1', N'98011', N'United States'),
-    (1, N'Vendor 1', N'SHIPPING', N'1 Main St', NULL, N'Bothell', N'Province 1', N'98011', N'United States'),
-    (1, N'Vendor 1', N'SHIPPING', N'1 Main St', NULL, N'Bothell', N'Province 1', N'98011', N'United States');
+    (1, N'Vendor 1', N'Billing', N'1 Main St', NULL, N'Bothell', N'Province 1', N'98011', N'United States'),
+    (2, N'shipping', N'Shipping', N'1 Main St', NULL, N'Bothell', N'Province 1', N'98011', N'United States');
   INSERT INTO #Actual
   SELECT * FROM Purchasing.vVendorWithAddresses;
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
@@ -551,6 +554,58 @@ BEGIN
   INSERT INTO #Expected ([BusinessEntityID], [Name], [AddressType], [AddressLine1], [AddressLine2], [City], [StateProvinceName], [PostalCode], [CountryRegionName]) VALUES
     (2147483647, N'Max', N'Zero', N'ÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖ', NULL, N'Köln 😀', N'Nordrhein-Westfalen', N'98011', N'Germany'),
     (3, N'Three', N'Zero', N'10 Main St', NULL, N'Bothell', N'Nordrhein-Westfalen', N'98011', N'Germany');
+  INSERT INTO #Actual
+  SELECT * FROM Purchasing.vVendorWithAddresses;
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
+END;
+GO
+-- case 10: [A10] a vendor address whose address type has no AddressType row is dropped by the inner join
+CREATE PROCEDURE [AgreedTests].[test 10 [A10 a vendor address whose address type has no AddressType row is dropped by the inner join]
+AS
+BEGIN
+  EXEC tSQLt.FakeTable @TableName = N'[Person].[Address]';
+  EXEC tSQLt.FakeTable @TableName = N'[Person].[AddressType]';
+  EXEC tSQLt.FakeTable @TableName = N'[Person].[BusinessEntityAddress]';
+  EXEC tSQLt.FakeTable @TableName = N'[Person].[CountryRegion]';
+  EXEC tSQLt.FakeTable @TableName = N'[Person].[StateProvince]';
+  EXEC tSQLt.FakeTable @TableName = N'[Purchasing].[Vendor]';
+  INSERT INTO [Person].[Address] ([AddressID], [AddressLine1], [AddressLine2], [City], [StateProvinceID], [PostalCode]) VALUES
+    (1, N'1 Main St', NULL, N'Bothell', 1, N'98011');
+  INSERT INTO [Person].[AddressType] ([AddressTypeID], [Name]) VALUES
+    (1, N'Main Office');
+  INSERT INTO [Person].[BusinessEntityAddress] ([BusinessEntityID], [AddressID], [AddressTypeID]) VALUES
+    (1, 1, 1),
+    (1, 1, 9);
+  INSERT INTO [Person].[CountryRegion] ([CountryRegionCode], [Name]) VALUES
+    (N'US', N'United States');
+  INSERT INTO [Person].[StateProvince] ([StateProvinceID], [CountryRegionCode], [Name]) VALUES
+    (1, N'US', N'Province 1');
+  INSERT INTO [Purchasing].[Vendor] ([BusinessEntityID], [Name]) VALUES
+    (1, N'Vendor 1');
+  CREATE TABLE #Expected (
+    [BusinessEntityID] int NULL,
+    [Name] nvarchar(50) NULL,
+    [AddressType] nvarchar(50) NULL,
+    [AddressLine1] nvarchar(60) NULL,
+    [AddressLine2] nvarchar(60) NULL,
+    [City] nvarchar(30) NULL,
+    [StateProvinceName] nvarchar(50) NULL,
+    [PostalCode] nvarchar(15) NULL,
+    [CountryRegionName] nvarchar(50) NULL
+  );
+  CREATE TABLE #Actual (
+    [BusinessEntityID] int NULL,
+    [Name] nvarchar(50) NULL,
+    [AddressType] nvarchar(50) NULL,
+    [AddressLine1] nvarchar(60) NULL,
+    [AddressLine2] nvarchar(60) NULL,
+    [City] nvarchar(30) NULL,
+    [StateProvinceName] nvarchar(50) NULL,
+    [PostalCode] nvarchar(15) NULL,
+    [CountryRegionName] nvarchar(50) NULL
+  );
+  INSERT INTO #Expected ([BusinessEntityID], [Name], [AddressType], [AddressLine1], [AddressLine2], [City], [StateProvinceName], [PostalCode], [CountryRegionName]) VALUES
+    (1, N'Vendor 1', N'Main Office', N'1 Main St', NULL, N'Bothell', N'Province 1', N'98011', N'United States');
   INSERT INTO #Actual
   SELECT * FROM Purchasing.vVendorWithAddresses;
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';

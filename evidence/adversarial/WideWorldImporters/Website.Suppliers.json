@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "object": "Website.Suppliers",
   "database": "WideWorldImporters",
-  "runAt": "2026-11-19T05:30:30.850Z",
+  "runAt": "2026-11-19T06:23:52.305Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "087864ad93c475c63f0b621fa9cb7310d7c91bb1a2512a7fe85780757e639d56",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-19T05:20:49.498Z",
+    "at": "2026-11-19T06:00:45.121Z",
     "file": "adversarial/WideWorldImporters/Website.Suppliers.cases.json",
-    "sha256": "16f8a6307e4b30c996c5affe453cbc4df022a4a39385b6c011892c6462e02d4b"
+    "sha256": "db0c60b0e34b557b5dd886d2a7ab111da84ea1411cb98cd6f7f766e6329796cc"
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-18T22:23:38.8804730-07:00",
+    "at": "2026-11-19T06:06:57.652Z",
     "file": "adversarial/WideWorldImporters/Website.Suppliers.audit.json",
-    "sha256": "2afbca42956b10cc96f1f3a6878df142eed84ef30e50d4bee173a282114a9dc3"
+    "sha256": "df1826da5a85a36e6ffb8e1bfe366032842799aab8a3feda339bafb9f82b48aa"
   },
   "sameModel": false,
   "casesAudited": [
@@ -67,11 +67,11 @@
   "cases": [
     {
       "id": "A01",
-      "label": "SupplierReference '' versus NULL kept distinct; NULL DeliveryMethodID yields a NULL method via LEFT JOIN",
+      "label": "'' from a joined delivery method versus NULL from a NULL DeliveryMethodID in the same output column; SupplierReference NULL and '' the other way round",
       "traps": [
         "null-vs-empty"
       ],
-      "reasoning": "Supplier 1 has SupplierReference '' and supplier 3 has SupplierReference NULL; the view returns '' as '' and NULL as NULL, and supplier 1's NULL DeliveryMethodID becomes a NULL method via the LEFT JOIN. A conversion that folded '' to NULL, or made the delivery-method join inner, would differ.",
+      "reasoning": "Supplier 3's delivery method exists and is named '' (DeliveryMethodName is NOT NULL, so '' is its only empty value); supplier 1's DeliveryMethodID is NULL, so the LEFT JOIN gives NULL in the same output column. SupplierReference is NULL on supplier 1 and '' on supplier 3, the reverse of the hand-derived case. A conversion that coalesced joined names to '', folded '' to NULL, or made the delivery-method join inner would differ. Every foreign key points at an existing row or is NULL.",
       "trapChecks": {
         "null-vs-empty": {
           "present": true,
@@ -89,15 +89,15 @@
     },
     {
       "id": "A02",
-      "label": "two suppliers share a fax number; a supplier with unmatched category/contacts/city keeps NULLs",
+      "label": "two suppliers share phone, fax and website; a NULL delivery method keeps its row; primary and alternate contacts are crossed",
       "traps": [
         "top-ties"
       ],
-      "reasoning": "Suppliers 1 and 2 share FaxNumber (non-key). Supplier 2's category, contacts and city ids have no matching rows, so the LEFT OUTER JOINs keep it with NULLs; an inner join would drop it.",
+      "reasoning": "Suppliers 1 and 2 share PhoneNumber, FaxNumber and WebsiteURL (non-key ties; SupplierName stays unique as in the source). Supplier 2's DeliveryMethodID is NULL (a nullable foreign key), so the LEFT OUTER JOIN keeps it with a NULL method; an inner join would drop it. Supplier 1's contacts are persons 1 (primary) and 2 (alternate), supplier 2's the reverse, so a conversion that joined the alternate contact on the primary contact id would show the wrong names. All other foreign keys point at existing rows.",
       "trapChecks": {
         "top-ties": {
           "present": true,
-          "detail": "two rows of Purchasing.Suppliers share PhoneNumber = \"(415) 555-0100\""
+          "detail": "two rows of Purchasing.Suppliers share SupplierCategoryID = 1"
         }
       },
       "status": "ran",
@@ -170,14 +170,24 @@
       "caseId": "A01",
       "kind": "duplicate",
       "text": "The single hand-derived case already supplies SupplierReference '' and NULL on separate suppliers and a NULL DeliveryMethodID, then compares all projected values. A01 repeats those exact NULL-versus-empty and LEFT JOIN mechanisms.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A01 now contrasts an empty name from an existing delivery-method row with NULL from a nullable DeliveryMethodID in the same output column, and reverses the SupplierReference NULL-empty arrangement. This adds a join-produced NULL versus stored-empty attack.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O02",
       "caseId": "A02",
       "kind": "duplicate",
       "text": "The hand-derived case already keeps a supplier whose category, both contacts and city point to missing rows, and its supplier rows already share the default fax number. A02 repeats both the LEFT JOIN and non-key-tie conditions.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A02 now uses valid nullable DeliveryMethodID only, crosses primary and alternate contacts to expose a wrong self-join, and ties phone, fax, and website values. It no longer repeats dangling required references.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     }
   ],
   "mutantAdequacy": {
@@ -191,11 +201,8 @@
     "equivalentRecorded": []
   },
   "gate": {
-    "passed": false,
-    "reasons": [
-      "objection O01 is open",
-      "objection O02 is open"
-    ]
+    "passed": true,
+    "reasons": []
   },
   "wording": "4 adversarial cases ran, 0 differed"
 }

@@ -2,7 +2,7 @@
   "object": "Sales.vStoreWithAddresses",
   "database": "AdventureWorks2025",
   "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
-  "capturedAt": "2026-11-19T05:04:32.742Z",
+  "capturedAt": "2026-11-19T06:18:27.080Z",
   "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
   "cases": [
     {
@@ -396,7 +396,7 @@
       ]
     },
     {
-      "label": "[A07] NULL versus '' in AddressLine2, an empty vendor name, address type name and city, and a single-space AddressLine2",
+      "label": "[A07] NULL versus '' in AddressLine2, an empty store name, address type name and city, and a single-space AddressLine2",
       "columns": [
         {
           "name": "BusinessEntityID",
@@ -472,7 +472,7 @@
       ]
     },
     {
-      "label": "[A08] keys with gaps and at the int limits: vendor 2147483647, address -2147483648, address type 0; text with an emoji and full length",
+      "label": "[A08] keys with gaps and at the int limits: store 2147483647, address -2147483648, address type 0; text with an emoji and full length",
       "columns": [
         {
           "name": "BusinessEntityID",

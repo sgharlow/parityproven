@@ -66,18 +66,24 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedState1', @Actual = N'#ActualState1', @Message = N'Warehouse.ColdRoomTemperatures after the call';
 END;
 GO
--- case 3: [A03] three existing rows for one sensor share a temperature; one reading updates all of them
+-- case 3: [A03] three rows for sensor 3 (two equal in every column) are all updated by one reading; rows for sensors 30, 0 and -3 with the same values are left alone
 --[@tSQLt:NoTransaction](DEFAULT)
-CREATE PROCEDURE [AgreedTests].[test 03 [A03 three existing rows for one sensor share a temperature; one reading updates all of them]
+CREATE PROCEDURE [AgreedTests].[test 03 [A03 three rows for sensor 3 (two equal in every column) are all updated by one reading; rows for sen…]
 AS
 BEGIN
   DELETE FROM [Warehouse].[ColdRoomTemperatures];
   INSERT INTO [Warehouse].[ColdRoomTemperatures] ([ColdRoomSensorNumber], [RecordedWhen], [Temperature]) VALUES
     (3, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), 1.00),
     (3, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), 1.00),
-    (3, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), 2.00);
+    (3, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), 2.00),
+    (30, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), 1.00),
+    (0, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), 1.00),
+    (-3, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), 1.00);
   SELECT TOP (0) [ColdRoomSensorNumber], [RecordedWhen], [Temperature] INTO #ExpectedState1 FROM [Warehouse].[ColdRoomTemperatures];
   INSERT INTO #ExpectedState1 ([ColdRoomSensorNumber], [RecordedWhen], [Temperature]) VALUES
+    (30, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), 1),
+    (0, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), 1),
+    (-3, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), 1),
     (3, CAST('2020-01-02T00:00:00.000000' AS datetime2(7)), 7),
     (3, CAST('2020-01-02T00:00:00.000000' AS datetime2(7)), 7),
     (3, CAST('2020-01-02T00:00:00.000000' AS datetime2(7)), 7);
@@ -98,19 +104,23 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedState1', @Actual = N'#ActualState1', @Message = N'Warehouse.ColdRoomTemperatures after the call';
 END;
 GO
--- case 4: [A04] two readings for the same new sensor: the first inserts, the second updates it (loop order preserved)
+-- case 4: [A04] readings for a new sensor interleaved with an existing one: the first inserts, the third updates the row the first inserted, the existing sensor is updated
 --[@tSQLt:NoTransaction](DEFAULT)
-CREATE PROCEDURE [AgreedTests].[test 04 [A04 two readings for the same new sensor: the first inserts, the second updates it (loop order prese…]
+CREATE PROCEDURE [AgreedTests].[test 04 [A04 readings for a new sensor interleaved with an existing one: the first inserts, the third updates…]
 AS
 BEGIN
   DELETE FROM [Warehouse].[ColdRoomTemperatures];
+  INSERT INTO [Warehouse].[ColdRoomTemperatures] ([ColdRoomSensorNumber], [RecordedWhen], [Temperature]) VALUES
+    (5, CAST('2019-12-31T00:00:00.000000' AS datetime2(7)), 5.00);
   SELECT TOP (0) [ColdRoomSensorNumber], [RecordedWhen], [Temperature] INTO #ExpectedState1 FROM [Warehouse].[ColdRoomTemperatures];
   INSERT INTO #ExpectedState1 ([ColdRoomSensorNumber], [RecordedWhen], [Temperature]) VALUES
+    (5, CAST('2020-01-01T00:00:01.000000' AS datetime2(7)), 5.5),
     (4, CAST('2020-01-01T00:00:05.123456' AS datetime2(7)), 4.5);
   DECLARE @outcome nvarchar(4000) = N'completed';
   BEGIN TRY
     DECLARE @tvp0 [Website].[SensorDataList];
   INSERT INTO @tvp0 ([ColdRoomSensorNumber], [RecordedWhen], [Temperature]) VALUES (4, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)), 4.00);
+  INSERT INTO @tvp0 ([ColdRoomSensorNumber], [RecordedWhen], [Temperature]) VALUES (5, CAST('2020-01-01T00:00:01.000000' AS datetime2(7)), 5.50);
   INSERT INTO @tvp0 ([ColdRoomSensorNumber], [RecordedWhen], [Temperature]) VALUES (4, CAST('2020-01-01T00:00:05.123456' AS datetime2(7)), 4.50);
   EXEC Website.RecordColdRoomTemperatures @SensorReadings = @tvp0;
   END TRY

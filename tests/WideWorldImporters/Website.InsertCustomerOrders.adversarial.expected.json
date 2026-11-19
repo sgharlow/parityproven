@@ -2,7 +2,7 @@
   "object": "Website.InsertCustomerOrders",
   "database": "WideWorldImporters",
   "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
-  "capturedAt": "2026-11-19T05:28:57.222Z",
+  "capturedAt": "2026-11-19T06:22:13.976Z",
   "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
   "cases": [
     {
@@ -1673,6 +1673,452 @@
           "rows": [
             [
               "n:73598"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "label": "[A07] lines are priced on today's date, not the expected delivery date: a deal valid today applies, one valid only on the delivery date 9999-12-31 does not",
+      "outcome": "completed",
+      "tables": {},
+      "queries": [
+        {
+          "label": "orders",
+          "columns": [
+            {
+              "name": "CustomerID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "SalespersonPersonID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "PickedByPersonID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "ContactPersonID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "BackorderOrderID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "OrderDate_now",
+              "sqlServerType": "nvarchar(5)"
+            },
+            {
+              "name": "OrderDate",
+              "sqlServerType": "date"
+            },
+            {
+              "name": "ExpectedDeliveryDate",
+              "sqlServerType": "date"
+            },
+            {
+              "name": "CustomerPurchaseOrderNumber",
+              "sqlServerType": "nvarchar(20)"
+            },
+            {
+              "name": "IsUndersupplyBackordered",
+              "sqlServerType": "bit"
+            },
+            {
+              "name": "Comments",
+              "sqlServerType": "nvarchar(400)"
+            },
+            {
+              "name": "DeliveryInstructions",
+              "sqlServerType": "nvarchar(400)"
+            },
+            {
+              "name": "InternalComments",
+              "sqlServerType": "nvarchar(400)"
+            },
+            {
+              "name": "PickingCompletedWhen",
+              "sqlServerType": "datetime2(7)"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": [
+            [
+              "n:1",
+              "n:2",
+              "∅",
+              "n:3",
+              "∅",
+              "s:today",
+              "∅",
+              "d:9999-12-31",
+              "s:PO-1",
+              "b:0",
+              "∅",
+              "∅",
+              "∅",
+              "∅",
+              "n:1",
+              "s:now",
+              "∅"
+            ]
+          ]
+        },
+        {
+          "label": "order lines, with their order",
+          "columns": [
+            {
+              "name": "OrderPO",
+              "sqlServerType": "nvarchar(20)"
+            },
+            {
+              "name": "OrderCustomer",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "HasOrder",
+              "sqlServerType": "nvarchar(6)"
+            },
+            {
+              "name": "StockItemID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "Description",
+              "sqlServerType": "nvarchar(100)"
+            },
+            {
+              "name": "PackageTypeID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "Quantity",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "UnitPrice",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "TaxRate",
+              "sqlServerType": "decimal(18,3)"
+            },
+            {
+              "name": "PickedQuantity",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "PickingCompletedWhen",
+              "sqlServerType": "datetime2(7)"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": [
+            [
+              "s:PO-1",
+              "n:1",
+              "s:ok",
+              "n:1",
+              "s:line 1/1",
+              "n:7",
+              "n:2",
+              "n:7.55",
+              "n:15",
+              "n:0",
+              "∅",
+              "n:1",
+              "s:now",
+              "∅"
+            ]
+          ]
+        },
+        {
+          "label": "order IDs allocated",
+          "columns": [
+            {
+              "name": "Orders",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "DistinctIDs",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "FirstID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastID",
+              "sqlServerType": "int"
+            }
+          ],
+          "rows": [
+            [
+              "n:1",
+              "n:1",
+              "n:73596",
+              "n:73596"
+            ]
+          ]
+        },
+        {
+          "label": "next order ID",
+          "columns": [
+            {
+              "name": "NextOrderID",
+              "sqlServerType": "int"
+            }
+          ],
+          "rows": [
+            [
+              "n:73597"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "label": "[A08] an order line for a stock item with no Warehouse.StockItems row is not inserted; the order and its other line are",
+      "outcome": "completed",
+      "tables": {},
+      "queries": [
+        {
+          "label": "orders",
+          "columns": [
+            {
+              "name": "CustomerID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "SalespersonPersonID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "PickedByPersonID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "ContactPersonID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "BackorderOrderID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "OrderDate_now",
+              "sqlServerType": "nvarchar(5)"
+            },
+            {
+              "name": "OrderDate",
+              "sqlServerType": "date"
+            },
+            {
+              "name": "ExpectedDeliveryDate",
+              "sqlServerType": "date"
+            },
+            {
+              "name": "CustomerPurchaseOrderNumber",
+              "sqlServerType": "nvarchar(20)"
+            },
+            {
+              "name": "IsUndersupplyBackordered",
+              "sqlServerType": "bit"
+            },
+            {
+              "name": "Comments",
+              "sqlServerType": "nvarchar(400)"
+            },
+            {
+              "name": "DeliveryInstructions",
+              "sqlServerType": "nvarchar(400)"
+            },
+            {
+              "name": "InternalComments",
+              "sqlServerType": "nvarchar(400)"
+            },
+            {
+              "name": "PickingCompletedWhen",
+              "sqlServerType": "datetime2(7)"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": [
+            [
+              "n:1",
+              "n:2",
+              "∅",
+              "n:3",
+              "∅",
+              "s:today",
+              "∅",
+              "d:2030-01-01",
+              "s:PO-1",
+              "b:0",
+              "∅",
+              "∅",
+              "∅",
+              "∅",
+              "n:1",
+              "s:now",
+              "∅"
+            ]
+          ]
+        },
+        {
+          "label": "order lines, with their order",
+          "columns": [
+            {
+              "name": "OrderPO",
+              "sqlServerType": "nvarchar(20)"
+            },
+            {
+              "name": "OrderCustomer",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "HasOrder",
+              "sqlServerType": "nvarchar(6)"
+            },
+            {
+              "name": "StockItemID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "Description",
+              "sqlServerType": "nvarchar(100)"
+            },
+            {
+              "name": "PackageTypeID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "Quantity",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "UnitPrice",
+              "sqlServerType": "decimal(18,2)"
+            },
+            {
+              "name": "TaxRate",
+              "sqlServerType": "decimal(18,3)"
+            },
+            {
+              "name": "PickedQuantity",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "PickingCompletedWhen",
+              "sqlServerType": "datetime2(7)"
+            },
+            {
+              "name": "LastEditedBy",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastEditedWhen_now",
+              "sqlServerType": "nvarchar(3)"
+            },
+            {
+              "name": "LastEditedWhen",
+              "sqlServerType": "datetime2(7)"
+            }
+          ],
+          "rows": [
+            [
+              "s:PO-1",
+              "n:1",
+              "s:ok",
+              "n:1",
+              "s:line 1/1",
+              "n:7",
+              "n:2",
+              "n:10",
+              "n:15",
+              "n:0",
+              "∅",
+              "n:1",
+              "s:now",
+              "∅"
+            ]
+          ]
+        },
+        {
+          "label": "order IDs allocated",
+          "columns": [
+            {
+              "name": "Orders",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "DistinctIDs",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "FirstID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "LastID",
+              "sqlServerType": "int"
+            }
+          ],
+          "rows": [
+            [
+              "n:1",
+              "n:1",
+              "n:73596",
+              "n:73596"
+            ]
+          ]
+        },
+        {
+          "label": "next order ID",
+          "columns": [
+            {
+              "name": "NextOrderID",
+              "sqlServerType": "int"
+            }
+          ],
+          "rows": [
+            [
+              "n:73597"
             ]
           ]
         }

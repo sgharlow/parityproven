@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "object": "Website.ActivateWebsiteLogon",
   "database": "WideWorldImporters",
-  "runAt": "2026-11-19T05:06:08.171Z",
+  "runAt": "2026-11-19T06:21:25.708Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "b0e51ef3afbc9c33f7436fababcbbb217afc73edf1226b184f61bc0ffbd4d8b3",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-19T04:36:25.160Z",
+    "at": "2026-11-19T06:00:45.121Z",
     "file": "adversarial/WideWorldImporters/Website.ActivateWebsiteLogon.cases.json",
-    "sha256": "251621379a14dcb5d76b939ebfc66db3020f04a0a90fb54dd3939bfff114a9df"
+    "sha256": "72b50646481df972dd70b5c31b7e08dd150816173e5dc25ea4b5b9007a0b43de"
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-18T21:39:58.1908526-07:00",
+    "at": "2026-11-19T06:06:57.652Z",
     "file": "adversarial/WideWorldImporters/Website.ActivateWebsiteLogon.audit.json",
-    "sha256": "60d357bd227c766b52cc240571abb6f99060d2a8a9becaa646179ba4bc32e1a8"
+    "sha256": "1d5f3a44f0af283eab8b2671933ce0f736a10912ed4a5576001a605a6a2db395"
   },
   "sameModel": false,
   "casesAudited": [
@@ -30,7 +30,8 @@
     "A09",
     "A10",
     "A11",
-    "A12"
+    "A12",
+    "A13"
   ],
   "traps": {
     "null-vs-empty": {
@@ -276,7 +277,7 @@
       "id": "A11",
       "label": "person 1 not yet enabled, called directly: refused, and its own row is unchanged",
       "traps": [],
-      "reasoning": "PersonID <> 1 excludes the template even when IsPermittedToLogon is 0, so the call raises and person 1 keeps its NULL logon and hash.",
+      "reasoning": "PersonID <> 1 excludes the template even when IsPermittedToLogon is 0, so the call raises and person 1 keeps its NULL logon and hash. Person 1 holds preferences and the call sends a logon name, so a conversion that let the template through (the planted defect 'person 1 (the template) can be activated') would visibly write LogonName, HashedPassword and IsPermittedToLogon on person 1. The adversarial gate and its planted-defect check run on the adversarial cases alone, without the hand-derived ones, so this input is kept among them even where a hand-derived case uses a similar one.",
       "trapChecks": {},
       "status": "ran",
       "sqlServer": {
@@ -291,7 +292,22 @@
       "id": "A12",
       "label": "an already-enabled person with an existing hash is refused and keeps the hash",
       "traps": [],
-      "reasoning": "IsPermittedToLogon = 0 is required. Person 2 is enabled with HashedPassword 0x00FF10; the call raises and the hash, logon name and preferences stay as they were.",
+      "reasoning": "IsPermittedToLogon = 0 is required. Person 2 is enabled with HashedPassword 0x00FF10; the call raises and the hash, logon name and preferences stay as they were. Paired with A13: here the flag and the stored credentials both say 'enabled'; in A13 the flag says 'not enabled' while old credentials are present. A conversion that decided 'already activated' from LogonName or HashedPassword instead of IsPermittedToLogon gets one of the two wrong. The adversarial gate and its planted-defect check run on the adversarial cases alone, without the hand-derived ones, so this input is kept among them even where a hand-derived case uses a similar one.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A13",
+      "label": "a disabled person who still holds an old logon name and hash is activated: both are replaced",
+      "traps": [],
+      "reasoning": "The WHERE tests IsPermittedToLogon = 0 only; person 2 is disabled but keeps LogonName 'old' and HashedPassword 0x00FF10 from an earlier activation. SQL Server activates the person, overwriting both and copying person 1's preferences. A conversion that treated a present logon name or hash as 'already activated' would refuse.",
       "trapChecks": {},
       "status": "ran",
       "sqlServer": {
@@ -304,7 +320,7 @@
     }
   ],
   "summary": {
-    "ran": 12,
+    "ran": 13,
     "differed": 0,
     "invalid": 0
   },
@@ -314,14 +330,24 @@
       "caseId": "A11",
       "kind": "duplicate",
       "text": "The hand-derived 'person 1 is refused' fixed case already calls the procedure for PersonID 1 while that person is not permitted to log on and requires the error path with unchanged table state. A11 changes only the logon name and template preferences, which the refused call does not read or write.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A11 now documents the unavoidable overlap: PersonID 1 is the only input that can expose removal of the template-person guard, and the adversarial-only planted-defect check does not run the hand-derived case.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O02",
       "caseId": "A12",
       "kind": "duplicate",
       "text": "The hand-derived 'an already-enabled person is refused' fixed case already calls PersonID 2 with IsPermittedToLogon true and requires the error path with every Application.People value unchanged. Adding pre-existing logon, hash and preference values does not attack a different predicate or update mechanism.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A12 is now paired with A13. A12 has an enabled flag and old credentials and must be refused; A13 has the same old-credential shape but a disabled flag and must be activated. Together they distinguish the actual IsPermittedToLogon predicate from an incorrect credential-presence predicate.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     }
   ],
   "mutantAdequacy": {
@@ -338,11 +364,8 @@
     "equivalentRecorded": []
   },
   "gate": {
-    "passed": false,
-    "reasons": [
-      "objection O01 is open",
-      "objection O02 is open"
-    ]
+    "passed": true,
+    "reasons": []
   },
-  "wording": "12 adversarial cases ran, 0 differed"
+  "wording": "13 adversarial cases ran, 0 differed"
 }

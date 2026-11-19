@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "object": "Website.InvoiceCustomerOrders",
   "database": "WideWorldImporters",
-  "runAt": "2026-11-19T05:29:37.745Z",
+  "runAt": "2026-11-19T06:22:48.764Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "ad1de5eaca3cc95e4d1ce4a67b0963f473cc4faa183279d53cf876ec1bd54267",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-19T05:20:49.498Z",
+    "at": "2026-11-19T06:00:45.121Z",
     "file": "adversarial/WideWorldImporters/Website.InvoiceCustomerOrders.cases.json",
-    "sha256": "0768757175e1430b65976a2030c17e04bbd1f3a67fe62737837850a2d8df27d6"
+    "sha256": "d36a4ba835e3dbc4eacbaf7204f5b7b9a700e2fe2e84b6bd4dd24b9e9ecfe52b"
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-18T22:23:38.8804730-07:00",
+    "at": "2026-11-19T06:06:57.652Z",
     "file": "adversarial/WideWorldImporters/Website.InvoiceCustomerOrders.audit.json",
-    "sha256": "bb51f703782c5082bae74f23f7c3bef6f0032bd2129ad655314d4edd668efb39"
+    "sha256": "d533dfb7f4b74518a0841b4d145e26e0408b3774411195e2724d68bd47ce7ce5"
   },
   "sameModel": false,
   "casesAudited": [
@@ -25,7 +25,8 @@
     "A04",
     "A05",
     "A06",
-    "A07"
+    "A07",
+    "A08"
   ],
   "traps": {
     "null-vs-empty": {
@@ -74,15 +75,15 @@
   "cases": [
     {
       "id": "A01",
-      "label": "tax and line amounts round half away from zero: 3 x 0.95 x 0.505 % = 0.01438875 -> 0.01",
+      "label": "tax amount at an exact half cent: 1 x 0.25 x 50 % = 0.125 -> 0.13 (half away from zero; banker's rounding and truncation give 0.12)",
       "traps": [
         "numeric-rounding"
       ],
-      "reasoning": "TaxAmount = ROUND(PickedQuantity * UnitPrice * TaxRate / 100.0, 2); UnitPrice 0.95 and TaxRate 0.505 both end in 5. Both engines must round half away from zero into decimal(18,2), and ExtendedPrice must be the sum of the two rounded parts.",
+      "reasoning": "TaxAmount = ROUND(PickedQuantity * UnitPrice * TaxRate / 100.0, 2). 1 * 0.25 * 50.000 / 100.0 is exactly 0.125 and the digit before the 5 is even, so half-away-from-zero gives 0.13 while round-half-to-even and truncation both give 0.12. UnitPrice 0.25 ends in 5. ExtendedPrice must be the sum of the two rounded parts.",
       "trapChecks": {
         "numeric-rounding": {
           "present": true,
-          "detail": "0.95 in UnitPrice ends in a 5"
+          "detail": "0.25 in UnitPrice ends in a 5"
         }
       },
       "status": "ran",
@@ -118,11 +119,11 @@
     },
     {
       "id": "A03",
-      "label": "empty DeliveryAddressLine1 with NULL DeliveryAddressLine2 makes DeliveryInstructions NULL (+ semantics)",
+      "label": "an empty DeliveryAddressLine1 with a line 2 gives ', Back door'; a NULL line 2 on the other customer makes its instructions NULL",
       "traps": [
         "null-vs-empty"
       ],
-      "reasoning": "DeliveryInstructions = c.DeliveryAddressLine1 + N', ' + c.DeliveryAddressLine2; with line2 NULL the whole concatenation is NULL on SQL Server, and the conversion uses || which also yields NULL (concat() would not). Line1 is '' to keep '' distinct from NULL.",
+      "reasoning": "DeliveryInstructions = c.DeliveryAddressLine1 + N', ' + c.DeliveryAddressLine2. Customer 1 has line 1 '' and line 2 'Back door', so SQL Server stores ', Back door'; a conversion that turned the empty line 1 into NULL (NULLIF, or a client mapping '' to NULL) would store NULL. Customer 2 has line 2 NULL, so its whole concatenation is NULL with + (and with ||), where concat() would give 'Unit 5, '.",
       "trapChecks": {
         "null-vs-empty": {
           "present": true,
@@ -189,9 +190,9 @@
     },
     {
       "id": "A06",
-      "label": "an order with no lines: its customer-transaction sums are NULL, hitting a NOT NULL violation that rolls everything back",
+      "label": "two orders requested, the second without lines: the NOT NULL violation on its customer transaction rolls back the first order's invoice too",
       "traps": [],
-      "reasoning": "SUM over no invoice lines is NULL; Sales.CustomerTransactions.AmountExcludingTax is NOT NULL, so both engines raise and undo every write (the whole batch). The outcome compares the error class, not the message.",
+      "reasoning": "Order 1 has a line and would be invoiced on its own; order 2 has none, so the SUM for its customer transaction is NULL and Sales.CustomerTransactions.AmountExcludingTax (NOT NULL) rejects it. The procedure runs in one transaction, so SQL Server undoes order 1's invoice, invoice line and stock transaction as well. A conversion that committed per order, or caught the error per order, would leave order 1 invoiced. The hand-derived case requests only the order without lines.",
       "trapChecks": {},
       "status": "ran",
       "sqlServer": {
@@ -223,10 +224,25 @@
         "passed": true
       },
       "differed": false
+    },
+    {
+      "id": "A08",
+      "label": "two orders requested, the second not yet picked: THROW 51000 and nothing is written for either",
+      "traps": [],
+      "reasoning": "The procedure first checks that every requested order exists, is not already invoiced and has PickingCompletedWhen set; order 2 is unpicked, so it raises 51000 before writing anything, also for the picked order 1. A conversion that dropped the picking test (the planted defect 'unpicked orders are invoiced') would invoice both.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
     }
   ],
   "summary": {
-    "ran": 7,
+    "ran": 8,
     "differed": 0,
     "invalid": 0
   },
@@ -236,26 +252,42 @@
       "caseId": "A01",
       "kind": "label-mismatch",
       "text": "The supplied arithmetic is 3 * 0.95 * 0.505 / 100 = 0.0143925, not 0.01438875. It rounds and truncates to the same two-decimal value, 0.01, so this input does not test the claimed rounding tie or the planted round-versus-truncation defect.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A01 now supplies 1 * 0.25 * 50 / 100 = 0.125 exactly. SQL Server rounds it to 0.13 while truncation and half-even rounding produce 0.12, matching the revised label.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O02",
       "caseId": "A03",
       "kind": "weak",
       "text": "DeliveryAddressLine2 is NULL, so the entire address expression is NULL whether DeliveryAddressLine1 is '' or NULL. The fixed two-order case already tests NULL line 2. A03 cannot expose a conversion that collapses the supplied empty line 1 to NULL.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A03 now pairs an empty line 1 with non-NULL line 2 'Back door', producing ', Back door'. Collapsing the empty first line to NULL changes that result, while the second customer separately retains the NULL-line-2 concatenation case.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O03",
       "caseId": "A06",
       "kind": "duplicate",
       "text": "The hand-derived 'an order without lines' case has the same requested order, empty Sales.OrderLines table and expected NOT NULL failure with rollback. A06 does not change any input that reaches a different path.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A06 now requests one order with a valid line before a second order without lines. It tests that the later failure rolls back writes already made for the first order, a transaction-wide behavior absent from the single-order hand-derived case.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     }
   ],
   "mutantAdequacy": {
-    "verdict": "inadequate",
+    "verdict": "adequate",
     "caught": [
+      "unpicked orders are invoiced",
       "chiller and dry item counts swapped",
       "tax amount truncated instead of rounded",
       "stock issued as a positive quantity",
@@ -263,20 +295,13 @@
       "customer transaction booked to the customer, not the bill-to customer",
       "missing address line 2 kept as line 1 (concat instead of ||)"
     ],
-    "missed": [
-      "unpicked orders are invoiced"
-    ],
+    "missed": [],
     "skipped": [],
     "equivalentRecorded": []
   },
   "gate": {
-    "passed": false,
-    "reasons": [
-      "objection O01 is open",
-      "objection O02 is open",
-      "objection O03 is open",
-      "mutant adequacy is inadequate (unexplained misses: unpicked orders are invoiced)"
-    ]
+    "passed": true,
+    "reasons": []
   },
-  "wording": "7 adversarial cases ran, 0 differed"
+  "wording": "8 adversarial cases ran, 0 differed"
 }

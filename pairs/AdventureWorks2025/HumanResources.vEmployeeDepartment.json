@@ -96,12 +96,12 @@
       "planted defects caught by the agreed tests: 2 of 2"
     ],
     "adversarial": {
-      "gate": "fail",
+      "gate": "pass",
       "ran": 7,
       "differed": 0,
       "evidencePath": "evidence/adversarial/AdventureWorks2025/HumanResources.vEmployeeDepartment.json",
       "conversionSha256": "e58524a5f1dd7b346151e40b1e0e411e6f4706f00026b436c4fb237b1ba4a49d",
-      "runAt": "2026-11-19T04:16:24.416Z"
+      "runAt": "2026-11-19T06:16:44.701Z"
     }
   },
   "effort": {

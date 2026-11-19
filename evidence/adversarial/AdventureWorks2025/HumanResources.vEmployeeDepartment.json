@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "object": "HumanResources.vEmployeeDepartment",
   "database": "AdventureWorks2025",
-  "runAt": "2026-11-19T04:16:24.416Z",
+  "runAt": "2026-11-19T06:16:44.701Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "e58524a5f1dd7b346151e40b1e0e411e6f4706f00026b436c4fb237b1ba4a49d",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-18T20:21:05-07:00",
+    "at": "2026-11-19T05:51:37.445Z",
     "file": "adversarial/AdventureWorks2025/HumanResources.vEmployeeDepartment.cases.json",
-    "sha256": "86bd841af4cf5b1c92dd28e9bdb3cda5a16a3f4df06cb252f71938c944ff96c4"
+    "sha256": "7a561b31fa384337c38a610993735e44bb43f1fc33b3bed4ff01b188637e03f5"
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-18T20:33:12.9525152-07:00",
+    "at": "2026-11-19T06:06:57.652Z",
     "file": "adversarial/AdventureWorks2025/HumanResources.vEmployeeDepartment.audit.json",
-    "sha256": "96d1bd636cd8b08a5f4ee448d57ec7ca1a3f21a44aec1afd6bb218f44118edfe"
+    "sha256": "be5eeb6ae63931c0a8a5d35b82116200735e43c99315078d00c1682de233b2a6"
   },
   "sameModel": false,
   "casesAudited": [
@@ -73,7 +73,7 @@
   "cases": [
     {
       "id": "A01",
-      "label": "date boundaries: start dates 0001-01-01, 1752-12-31, 1753-01-01, 2000-02-29 and 9999-12-31; end dates 0001-01-01 and 9999-12-31",
+      "label": "date boundaries: start dates 0001-01-01, 1752-12-31, 1753-01-01, 2000-02-29 and 9999-12-31; end dates 0001-01-01, 1900-01-01 and 9999-12-31",
       "traps": [
         "dates-datetime"
       ],
@@ -95,11 +95,11 @@
     },
     {
       "id": "A02",
-      "label": "an end date before the start date, and an end date equal to it: the view does not compare the two",
+      "label": "an end date equal to the start date, and one a day after it: the view does not compare the two",
       "traps": [
         "dates-datetime"
       ],
-      "reasoning": "Neither view compares EndDate with StartDate; a conversion that added a validity check would drop rows. only histories with EndDate NULL are listed. 9999-12-31 is the end date of one row.",
+      "reasoning": "Neither view compares EndDate with StartDate; a conversion that added a validity check written as EndDate > StartDate, or that treated the end date as exclusive, would drop the history that starts and ends on 2010-06-15. Both rows respect the source check EndDate >= StartDate. Only histories with EndDate NULL are listed. 9999-12-31 is the end date of one row.",
       "trapChecks": {
         "dates-datetime": {
           "present": true,
@@ -139,12 +139,12 @@
     },
     {
       "id": "A04",
-      "label": "text returned as stored: department names differing only in case, trailing spaces, non-ASCII and an emoji",
+      "label": "text returned as stored: a department name and group names differing only in case, trailing spaces, non-ASCII and an emoji",
       "traps": [
         "collation-case",
         "trailing-spaces"
       ],
-      "reasoning": "No text is compared in the view, so 'Sales', 'SALES' and 'sales ' are three departments with their own spelling; a conversion that case-folded, trimmed or grouped them would differ. An emoji and combining characters check the nvarchar -> varchar load on both engines.",
+      "reasoning": "No text is compared in the view. Department names are distinct (the source keeps Department.Name unique under its case-insensitive collation); the case-only pairs are department 'Sales' against groups 'SALES' and 'sales', and the first names 'Ann ', 'ANN' and 'ann'. A conversion that case-folded, trimmed or grouped text would differ. 'Marketing ' and 'Sales and Marketing ' end in a space; an emoji and an accent check the nvarchar -> varchar load on both engines.",
       "trapChecks": {
         "collation-case": {
           "present": true,
@@ -235,21 +235,36 @@
       "caseId": "A01",
       "kind": "label-mismatch",
       "text": "The label says the input includes EndDate 0001-01-01, but no EmployeeDepartmentHistory row sends that end date. The only 0001-01-01 value is a StartDate; the sent EndDate boundaries are 1900-01-01 and 9999-12-31.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A01 now includes a history whose StartDate and EndDate are both 0001-01-01, so the label matches the sent end-date boundary and the row satisfies EndDate >= StartDate.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O02",
       "caseId": "A02",
       "kind": "not-an-attack",
       "text": "The first history ends on 2010-06-14 after starting on 2010-06-15. It violates the source EmployeeDepartmentHistory check requiring EndDate >= StartDate (or NULL), so the case's central input cannot occur under the source schema preconditions.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "The first history now starts on 2010-06-14 and ends on 2010-06-15; all sent histories satisfy the source date check while retaining the equal-date boundary attack.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O03",
       "caseId": "A04",
       "kind": "not-an-attack",
       "text": "Department names 'Sales', 'SALES' and 'sales ' collide under the source case-insensitive, trailing-space-insensitive unique key on HumanResources.Department.Name. The input cannot occur in the source table with its constraints.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A04 now uses distinct department names. Its case-only pairs occur across Department.Name, GroupName, and Person.FirstName, so no source unique key is violated.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     }
   ],
   "mutantAdequacy": {
@@ -263,12 +278,8 @@
     "equivalentRecorded": []
   },
   "gate": {
-    "passed": false,
-    "reasons": [
-      "objection O01 is open",
-      "objection O02 is open",
-      "objection O03 is open"
-    ]
+    "passed": true,
+    "reasons": []
   },
   "wording": "7 adversarial cases ran, 0 differed"
 }

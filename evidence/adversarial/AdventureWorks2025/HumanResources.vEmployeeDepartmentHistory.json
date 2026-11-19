@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "object": "HumanResources.vEmployeeDepartmentHistory",
   "database": "AdventureWorks2025",
-  "runAt": "2026-11-19T04:16:34.014Z",
+  "runAt": "2026-11-19T06:16:57.363Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "3c4aab538cbdbbf16ded3383a1866702e6d6ab5e999bac1f48faaf7a7df2140a",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-18T20:21:05-07:00",
+    "at": "2026-11-19T05:51:37.445Z",
     "file": "adversarial/AdventureWorks2025/HumanResources.vEmployeeDepartmentHistory.cases.json",
-    "sha256": "54599299d2e547cf99432a49adf228d2cf7e0f913f792aedae27b53275213729"
+    "sha256": "7bb417e56d146f55403103d130f83e21b0b8bad3e27f966fd7fdc53410be1135"
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-18T20:33:12.9525152-07:00",
+    "at": "2026-11-19T06:06:57.652Z",
     "file": "adversarial/AdventureWorks2025/HumanResources.vEmployeeDepartmentHistory.audit.json",
-    "sha256": "13a4e3ad415b2b13f6b5cb288e8f1178f3b1d80737cd747e5619425c62ce3ef9"
+    "sha256": "6fc0620f0fc009ef0e608d8fdc20df4045a2c1f41953a704ef485b1783f0ebb7"
   },
   "sameModel": false,
   "casesAudited": [
@@ -77,7 +77,7 @@
       "traps": [
         "dates-datetime"
       ],
-      "reasoning": "date covers 0001-01-01 to 9999-12-31 on both engines (wider than datetime). Values before 1753 and the leap day check the date mapping and how both drivers read early years (a client that builds dates with Date.UTC maps years 0-99 to 1900-1999). both open and ended histories are listed.",
+      "reasoning": "date covers 0001-01-01 to 9999-12-31 on both engines (wider than datetime). Values before 1753 and the leap day check the date mapping and how both drivers read early years (a client that builds dates with Date.UTC maps years 0-99 to 1900-1999). both open and ended histories are listed. Every ended history ends on or after its start (the source check EndDate >= StartDate): employee 1 in department 2 has one history from 0001-01-01 to 0001-01-01 and an open one from 1752-12-31.",
       "trapChecks": {
         "dates-datetime": {
           "present": true,
@@ -95,11 +95,11 @@
     },
     {
       "id": "A02",
-      "label": "an end date before the start date, and an end date equal to it: the view does not compare the two",
+      "label": "an end date equal to the start date, and one a day after it: the view does not compare the two",
       "traps": [
         "dates-datetime"
       ],
-      "reasoning": "Neither view compares EndDate with StartDate; a conversion that added a validity check would drop rows. both open and ended histories are listed. 9999-12-31 is the end date of one row.",
+      "reasoning": "Neither view compares EndDate with StartDate; a conversion that added a validity check written as EndDate > StartDate, or that treated the end date as exclusive, would drop the history that starts and ends on 2010-06-15. Both rows respect the source check EndDate >= StartDate. Both open and ended histories are listed. 9999-12-31 is the end date of one row.",
       "trapChecks": {
         "dates-datetime": {
           "present": true,
@@ -139,12 +139,12 @@
     },
     {
       "id": "A04",
-      "label": "text returned as stored: department names differing only in case, trailing spaces, non-ASCII and an emoji",
+      "label": "text returned as stored: a department name and group names differing only in case, trailing spaces, non-ASCII and an emoji",
       "traps": [
         "collation-case",
         "trailing-spaces"
       ],
-      "reasoning": "No text is compared in the view, so 'Sales', 'SALES' and 'sales ' are three departments with their own spelling; a conversion that case-folded, trimmed or grouped them would differ. An emoji and combining characters check the nvarchar -> varchar load on both engines.",
+      "reasoning": "No text is compared in the view. Department names are distinct (the source keeps Department.Name unique under its case-insensitive collation); the case-only pairs are department 'Sales' against groups 'SALES' and 'sales', and the first names 'Ann ', 'ANN' and 'ann'. A conversion that case-folded, trimmed or grouped text would differ. 'Marketing ' and 'Sales and Marketing ' end in a space; an emoji and an accent check the nvarchar -> varchar load on both engines.",
       "trapChecks": {
         "collation-case": {
           "present": true,
@@ -166,11 +166,11 @@
     },
     {
       "id": "A05",
-      "label": "duplicate history rows (same employee, department and start date twice): two identical output rows",
+      "label": "the same employee, department and start date on two shifts: two rows that differ only in Shift",
       "traps": [
         "top-ties"
       ],
-      "reasoning": "EmployeeDepartmentHistory has no key constraint in the scratch tables, so the same row twice is two rows on both engines; the view has no DISTINCT. Compared as a multiset.",
+      "reasoning": "The source key is (BusinessEntityID, DepartmentID, ShiftID, StartDate), so one employee may start in one department on one date on two shifts (Day and Zero). The view lists both; a conversion that grouped or de-duplicated on employee, department and start date would return one. Identical output rows cannot occur here: Shift.Name is unique, so two rows that agree on every output column would share the source key.",
       "trapChecks": {
         "top-ties": {
           "present": true,
@@ -235,28 +235,48 @@
       "caseId": "A01",
       "kind": "not-an-attack",
       "text": "The employee 1, department 2 history ends on 0001-01-01 after starting on 1752-12-31. It violates the source check requiring EndDate >= StartDate (or NULL), so the boundary set is not valid source data.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "The ended department-2 history now starts and ends on 0001-01-01, while the 1752-12-31 history is a separate open row. Every ended history satisfies EndDate >= StartDate.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O02",
       "caseId": "A02",
       "kind": "not-an-attack",
       "text": "The first history ends on 2010-06-14 after starting on 2010-06-15. It violates the source EmployeeDepartmentHistory check requiring EndDate >= StartDate (or NULL), so the case's central input cannot occur under the source schema preconditions.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "The first history now starts on 2010-06-14 and ends on 2010-06-15; all sent histories satisfy the source date check.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O03",
       "caseId": "A04",
       "kind": "not-an-attack",
       "text": "Department names 'Sales', 'SALES' and 'sales ' collide under the source case-insensitive, trailing-space-insensitive unique key on HumanResources.Department.Name. The input cannot occur in the source table with its constraints.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A04 now uses distinct department names. The case-only pairs cross Department.Name, GroupName, and Person.FirstName, avoiding the Department.Name unique key.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O04",
       "caseId": "A05",
       "kind": "not-an-attack",
       "text": "A05 sends the exact EmployeeDepartmentHistory primary-key tuple (employee 1, department 1, shift 1, StartDate 2005-07-01) twice. The duplicate cannot occur under the source schema preconditions.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A05 now uses ShiftID 1 and 0 for the two same-date histories. The full source primary-key tuples are distinct, and the projected rows remain a useful de-duplication attack because they share employee, department, and start date while differing by Shift.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     }
   ],
   "mutantAdequacy": {
@@ -270,13 +290,8 @@
     "equivalentRecorded": []
   },
   "gate": {
-    "passed": false,
-    "reasons": [
-      "objection O01 is open",
-      "objection O02 is open",
-      "objection O03 is open",
-      "objection O04 is open"
-    ]
+    "passed": true,
+    "reasons": []
   },
   "wording": "7 adversarial cases ran, 0 differed"
 }

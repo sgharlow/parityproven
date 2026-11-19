@@ -327,9 +327,9 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedQuery1', @Actual = N'#ActualQuery1', @Message = N'next value of each sequence after the call';
 END;
 GO
--- case 8: [A08] table maximum equal to the start value of an unused sequence at 7, while the other sequence was used 3 times: restart at 8
+-- case 8: [A08] table maximum equal to the current value of a used sequence (start 5, used 3 times, current 7): restart at 8; an unused sequence starting at 7 is left alone
 --[@tSQLt:NoTransaction](DEFAULT)
-CREATE PROCEDURE [AgreedTests].[test 08 [A08 table maximum equal to the start value of an unused sequence at 7, while the other sequence was…]
+CREATE PROCEDURE [AgreedTests].[test 08 [A08 table maximum equal to the current value of a used sequence (start 5, used 3 times, current 7):…]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Sales].[Orders]';
@@ -339,15 +339,15 @@ BEGIN
     (1, 7),
     (2, -1);
   INSERT INTO [Harness].[SequenceStart] ([Id], [SequenceName], [StartValue], [Used], [Pick]) VALUES
-    (1, N'OrderID', 7, 0, 0),
-    (2, N'StockItemID', 5, 3, 0);
+    (1, N'OrderID', 5, 3, 0),
+    (2, N'StockItemID', 7, 0, 0);
   IF OBJECT_ID(N'Sequences.OrderID', N'SO') IS NOT NULL DROP SEQUENCE Sequences.[OrderID];
-  CREATE SEQUENCE Sequences.[OrderID] AS int START WITH 7 MINVALUE -2147483648;
+  CREATE SEQUENCE Sequences.[OrderID] AS int START WITH 5 MINVALUE -2147483648;
+  DECLARE @vOrderID0 int = NEXT VALUE FOR Sequences.[OrderID];
+  DECLARE @vOrderID1 int = NEXT VALUE FOR Sequences.[OrderID];
+  DECLARE @vOrderID2 int = NEXT VALUE FOR Sequences.[OrderID];
   IF OBJECT_ID(N'Sequences.StockItemID', N'SO') IS NOT NULL DROP SEQUENCE Sequences.[StockItemID];
-  CREATE SEQUENCE Sequences.[StockItemID] AS int START WITH 5 MINVALUE -2147483648;
-  DECLARE @vStockItemID0 int = NEXT VALUE FOR Sequences.[StockItemID];
-  DECLARE @vStockItemID1 int = NEXT VALUE FOR Sequences.[StockItemID];
-  DECLARE @vStockItemID2 int = NEXT VALUE FOR Sequences.[StockItemID];
+  CREATE SEQUENCE Sequences.[StockItemID] AS int START WITH 7 MINVALUE -2147483648;
   DECLARE @outcome nvarchar(4000) = N'completed';
   BEGIN TRY
     EXEC Sequences.ReseedSequenceBeyondTableValues @SequenceName = N'OrderID', @SchemaName = N'Sales', @TableName = N'Orders', @ColumnName = N'OrderID';
@@ -367,7 +367,7 @@ BEGIN
     [StockItemID] int NULL
   );
   INSERT INTO #ExpectedQuery1 ([OrderID], [StockItemID]) VALUES
-    (8, 8);
+    (8, 7);
   INSERT INTO #ActualQuery1
   SELECT NEXT VALUE FOR Sequences.OrderID AS OrderID, NEXT VALUE FOR Sequences.StockItemID AS StockItemID;
   IF OBJECT_ID(N'Sequences.OrderID', N'SO') IS NOT NULL DROP SEQUENCE Sequences.[OrderID];

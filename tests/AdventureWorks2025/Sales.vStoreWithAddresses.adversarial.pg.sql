@@ -339,7 +339,7 @@ BEGIN
 END $pp$;
 ROLLBACK;
 
--- @case 7: [A07] NULL versus '' in AddressLine2, an empty vendor name, address type name and city, and a single-space AddressLine2
+-- @case 7: [A07] NULL versus '' in AddressLine2, an empty store name, address type name and city, and a single-space AddressLine2
 BEGIN;
 DELETE FROM person.address;
 DELETE FROM person.address_type;
@@ -372,7 +372,7 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['BusinessEntityID', 'Name', 'AddressType', 'AddressLine1', 'AddressLine2', 'City', 'StateProvinceName', 'PostalCode', 'CountryRegionName']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 07 [A07 NULL versus in AddressLine2, an empty vendor name, address type name and city, and a single-spac…', got, ARRAY['BusinessEntityID', 'Name', 'AddressType', 'AddressLine1', 'AddressLine2', 'City', 'StateProvinceName', 'PostalCode', 'CountryRegionName']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 07 [A07 NULL versus in AddressLine2, an empty store name, address type name and city, and a single-space…', got, ARRAY['BusinessEntityID', 'Name', 'AddressType', 'AddressLine1', 'AddressLine2', 'City', 'StateProvinceName', 'PostalCode', 'CountryRegionName']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
@@ -386,12 +386,12 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 07 [A07 NULL versus in AddressLine2, an empty vendor name, address type name and city, and a single-spac…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 07 [A07 NULL versus in AddressLine2, an empty store name, address type name and city, and a single-space…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;
 
--- @case 8: [A08] keys with gaps and at the int limits: vendor 2147483647, address -2147483648, address type 0; text with an emoji and full length
+-- @case 8: [A08] keys with gaps and at the int limits: store 2147483647, address -2147483648, address type 0; text with an emoji and full length
 BEGIN;
 DELETE FROM person.address;
 DELETE FROM person.address_type;
@@ -421,7 +421,7 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['BusinessEntityID', 'Name', 'AddressType', 'AddressLine1', 'AddressLine2', 'City', 'StateProvinceName', 'PostalCode', 'CountryRegionName']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 08 [A08 keys with gaps and at the int limits: vendor 2147483647, address -2147483648, address type 0; te…', got, ARRAY['BusinessEntityID', 'Name', 'AddressType', 'AddressLine1', 'AddressLine2', 'City', 'StateProvinceName', 'PostalCode', 'CountryRegionName']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 08 [A08 keys with gaps and at the int limits: store 2147483647, address -2147483648, address type 0; tex…', got, ARRAY['BusinessEntityID', 'Name', 'AddressType', 'AddressLine1', 'AddressLine2', 'City', 'StateProvinceName', 'PostalCode', 'CountryRegionName']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
@@ -434,7 +434,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 08 [A08 keys with gaps and at the int limits: vendor 2147483647, address -2147483648, address type 0; te…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 08 [A08 keys with gaps and at the int limits: store 2147483647, address -2147483648, address type 0; tex…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;

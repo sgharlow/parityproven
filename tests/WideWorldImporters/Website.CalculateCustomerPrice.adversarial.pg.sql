@@ -7,7 +7,7 @@
 -- Prerequisites: the spec's tables created and the final conversion deployed.
 -- Each case is one transaction and always rolls back.
 
--- @case 1: [A01] percentage discount rounds half away from zero: 1.05 * 0.5 % = 0.00525 -> 0.01, not banker's 0.00
+-- @case 1: [A01] percentage price at an exact half cent: 0.25 * 50 % = 0.125 rounds half away from zero to 0.13 (banker's rounding and truncation give 0.12)
 BEGIN;
 DELETE FROM sales.customers;
 DELETE FROM warehouse.stock_items;
@@ -16,9 +16,9 @@ DELETE FROM warehouse.stock_item_stock_groups;
 INSERT INTO sales.customers ("CustomerID", "BuyingGroupID", "CustomerCategoryID") VALUES
   ('1', NULL, '1');
 INSERT INTO warehouse.stock_items ("StockItemID", "UnitPrice") VALUES
-  ('1', '1.05');
+  ('1', '0.25');
 INSERT INTO sales.special_deals ("SpecialDealID", "StockItemID", "CustomerID", "BuyingGroupID", "CustomerCategoryID", "StockGroupID", "StartDate", "EndDate", "DiscountAmount", "DiscountPercentage", "UnitPrice") VALUES
-  ('1', '1', NULL, NULL, NULL, NULL, '2020-01-01', '2020-01-03', NULL, '0.500', NULL);
+  ('1', '1', NULL, NULL, NULL, NULL, '2020-01-01', '2020-01-03', NULL, '50.000', NULL);
 CREATE TEMP TABLE pp_actual ON COMMIT DROP AS
 SELECT website.calculate_customer_price('1'::integer, '1'::integer, '2020-01-02'::date) AS result;
 DO $pp$
@@ -26,19 +26,19 @@ DECLARE got text[];
 BEGIN
   SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
   IF got IS DISTINCT FROM ARRAY['result']::text[] THEN
-    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 01 [A01 percentage discount rounds half away from zero: 1.05 * 0.5 % = 0.00525 -> 0.01, not bankers 0.00', got, ARRAY['result']::text[];
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 01 [A01 percentage price at an exact half cent: 0.25 * 50 % = 0.125 rounds half away from zero to 0.13 (…', got, ARRAY['result']::text[];
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
 INSERT INTO pp_expected VALUES
-  ('0.01');
+  ('0.13');
 DO $pp$
 DECLARE missing bigint; extra bigint;
 BEGIN
   SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 01 [A01 percentage discount rounds half away from zero: 1.05 * 0.5 % = 0.00525 -> 0.01, not bankers 0.00', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 01 [A01 percentage price at an exact half cent: 0.25 * 50 % = 0.125 rounds half away from zero to 0.13 (…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;
@@ -224,6 +224,44 @@ BEGIN
   SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
   IF missing > 0 OR extra > 0 THEN
     RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 06 [A06 no customer row: BuyingGroupID and CustomerCategoryID stay NULL, so only the OR ... IS NULL deal…', missing, extra;
+  END IF;
+END $pp$;
+ROLLBACK;
+
+-- @case 7: [A07] three discount amounts through different deal legs (-1.00, 0.05, 3.15): the highest, 3.15, wins and gives 6.85
+BEGIN;
+DELETE FROM sales.customers;
+DELETE FROM warehouse.stock_items;
+DELETE FROM sales.special_deals;
+DELETE FROM warehouse.stock_item_stock_groups;
+INSERT INTO sales.customers ("CustomerID", "BuyingGroupID", "CustomerCategoryID") VALUES
+  ('1', '2', '3');
+INSERT INTO warehouse.stock_items ("StockItemID", "UnitPrice") VALUES
+  ('1', '10.00');
+INSERT INTO sales.special_deals ("SpecialDealID", "StockItemID", "CustomerID", "BuyingGroupID", "CustomerCategoryID", "StockGroupID", "StartDate", "EndDate", "DiscountAmount", "DiscountPercentage", "UnitPrice") VALUES
+  ('2', '1', NULL, NULL, NULL, NULL, '2020-01-01', '2020-01-03', '0.05', NULL, NULL),
+  ('4', NULL, NULL, '2', NULL, NULL, '2020-01-01', '2020-01-03', '3.15', NULL, NULL),
+  ('6', NULL, NULL, NULL, '3', NULL, '2020-01-01', '2020-01-03', '-1.00', NULL, NULL);
+CREATE TEMP TABLE pp_actual ON COMMIT DROP AS
+SELECT website.calculate_customer_price('1'::integer, '1'::integer, '2020-01-02'::date) AS result;
+DO $pp$
+DECLARE got text[];
+BEGIN
+  SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
+  IF got IS DISTINCT FROM ARRAY['result']::text[] THEN
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 07 [A07 three discount amounts through different deal legs (-1.00, 0.05, 3.15): the highest, 3.15, wins…', got, ARRAY['result']::text[];
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
+INSERT INTO pp_expected VALUES
+  ('6.85');
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 07 [A07 three discount amounts through different deal legs (-1.00, 0.05, 3.15): the highest, 3.15, wins…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;

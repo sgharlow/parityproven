@@ -8,7 +8,7 @@
 GO
 EXEC tSQLt.NewTestClass 'AgreedTests';
 GO
--- case 1: [A01] date boundaries: start dates 0001-01-01, 1752-12-31, 1753-01-01, 2000-02-29 and 9999-12-31; end dates 0001-01-01 and 9999-12-31
+-- case 1: [A01] date boundaries: start dates 0001-01-01, 1752-12-31, 1753-01-01, 2000-02-29 and 9999-12-31; end dates 0001-01-01, 1900-01-01 and 9999-12-31
 CREATE PROCEDURE [AgreedTests].[test 01 [A01 date boundaries: start dates 0001-01-01, 1752-12-31, 1753-01-01, 2000-02-29 and 9999-12-31; end…]
 AS
 BEGIN
@@ -29,7 +29,8 @@ BEGIN
     (2, 1, CAST('1753-01-01' AS date), NULL),
     (2, 2, CAST('2000-02-29' AS date), CAST('9999-12-31' AS date)),
     (3, 1, CAST('9999-12-31' AS date), NULL),
-    (3, 2, CAST('1900-01-01' AS date), CAST('1900-01-01' AS date));
+    (3, 2, CAST('1900-01-01' AS date), CAST('1900-01-01' AS date)),
+    (3, 1, CAST('0001-01-01' AS date), CAST('0001-01-01' AS date));
   INSERT INTO [Person].[Person] ([BusinessEntityID], [Title], [FirstName], [MiddleName], [LastName], [Suffix]) VALUES
     (1, NULL, N'First1', NULL, N'Last1', NULL),
     (2, NULL, N'First2', NULL, N'Last2', NULL),
@@ -68,8 +69,8 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
--- case 2: [A02] an end date before the start date, and an end date equal to it: the view does not compare the two
-CREATE PROCEDURE [AgreedTests].[test 02 [A02 an end date before the start date, and an end date equal to it: the view does not compare the two]
+-- case 2: [A02] an end date equal to the start date, and one a day after it: the view does not compare the two
+CREATE PROCEDURE [AgreedTests].[test 02 [A02 an end date equal to the start date, and one a day after it: the view does not compare the two]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[HumanResources].[Department]';
@@ -82,7 +83,7 @@ BEGIN
     (1, N'Job 1'),
     (2, N'Job 2');
   INSERT INTO [HumanResources].[EmployeeDepartmentHistory] ([BusinessEntityID], [DepartmentID], [StartDate], [EndDate]) VALUES
-    (1, 1, CAST('2010-06-15' AS date), CAST('2010-06-14' AS date)),
+    (1, 1, CAST('2010-06-14' AS date), CAST('2010-06-15' AS date)),
     (2, 1, CAST('2010-06-15' AS date), CAST('2010-06-15' AS date)),
     (2, 1, CAST('2011-01-01' AS date), CAST('9999-12-31' AS date)),
     (1, 1, CAST('2012-01-01' AS date), NULL);
@@ -172,8 +173,8 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
--- case 4: [A04] text returned as stored: department names differing only in case, trailing spaces, non-ASCII and an emoji
-CREATE PROCEDURE [AgreedTests].[test 04 [A04 text returned as stored: department names differing only in case, trailing spaces, non-ASCII and…]
+-- case 4: [A04] text returned as stored: a department name and group names differing only in case, trailing spaces, non-ASCII and an emoji
+CREATE PROCEDURE [AgreedTests].[test 04 [A04 text returned as stored: a department name and group names differing only in case, trailing spac…]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[HumanResources].[Department]';
@@ -181,9 +182,9 @@ BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[HumanResources].[EmployeeDepartmentHistory]';
   EXEC tSQLt.FakeTable @TableName = N'[Person].[Person]';
   INSERT INTO [HumanResources].[Department] ([DepartmentID], [Name], [GroupName]) VALUES
-    (1, N'Sales', N'Sales and Marketing'),
-    (2, N'SALES', N'Sales and Marketing '),
-    (3, N'sales ', N'Ventes 😀 é');
+    (1, N'Sales', N'SALES'),
+    (2, N'Marketing ', N'Sales and Marketing '),
+    (3, N'Ventes 😀 é', N'sales');
   INSERT INTO [HumanResources].[Employee] ([BusinessEntityID], [JobTitle]) VALUES
     (1, N'Job 1'),
     (2, N'Job 2'),
@@ -221,9 +222,9 @@ BEGIN
     [StartDate] date NULL
   );
   INSERT INTO #Expected ([BusinessEntityID], [Title], [FirstName], [MiddleName], [LastName], [Suffix], [JobTitle], [Department], [GroupName], [StartDate]) VALUES
-    (1, NULL, N'Ann ', NULL, N'Last1', NULL, N'Job 1', N'Sales', N'Sales and Marketing', CAST('2001-01-01' AS date)),
-    (2, NULL, N'ANN', NULL, N'Last2', NULL, N'Job 2', N'SALES', N'Sales and Marketing ', CAST('2001-01-01' AS date)),
-    (3, NULL, N'ann', NULL, N'Last3', NULL, N'Job 3', N'sales ', N'Ventes 😀 é', CAST('2001-01-01' AS date));
+    (1, NULL, N'Ann ', NULL, N'Last1', NULL, N'Job 1', N'Sales', N'SALES', CAST('2001-01-01' AS date)),
+    (2, NULL, N'ANN', NULL, N'Last2', NULL, N'Job 2', N'Marketing ', N'Sales and Marketing ', CAST('2001-01-01' AS date)),
+    (3, NULL, N'ann', NULL, N'Last3', NULL, N'Job 3', N'Ventes 😀 é', N'sales', CAST('2001-01-01' AS date));
   INSERT INTO #Actual
   SELECT * FROM HumanResources.vEmployeeDepartment;
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';

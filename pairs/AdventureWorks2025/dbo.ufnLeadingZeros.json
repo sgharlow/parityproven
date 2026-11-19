@@ -90,7 +90,7 @@
       "differed": 0,
       "evidencePath": "evidence/adversarial/AdventureWorks2025/dbo.ufnLeadingZeros.json",
       "conversionSha256": "71fbec7f435258e2d71571bdf1980b124670f38daa9b4d97753eba7d5fb418e2",
-      "runAt": "2026-11-19T02:26:47.021Z"
+      "runAt": "2026-11-19T06:19:58.663Z"
     }
   },
   "effort": {

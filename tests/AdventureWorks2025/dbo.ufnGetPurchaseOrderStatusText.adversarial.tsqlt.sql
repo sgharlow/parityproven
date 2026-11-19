@@ -110,3 +110,54 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
+-- case 7: [A07] status 2 gives 'Approved' (a mapped branch the other adversarial cases do not reach)
+CREATE PROCEDURE [AgreedTests].[test 07 [A07 status 2 gives Approved (a mapped branch the other adversarial cases do not reach)]
+AS
+BEGIN
+  CREATE TABLE #Expected (
+    [result] nvarchar(15) NULL
+  );
+  CREATE TABLE #Actual (
+    [result] nvarchar(15) NULL
+  );
+  INSERT INTO #Expected ([result]) VALUES
+    (N'Approved');
+  INSERT INTO #Actual
+  SELECT dbo.ufnGetPurchaseOrderStatusText(2) AS result;
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
+END;
+GO
+-- case 8: [A08] status 3 gives 'Rejected'
+CREATE PROCEDURE [AgreedTests].[test 08 [A08 status 3 gives Rejected]
+AS
+BEGIN
+  CREATE TABLE #Expected (
+    [result] nvarchar(15) NULL
+  );
+  CREATE TABLE #Actual (
+    [result] nvarchar(15) NULL
+  );
+  INSERT INTO #Expected ([result]) VALUES
+    (N'Rejected');
+  INSERT INTO #Actual
+  SELECT dbo.ufnGetPurchaseOrderStatusText(3) AS result;
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
+END;
+GO
+-- case 9: [A09] status 4 gives 'Complete' (the last WHEN branch before ELSE)
+CREATE PROCEDURE [AgreedTests].[test 09 [A09 status 4 gives Complete (the last WHEN branch before ELSE)]
+AS
+BEGIN
+  CREATE TABLE #Expected (
+    [result] nvarchar(15) NULL
+  );
+  CREATE TABLE #Actual (
+    [result] nvarchar(15) NULL
+  );
+  INSERT INTO #Expected ([result]) VALUES
+    (N'Complete');
+  INSERT INTO #Actual
+  SELECT dbo.ufnGetPurchaseOrderStatusText(4) AS result;
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
+END;
+GO

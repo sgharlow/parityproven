@@ -2,11 +2,11 @@
   "object": "Website.CalculateCustomerPrice",
   "database": "WideWorldImporters",
   "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
-  "capturedAt": "2026-11-19T05:28:10.297Z",
+  "capturedAt": "2026-11-19T06:21:33.685Z",
   "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
   "cases": [
     {
-      "label": "[A01] percentage discount rounds half away from zero: 1.05 * 0.5 % = 0.00525 -> 0.01, not banker's 0.00",
+      "label": "[A01] percentage price at an exact half cent: 0.25 * 50 % = 0.125 rounds half away from zero to 0.13 (banker's rounding and truncation give 0.12)",
       "columns": [
         {
           "name": "result",
@@ -15,7 +15,7 @@
       ],
       "rows": [
         [
-          "n:0.01"
+          "n:0.13"
         ]
       ]
     },
@@ -86,6 +86,20 @@
       "rows": [
         [
           "n:10"
+        ]
+      ]
+    },
+    {
+      "label": "[A07] three discount amounts through different deal legs (-1.00, 0.05, 3.15): the highest, 3.15, wins and gives 6.85",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "decimal(18,2)"
+        }
+      ],
+      "rows": [
+        [
+          "n:6.85"
         ]
       ]
     }

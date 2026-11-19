@@ -2,7 +2,7 @@
   "object": "Integration.GetTransactionUpdates",
   "database": "WideWorldImporters",
   "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
-  "capturedAt": "2026-11-19T05:05:36.136Z",
+  "capturedAt": "2026-11-19T06:20:46.468Z",
   "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
   "cases": [
     {
@@ -892,6 +892,25 @@
         ],
         [
           "d:1753-01-01",
+          "n:3",
+          "∅",
+          "∅",
+          "∅",
+          "∅",
+          "n:100",
+          "n:15",
+          "n:115",
+          "n:0",
+          "b:1",
+          "n:5",
+          "n:5",
+          "∅",
+          "n:1",
+          "∅",
+          "t:0001-01-01T00:00:00.000001"
+        ],
+        [
+          "d:1753-01-01",
           "∅",
           "n:1",
           "∅",
@@ -908,6 +927,25 @@
           "n:5",
           "n:2",
           "t:0001-01-01T00:00:00.000001"
+        ],
+        [
+          "d:9999-12-31",
+          "∅",
+          "n:3",
+          "∅",
+          "∅",
+          "s:INV-3",
+          "n:-50",
+          "n:-7.5",
+          "n:-57.5",
+          "n:0",
+          "b:0",
+          "∅",
+          "∅",
+          "n:4",
+          "n:5",
+          "n:2",
+          "t:9999-12-31T23:59:59.999999"
         ]
       ]
     }

@@ -11,9 +11,9 @@
 GO
 EXEC tSQLt.NewTestClass 'AgreedTests';
 GO
--- case 1: [A01] tax and line amounts round half away from zero: 3 x 0.95 x 0.505 % = 0.01438875 -> 0.01
+-- case 1: [A01] tax amount at an exact half cent: 1 x 0.25 x 50 % = 0.125 -> 0.13 (half away from zero; banker's rounding and truncation give 0.12)
 --[@tSQLt:NoTransaction](DEFAULT)
-CREATE PROCEDURE [AgreedTests].[test 01 [A01 tax and line amounts round half away from zero: 3 x 0.95 x 0.505 % = 0.01438875 -> 0.01]
+CREATE PROCEDURE [AgreedTests].[test 01 [A01 tax amount at an exact half cent: 1 x 0.25 x 50 % = 0.125 -> 0.13 (half away from zero; bankers…]
 AS
 BEGIN
   DELETE FROM [Sales].[Orders];
@@ -30,7 +30,7 @@ BEGIN
     (1, 1, 3, 7, N'PO-1', CAST('2020-01-01T10:00:00.000000' AS datetime2(7))),
     (2, 2, 4, 8, NULL, CAST('2020-01-01T10:00:00.000000' AS datetime2(7)));
   INSERT INTO [Sales].[OrderLines] ([OrderLineID], [OrderID], [StockItemID], [Description], [PackageTypeID], [PickedQuantity], [UnitPrice], [TaxRate]) VALUES
-    (1, 1, 1, N'dry', 7, 3, 0.95, 0.505),
+    (1, 1, 1, N'dry', 7, 1, 0.25, 50.000),
     (2, 1, 2, N'chilled', 9, 2, 10.00, 15.000),
     (3, 2, 1, N'dry', 7, 1, 5.55, 10.000);
   INSERT INTO [Warehouse].[StockItems] ([StockItemID], [IsChillerStock]) VALUES
@@ -161,7 +161,7 @@ BEGIN
     [LastEditedWhen] datetime2(7) NULL
   );
   INSERT INTO #ExpectedQuery2 ([InvoiceOrder], [StockItemID], [Description], [PackageTypeID], [Quantity], [UnitPrice], [TaxRate], [TaxAmount], [LineProfit], [ExtendedPrice], [LastEditedBy], [LastEditedWhen_now], [LastEditedWhen]) VALUES
-    (1, 1, N'dry', 7, 3, 0.95, 0.505, 0.01, 1.35, 2.86, 9, N'now', NULL),
+    (1, 1, N'dry', 7, 1, 0.25, 50, 0.13, -0.25, 0.38, 9, N'now', NULL),
     (1, 2, N'chilled', 9, 2, 10, 15, 3, 8, 23, 9, N'now', NULL);
   INSERT INTO #ActualQuery2
   SELECT i.OrderID AS InvoiceOrder, il.StockItemID, il.Description, il.PackageTypeID, il.Quantity, il.UnitPrice, il.TaxRate, il.TaxAmount,
@@ -196,7 +196,7 @@ BEGIN
     [LastEditedWhen] datetime2(7) NULL
   );
   INSERT INTO #ExpectedQuery3 ([InvoiceOrder], [StockItemID], [TransactionTypeID], [CustomerID], [SupplierID], [PurchaseOrderID], [TransactionOccurredWhen_now], [TransactionOccurredWhen], [Quantity], [LastEditedBy], [LastEditedWhen_now], [LastEditedWhen]) VALUES
-    (1, 1, 10, 1, NULL, NULL, N'now', NULL, -3, 9, N'now', NULL),
+    (1, 1, 10, 1, NULL, NULL, N'now', NULL, -1, 9, N'now', NULL),
     (1, 2, 10, 1, NULL, NULL, N'now', NULL, -2, 9, N'now', NULL);
   INSERT INTO #ActualQuery3
   SELECT i.OrderID AS InvoiceOrder, t.StockItemID, t.TransactionTypeID, t.CustomerID, t.SupplierID, t.PurchaseOrderID,
@@ -235,7 +235,7 @@ BEGIN
     [LastEditedWhen] datetime2(7) NULL
   );
   INSERT INTO #ExpectedQuery4 ([InvoiceOrder], [CustomerID], [TransactionTypeID], [PaymentMethodID], [TransactionDate_now], [TransactionDate], [AmountExcludingTax], [TaxAmount], [TransactionAmount], [OutstandingBalance], [FinalizationDate], [LastEditedBy], [LastEditedWhen_now], [LastEditedWhen]) VALUES
-    (1, 2, 1, NULL, N'today', NULL, 22.85, 3.01, 25.86, 25.86, NULL, 9, N'now', NULL);
+    (1, 2, 1, NULL, N'today', NULL, 20.25, 3.13, 23.38, 23.38, NULL, 9, N'now', NULL);
   INSERT INTO #ActualQuery4
   SELECT i.OrderID AS InvoiceOrder, ct.CustomerID, ct.TransactionTypeID, ct.PaymentMethodID, CASE WHEN ct.TransactionDate = CAST(SYSDATETIME() AS date) THEN N'today' END AS [TransactionDate_now], CASE WHEN ct.TransactionDate = CAST(SYSDATETIME() AS date) THEN NULL ELSE ct.TransactionDate END AS [TransactionDate],
                           ct.AmountExcludingTax, ct.TaxAmount, ct.TransactionAmount, ct.OutstandingBalance, ct.FinalizationDate, ct.LastEditedBy,
@@ -258,7 +258,7 @@ BEGIN
     [LastEditedWhen] datetime2(7) NULL
   );
   INSERT INTO #ExpectedQuery5 ([StockItemID], [QuantityOnHand], [LastCostPrice], [LastEditedBy], [LastEditedWhen_now], [LastEditedWhen]) VALUES
-    (1, 97, 0.5, 9, N'now', NULL),
+    (1, 99, 0.5, 9, N'now', NULL),
     (2, 8, 6, 9, N'now', NULL);
   INSERT INTO #ActualQuery5
   SELECT h.StockItemID, h.QuantityOnHand, h.LastCostPrice, h.LastEditedBy, CASE WHEN h.LastEditedWhen BETWEEN DATEADD(minute, -5, SYSDATETIME()) AND SYSDATETIME() THEN N'now' END AS [LastEditedWhen_now], CASE WHEN h.LastEditedWhen BETWEEN DATEADD(minute, -5, SYSDATETIME()) AND SYSDATETIME() THEN NULL ELSE h.LastEditedWhen END AS [LastEditedWhen] FROM Warehouse.StockItemHoldings AS h;
@@ -587,9 +587,9 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedQuery7', @Actual = N'#ActualQuery7', @Message = N'next invoice ID';
 END;
 GO
--- case 3: [A03] empty DeliveryAddressLine1 with NULL DeliveryAddressLine2 makes DeliveryInstructions NULL (+ semantics)
+-- case 3: [A03] an empty DeliveryAddressLine1 with a line 2 gives ', Back door'; a NULL line 2 on the other customer makes its instructions NULL
 --[@tSQLt:NoTransaction](DEFAULT)
-CREATE PROCEDURE [AgreedTests].[test 03 [A03 empty DeliveryAddressLine1 with NULL DeliveryAddressLine2 makes DeliveryInstructions NULL (+ sem…]
+CREATE PROCEDURE [AgreedTests].[test 03 [A03 an empty DeliveryAddressLine1 with a line 2 gives , Back door; a NULL line 2 on the other custom…]
 AS
 BEGIN
   DELETE FROM [Sales].[Orders];
@@ -616,7 +616,7 @@ BEGIN
     (1, 100, 0.50, 1, CAST('2020-01-01T00:00:00.000000' AS datetime2(7))),
     (2, 10, 6.00, 1, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)));
   INSERT INTO [Sales].[Customers] ([CustomerID], [BillToCustomerID], [DeliveryMethodID], [PrimaryContactPersonID], [DeliveryAddressLine1], [DeliveryAddressLine2], [DeliveryRun], [RunPosition]) VALUES
-    (1, 2, 3, 11, N'', NULL, N'A', N'1'),
+    (1, 2, 3, 11, N'', N'Back door', N'A', N'1'),
     (2, 2, 3, 12, N'Unit 5', NULL, NULL, NULL);
   INSERT INTO [Application].[TransactionTypes] ([TransactionTypeID], [TransactionTypeName]) VALUES
     (1, N'Customer Invoice'),
@@ -691,7 +691,7 @@ BEGIN
     [LastEditedWhen] datetime2(7) NULL
   );
   INSERT INTO #ExpectedQuery1 ([OrderID], [Invoice], [CustomerID], [BillToCustomerID], [DeliveryMethodID], [ContactPersonID], [AccountsPersonID], [SalespersonPersonID], [PackedByPersonID], [InvoiceDate_now], [InvoiceDate], [CustomerPurchaseOrderNumber], [IsCreditNote], [CreditNoteReason], [Comments], [DeliveryInstructions], [InternalComments], [TotalDryItems], [TotalChillerItems], [DeliveryRun], [RunPosition], [ReturnedDeliveryData], [LastEditedBy], [LastEditedWhen_now], [LastEditedWhen]) VALUES
-    (1, N'new', 1, 2, 3, 3, 12, 7, 5, N'today', NULL, N'PO-1', 0, NULL, NULL, NULL, NULL, 1, 1, N'A', N'1', N'{"Events": [{ "Event":"Ready for collection","EventTime":"<call time, 20 chars, ends .>","ConNote":"EAN-125-<InvoiceID + 1050>"}]}', 9, N'now', NULL);
+    (1, N'new', 1, 2, 3, 3, 12, 7, 5, N'today', NULL, N'PO-1', 0, NULL, NULL, N', Back door', NULL, 1, 1, N'A', N'1', N'{"Events": [{ "Event":"Ready for collection","EventTime":"<call time, 20 chars, ends .>","ConNote":"EAN-125-<InvoiceID + 1050>"}]}', 9, N'now', NULL);
   INSERT INTO #ActualQuery1
   SELECT i.OrderID, CASE WHEN i.InvoiceID >= 70511 THEN N'new' ELSE CAST(i.InvoiceID AS nvarchar(10)) END AS Invoice,
                           i.CustomerID, i.BillToCustomerID, i.DeliveryMethodID, i.ContactPersonID, i.AccountsPersonID, i.SalespersonPersonID, i.PackedByPersonID,
@@ -1451,9 +1451,9 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedQuery7', @Actual = N'#ActualQuery7', @Message = N'next invoice ID';
 END;
 GO
--- case 6: [A06] an order with no lines: its customer-transaction sums are NULL, hitting a NOT NULL violation that rolls everything back
+-- case 6: [A06] two orders requested, the second without lines: the NOT NULL violation on its customer transaction rolls back the first order's invoice too
 --[@tSQLt:NoTransaction](DEFAULT)
-CREATE PROCEDURE [AgreedTests].[test 06 [A06 an order with no lines: its customer-transaction sums are NULL, hitting a NOT NULL violation tha…]
+CREATE PROCEDURE [AgreedTests].[test 06 [A06 two orders requested, the second without lines: the NOT NULL violation on its customer transacti…]
 AS
 BEGIN
   DELETE FROM [Sales].[Orders];
@@ -1469,6 +1469,8 @@ BEGIN
   INSERT INTO [Sales].[Orders] ([OrderID], [CustomerID], [ContactPersonID], [SalespersonPersonID], [CustomerPurchaseOrderNumber], [PickingCompletedWhen]) VALUES
     (1, 1, 3, 7, N'PO-1', CAST('2020-01-01T10:00:00.000000' AS datetime2(7))),
     (2, 2, 4, 8, NULL, CAST('2020-01-01T10:00:00.000000' AS datetime2(7)));
+  INSERT INTO [Sales].[OrderLines] ([OrderLineID], [OrderID], [StockItemID], [Description], [PackageTypeID], [PickedQuantity], [UnitPrice], [TaxRate]) VALUES
+    (1, 1, 1, N'dry', 7, 3, 0.99, 15.000);
   INSERT INTO [Warehouse].[StockItems] ([StockItemID], [IsChillerStock]) VALUES
     (1, 0),
     (2, 1);
@@ -1488,6 +1490,7 @@ BEGIN
   BEGIN TRY
     DECLARE @tvp0 [Website].[OrderIDList];
   INSERT INTO @tvp0 ([OrderID]) VALUES (1);
+  INSERT INTO @tvp0 ([OrderID]) VALUES (2);
   EXEC Website.InvoiceCustomerOrders @OrdersToInvoice = @tvp0, @PackedByPersonID = 5, @InvoicedByPersonID = 9;
   END TRY
   BEGIN CATCH
@@ -1712,7 +1715,7 @@ BEGIN
     [NextInvoiceID] int NULL
   );
   INSERT INTO #ExpectedQuery7 ([NextInvoiceID]) VALUES
-    (70512);
+    (70513);
   INSERT INTO #ActualQuery7
   SELECT NEXT VALUE FOR Sequences.InvoiceID AS NextInvoiceID;
   EXEC tSQLt.AssertEqualsString @Expected = N'raised: NULL into a NOT NULL column', @Actual = @outcome, @Message = N'outcome';
@@ -2009,6 +2012,284 @@ BEGIN
   INSERT INTO #ActualQuery7
   SELECT NEXT VALUE FOR Sequences.InvoiceID AS NextInvoiceID;
   EXEC tSQLt.AssertEqualsString @Expected = N'completed', @Actual = @outcome, @Message = N'outcome';
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedQuery1', @Actual = N'#ActualQuery1', @Message = N'invoices';
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedQuery2', @Actual = N'#ActualQuery2', @Message = N'invoice lines, by their invoice''s order';
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedQuery3', @Actual = N'#ActualQuery3', @Message = N'stock transactions, by their invoice''s order';
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedQuery4', @Actual = N'#ActualQuery4', @Message = N'customer transactions, by their invoice''s order';
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedQuery5', @Actual = N'#ActualQuery5', @Message = N'stock holdings';
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedQuery6', @Actual = N'#ActualQuery6', @Message = N'invoice IDs used';
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedQuery7', @Actual = N'#ActualQuery7', @Message = N'next invoice ID';
+END;
+GO
+-- case 8: [A08] two orders requested, the second not yet picked: THROW 51000 and nothing is written for either
+--[@tSQLt:NoTransaction](DEFAULT)
+CREATE PROCEDURE [AgreedTests].[test 08 [A08 two orders requested, the second not yet picked: THROW 51000 and nothing is written for either]
+AS
+BEGIN
+  DELETE FROM [Sales].[Orders];
+  DELETE FROM [Sales].[OrderLines];
+  DELETE FROM [Warehouse].[StockItems];
+  DELETE FROM [Warehouse].[StockItemHoldings];
+  DELETE FROM [Sales].[Customers];
+  DELETE FROM [Sales].[Invoices];
+  DELETE FROM [Sales].[InvoiceLines];
+  DELETE FROM [Application].[TransactionTypes];
+  DELETE FROM [Warehouse].[StockItemTransactions];
+  DELETE FROM [Sales].[CustomerTransactions];
+  INSERT INTO [Sales].[Orders] ([OrderID], [CustomerID], [ContactPersonID], [SalespersonPersonID], [CustomerPurchaseOrderNumber], [PickingCompletedWhen]) VALUES
+    (1, 1, 3, 7, N'PO-1', CAST('2020-01-01T10:00:00.000000' AS datetime2(7))),
+    (2, 2, 4, 8, NULL, NULL);
+  INSERT INTO [Sales].[OrderLines] ([OrderLineID], [OrderID], [StockItemID], [Description], [PackageTypeID], [PickedQuantity], [UnitPrice], [TaxRate]) VALUES
+    (1, 1, 1, N'dry', 7, 3, 0.99, 15.000),
+    (2, 2, 2, N'chilled', 9, 1, 10.00, 15.000);
+  INSERT INTO [Warehouse].[StockItems] ([StockItemID], [IsChillerStock]) VALUES
+    (1, 0),
+    (2, 1);
+  INSERT INTO [Warehouse].[StockItemHoldings] ([StockItemID], [QuantityOnHand], [LastCostPrice], [LastEditedBy], [LastEditedWhen]) VALUES
+    (1, 100, 0.50, 1, CAST('2020-01-01T00:00:00.000000' AS datetime2(7))),
+    (2, 10, 6.00, 1, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)));
+  INSERT INTO [Sales].[Customers] ([CustomerID], [BillToCustomerID], [DeliveryMethodID], [PrimaryContactPersonID], [DeliveryAddressLine1], [DeliveryAddressLine2], [DeliveryRun], [RunPosition]) VALUES
+    (1, 2, 3, 11, N'Shop 12', N'1 Main St', N'A', N'1'),
+    (2, 2, 3, 12, N'Unit 5', NULL, NULL, NULL);
+  INSERT INTO [Application].[TransactionTypes] ([TransactionTypeID], [TransactionTypeName]) VALUES
+    (1, N'Customer Invoice'),
+    (3, N'Customer Payment Received'),
+    (10, N'Stock Issue'),
+    (11, N'Stock Receipt');
+  ALTER SEQUENCE Sequences.InvoiceID RESTART WITH 70511;
+  DECLARE @outcome nvarchar(4000) = N'completed';
+  BEGIN TRY
+    DECLARE @tvp0 [Website].[OrderIDList];
+  INSERT INTO @tvp0 ([OrderID]) VALUES (1);
+  INSERT INTO @tvp0 ([OrderID]) VALUES (2);
+  EXEC Website.InvoiceCustomerOrders @OrdersToInvoice = @tvp0, @PackedByPersonID = 5, @InvoicedByPersonID = 9;
+  END TRY
+  BEGIN CATCH
+    SET @outcome = CASE WHEN ERROR_NUMBER() IN (51000) THEN N'raised: THROW 51000 (order missing, not picked or already invoiced)' WHEN ERROR_NUMBER() IN (515) THEN N'raised: NULL into a NOT NULL column' WHEN ERROR_NUMBER() IN (512) THEN N'raised: scalar subquery returned more than one row' WHEN ERROR_NUMBER() IN (8115, 220) THEN N'raised: numeric overflow' ELSE N'unexpected error ' + CAST(ERROR_NUMBER() AS nvarchar(20)) + N': ' + ERROR_MESSAGE() END;
+    -- a procedure that fails inside its own transaction can leave it open (and uncommittable); the test is outside
+    -- tSQLt's transaction (NoTransaction), so this undoes only the procedure's work, as SQL Server does at batch end
+    IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+  END CATCH;
+  CREATE TABLE #ExpectedQuery1 (
+    [OrderID] int NULL,
+    [Invoice] nvarchar(10) NULL,
+    [CustomerID] int NULL,
+    [BillToCustomerID] int NULL,
+    [DeliveryMethodID] int NULL,
+    [ContactPersonID] int NULL,
+    [AccountsPersonID] int NULL,
+    [SalespersonPersonID] int NULL,
+    [PackedByPersonID] int NULL,
+    [InvoiceDate_now] nvarchar(5) NULL,
+    [InvoiceDate] date NULL,
+    [CustomerPurchaseOrderNumber] nvarchar(20) NULL,
+    [IsCreditNote] bit NULL,
+    [CreditNoteReason] nvarchar(400) NULL,
+    [Comments] nvarchar(400) NULL,
+    [DeliveryInstructions] nvarchar(400) NULL,
+    [InternalComments] nvarchar(400) NULL,
+    [TotalDryItems] int NULL,
+    [TotalChillerItems] int NULL,
+    [DeliveryRun] nvarchar(5) NULL,
+    [RunPosition] nvarchar(5) NULL,
+    [ReturnedDeliveryData] nvarchar(4000) NULL,
+    [LastEditedBy] int NULL,
+    [LastEditedWhen_now] nvarchar(3) NULL,
+    [LastEditedWhen] datetime2(7) NULL
+  );
+  CREATE TABLE #ActualQuery1 (
+    [OrderID] int NULL,
+    [Invoice] nvarchar(10) NULL,
+    [CustomerID] int NULL,
+    [BillToCustomerID] int NULL,
+    [DeliveryMethodID] int NULL,
+    [ContactPersonID] int NULL,
+    [AccountsPersonID] int NULL,
+    [SalespersonPersonID] int NULL,
+    [PackedByPersonID] int NULL,
+    [InvoiceDate_now] nvarchar(5) NULL,
+    [InvoiceDate] date NULL,
+    [CustomerPurchaseOrderNumber] nvarchar(20) NULL,
+    [IsCreditNote] bit NULL,
+    [CreditNoteReason] nvarchar(400) NULL,
+    [Comments] nvarchar(400) NULL,
+    [DeliveryInstructions] nvarchar(400) NULL,
+    [InternalComments] nvarchar(400) NULL,
+    [TotalDryItems] int NULL,
+    [TotalChillerItems] int NULL,
+    [DeliveryRun] nvarchar(5) NULL,
+    [RunPosition] nvarchar(5) NULL,
+    [ReturnedDeliveryData] nvarchar(4000) NULL,
+    [LastEditedBy] int NULL,
+    [LastEditedWhen_now] nvarchar(3) NULL,
+    [LastEditedWhen] datetime2(7) NULL
+  );
+  INSERT INTO #ActualQuery1
+  SELECT i.OrderID, CASE WHEN i.InvoiceID >= 70511 THEN N'new' ELSE CAST(i.InvoiceID AS nvarchar(10)) END AS Invoice,
+                          i.CustomerID, i.BillToCustomerID, i.DeliveryMethodID, i.ContactPersonID, i.AccountsPersonID, i.SalespersonPersonID, i.PackedByPersonID,
+                          CASE WHEN i.InvoiceDate = CAST(SYSDATETIME() AS date) THEN N'today' END AS [InvoiceDate_now], CASE WHEN i.InvoiceDate = CAST(SYSDATETIME() AS date) THEN NULL ELSE i.InvoiceDate END AS [InvoiceDate], i.CustomerPurchaseOrderNumber, i.IsCreditNote, i.CreditNoteReason, i.Comments,
+                          i.DeliveryInstructions, i.InternalComments, i.TotalDryItems, i.TotalChillerItems, i.DeliveryRun, i.RunPosition,
+                          CASE WHEN ISJSON(i.ReturnedDeliveryData) = 1 AND JSON_VALUE(i.ReturnedDeliveryData, N'$.Events[0].EventTime') IS NOT NULL THEN
+              REPLACE(REPLACE(i.ReturnedDeliveryData,
+                N'"EventTime":"' + JSON_VALUE(i.ReturnedDeliveryData, N'$.Events[0].EventTime') + N'"',
+                N'"EventTime":"' + CASE WHEN TRY_CAST(LEFT(JSON_VALUE(i.ReturnedDeliveryData, N'$.Events[0].EventTime'), 19) AS datetime2) BETWEEN DATEADD(minute, -5, SYSDATETIME()) AND SYSDATETIME()
+                                       THEN N'<call time, ' + CAST(LEN(JSON_VALUE(i.ReturnedDeliveryData, N'$.Events[0].EventTime')) AS nvarchar(5)) + N' chars, ends ' + RIGHT(JSON_VALUE(i.ReturnedDeliveryData, N'$.Events[0].EventTime'), 1) + N'>'
+                                       ELSE JSON_VALUE(i.ReturnedDeliveryData, N'$.Events[0].EventTime') END + N'"'),
+                N'"ConNote":"EAN-125-' + CAST(i.InvoiceID + 1050 AS nvarchar(20)) + N'"', N'"ConNote":"EAN-125-<InvoiceID + 1050>"')
+            ELSE i.ReturnedDeliveryData END AS ReturnedDeliveryData, i.LastEditedBy, CASE WHEN i.LastEditedWhen BETWEEN DATEADD(minute, -5, SYSDATETIME()) AND SYSDATETIME() THEN N'now' END AS [LastEditedWhen_now], CASE WHEN i.LastEditedWhen BETWEEN DATEADD(minute, -5, SYSDATETIME()) AND SYSDATETIME() THEN NULL ELSE i.LastEditedWhen END AS [LastEditedWhen]
+                        FROM Sales.Invoices AS i;
+  CREATE TABLE #ExpectedQuery2 (
+    [InvoiceOrder] int NULL,
+    [StockItemID] int NULL,
+    [Description] nvarchar(100) NULL,
+    [PackageTypeID] int NULL,
+    [Quantity] int NULL,
+    [UnitPrice] decimal(18,2) NULL,
+    [TaxRate] decimal(18,3) NULL,
+    [TaxAmount] decimal(18,2) NULL,
+    [LineProfit] decimal(18,2) NULL,
+    [ExtendedPrice] decimal(18,2) NULL,
+    [LastEditedBy] int NULL,
+    [LastEditedWhen_now] nvarchar(3) NULL,
+    [LastEditedWhen] datetime2(7) NULL
+  );
+  CREATE TABLE #ActualQuery2 (
+    [InvoiceOrder] int NULL,
+    [StockItemID] int NULL,
+    [Description] nvarchar(100) NULL,
+    [PackageTypeID] int NULL,
+    [Quantity] int NULL,
+    [UnitPrice] decimal(18,2) NULL,
+    [TaxRate] decimal(18,3) NULL,
+    [TaxAmount] decimal(18,2) NULL,
+    [LineProfit] decimal(18,2) NULL,
+    [ExtendedPrice] decimal(18,2) NULL,
+    [LastEditedBy] int NULL,
+    [LastEditedWhen_now] nvarchar(3) NULL,
+    [LastEditedWhen] datetime2(7) NULL
+  );
+  INSERT INTO #ActualQuery2
+  SELECT i.OrderID AS InvoiceOrder, il.StockItemID, il.Description, il.PackageTypeID, il.Quantity, il.UnitPrice, il.TaxRate, il.TaxAmount,
+                          il.LineProfit, il.ExtendedPrice, il.LastEditedBy, CASE WHEN il.LastEditedWhen BETWEEN DATEADD(minute, -5, SYSDATETIME()) AND SYSDATETIME() THEN N'now' END AS [LastEditedWhen_now], CASE WHEN il.LastEditedWhen BETWEEN DATEADD(minute, -5, SYSDATETIME()) AND SYSDATETIME() THEN NULL ELSE il.LastEditedWhen END AS [LastEditedWhen]
+                        FROM Sales.InvoiceLines AS il LEFT JOIN Sales.Invoices AS i ON i.InvoiceID = il.InvoiceID;
+  CREATE TABLE #ExpectedQuery3 (
+    [InvoiceOrder] int NULL,
+    [StockItemID] int NULL,
+    [TransactionTypeID] int NULL,
+    [CustomerID] int NULL,
+    [SupplierID] int NULL,
+    [PurchaseOrderID] int NULL,
+    [TransactionOccurredWhen_now] nvarchar(3) NULL,
+    [TransactionOccurredWhen] datetime2(7) NULL,
+    [Quantity] decimal(18,3) NULL,
+    [LastEditedBy] int NULL,
+    [LastEditedWhen_now] nvarchar(3) NULL,
+    [LastEditedWhen] datetime2(7) NULL
+  );
+  CREATE TABLE #ActualQuery3 (
+    [InvoiceOrder] int NULL,
+    [StockItemID] int NULL,
+    [TransactionTypeID] int NULL,
+    [CustomerID] int NULL,
+    [SupplierID] int NULL,
+    [PurchaseOrderID] int NULL,
+    [TransactionOccurredWhen_now] nvarchar(3) NULL,
+    [TransactionOccurredWhen] datetime2(7) NULL,
+    [Quantity] decimal(18,3) NULL,
+    [LastEditedBy] int NULL,
+    [LastEditedWhen_now] nvarchar(3) NULL,
+    [LastEditedWhen] datetime2(7) NULL
+  );
+  INSERT INTO #ActualQuery3
+  SELECT i.OrderID AS InvoiceOrder, t.StockItemID, t.TransactionTypeID, t.CustomerID, t.SupplierID, t.PurchaseOrderID,
+                          CASE WHEN t.TransactionOccurredWhen BETWEEN DATEADD(minute, -5, SYSDATETIME()) AND SYSDATETIME() THEN N'now' END AS [TransactionOccurredWhen_now], CASE WHEN t.TransactionOccurredWhen BETWEEN DATEADD(minute, -5, SYSDATETIME()) AND SYSDATETIME() THEN NULL ELSE t.TransactionOccurredWhen END AS [TransactionOccurredWhen], t.Quantity, t.LastEditedBy, CASE WHEN t.LastEditedWhen BETWEEN DATEADD(minute, -5, SYSDATETIME()) AND SYSDATETIME() THEN N'now' END AS [LastEditedWhen_now], CASE WHEN t.LastEditedWhen BETWEEN DATEADD(minute, -5, SYSDATETIME()) AND SYSDATETIME() THEN NULL ELSE t.LastEditedWhen END AS [LastEditedWhen]
+                        FROM Warehouse.StockItemTransactions AS t LEFT JOIN Sales.Invoices AS i ON i.InvoiceID = t.InvoiceID;
+  CREATE TABLE #ExpectedQuery4 (
+    [InvoiceOrder] int NULL,
+    [CustomerID] int NULL,
+    [TransactionTypeID] int NULL,
+    [PaymentMethodID] int NULL,
+    [TransactionDate_now] nvarchar(5) NULL,
+    [TransactionDate] date NULL,
+    [AmountExcludingTax] decimal(18,2) NULL,
+    [TaxAmount] decimal(18,2) NULL,
+    [TransactionAmount] decimal(18,2) NULL,
+    [OutstandingBalance] decimal(18,2) NULL,
+    [FinalizationDate] date NULL,
+    [LastEditedBy] int NULL,
+    [LastEditedWhen_now] nvarchar(3) NULL,
+    [LastEditedWhen] datetime2(7) NULL
+  );
+  CREATE TABLE #ActualQuery4 (
+    [InvoiceOrder] int NULL,
+    [CustomerID] int NULL,
+    [TransactionTypeID] int NULL,
+    [PaymentMethodID] int NULL,
+    [TransactionDate_now] nvarchar(5) NULL,
+    [TransactionDate] date NULL,
+    [AmountExcludingTax] decimal(18,2) NULL,
+    [TaxAmount] decimal(18,2) NULL,
+    [TransactionAmount] decimal(18,2) NULL,
+    [OutstandingBalance] decimal(18,2) NULL,
+    [FinalizationDate] date NULL,
+    [LastEditedBy] int NULL,
+    [LastEditedWhen_now] nvarchar(3) NULL,
+    [LastEditedWhen] datetime2(7) NULL
+  );
+  INSERT INTO #ActualQuery4
+  SELECT i.OrderID AS InvoiceOrder, ct.CustomerID, ct.TransactionTypeID, ct.PaymentMethodID, CASE WHEN ct.TransactionDate = CAST(SYSDATETIME() AS date) THEN N'today' END AS [TransactionDate_now], CASE WHEN ct.TransactionDate = CAST(SYSDATETIME() AS date) THEN NULL ELSE ct.TransactionDate END AS [TransactionDate],
+                          ct.AmountExcludingTax, ct.TaxAmount, ct.TransactionAmount, ct.OutstandingBalance, ct.FinalizationDate, ct.LastEditedBy,
+                          CASE WHEN ct.LastEditedWhen BETWEEN DATEADD(minute, -5, SYSDATETIME()) AND SYSDATETIME() THEN N'now' END AS [LastEditedWhen_now], CASE WHEN ct.LastEditedWhen BETWEEN DATEADD(minute, -5, SYSDATETIME()) AND SYSDATETIME() THEN NULL ELSE ct.LastEditedWhen END AS [LastEditedWhen]
+                        FROM Sales.CustomerTransactions AS ct LEFT JOIN Sales.Invoices AS i ON i.InvoiceID = ct.InvoiceID;
+  CREATE TABLE #ExpectedQuery5 (
+    [StockItemID] int NULL,
+    [QuantityOnHand] int NULL,
+    [LastCostPrice] decimal(18,2) NULL,
+    [LastEditedBy] int NULL,
+    [LastEditedWhen_now] nvarchar(3) NULL,
+    [LastEditedWhen] datetime2(7) NULL
+  );
+  CREATE TABLE #ActualQuery5 (
+    [StockItemID] int NULL,
+    [QuantityOnHand] int NULL,
+    [LastCostPrice] decimal(18,2) NULL,
+    [LastEditedBy] int NULL,
+    [LastEditedWhen_now] nvarchar(3) NULL,
+    [LastEditedWhen] datetime2(7) NULL
+  );
+  INSERT INTO #ExpectedQuery5 ([StockItemID], [QuantityOnHand], [LastCostPrice], [LastEditedBy], [LastEditedWhen_now], [LastEditedWhen]) VALUES
+    (1, 100, 0.5, 1, NULL, CAST('2020-01-01T00:00:00.000000' AS datetime2(7))),
+    (2, 10, 6, 1, NULL, CAST('2020-01-01T00:00:00.000000' AS datetime2(7)));
+  INSERT INTO #ActualQuery5
+  SELECT h.StockItemID, h.QuantityOnHand, h.LastCostPrice, h.LastEditedBy, CASE WHEN h.LastEditedWhen BETWEEN DATEADD(minute, -5, SYSDATETIME()) AND SYSDATETIME() THEN N'now' END AS [LastEditedWhen_now], CASE WHEN h.LastEditedWhen BETWEEN DATEADD(minute, -5, SYSDATETIME()) AND SYSDATETIME() THEN NULL ELSE h.LastEditedWhen END AS [LastEditedWhen] FROM Warehouse.StockItemHoldings AS h;
+  CREATE TABLE #ExpectedQuery6 (
+    [Invoices] int NULL,
+    [DistinctIDs] int NULL,
+    [InRange] nvarchar(26) NULL
+  );
+  CREATE TABLE #ActualQuery6 (
+    [Invoices] int NULL,
+    [DistinctIDs] int NULL,
+    [InRange] nvarchar(26) NULL
+  );
+  INSERT INTO #ExpectedQuery6 ([Invoices], [DistinctIDs], [InRange]) VALUES
+    (0, 0, N'within the allocated range');
+  INSERT INTO #ActualQuery6
+  SELECT COUNT(*) AS Invoices, COUNT(DISTINCT InvoiceID) AS DistinctIDs,
+                          CASE WHEN COUNT(*) = 0 OR MAX(InvoiceID) < (SELECT CAST(current_value AS int) FROM sys.sequences WHERE name = N'InvoiceID') + 1
+                               THEN N'within the allocated range' ELSE N'outside' END AS InRange
+                        FROM Sales.Invoices WHERE InvoiceID >= 70511;
+  CREATE TABLE #ExpectedQuery7 (
+    [NextInvoiceID] int NULL
+  );
+  CREATE TABLE #ActualQuery7 (
+    [NextInvoiceID] int NULL
+  );
+  INSERT INTO #ExpectedQuery7 ([NextInvoiceID]) VALUES
+    (70512);
+  INSERT INTO #ActualQuery7
+  SELECT NEXT VALUE FOR Sequences.InvoiceID AS NextInvoiceID;
+  EXEC tSQLt.AssertEqualsString @Expected = N'raised: THROW 51000 (order missing, not picked or already invoiced)', @Actual = @outcome, @Message = N'outcome';
   EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedQuery1', @Actual = N'#ActualQuery1', @Message = N'invoices';
   EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedQuery2', @Actual = N'#ActualQuery2', @Message = N'invoice lines, by their invoice''s order';
   EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedQuery3', @Actual = N'#ActualQuery3', @Message = N'stock transactions, by their invoice''s order';

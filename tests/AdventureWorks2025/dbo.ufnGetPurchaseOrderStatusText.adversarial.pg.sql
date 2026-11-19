@@ -162,3 +162,81 @@ BEGIN
   END IF;
 END $pp$;
 ROLLBACK;
+
+-- @case 7: [A07] status 2 gives 'Approved' (a mapped branch the other adversarial cases do not reach)
+BEGIN;
+CREATE TEMP TABLE pp_actual ON COMMIT DROP AS
+SELECT dbo.ufn_get_purchase_order_status_text('2'::smallint) AS result;
+DO $pp$
+DECLARE got text[];
+BEGIN
+  SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
+  IF got IS DISTINCT FROM ARRAY['result']::text[] THEN
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 07 [A07 status 2 gives Approved (a mapped branch the other adversarial cases do not reach)', got, ARRAY['result']::text[];
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
+INSERT INTO pp_expected VALUES
+  ('Approved');
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 07 [A07 status 2 gives Approved (a mapped branch the other adversarial cases do not reach)', missing, extra;
+  END IF;
+END $pp$;
+ROLLBACK;
+
+-- @case 8: [A08] status 3 gives 'Rejected'
+BEGIN;
+CREATE TEMP TABLE pp_actual ON COMMIT DROP AS
+SELECT dbo.ufn_get_purchase_order_status_text('3'::smallint) AS result;
+DO $pp$
+DECLARE got text[];
+BEGIN
+  SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
+  IF got IS DISTINCT FROM ARRAY['result']::text[] THEN
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 08 [A08 status 3 gives Rejected', got, ARRAY['result']::text[];
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
+INSERT INTO pp_expected VALUES
+  ('Rejected');
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 08 [A08 status 3 gives Rejected', missing, extra;
+  END IF;
+END $pp$;
+ROLLBACK;
+
+-- @case 9: [A09] status 4 gives 'Complete' (the last WHEN branch before ELSE)
+BEGIN;
+CREATE TEMP TABLE pp_actual ON COMMIT DROP AS
+SELECT dbo.ufn_get_purchase_order_status_text('4'::smallint) AS result;
+DO $pp$
+DECLARE got text[];
+BEGIN
+  SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
+  IF got IS DISTINCT FROM ARRAY['result']::text[] THEN
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 09 [A09 status 4 gives Complete (the last WHEN branch before ELSE)', got, ARRAY['result']::text[];
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
+INSERT INTO pp_expected VALUES
+  ('Complete');
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 09 [A09 status 4 gives Complete (the last WHEN branch before ELSE)', missing, extra;
+  END IF;
+END $pp$;
+ROLLBACK;

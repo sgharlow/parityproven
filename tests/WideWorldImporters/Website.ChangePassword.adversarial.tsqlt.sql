@@ -39,22 +39,22 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedState1', @Actual = N'#ActualState1', @Message = N'Application.People after the call';
 END;
 GO
--- case 2: [A02] old and new passwords differ only in case; the stored hash is compared as bytes
+-- case 2: [A02] the new password differs from the old one only in case: the new hash is of 'PW', not of 'pw'
 --[@tSQLt:NoTransaction](DEFAULT)
-CREATE PROCEDURE [AgreedTests].[test 02 [A02 old and new passwords differ only in case; the stored hash is compared as bytes]
+CREATE PROCEDURE [AgreedTests].[test 02 [A02 the new password differs from the old one only in case: the new hash is of PW, not of pw]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Application].[People]';
   INSERT INTO [Application].[People] ([PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences]) VALUES
     (1, N'Person 1', 0, NULL, NULL, NULL),
-    (2, N'amy', 0, NULL, 0x00ff10, NULL);
+    (2, N'amy', 0, NULL, 0x2288b9a49d5366ea09ace5cd9989b3b3a2004e6e85fa2c124febd5fd2b0f3edf, NULL);
   SELECT TOP (0) [PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences] INTO #ExpectedState1 FROM [Application].[People];
   INSERT INTO #ExpectedState1 ([PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences]) VALUES
     (1, N'Person 1', 0, NULL, NULL, NULL),
-    (2, N'amy', 0, NULL, 0x00ff10, NULL);
+    (2, N'amy', 1, NULL, 0x84d2c604d3b6d69ca9e7f448cb2504ed18f815f372e45fbdb37c16e72d3c28fc, NULL);
   DECLARE @outcome nvarchar(4000) = N'completed';
   BEGIN TRY
-    EXEC Website.ChangePassword @PersonID = 2, @OldPassword = N'PW', @NewPassword = N'pw';
+    EXEC Website.ChangePassword @PersonID = 2, @OldPassword = N'pw', @NewPassword = N'PW';
   END TRY
   BEGIN CATCH
     SET @outcome = CASE WHEN ERROR_NUMBER() IN (51000) THEN N'raised' ELSE N'unexpected error ' + CAST(ERROR_NUMBER() AS nvarchar(20)) + N': ' + ERROR_MESSAGE() END;
@@ -63,7 +63,7 @@ BEGIN
     IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
   END CATCH;
   SELECT [PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences] INTO #ActualState1 FROM [Application].[People];
-  EXEC tSQLt.AssertEqualsString @Expected = N'raised', @Actual = @outcome, @Message = N'outcome';
+  EXEC tSQLt.AssertEqualsString @Expected = N'completed', @Actual = @outcome, @Message = N'outcome';
   EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedState1', @Actual = N'#ActualState1', @Message = N'Application.People after the call';
 END;
 GO
@@ -75,13 +75,13 @@ BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Application].[People]';
   INSERT INTO [Application].[People] ([PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences]) VALUES
     (1, N'Amy', 0, NULL, NULL, NULL),
-    (2, N'amy', 0, NULL, 0xaa, NULL),
-    (3, N'amy', 0, NULL, 0xaa, NULL);
+    (2, N'amy', 0, NULL, 0x2288b9a49d5366ea09ace5cd9989b3b3a2004e6e85fa2c124febd5fd2b0f3edf, NULL),
+    (3, N'amy', 0, NULL, 0x2288b9a49d5366ea09ace5cd9989b3b3a2004e6e85fa2c124febd5fd2b0f3edf, NULL);
   SELECT TOP (0) [PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences] INTO #ExpectedState1 FROM [Application].[People];
   INSERT INTO #ExpectedState1 ([PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences]) VALUES
     (1, N'Amy', 0, NULL, NULL, NULL),
-    (2, N'amy', 0, NULL, 0xaa, NULL),
-    (3, N'amy', 0, NULL, 0xaa, NULL);
+    (2, N'amy', 1, NULL, 0xa61b0e5025e1d923dceebae78308a0506827314fa81da4f1793c8d113669eb49, NULL),
+    (3, N'amy', 0, NULL, 0x2288b9a49d5366ea09ace5cd9989b3b3a2004e6e85fa2c124febd5fd2b0f3edf, NULL);
   DECLARE @outcome nvarchar(4000) = N'completed';
   BEGIN TRY
     EXEC Website.ChangePassword @PersonID = 2, @OldPassword = N'pw', @NewPassword = N'new';
@@ -93,23 +93,23 @@ BEGIN
     IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
   END CATCH;
   SELECT [PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences] INTO #ActualState1 FROM [Application].[People];
-  EXEC tSQLt.AssertEqualsString @Expected = N'raised', @Actual = @outcome, @Message = N'outcome';
+  EXEC tSQLt.AssertEqualsString @Expected = N'completed', @Actual = @outcome, @Message = N'outcome';
   EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedState1', @Actual = N'#ActualState1', @Message = N'Application.People after the call';
 END;
 GO
--- case 4: [A04] NULL new password with an empty-string preference present: hash becomes NULL, '' preference stays ''
+-- case 4: [A04] NULL new password with an empty full name: NULL + '' is NULL, so the hash becomes NULL (concat would hash ''); an '' preference stays ''
 --[@tSQLt:NoTransaction](DEFAULT)
-CREATE PROCEDURE [AgreedTests].[test 04 [A04 NULL new password with an empty-string preference present: hash becomes NULL, preference stays]
+CREATE PROCEDURE [AgreedTests].[test 04 [A04 NULL new password with an empty full name: NULL + is NULL, so the hash becomes NULL (concat woul…]
 AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Application].[People]';
   INSERT INTO [Application].[People] ([PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences]) VALUES
     (1, N'Person 1', 0, NULL, NULL, N''),
-    (2, N'x', 0, NULL, 0x00ff10, NULL);
+    (2, N'', 0, NULL, 0x96936e717bb7c5deca64c3b19d5a1fda0a45b95386e37ba86ecfd9f0f7d57a8f, NULL);
   SELECT TOP (0) [PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences] INTO #ExpectedState1 FROM [Application].[People];
   INSERT INTO #ExpectedState1 ([PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences]) VALUES
     (1, N'Person 1', 0, NULL, NULL, N''),
-    (2, N'x', 0, NULL, 0x00ff10, NULL);
+    (2, N'', 1, NULL, NULL, NULL);
   DECLARE @outcome nvarchar(4000) = N'completed';
   BEGIN TRY
     EXEC Website.ChangePassword @PersonID = 2, @OldPassword = N'pw', @NewPassword = NULL;
@@ -121,7 +121,7 @@ BEGIN
     IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
   END CATCH;
   SELECT [PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences] INTO #ActualState1 FROM [Application].[People];
-  EXEC tSQLt.AssertEqualsString @Expected = N'raised', @Actual = @outcome, @Message = N'outcome';
+  EXEC tSQLt.AssertEqualsString @Expected = N'completed', @Actual = @outcome, @Message = N'outcome';
   EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedState1', @Actual = N'#ActualState1', @Message = N'Application.People after the call';
 END;
 GO
@@ -132,11 +132,11 @@ AS
 BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Application].[People]';
   INSERT INTO [Application].[People] ([PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences]) VALUES
-    (1, N'root', 0, NULL, 0x00ff10, NULL),
+    (1, N'root', 0, NULL, 0x53607c6dea58e5a9392e7e58d09da361a9bfc5e631c49ff2bf95d6381d7aeac8, NULL),
     (3, N'Person 3', 0, NULL, NULL, NULL);
   SELECT TOP (0) [PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences] INTO #ExpectedState1 FROM [Application].[People];
   INSERT INTO #ExpectedState1 ([PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences]) VALUES
-    (1, N'root', 0, NULL, 0x00ff10, NULL),
+    (1, N'root', 0, NULL, 0x53607c6dea58e5a9392e7e58d09da361a9bfc5e631c49ff2bf95d6381d7aeac8, NULL),
     (3, N'Person 3', 0, NULL, NULL, NULL);
   DECLARE @outcome nvarchar(4000) = N'completed';
   BEGIN TRY
@@ -161,11 +161,11 @@ BEGIN
   EXEC tSQLt.FakeTable @TableName = N'[Application].[People]';
   INSERT INTO [Application].[People] ([PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences]) VALUES
     (1, N'Person 1', 0, NULL, NULL, NULL),
-    (2, N'Ab ', 0, NULL, 0x00ff10, NULL);
+    (2, N'Ab ', 0, NULL, 0x300e84189da044147dc5fc6fb587e3223e37daa6fda2250301d7729516451c8d, NULL);
   SELECT TOP (0) [PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences] INTO #ExpectedState1 FROM [Application].[People];
   INSERT INTO #ExpectedState1 ([PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences]) VALUES
     (1, N'Person 1', 0, NULL, NULL, NULL),
-    (2, N'Ab ', 0, NULL, 0x00ff10, NULL);
+    (2, N'Ab ', 1, NULL, 0xd0d3e8291a6bac9a88b66b788535cc5115416e2c901807e12abd9106a6189ed0, NULL);
   DECLARE @outcome nvarchar(4000) = N'completed';
   BEGIN TRY
     EXEC Website.ChangePassword @PersonID = 2, @OldPassword = N'pw', @NewPassword = N'new';
@@ -177,7 +177,7 @@ BEGIN
     IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
   END CATCH;
   SELECT [PersonID], [FullName], [IsPermittedToLogon], [LogonName], [HashedPassword], [UserPreferences] INTO #ActualState1 FROM [Application].[People];
-  EXEC tSQLt.AssertEqualsString @Expected = N'raised', @Actual = @outcome, @Message = N'outcome';
+  EXEC tSQLt.AssertEqualsString @Expected = N'completed', @Actual = @outcome, @Message = N'outcome';
   EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedState1', @Actual = N'#ActualState1', @Message = N'Application.People after the call';
 END;
 GO

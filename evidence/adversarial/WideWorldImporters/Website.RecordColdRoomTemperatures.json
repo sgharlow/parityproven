@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "object": "Website.RecordColdRoomTemperatures",
   "database": "WideWorldImporters",
-  "runAt": "2026-11-19T05:29:55.966Z",
+  "runAt": "2026-11-19T06:23:06.302Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "6a35f9a6ea380b94842288ede6569c049a286cc48ed0e721601440efa9f8608a",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-19T05:20:49.498Z",
+    "at": "2026-11-19T06:00:45.121Z",
     "file": "adversarial/WideWorldImporters/Website.RecordColdRoomTemperatures.cases.json",
-    "sha256": "0b1052ec25be18500cecb648949f7e710441634eac7f82bd36098e11874e3ec1"
+    "sha256": "e6d23fd7dcbfb02cc5d5dee30ad1c3b637cfbc5361df1479e8bd1980a2341a62"
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-18T22:23:38.8804730-07:00",
+    "at": "2026-11-19T06:06:57.652Z",
     "file": "adversarial/WideWorldImporters/Website.RecordColdRoomTemperatures.audit.json",
-    "sha256": "93921548f9b656f44695d57c83f3c7aec5a908ab6d968307714a42666a031345"
+    "sha256": "48cbf92558de48bfb3c215a3c85787ce6648c6f9a6b38424ca2055861788f05f"
   },
   "sameModel": false,
   "casesAudited": [
@@ -109,11 +109,11 @@
     },
     {
       "id": "A03",
-      "label": "three existing rows for one sensor share a temperature; one reading updates all of them",
+      "label": "three rows for sensor 3 (two equal in every column) are all updated by one reading; rows for sensors 30, 0 and -3 with the same values are left alone",
       "traps": [
         "top-ties"
       ],
-      "reasoning": "Two existing sensor-3 rows share Temperature 1.00 (a non-key tie; the table has no key the procedure uses). The single reading's UPDATE ... WHERE ColdRoomSensorNumber = 3 must rewrite every matching row on both engines.",
+      "reasoning": "The UPDATE ... WHERE ColdRoomSensorNumber = 3 must rewrite every sensor-3 row, including two that are identical in every column (a conversion that updated through a key or ctid it picked once, or LIMIT 1, would change one), and must not touch sensors whose numbers share digits or sign with 3 (30, -3) or are 0. Those rows hold the same RecordedWhen and Temperature as the sensor-3 rows, so only the sensor number tells them apart.",
       "trapChecks": {
         "top-ties": {
           "present": true,
@@ -131,9 +131,9 @@
     },
     {
       "id": "A04",
-      "label": "two readings for the same new sensor: the first inserts, the second updates it (loop order preserved)",
+      "label": "readings for a new sensor interleaved with an existing one: the first inserts, the third updates the row the first inserted, the existing sensor is updated",
       "traps": [],
-      "reasoning": "Readings are applied in SensorDataListID order; for a brand-new sensor the first inserts and the second updates. A conversion that swapped the loop bounds, or inserted even when the update matched, would differ.",
+      "reasoning": "Readings are applied one at a time in SensorDataListID order. Reading 1 (sensor 4, new) inserts; reading 2 updates sensor 5's existing row; reading 3 (sensor 4 again) must find the row reading 1 inserted and update it. A set-based conversion that decided insert-or-update for all readings against the table as it was before the call would insert sensor 4 twice. The hand-derived case sends two consecutive readings for one sensor with no other sensor in between.",
       "trapChecks": {},
       "status": "ran",
       "sqlServer": {
@@ -156,14 +156,24 @@
       "caseId": "A03",
       "kind": "duplicate",
       "text": "The hand-derived 'updates every existing row' case already has two rows for one sensor, including a non-key tie on RecordedWhen, and requires both rows to be updated. Adding a third row and moving the tie to Temperature does not attack a different selection or update mechanism.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A03 now includes two rows equal in every projected column for sensor 3 plus control sensors 30, 0, and -3 carrying the same values. This exposes single-row physical selection and imprecise sensor matching beyond the hand-derived two-row case.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O02",
       "caseId": "A04",
       "kind": "duplicate",
       "text": "The first hand-derived case already sends two consecutive readings for the same new sensor with the same timestamps and temperatures, requiring the first reading to insert and the second to update. A04 changes only the sensor number.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A04 now interleaves a reading for an existing sensor between the two readings for the new sensor and gives the readings distinct values. It tests ordered, stateful per-reading processing rather than repeating a consecutive identical pair.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     }
   ],
   "mutantAdequacy": {
@@ -179,11 +189,8 @@
     "equivalentRecorded": []
   },
   "gate": {
-    "passed": false,
-    "reasons": [
-      "objection O01 is open",
-      "objection O02 is open"
-    ]
+    "passed": true,
+    "reasons": []
   },
   "wording": "4 adversarial cases ran, 0 differed"
 }

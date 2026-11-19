@@ -77,13 +77,16 @@ BEGIN
 END $pp$;
 ROLLBACK;
 
--- @case 3: [A03] three existing rows for one sensor share a temperature; one reading updates all of them
+-- @case 3: [A03] three rows for sensor 3 (two equal in every column) are all updated by one reading; rows for sensors 30, 0 and -3 with the same values are left alone
 BEGIN;
 DELETE FROM warehouse.cold_room_temperatures;
 INSERT INTO warehouse.cold_room_temperatures ("ColdRoomSensorNumber", "RecordedWhen", "Temperature") VALUES
   ('3', '2020-01-01 00:00:00.000000', '1.00'),
   ('3', '2020-01-01 00:00:00.000000', '1.00'),
-  ('3', '2020-01-01 00:00:00.000000', '2.00');
+  ('3', '2020-01-01 00:00:00.000000', '2.00'),
+  ('30', '2020-01-01 00:00:00.000000', '1.00'),
+  ('0', '2020-01-01 00:00:00.000000', '1.00'),
+  ('-3', '2020-01-01 00:00:00.000000', '1.00');
 CREATE TEMP TABLE pp_outcome (outcome text) ON COMMIT DROP;
 DO $pp$
 BEGIN
@@ -98,11 +101,14 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT 'completed'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'completed'::text AS outcome)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 03 [A03 three existing rows for one sensor share a temperature; one reading updates all of them', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 03 [A03 three rows for sensor 3 (two equal in every column) are all updated by one reading; rows for sen…', missing, extra;
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected_state_1 ON COMMIT DROP AS SELECT "ColdRoomSensorNumber", "RecordedWhen", "Temperature" FROM warehouse.cold_room_temperatures WITH NO DATA;
 INSERT INTO pp_expected_state_1 ("ColdRoomSensorNumber", "RecordedWhen", "Temperature") VALUES
+  ('30', '2020-01-01 00:00:00.000000', '1'),
+  ('0', '2020-01-01 00:00:00.000000', '1'),
+  ('-3', '2020-01-01 00:00:00.000000', '1'),
   ('3', '2020-01-02 00:00:00.000000', '7'),
   ('3', '2020-01-02 00:00:00.000000', '7'),
   ('3', '2020-01-02 00:00:00.000000', '7');
@@ -112,18 +118,20 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT "ColdRoomSensorNumber", "RecordedWhen", "Temperature" FROM pp_expected_state_1) EXCEPT ALL (SELECT "ColdRoomSensorNumber", "RecordedWhen", "Temperature" FROM warehouse.cold_room_temperatures)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT "ColdRoomSensorNumber", "RecordedWhen", "Temperature" FROM warehouse.cold_room_temperatures) EXCEPT ALL (SELECT "ColdRoomSensorNumber", "RecordedWhen", "Temperature" FROM pp_expected_state_1)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in Warehouse.ColdRoomTemperatures after the call', 'test 03 [A03 three existing rows for one sensor share a temperature; one reading updates all of them', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in Warehouse.ColdRoomTemperatures after the call', 'test 03 [A03 three rows for sensor 3 (two equal in every column) are all updated by one reading; rows for sen…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;
 
--- @case 4: [A04] two readings for the same new sensor: the first inserts, the second updates it (loop order preserved)
+-- @case 4: [A04] readings for a new sensor interleaved with an existing one: the first inserts, the third updates the row the first inserted, the existing sensor is updated
 BEGIN;
 DELETE FROM warehouse.cold_room_temperatures;
+INSERT INTO warehouse.cold_room_temperatures ("ColdRoomSensorNumber", "RecordedWhen", "Temperature") VALUES
+  ('5', '2019-12-31 00:00:00.000000', '5.00');
 CREATE TEMP TABLE pp_outcome (outcome text) ON COMMIT DROP;
 DO $pp$
 BEGIN
-  CALL website.record_cold_room_temperatures(website.sensor_data_list_from_json('[{"SensorDataListID":1,"ColdRoomSensorNumber":4,"RecordedWhen":"2020-01-01T00:00:00.000000","Temperature":"4.00"},{"SensorDataListID":2,"ColdRoomSensorNumber":4,"RecordedWhen":"2020-01-01T00:00:05.123456","Temperature":"4.50"}]'::jsonb));
+  CALL website.record_cold_room_temperatures(website.sensor_data_list_from_json('[{"SensorDataListID":1,"ColdRoomSensorNumber":4,"RecordedWhen":"2020-01-01T00:00:00.000000","Temperature":"4.00"},{"SensorDataListID":2,"ColdRoomSensorNumber":5,"RecordedWhen":"2020-01-01T00:00:01.000000","Temperature":"5.50"},{"SensorDataListID":3,"ColdRoomSensorNumber":4,"RecordedWhen":"2020-01-01T00:00:05.123456","Temperature":"4.50"}]'::jsonb));
   INSERT INTO pp_outcome VALUES ('completed');
 EXCEPTION
   WHEN SQLSTATE 'P0001' THEN INSERT INTO pp_outcome VALUES ('raised');
@@ -134,11 +142,12 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT 'completed'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'completed'::text AS outcome)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 04 [A04 two readings for the same new sensor: the first inserts, the second updates it (loop order prese…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 04 [A04 readings for a new sensor interleaved with an existing one: the first inserts, the third updates…', missing, extra;
   END IF;
 END $pp$;
 CREATE TEMP TABLE pp_expected_state_1 ON COMMIT DROP AS SELECT "ColdRoomSensorNumber", "RecordedWhen", "Temperature" FROM warehouse.cold_room_temperatures WITH NO DATA;
 INSERT INTO pp_expected_state_1 ("ColdRoomSensorNumber", "RecordedWhen", "Temperature") VALUES
+  ('5', '2020-01-01 00:00:01.000000', '5.5'),
   ('4', '2020-01-01 00:00:05.123456', '4.5');
 DO $pp$
 DECLARE missing bigint; extra bigint;
@@ -146,7 +155,7 @@ BEGIN
   SELECT count(*) INTO missing FROM ((SELECT "ColdRoomSensorNumber", "RecordedWhen", "Temperature" FROM pp_expected_state_1) EXCEPT ALL (SELECT "ColdRoomSensorNumber", "RecordedWhen", "Temperature" FROM warehouse.cold_room_temperatures)) AS d;
   SELECT count(*) INTO extra FROM ((SELECT "ColdRoomSensorNumber", "RecordedWhen", "Temperature" FROM warehouse.cold_room_temperatures) EXCEPT ALL (SELECT "ColdRoomSensorNumber", "RecordedWhen", "Temperature" FROM pp_expected_state_1)) AS d;
   IF missing > 0 OR extra > 0 THEN
-    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in Warehouse.ColdRoomTemperatures after the call', 'test 04 [A04 two readings for the same new sensor: the first inserts, the second updates it (loop order prese…', missing, extra;
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in Warehouse.ColdRoomTemperatures after the call', 'test 04 [A04 readings for a new sensor interleaved with an existing one: the first inserts, the third updates…', missing, extra;
   END IF;
 END $pp$;
 ROLLBACK;

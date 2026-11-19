@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "object": "Sales.vIndividualCustomer",
   "database": "AdventureWorks2025",
-  "runAt": "2026-11-19T04:17:23.132Z",
+  "runAt": "2026-11-19T06:18:02.974Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "5ddb81d7087b776df698418ce2f79b986920175604a9dbe3bdad97c1b6105c49",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-18T20:21:05-07:00",
+    "at": "2026-11-19T05:51:37.445Z",
     "file": "adversarial/AdventureWorks2025/Sales.vIndividualCustomer.cases.json",
-    "sha256": "84b4e223f32e236c9d925db85d1a19459913ec7957aa290b8f8420258dc55418"
+    "sha256": "3f024558bfb11cd9e1263f5462cef631a987cab7a8d9432acb329fb2d2524dda"
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-18T20:33:12.9525152-07:00",
+    "at": "2026-11-19T06:06:57.652Z",
     "file": "adversarial/AdventureWorks2025/Sales.vIndividualCustomer.audit.json",
-    "sha256": "1c3cdcfe6d6a78f3691c6102ebe7b3ba27596d121b5057b0e3530757d5944ba8"
+    "sha256": "5bc804a02858c5191300c7bb243cd5bf168c1ea00b3354e83e0a5678ddd68fdb"
   },
   "sameModel": false,
   "casesAudited": [
@@ -81,20 +81,20 @@
   "cases": [
     {
       "id": "A01",
-      "label": "case-only variants 'Us', 'uS' and 'us ' of a country code join 'US'",
+      "label": "case pairs outside ASCII ('üs' to 'ÜS', 'σa' to 'ΣA') and case plus a trailing space on the country side ('CA' to 'ca ')",
       "traps": [
         "collation-case",
         "trailing-spaces"
       ],
-      "reasoning": "CI_AS ignores case and SQL Server equality ignores trailing spaces, so all three province codes join country 'US'. The conversion uses rtrim under an ICU level-2 collation; this checks mixed case and case plus trailing space together.",
+      "reasoning": "The hand-derived cases join an ASCII lowercase province code to an uppercase country and a province code with a trailing space; both differences sit on the province side. Here the case pairs are Latin-1 (ü/Ü) and Greek (σ/Σ), which CI_AS folds through its Unicode case tables, and the country row itself is lowercase with a trailing space ('ca '), so the rtrim and the case-insensitive comparison must apply to the country side too. A conversion that lower()ed only ASCII, folded with a byte-wise or C-collation upper(), or trimmed only the province side would drop rows that SQL Server keeps. These are valid source rows: CountryRegion keys 'ÜS', 'ΣA' and 'ca ' are distinct under the case-insensitive key, and each province code references its country under that collation.",
       "trapChecks": {
         "collation-case": {
           "present": true,
-          "detail": "\"Us\" and \"uS\" differ only in case"
+          "detail": "\"üs\" and \"ÜS\" differ only in case"
         },
         "trailing-spaces": {
           "present": true,
-          "detail": "\"us \" ends in a space"
+          "detail": "\"ca \" ends in a space"
         }
       },
       "status": "ran",
@@ -233,11 +233,11 @@
     },
     {
       "id": "A08",
-      "label": "a person with two individual customer rows and two identical phones: rows multiply (2 x 2), duplicates kept",
+      "label": "a person with two individual customer rows and the same number under two phone types of one name: rows multiply (2 x 2), identical rows kept",
       "traps": [
         "top-ties"
       ],
-      "reasoning": "Customer and PersonPhone have no key on PersonID in the scratch tables, so two customer rows (both StoreID NULL) and two identical phone rows give four identical rows; there is no DISTINCT. A third customer row with a store adds nothing.",
+      "reasoning": "Sales.Customer keys on CustomerID, so one person may have two individual customer rows (both StoreID NULL). PersonPhone keys on (BusinessEntityID, PhoneNumber, PhoneNumberTypeID) and PhoneNumberType keys on PhoneNumberTypeID only, so the same number under types 1 and 2, both named 'Cell', is two valid rows that give two identical output rows; the view has no DISTINCT. Two customer rows times two such phones give four identical rows. A third customer row with a store adds nothing.",
       "trapChecks": {
         "top-ties": {
           "present": true,
@@ -336,14 +336,24 @@
       "caseId": "A01",
       "kind": "duplicate",
       "text": "The hand-derived fixed cases already test a lowercase province code joining 'US' under CI_AS and a province code with a trailing space joining 'US'. Additional mixed-case spellings and combining case with the trailing space attack the same two join mechanisms.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A01 now uses non-ASCII Latin-1 and Greek case pairs and puts the combined case/trailing-space variant on the country side, exercising Unicode folding and asymmetric trimming paths absent from the hand-derived inputs.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     },
     {
       "id": "O02",
       "caseId": "A08",
       "kind": "not-an-attack",
       "text": "A08 inserts the identical PersonPhone primary-key tuple (BusinessEntityID 1, PhoneNumber '555-0100', PhoneNumberTypeID 1) twice. The claimed 2 x 2 duplicate fan-out cannot occur under the source schema preconditions.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A08 now sends the same number under two distinct PhoneNumberTypeID values and uses separate Customer rows whose omitted CustomerID values are generated independently. The PersonPhone keys are valid and the 2 x 2 fan-out remains visible.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T06:06:57.652Z"
+      }
     }
   ],
   "mutantAdequacy": {
@@ -358,11 +368,8 @@
     "equivalentRecorded": []
   },
   "gate": {
-    "passed": false,
-    "reasons": [
-      "objection O01 is open",
-      "objection O02 is open"
-    ]
+    "passed": true,
+    "reasons": []
   },
   "wording": "11 adversarial cases ran, 0 differed"
 }
