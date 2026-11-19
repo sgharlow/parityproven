@@ -1,0 +1,306 @@
+{
+  "schemaVersion": 1,
+  "object": "Website.Suppliers",
+  "database": "WideWorldImporters",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-19T05:20:49.498Z"
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "SupplierReference '' versus NULL kept distinct; NULL DeliveryMethodID yields a NULL method via LEFT JOIN",
+      "traps": [
+        "null-vs-empty"
+      ],
+      "reasoning": "Supplier 1 has SupplierReference '' and supplier 3 has SupplierReference NULL; the view returns '' as '' and NULL as NULL, and supplier 1's NULL DeliveryMethodID becomes a NULL method via the LEFT JOIN. A conversion that folded '' to NULL, or made the delivery-method join inner, would differ.",
+      "fixedCase": {
+        "tables": {
+          "Purchasing.Suppliers": [
+            {
+              "SupplierID": 1,
+              "SupplierName": "Supplier 1",
+              "SupplierCategoryID": 1,
+              "PrimaryContactPersonID": 1,
+              "AlternateContactPersonID": 2,
+              "DeliveryMethodID": null,
+              "DeliveryCityID": 1,
+              "SupplierReference": "",
+              "PhoneNumber": "(415) 555-0100",
+              "FaxNumber": "(415) 555-0101",
+              "WebsiteURL": "http://x",
+              "DeliveryLocation": null
+            },
+            {
+              "SupplierID": 3,
+              "SupplierName": "Supplier 3",
+              "SupplierCategoryID": 1,
+              "PrimaryContactPersonID": 1,
+              "AlternateContactPersonID": 2,
+              "DeliveryMethodID": 1,
+              "DeliveryCityID": 1,
+              "SupplierReference": null,
+              "PhoneNumber": "(415) 555-0100",
+              "FaxNumber": "(415) 555-0101",
+              "WebsiteURL": "http://x",
+              "DeliveryLocation": null
+            }
+          ],
+          "Purchasing.SupplierCategories": [
+            {
+              "SupplierCategoryID": 1,
+              "SupplierCategoryName": "Toy Supplier"
+            }
+          ],
+          "Application.People": [
+            {
+              "PersonID": 1,
+              "FullName": "Ann Lee"
+            },
+            {
+              "PersonID": 2,
+              "FullName": "Bo Ng"
+            }
+          ],
+          "Application.DeliveryMethods": [
+            {
+              "DeliveryMethodID": 1,
+              "DeliveryMethodName": "Air Freight"
+            }
+          ],
+          "Application.Cities": [
+            {
+              "CityID": 1,
+              "CityName": "Auckland"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A02",
+      "label": "two suppliers share a fax number; a supplier with unmatched category/contacts/city keeps NULLs",
+      "traps": [
+        "top-ties"
+      ],
+      "reasoning": "Suppliers 1 and 2 share FaxNumber (non-key). Supplier 2's category, contacts and city ids have no matching rows, so the LEFT OUTER JOINs keep it with NULLs; an inner join would drop it.",
+      "fixedCase": {
+        "tables": {
+          "Purchasing.Suppliers": [
+            {
+              "SupplierID": 1,
+              "SupplierName": "Supplier 1",
+              "SupplierCategoryID": 1,
+              "PrimaryContactPersonID": 1,
+              "AlternateContactPersonID": 2,
+              "DeliveryMethodID": null,
+              "DeliveryCityID": 1,
+              "SupplierReference": null,
+              "PhoneNumber": "(415) 555-0100",
+              "FaxNumber": "(415) 555-7777",
+              "WebsiteURL": "http://x",
+              "DeliveryLocation": null
+            },
+            {
+              "SupplierID": 2,
+              "SupplierName": "Supplier 2",
+              "SupplierCategoryID": 99,
+              "PrimaryContactPersonID": 98,
+              "AlternateContactPersonID": 99,
+              "DeliveryMethodID": null,
+              "DeliveryCityID": 99,
+              "SupplierReference": null,
+              "PhoneNumber": "(415) 555-0100",
+              "FaxNumber": "(415) 555-7777",
+              "WebsiteURL": "http://x",
+              "DeliveryLocation": null
+            }
+          ],
+          "Purchasing.SupplierCategories": [
+            {
+              "SupplierCategoryID": 1,
+              "SupplierCategoryName": "Toy Supplier"
+            }
+          ],
+          "Application.People": [
+            {
+              "PersonID": 1,
+              "FullName": "Ann Lee"
+            },
+            {
+              "PersonID": 2,
+              "FullName": "Bo Ng"
+            }
+          ],
+          "Application.DeliveryMethods": [
+            {
+              "DeliveryMethodID": 1,
+              "DeliveryMethodName": "Air Freight"
+            }
+          ],
+          "Application.Cities": [
+            {
+              "CityID": 1,
+              "CityName": "Auckland"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A03",
+      "label": "supplier names differing only in case are both returned; a trailing space is preserved",
+      "traps": [
+        "collation-case",
+        "trailing-spaces"
+      ],
+      "reasoning": "SupplierName 'toys' and 'Toys' differ only in case and 'Padded ' ends in a space; the view projects them verbatim, so both engines keep case and the trailing space.",
+      "fixedCase": {
+        "tables": {
+          "Purchasing.Suppliers": [
+            {
+              "SupplierID": 1,
+              "SupplierName": "toys",
+              "SupplierCategoryID": 1,
+              "PrimaryContactPersonID": 1,
+              "AlternateContactPersonID": 2,
+              "DeliveryMethodID": null,
+              "DeliveryCityID": 1,
+              "SupplierReference": null,
+              "PhoneNumber": "(415) 555-0100",
+              "FaxNumber": "(415) 555-0101",
+              "WebsiteURL": "http://x",
+              "DeliveryLocation": null
+            },
+            {
+              "SupplierID": 2,
+              "SupplierName": "Toys",
+              "SupplierCategoryID": 1,
+              "PrimaryContactPersonID": 1,
+              "AlternateContactPersonID": 2,
+              "DeliveryMethodID": null,
+              "DeliveryCityID": 1,
+              "SupplierReference": null,
+              "PhoneNumber": "(415) 555-0100",
+              "FaxNumber": "(415) 555-0101",
+              "WebsiteURL": "http://x",
+              "DeliveryLocation": null
+            },
+            {
+              "SupplierID": 3,
+              "SupplierName": "Padded ",
+              "SupplierCategoryID": 1,
+              "PrimaryContactPersonID": 1,
+              "AlternateContactPersonID": 2,
+              "DeliveryMethodID": null,
+              "DeliveryCityID": 1,
+              "SupplierReference": null,
+              "PhoneNumber": "(415) 555-0100",
+              "FaxNumber": "(415) 555-0101",
+              "WebsiteURL": "http://x",
+              "DeliveryLocation": null
+            }
+          ],
+          "Purchasing.SupplierCategories": [
+            {
+              "SupplierCategoryID": 1,
+              "SupplierCategoryName": "Toy Supplier"
+            }
+          ],
+          "Application.People": [
+            {
+              "PersonID": 1,
+              "FullName": "Ann Lee"
+            },
+            {
+              "PersonID": 2,
+              "FullName": "Bo Ng"
+            }
+          ],
+          "Application.DeliveryMethods": [
+            {
+              "DeliveryMethodID": 1,
+              "DeliveryMethodName": "Air Freight"
+            }
+          ],
+          "Application.Cities": [
+            {
+              "CityID": 1,
+              "CityName": "Auckland"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A04",
+      "label": "same person as both contacts; geography as WKT; supplier ids skip a value",
+      "traps": [
+        "identity-gaps"
+      ],
+      "reasoning": "Supplier 1 uses person 1 as both primary and alternate contact (two self-joins on Application.People). DeliveryLocation is a point compared as WKT. SupplierIDs 1 and 3 (a gap) confirm the key is by value.",
+      "fixedCase": {
+        "tables": {
+          "Purchasing.Suppliers": [
+            {
+              "SupplierID": 1,
+              "SupplierName": "Supplier 1",
+              "SupplierCategoryID": 1,
+              "PrimaryContactPersonID": 1,
+              "AlternateContactPersonID": 1,
+              "DeliveryMethodID": 1,
+              "DeliveryCityID": 1,
+              "SupplierReference": null,
+              "PhoneNumber": "(415) 555-0100",
+              "FaxNumber": "(415) 555-0101",
+              "WebsiteURL": "http://x",
+              "DeliveryLocation": "POINT(-0.25 51.5)"
+            },
+            {
+              "SupplierID": 3,
+              "SupplierName": "Supplier 3",
+              "SupplierCategoryID": 1,
+              "PrimaryContactPersonID": 1,
+              "AlternateContactPersonID": 2,
+              "DeliveryMethodID": 1,
+              "DeliveryCityID": 1,
+              "SupplierReference": null,
+              "PhoneNumber": "(415) 555-0100",
+              "FaxNumber": "(415) 555-0101",
+              "WebsiteURL": "http://x",
+              "DeliveryLocation": "POINT(174.75 -36.75)"
+            }
+          ],
+          "Purchasing.SupplierCategories": [
+            {
+              "SupplierCategoryID": 1,
+              "SupplierCategoryName": "Toy Supplier"
+            }
+          ],
+          "Application.People": [
+            {
+              "PersonID": 1,
+              "FullName": "Ann Lee"
+            },
+            {
+              "PersonID": 2,
+              "FullName": "Bo Ng"
+            }
+          ],
+          "Application.DeliveryMethods": [
+            {
+              "DeliveryMethodID": 1,
+              "DeliveryMethodName": "Air Freight"
+            }
+          ],
+          "Application.Cities": [
+            {
+              "CityID": 1,
+              "CityName": "Auckland"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

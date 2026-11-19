@@ -1,0 +1,563 @@
+{
+  "schemaVersion": 1,
+  "object": "Website.InsertCustomerOrders",
+  "database": "WideWorldImporters",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-19T05:20:49.498Z"
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "'' versus NULL in order comments are kept distinct through the insert",
+      "traps": [
+        "null-vs-empty"
+      ],
+      "reasoning": "Order 1 has Comments '' and DeliveryInstructions NULL; order 2 has Comments NULL. Sales.Orders must store '' as '' and NULL as NULL (nvarchar). A conversion coalescing either way would differ.",
+      "fixedCase": {
+        "tables": {
+          "Website.OrderList": [
+            {
+              "OrderReference": 1,
+              "CustomerID": 1,
+              "ContactPersonID": 3,
+              "ExpectedDeliveryDate": "2030-01-01",
+              "CustomerPurchaseOrderNumber": "PO-1",
+              "IsUndersupplyBackordered": false,
+              "Comments": "",
+              "DeliveryInstructions": null
+            },
+            {
+              "OrderReference": 2,
+              "CustomerID": 2,
+              "ContactPersonID": 3,
+              "ExpectedDeliveryDate": "2030-01-01",
+              "CustomerPurchaseOrderNumber": "PO-2",
+              "IsUndersupplyBackordered": false,
+              "Comments": null,
+              "DeliveryInstructions": null
+            }
+          ],
+          "Website.OrderLineList": [
+            {
+              "OrderReference": 1,
+              "StockItemID": 1,
+              "Description": "line 1/1",
+              "Quantity": 2
+            },
+            {
+              "OrderReference": 1,
+              "StockItemID": 2,
+              "Description": "line 1/2",
+              "Quantity": 2
+            },
+            {
+              "OrderReference": 2,
+              "StockItemID": 1,
+              "Description": "line 2/1",
+              "Quantity": 2
+            },
+            {
+              "OrderReference": 2,
+              "StockItemID": 2,
+              "Description": "line 2/2",
+              "Quantity": 2
+            }
+          ],
+          "Sales.Orders": [],
+          "Sales.OrderLines": [],
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "UnitPackageID": 7,
+              "TaxRate": "15.000",
+              "UnitPrice": "10.00"
+            },
+            {
+              "StockItemID": 2,
+              "UnitPackageID": 9,
+              "TaxRate": "10.000",
+              "UnitPrice": "99.99"
+            }
+          ],
+          "Sales.Customers": [
+            {
+              "CustomerID": 1,
+              "BuyingGroupID": null,
+              "CustomerCategoryID": 1
+            },
+            {
+              "CustomerID": 2,
+              "BuyingGroupID": 1,
+              "CustomerCategoryID": 2
+            }
+          ],
+          "Sales.SpecialDeals": [],
+          "Warehouse.StockItemStockGroups": []
+        },
+        "args": [
+          1,
+          2
+        ]
+      }
+    },
+    {
+      "id": "A02",
+      "label": "two order lines whose descriptions differ only in case; both kept and priced",
+      "traps": [
+        "collation-case",
+        "top-ties"
+      ],
+      "reasoning": "Lines 'widget' and 'Widget' differ only in case and both share Quantity 2 (a non-key tie). Descriptions are stored verbatim and each line is inserted; no case folding and no de-duplication on either engine.",
+      "fixedCase": {
+        "tables": {
+          "Website.OrderList": [
+            {
+              "OrderReference": 1,
+              "CustomerID": 1,
+              "ContactPersonID": 3,
+              "ExpectedDeliveryDate": "2030-01-01",
+              "CustomerPurchaseOrderNumber": "PO-1",
+              "IsUndersupplyBackordered": false,
+              "Comments": null,
+              "DeliveryInstructions": null
+            },
+            {
+              "OrderReference": 2,
+              "CustomerID": 2,
+              "ContactPersonID": 3,
+              "ExpectedDeliveryDate": "2030-01-01",
+              "CustomerPurchaseOrderNumber": "PO-2",
+              "IsUndersupplyBackordered": false,
+              "Comments": null,
+              "DeliveryInstructions": null
+            }
+          ],
+          "Website.OrderLineList": [
+            {
+              "OrderReference": 1,
+              "StockItemID": 1,
+              "Description": "widget",
+              "Quantity": 2
+            },
+            {
+              "OrderReference": 1,
+              "StockItemID": 2,
+              "Description": "Widget",
+              "Quantity": 2
+            },
+            {
+              "OrderReference": 2,
+              "StockItemID": 1,
+              "Description": "line 2/1",
+              "Quantity": 2
+            },
+            {
+              "OrderReference": 2,
+              "StockItemID": 2,
+              "Description": "line 2/2",
+              "Quantity": 2
+            }
+          ],
+          "Sales.Orders": [],
+          "Sales.OrderLines": [],
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "UnitPackageID": 7,
+              "TaxRate": "15.000",
+              "UnitPrice": "10.00"
+            },
+            {
+              "StockItemID": 2,
+              "UnitPackageID": 9,
+              "TaxRate": "10.000",
+              "UnitPrice": "99.99"
+            }
+          ],
+          "Sales.Customers": [
+            {
+              "CustomerID": 1,
+              "BuyingGroupID": null,
+              "CustomerCategoryID": 1
+            },
+            {
+              "CustomerID": 2,
+              "BuyingGroupID": 1,
+              "CustomerCategoryID": 2
+            }
+          ],
+          "Sales.SpecialDeals": [],
+          "Warehouse.StockItemStockGroups": []
+        },
+        "args": [
+          1,
+          2
+        ]
+      }
+    },
+    {
+      "id": "A03",
+      "label": "customer purchase order number with a trailing space is preserved",
+      "traps": [
+        "trailing-spaces"
+      ],
+      "reasoning": "CustomerPurchaseOrderNumber 'PO-1 ' ends in a space; Sales.Orders.CustomerPurchaseOrderNumber nvarchar(20) keeps it, and the conversion's varchar(20) keeps it too. A conversion that rtrimmed would differ.",
+      "fixedCase": {
+        "tables": {
+          "Website.OrderList": [
+            {
+              "OrderReference": 1,
+              "CustomerID": 1,
+              "ContactPersonID": 3,
+              "ExpectedDeliveryDate": "2030-01-01",
+              "CustomerPurchaseOrderNumber": "PO-1 ",
+              "IsUndersupplyBackordered": false,
+              "Comments": null,
+              "DeliveryInstructions": null
+            },
+            {
+              "OrderReference": 2,
+              "CustomerID": 2,
+              "ContactPersonID": 3,
+              "ExpectedDeliveryDate": "2030-01-01",
+              "CustomerPurchaseOrderNumber": "PO-2",
+              "IsUndersupplyBackordered": false,
+              "Comments": null,
+              "DeliveryInstructions": null
+            }
+          ],
+          "Website.OrderLineList": [
+            {
+              "OrderReference": 1,
+              "StockItemID": 1,
+              "Description": "line 1/1",
+              "Quantity": 2
+            },
+            {
+              "OrderReference": 1,
+              "StockItemID": 2,
+              "Description": "line 1/2",
+              "Quantity": 2
+            },
+            {
+              "OrderReference": 2,
+              "StockItemID": 1,
+              "Description": "line 2/1",
+              "Quantity": 2
+            },
+            {
+              "OrderReference": 2,
+              "StockItemID": 2,
+              "Description": "line 2/2",
+              "Quantity": 2
+            }
+          ],
+          "Sales.Orders": [],
+          "Sales.OrderLines": [],
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "UnitPackageID": 7,
+              "TaxRate": "15.000",
+              "UnitPrice": "10.00"
+            },
+            {
+              "StockItemID": 2,
+              "UnitPackageID": 9,
+              "TaxRate": "10.000",
+              "UnitPrice": "99.99"
+            }
+          ],
+          "Sales.Customers": [
+            {
+              "CustomerID": 1,
+              "BuyingGroupID": null,
+              "CustomerCategoryID": 1
+            },
+            {
+              "CustomerID": 2,
+              "BuyingGroupID": 1,
+              "CustomerCategoryID": 2
+            }
+          ],
+          "Sales.SpecialDeals": [],
+          "Warehouse.StockItemStockGroups": []
+        },
+        "args": [
+          1,
+          2
+        ]
+      }
+    },
+    {
+      "id": "A04",
+      "label": "order references 1 and 5 (a gap): both orders are created and every line matches its order by reference",
+      "traps": [
+        "identity-gaps"
+      ],
+      "reasoning": "OrderReference is the key of @OrdersToGenerate; using 1 and 5 (non-contiguous) confirms lines join to orders by reference value, not position, when the new OrderIDs are allocated from the sequence.",
+      "fixedCase": {
+        "tables": {
+          "Website.OrderList": [
+            {
+              "OrderReference": 1,
+              "CustomerID": 1,
+              "ContactPersonID": 3,
+              "ExpectedDeliveryDate": "2030-01-01",
+              "CustomerPurchaseOrderNumber": "PO-1",
+              "IsUndersupplyBackordered": false,
+              "Comments": null,
+              "DeliveryInstructions": null
+            },
+            {
+              "OrderReference": 5,
+              "CustomerID": 2,
+              "ContactPersonID": 3,
+              "ExpectedDeliveryDate": "2030-01-01",
+              "CustomerPurchaseOrderNumber": "PO-2",
+              "IsUndersupplyBackordered": false,
+              "Comments": null,
+              "DeliveryInstructions": null
+            }
+          ],
+          "Website.OrderLineList": [
+            {
+              "OrderReference": 1,
+              "StockItemID": 1,
+              "Description": "line 1/1",
+              "Quantity": 2
+            },
+            {
+              "OrderReference": 1,
+              "StockItemID": 2,
+              "Description": "line 1/2",
+              "Quantity": 2
+            },
+            {
+              "OrderReference": 5,
+              "StockItemID": 1,
+              "Description": "line 2/1",
+              "Quantity": 2
+            },
+            {
+              "OrderReference": 5,
+              "StockItemID": 2,
+              "Description": "line 2/2",
+              "Quantity": 2
+            }
+          ],
+          "Sales.Orders": [],
+          "Sales.OrderLines": [],
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "UnitPackageID": 7,
+              "TaxRate": "15.000",
+              "UnitPrice": "10.00"
+            },
+            {
+              "StockItemID": 2,
+              "UnitPackageID": 9,
+              "TaxRate": "10.000",
+              "UnitPrice": "99.99"
+            }
+          ],
+          "Sales.Customers": [
+            {
+              "CustomerID": 1,
+              "BuyingGroupID": null,
+              "CustomerCategoryID": 1
+            },
+            {
+              "CustomerID": 2,
+              "BuyingGroupID": 1,
+              "CustomerCategoryID": 2
+            }
+          ],
+          "Sales.SpecialDeals": [],
+          "Warehouse.StockItemStockGroups": []
+        },
+        "args": [
+          1,
+          2
+        ]
+      }
+    },
+    {
+      "id": "A05",
+      "label": "a special deal running until 9999-12-31 lowers the line price; deal unit price 7.55",
+      "traps": [
+        "dates-datetime",
+        "numeric-rounding"
+      ],
+      "reasoning": "The line is priced through Website.CalculateCustomerPrice on today's date; a deal valid from 2026-11-01 to the maximum date 9999-12-31 must apply (inclusive BETWEEN). 7.55 ends in 5 to check decimal(18,2) carry into Sales.OrderLines.UnitPrice.",
+      "fixedCase": {
+        "tables": {
+          "Website.OrderList": [
+            {
+              "OrderReference": 1,
+              "CustomerID": 1,
+              "ContactPersonID": 3,
+              "ExpectedDeliveryDate": "2030-01-01",
+              "CustomerPurchaseOrderNumber": "PO-1",
+              "IsUndersupplyBackordered": false,
+              "Comments": null,
+              "DeliveryInstructions": null
+            }
+          ],
+          "Website.OrderLineList": [
+            {
+              "OrderReference": 1,
+              "StockItemID": 1,
+              "Description": "line 1/1",
+              "Quantity": 2
+            }
+          ],
+          "Sales.Orders": [],
+          "Sales.OrderLines": [],
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "UnitPackageID": 7,
+              "TaxRate": "15.000",
+              "UnitPrice": "10.00"
+            },
+            {
+              "StockItemID": 2,
+              "UnitPackageID": 9,
+              "TaxRate": "10.000",
+              "UnitPrice": "99.99"
+            }
+          ],
+          "Sales.Customers": [
+            {
+              "CustomerID": 1,
+              "BuyingGroupID": null,
+              "CustomerCategoryID": 1
+            },
+            {
+              "CustomerID": 2,
+              "BuyingGroupID": 1,
+              "CustomerCategoryID": 2
+            }
+          ],
+          "Sales.SpecialDeals": [
+            {
+              "SpecialDealID": 1,
+              "StockItemID": 1,
+              "CustomerID": null,
+              "BuyingGroupID": null,
+              "CustomerCategoryID": null,
+              "StockGroupID": null,
+              "StartDate": "2026-11-01",
+              "EndDate": "9999-12-31",
+              "DiscountAmount": null,
+              "DiscountPercentage": null,
+              "UnitPrice": "7.55"
+            }
+          ],
+          "Warehouse.StockItemStockGroups": []
+        },
+        "args": [
+          1,
+          2
+        ]
+      }
+    },
+    {
+      "id": "A06",
+      "label": "list price 19.95 and tax rate 12.345 flow into the line unchanged",
+      "traps": [
+        "numeric-rounding"
+      ],
+      "reasoning": "With no special deal, the line takes the stock item's UnitPrice 19.95 and TaxRate 12.345 (both ending in 5). Both engines must store the same scaled values in Sales.OrderLines.",
+      "fixedCase": {
+        "tables": {
+          "Website.OrderList": [
+            {
+              "OrderReference": 1,
+              "CustomerID": 1,
+              "ContactPersonID": 3,
+              "ExpectedDeliveryDate": "2030-01-01",
+              "CustomerPurchaseOrderNumber": "PO-1",
+              "IsUndersupplyBackordered": false,
+              "Comments": null,
+              "DeliveryInstructions": null
+            },
+            {
+              "OrderReference": 2,
+              "CustomerID": 2,
+              "ContactPersonID": 3,
+              "ExpectedDeliveryDate": "2030-01-01",
+              "CustomerPurchaseOrderNumber": "PO-2",
+              "IsUndersupplyBackordered": false,
+              "Comments": null,
+              "DeliveryInstructions": null
+            }
+          ],
+          "Website.OrderLineList": [
+            {
+              "OrderReference": 1,
+              "StockItemID": 1,
+              "Description": "line 1/1",
+              "Quantity": 2
+            },
+            {
+              "OrderReference": 1,
+              "StockItemID": 2,
+              "Description": "line 1/2",
+              "Quantity": 2
+            },
+            {
+              "OrderReference": 2,
+              "StockItemID": 1,
+              "Description": "line 2/1",
+              "Quantity": 2
+            },
+            {
+              "OrderReference": 2,
+              "StockItemID": 2,
+              "Description": "line 2/2",
+              "Quantity": 2
+            }
+          ],
+          "Sales.Orders": [],
+          "Sales.OrderLines": [],
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "UnitPackageID": 7,
+              "TaxRate": "15.000",
+              "UnitPrice": "19.95"
+            },
+            {
+              "StockItemID": 2,
+              "UnitPackageID": 9,
+              "TaxRate": "12.345",
+              "UnitPrice": "99.99"
+            }
+          ],
+          "Sales.Customers": [
+            {
+              "CustomerID": 1,
+              "BuyingGroupID": null,
+              "CustomerCategoryID": 1
+            },
+            {
+              "CustomerID": 2,
+              "BuyingGroupID": 1,
+              "CustomerCategoryID": 2
+            }
+          ],
+          "Sales.SpecialDeals": [],
+          "Warehouse.StockItemStockGroups": []
+        },
+        "args": [
+          1,
+          2
+        ]
+      }
+    }
+  ]
+}

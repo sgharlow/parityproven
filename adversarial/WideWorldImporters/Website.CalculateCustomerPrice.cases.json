@@ -1,0 +1,330 @@
+{
+  "schemaVersion": 1,
+  "object": "Website.CalculateCustomerPrice",
+  "database": "WideWorldImporters",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-19T05:20:49.498Z"
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "percentage discount rounds half away from zero: 1.05 * 0.5 % = 0.00525 -> 0.01, not banker's 0.00",
+      "traps": [
+        "numeric-rounding"
+      ],
+      "reasoning": "T-SQL ROUND(@UnitPrice * @HighestDiscountPercentage / 100.0, 2) rounds half away from zero; PostgreSQL round(numeric,2) must do the same, not round-half-to-even. UnitPrice 1.05 ends in 5 and the product 0.00525 is the half-way-ish case a banker's-rounding conversion would mishandle.",
+      "fixedCase": {
+        "args": [
+          1,
+          1,
+          "2020-01-02"
+        ],
+        "tables": {
+          "Sales.Customers": [
+            {
+              "CustomerID": 1,
+              "BuyingGroupID": null,
+              "CustomerCategoryID": 1
+            }
+          ],
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "UnitPrice": "1.05"
+            }
+          ],
+          "Sales.SpecialDeals": [
+            {
+              "SpecialDealID": 1,
+              "StockItemID": 1,
+              "CustomerID": null,
+              "BuyingGroupID": null,
+              "CustomerCategoryID": null,
+              "StockGroupID": null,
+              "StartDate": "2020-01-01",
+              "EndDate": "2020-01-03",
+              "DiscountAmount": null,
+              "DiscountPercentage": "0.500",
+              "UnitPrice": null
+            }
+          ],
+          "Warehouse.StockItemStockGroups": []
+        }
+      }
+    },
+    {
+      "id": "A02",
+      "label": "deal priced at 19.95 competes with a percentage deal; lowest of all paths wins",
+      "traps": [
+        "numeric-rounding"
+      ],
+      "reasoning": "Three independent lowerings (special unit price, discount amount, discount percentage) are each compared with <; the minimum must win on both engines. 19.95 ends in 5 to exercise decimal(18,2) exactness.",
+      "fixedCase": {
+        "args": [
+          1,
+          1,
+          "2020-01-02"
+        ],
+        "tables": {
+          "Sales.Customers": [
+            {
+              "CustomerID": 1,
+              "BuyingGroupID": null,
+              "CustomerCategoryID": 1
+            }
+          ],
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "UnitPrice": "100.00"
+            }
+          ],
+          "Sales.SpecialDeals": [
+            {
+              "SpecialDealID": 1,
+              "StockItemID": 1,
+              "CustomerID": null,
+              "BuyingGroupID": null,
+              "CustomerCategoryID": null,
+              "StockGroupID": null,
+              "StartDate": "2020-01-01",
+              "EndDate": "2020-01-03",
+              "DiscountAmount": null,
+              "DiscountPercentage": null,
+              "UnitPrice": "19.95"
+            },
+            {
+              "SpecialDealID": 3,
+              "StockItemID": null,
+              "CustomerID": 1,
+              "BuyingGroupID": null,
+              "CustomerCategoryID": null,
+              "StockGroupID": null,
+              "StartDate": "2020-01-01",
+              "EndDate": "2020-01-03",
+              "DiscountAmount": "25.00",
+              "DiscountPercentage": null,
+              "UnitPrice": null
+            },
+            {
+              "SpecialDealID": 5,
+              "StockItemID": null,
+              "CustomerID": null,
+              "BuyingGroupID": null,
+              "CustomerCategoryID": 1,
+              "StockGroupID": null,
+              "StartDate": "2020-01-01",
+              "EndDate": "2020-01-03",
+              "DiscountAmount": null,
+              "DiscountPercentage": "10.250",
+              "UnitPrice": null
+            }
+          ],
+          "Warehouse.StockItemStockGroups": []
+        }
+      }
+    },
+    {
+      "id": "A03",
+      "label": "pricing date at the maximum date 9999-12-31 equals the deal end date (BETWEEN is inclusive)",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "BETWEEN sd.StartDate AND sd.EndDate is inclusive on both engines; the boundary date 9999-12-31 must compare equal, so the special price applies. A conversion using < EndDate would drop it.",
+      "fixedCase": {
+        "args": [
+          1,
+          1,
+          "9999-12-31"
+        ],
+        "tables": {
+          "Sales.Customers": [
+            {
+              "CustomerID": 1,
+              "BuyingGroupID": null,
+              "CustomerCategoryID": 1
+            }
+          ],
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "UnitPrice": "10.00"
+            }
+          ],
+          "Sales.SpecialDeals": [
+            {
+              "SpecialDealID": 1,
+              "StockItemID": 1,
+              "CustomerID": null,
+              "BuyingGroupID": null,
+              "CustomerCategoryID": null,
+              "StockGroupID": null,
+              "StartDate": "9999-12-30",
+              "EndDate": "9999-12-31",
+              "DiscountAmount": null,
+              "DiscountPercentage": null,
+              "UnitPrice": "5.00"
+            }
+          ],
+          "Warehouse.StockItemStockGroups": []
+        }
+      }
+    },
+    {
+      "id": "A04",
+      "label": "a negative discount amount would raise the price, so the < guard must reject it",
+      "traps": [
+        "numeric-rounding"
+      ],
+      "reasoning": "MAX(DiscountAmount) is -5.05; @UnitPrice - (-5.05) = 15.05 which is NOT < @CalculatedPrice, so it must be ignored. A conversion that dropped the guard would return 15.05.",
+      "fixedCase": {
+        "args": [
+          1,
+          1,
+          "2020-01-02"
+        ],
+        "tables": {
+          "Sales.Customers": [
+            {
+              "CustomerID": 1,
+              "BuyingGroupID": null,
+              "CustomerCategoryID": 1
+            }
+          ],
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "UnitPrice": "10.00"
+            }
+          ],
+          "Sales.SpecialDeals": [
+            {
+              "SpecialDealID": 1,
+              "StockItemID": 1,
+              "CustomerID": null,
+              "BuyingGroupID": null,
+              "CustomerCategoryID": null,
+              "StockGroupID": null,
+              "StartDate": "2020-01-01",
+              "EndDate": "2020-01-03",
+              "DiscountAmount": "-5.05",
+              "DiscountPercentage": null,
+              "UnitPrice": null
+            }
+          ],
+          "Warehouse.StockItemStockGroups": []
+        }
+      }
+    },
+    {
+      "id": "A05",
+      "label": "StockGroup-scoped deal applies only through the StockItemStockGroups bridge; deal ids are non-contiguous",
+      "traps": [
+        "identity-gaps"
+      ],
+      "reasoning": "The deal with StockGroupID set applies only when EXISTS a bridge row for (@StockItemID, that group). SpecialDealID runs 1, 3 (a gap) to confirm the key is compared by value, not position.",
+      "fixedCase": {
+        "args": [
+          1,
+          1,
+          "2020-01-02"
+        ],
+        "tables": {
+          "Sales.Customers": [
+            {
+              "CustomerID": 1,
+              "BuyingGroupID": null,
+              "CustomerCategoryID": 1
+            }
+          ],
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "UnitPrice": "10.00"
+            }
+          ],
+          "Sales.SpecialDeals": [
+            {
+              "SpecialDealID": 1,
+              "StockItemID": null,
+              "CustomerID": null,
+              "BuyingGroupID": null,
+              "CustomerCategoryID": null,
+              "StockGroupID": 7,
+              "StartDate": "2020-01-01",
+              "EndDate": "2020-01-03",
+              "DiscountAmount": null,
+              "DiscountPercentage": null,
+              "UnitPrice": "4.00"
+            },
+            {
+              "SpecialDealID": 3,
+              "StockItemID": null,
+              "CustomerID": null,
+              "BuyingGroupID": null,
+              "CustomerCategoryID": null,
+              "StockGroupID": 9,
+              "StartDate": "2020-01-01",
+              "EndDate": "2020-01-03",
+              "DiscountAmount": null,
+              "DiscountPercentage": null,
+              "UnitPrice": "1.00"
+            }
+          ],
+          "Warehouse.StockItemStockGroups": [
+            {
+              "StockItemStockGroupID": 1,
+              "StockItemID": 1,
+              "StockGroupID": 7
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A06",
+      "label": "no customer row: BuyingGroupID and CustomerCategoryID stay NULL, so only the OR ... IS NULL deal legs match",
+      "traps": [],
+      "reasoning": "When CustomerID has no Sales.Customers row, the SELECT @BuyingGroupID = ... leaves both variables NULL; (sd.BuyingGroupID = @BuyingGroupID OR sd.BuyingGroupID IS NULL) then matches only deals whose BuyingGroupID IS NULL. PL/pgSQL SELECT INTO with no row also leaves NULLs.",
+      "fixedCase": {
+        "args": [
+          999,
+          1,
+          "2020-01-02"
+        ],
+        "tables": {
+          "Sales.Customers": [
+            {
+              "CustomerID": 1,
+              "BuyingGroupID": null,
+              "CustomerCategoryID": 1
+            }
+          ],
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "UnitPrice": "10.00"
+            }
+          ],
+          "Sales.SpecialDeals": [
+            {
+              "SpecialDealID": 1,
+              "StockItemID": 1,
+              "CustomerID": null,
+              "BuyingGroupID": 4,
+              "CustomerCategoryID": null,
+              "StockGroupID": null,
+              "StartDate": "2020-01-01",
+              "EndDate": "2020-01-03",
+              "DiscountAmount": null,
+              "DiscountPercentage": null,
+              "UnitPrice": "1.00"
+            }
+          ],
+          "Warehouse.StockItemStockGroups": []
+        }
+      }
+    }
+  ]
+}

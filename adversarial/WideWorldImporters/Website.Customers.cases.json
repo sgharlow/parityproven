@@ -1,0 +1,332 @@
+{
+  "schemaVersion": 1,
+  "object": "Website.Customers",
+  "database": "WideWorldImporters",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-19T05:20:49.498Z"
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "'' versus NULL in DeliveryRun and RunPosition are kept distinct across the LEFT JOINs",
+      "traps": [
+        "null-vs-empty"
+      ],
+      "reasoning": "Customer 1 has DeliveryRun '' and RunPosition NULL; the view selects both columns unchanged, so '' must stay '' and NULL stay NULL. A conversion coalescing '' to NULL (or back) would differ.",
+      "fixedCase": {
+        "tables": {
+          "Sales.Customers": [
+            {
+              "CustomerID": 1,
+              "CustomerName": "Customer 1",
+              "CustomerCategoryID": 1,
+              "PrimaryContactPersonID": 1,
+              "AlternateContactPersonID": null,
+              "BuyingGroupID": null,
+              "DeliveryMethodID": 1,
+              "DeliveryCityID": 1,
+              "PhoneNumber": "(206) 555-0100",
+              "FaxNumber": "(206) 555-0101",
+              "WebsiteURL": "http://x",
+              "DeliveryLocation": null,
+              "DeliveryRun": "",
+              "RunPosition": null
+            }
+          ],
+          "Sales.CustomerCategories": [
+            {
+              "CustomerCategoryID": 1,
+              "CustomerCategoryName": "Novelty Shop"
+            }
+          ],
+          "Sales.BuyingGroups": [
+            {
+              "BuyingGroupID": 1,
+              "BuyingGroupName": "Tailspin Toys"
+            }
+          ],
+          "Application.People": [
+            {
+              "PersonID": 1,
+              "FullName": "Ann Lee"
+            },
+            {
+              "PersonID": 2,
+              "FullName": "Bo Ng"
+            }
+          ],
+          "Application.DeliveryMethods": [
+            {
+              "DeliveryMethodID": 1,
+              "DeliveryMethodName": "Delivery Van"
+            }
+          ],
+          "Application.Cities": [
+            {
+              "CityID": 1,
+              "CityName": "Seattle"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A02",
+      "label": "two customers share a phone number; a missing category/contact/city still yields the row with NULLs",
+      "traps": [
+        "top-ties"
+      ],
+      "reasoning": "Customers 1 and 2 share PhoneNumber (a non-key value). Customer 2 points at category/contact/city ids with no matching row, so the LEFT OUTER JOINs must keep it with NULLs. An INNER JOIN conversion would drop customer 2.",
+      "fixedCase": {
+        "tables": {
+          "Sales.Customers": [
+            {
+              "CustomerID": 1,
+              "CustomerName": "Customer 1",
+              "CustomerCategoryID": 1,
+              "PrimaryContactPersonID": 1,
+              "AlternateContactPersonID": null,
+              "BuyingGroupID": null,
+              "DeliveryMethodID": 1,
+              "DeliveryCityID": 1,
+              "PhoneNumber": "(206) 555-9999",
+              "FaxNumber": "(206) 555-0101",
+              "WebsiteURL": "http://x",
+              "DeliveryLocation": null,
+              "DeliveryRun": null,
+              "RunPosition": null
+            },
+            {
+              "CustomerID": 2,
+              "CustomerName": "Customer 2",
+              "CustomerCategoryID": 99,
+              "PrimaryContactPersonID": 99,
+              "AlternateContactPersonID": null,
+              "BuyingGroupID": null,
+              "DeliveryMethodID": 99,
+              "DeliveryCityID": 99,
+              "PhoneNumber": "(206) 555-9999",
+              "FaxNumber": "(206) 555-0101",
+              "WebsiteURL": "http://x",
+              "DeliveryLocation": null,
+              "DeliveryRun": null,
+              "RunPosition": null
+            }
+          ],
+          "Sales.CustomerCategories": [
+            {
+              "CustomerCategoryID": 1,
+              "CustomerCategoryName": "Novelty Shop"
+            }
+          ],
+          "Sales.BuyingGroups": [
+            {
+              "BuyingGroupID": 1,
+              "BuyingGroupName": "Tailspin Toys"
+            }
+          ],
+          "Application.People": [
+            {
+              "PersonID": 1,
+              "FullName": "Ann Lee"
+            },
+            {
+              "PersonID": 2,
+              "FullName": "Bo Ng"
+            }
+          ],
+          "Application.DeliveryMethods": [
+            {
+              "DeliveryMethodID": 1,
+              "DeliveryMethodName": "Delivery Van"
+            }
+          ],
+          "Application.Cities": [
+            {
+              "CityID": 1,
+              "CityName": "Seattle"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A03",
+      "label": "customer names differing only in case are both returned; a trailing space is preserved",
+      "traps": [
+        "collation-case",
+        "trailing-spaces"
+      ],
+      "reasoning": "CustomerName 'acme' and 'Acme' differ only in case and 'Trailing ' ends in a space; the view projects the names verbatim, so both engines must keep case and the trailing space (no implicit rtrim).",
+      "fixedCase": {
+        "tables": {
+          "Sales.Customers": [
+            {
+              "CustomerID": 1,
+              "CustomerName": "acme",
+              "CustomerCategoryID": 1,
+              "PrimaryContactPersonID": 1,
+              "AlternateContactPersonID": null,
+              "BuyingGroupID": null,
+              "DeliveryMethodID": 1,
+              "DeliveryCityID": 1,
+              "PhoneNumber": "(206) 555-0100",
+              "FaxNumber": "(206) 555-0101",
+              "WebsiteURL": "http://x",
+              "DeliveryLocation": null,
+              "DeliveryRun": null,
+              "RunPosition": null
+            },
+            {
+              "CustomerID": 2,
+              "CustomerName": "Acme",
+              "CustomerCategoryID": 1,
+              "PrimaryContactPersonID": 1,
+              "AlternateContactPersonID": null,
+              "BuyingGroupID": null,
+              "DeliveryMethodID": 1,
+              "DeliveryCityID": 1,
+              "PhoneNumber": "(206) 555-0100",
+              "FaxNumber": "(206) 555-0101",
+              "WebsiteURL": "http://x",
+              "DeliveryLocation": null,
+              "DeliveryRun": null,
+              "RunPosition": null
+            },
+            {
+              "CustomerID": 3,
+              "CustomerName": "Trailing ",
+              "CustomerCategoryID": 1,
+              "PrimaryContactPersonID": 1,
+              "AlternateContactPersonID": null,
+              "BuyingGroupID": null,
+              "DeliveryMethodID": 1,
+              "DeliveryCityID": 1,
+              "PhoneNumber": "(206) 555-0100",
+              "FaxNumber": "(206) 555-0101",
+              "WebsiteURL": "http://x",
+              "DeliveryLocation": null,
+              "DeliveryRun": null,
+              "RunPosition": null
+            }
+          ],
+          "Sales.CustomerCategories": [
+            {
+              "CustomerCategoryID": 1,
+              "CustomerCategoryName": "Novelty Shop"
+            }
+          ],
+          "Sales.BuyingGroups": [
+            {
+              "BuyingGroupID": 1,
+              "BuyingGroupName": "Tailspin Toys"
+            }
+          ],
+          "Application.People": [
+            {
+              "PersonID": 1,
+              "FullName": "Ann Lee"
+            },
+            {
+              "PersonID": 2,
+              "FullName": "Bo Ng"
+            }
+          ],
+          "Application.DeliveryMethods": [
+            {
+              "DeliveryMethodID": 1,
+              "DeliveryMethodName": "Delivery Van"
+            }
+          ],
+          "Application.Cities": [
+            {
+              "CityID": 1,
+              "CityName": "Seattle"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A04",
+      "label": "same person is both primary and alternate contact; geography carried as well-known text; customer ids skip a value",
+      "traps": [
+        "identity-gaps"
+      ],
+      "reasoning": "Customer 1 uses person 1 as both contacts (the view self-joins Application.People twice). DeliveryLocation is a point compared as WKT. CustomerIDs 1 and 3 (a gap) confirm the key is by value. PostGIS and SQL Server must agree on the point.",
+      "fixedCase": {
+        "tables": {
+          "Sales.Customers": [
+            {
+              "CustomerID": 1,
+              "CustomerName": "Customer 1",
+              "CustomerCategoryID": 1,
+              "PrimaryContactPersonID": 1,
+              "AlternateContactPersonID": 1,
+              "BuyingGroupID": null,
+              "DeliveryMethodID": 1,
+              "DeliveryCityID": 1,
+              "PhoneNumber": "(206) 555-0100",
+              "FaxNumber": "(206) 555-0101",
+              "WebsiteURL": "http://x",
+              "DeliveryLocation": "POINT(-122.25 47.5)",
+              "DeliveryRun": null,
+              "RunPosition": null
+            },
+            {
+              "CustomerID": 3,
+              "CustomerName": "Customer 3",
+              "CustomerCategoryID": 1,
+              "PrimaryContactPersonID": 1,
+              "AlternateContactPersonID": null,
+              "BuyingGroupID": null,
+              "DeliveryMethodID": 1,
+              "DeliveryCityID": 1,
+              "PhoneNumber": "(206) 555-0100",
+              "FaxNumber": "(206) 555-0101",
+              "WebsiteURL": "http://x",
+              "DeliveryLocation": "POINT(0.5 -1.75)",
+              "DeliveryRun": null,
+              "RunPosition": null
+            }
+          ],
+          "Sales.CustomerCategories": [
+            {
+              "CustomerCategoryID": 1,
+              "CustomerCategoryName": "Novelty Shop"
+            }
+          ],
+          "Sales.BuyingGroups": [
+            {
+              "BuyingGroupID": 1,
+              "BuyingGroupName": "Tailspin Toys"
+            }
+          ],
+          "Application.People": [
+            {
+              "PersonID": 1,
+              "FullName": "Ann Lee"
+            },
+            {
+              "PersonID": 2,
+              "FullName": "Bo Ng"
+            }
+          ],
+          "Application.DeliveryMethods": [
+            {
+              "DeliveryMethodID": 1,
+              "DeliveryMethodName": "Delivery Van"
+            }
+          ],
+          "Application.Cities": [
+            {
+              "CityID": 1,
+              "CityName": "Seattle"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

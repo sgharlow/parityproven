@@ -1,0 +1,241 @@
+{
+  "schemaVersion": 1,
+  "object": "Website.SearchForPeople",
+  "database": "WideWorldImporters",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-19T05:20:49.498Z"
+  },
+  "notApplicable": {
+    "null-vs-empty": "Application.People.SearchName is NOT NULL and the only text parameter (SearchText) cannot be both '' and NULL in one case; a NULL SearchText is outside the object's stated precondition. '' is covered by the empty-search case."
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "SearchName values differing only in case both match; the two rows share PreferredName",
+      "traps": [
+        "collation-case",
+        "top-ties"
+      ],
+      "reasoning": "LIKE under CI_AS is case-insensitive, so 'ab' matches SearchName 'ab' and 'AB' (the conversion uses ~*). Both rows share PreferredName 'Q' (a non-key tie) but have distinct FullName, so order is well-defined and both appear.",
+      "fixedCase": {
+        "args": [
+          "ab",
+          5
+        ],
+        "tables": {
+          "Application.People": [
+            {
+              "PersonID": 1,
+              "FullName": "Q0001",
+              "PreferredName": "Q",
+              "IsSalesperson": false,
+              "IsEmployee": true,
+              "SearchName": "ab"
+            },
+            {
+              "PersonID": 3,
+              "FullName": "Q0003",
+              "PreferredName": "Q",
+              "IsSalesperson": false,
+              "IsEmployee": true,
+              "SearchName": "AB"
+            }
+          ],
+          "Sales.Customers": [],
+          "Purchasing.Suppliers": []
+        }
+      }
+    },
+    {
+      "id": "A02",
+      "label": "a trailing space in SearchName is matched by LIKE '%amy%'",
+      "traps": [
+        "trailing-spaces"
+      ],
+      "reasoning": "SearchName 'amy ' ends in a space; LIKE N'%amy%' matches it on SQL Server and the translated regex matches it too. The person is returned on both engines.",
+      "fixedCase": {
+        "args": [
+          "amy",
+          5
+        ],
+        "tables": {
+          "Application.People": [
+            {
+              "PersonID": 1,
+              "FullName": "Q0001",
+              "PreferredName": "Q",
+              "IsSalesperson": false,
+              "IsEmployee": true,
+              "SearchName": "amy "
+            }
+          ],
+          "Sales.Customers": [],
+          "Purchasing.Suppliers": []
+        }
+      }
+    },
+    {
+      "id": "A03",
+      "label": "character class [^a] matches any one character that is not 'a'",
+      "traps": [],
+      "reasoning": "T-SQL LIKE negated class [^a] matches a single non-'a' character; PostgreSQL LIKE has no classes, so the conversion must translate it. 'b' matches, 'a' and 'A' do not (case-insensitive), '' does not.",
+      "fixedCase": {
+        "args": [
+          "[^a]",
+          5
+        ],
+        "tables": {
+          "Application.People": [
+            {
+              "PersonID": 1,
+              "FullName": "Q0001",
+              "PreferredName": "Q",
+              "IsSalesperson": false,
+              "IsEmployee": true,
+              "SearchName": "a"
+            },
+            {
+              "PersonID": 2,
+              "FullName": "Q0002",
+              "PreferredName": "Q",
+              "IsSalesperson": false,
+              "IsEmployee": true,
+              "SearchName": "A"
+            },
+            {
+              "PersonID": 3,
+              "FullName": "Q0003",
+              "PreferredName": "Q",
+              "IsSalesperson": false,
+              "IsEmployee": true,
+              "SearchName": "b"
+            },
+            {
+              "PersonID": 4,
+              "FullName": "Q0004",
+              "PreferredName": "Q",
+              "IsSalesperson": false,
+              "IsEmployee": true,
+              "SearchName": ""
+            }
+          ],
+          "Sales.Customers": [],
+          "Purchasing.Suppliers": []
+        }
+      }
+    },
+    {
+      "id": "A04",
+      "label": "relationship precedence: a person flagged both salesperson and employee is reported as 'Salesperson'",
+      "traps": [],
+      "reasoning": "The CASE tests IsSalesperson before IsEmployee; a person with both bits set must be 'Salesperson'. A conversion that reordered the WHEN branches would report 'Employee'.",
+      "fixedCase": {
+        "args": [
+          "ab",
+          5
+        ],
+        "tables": {
+          "Application.People": [
+            {
+              "PersonID": 1,
+              "FullName": "Q0001",
+              "PreferredName": "Q",
+              "IsSalesperson": true,
+              "IsEmployee": true,
+              "SearchName": "ab"
+            }
+          ],
+          "Sales.Customers": [],
+          "Purchasing.Suppliers": []
+        }
+      }
+    },
+    {
+      "id": "A05",
+      "label": "TOP(2) of five hits, ordered by the Windows collation; person ids are non-contiguous",
+      "traps": [
+        "identity-gaps"
+      ],
+      "reasoning": "Five people match; @MaximumRowsToReturn = 2 returns the first two in Latin1_General_100_CI_AS order of FullName (LIMIT 2, same collation). PersonIDs 1,3,5,7,9 (gaps) confirm the key is by value.",
+      "fixedCase": {
+        "args": [
+          "ab",
+          2
+        ],
+        "tables": {
+          "Application.People": [
+            {
+              "PersonID": 1,
+              "FullName": "Q0001",
+              "PreferredName": "Q",
+              "IsSalesperson": false,
+              "IsEmployee": true,
+              "SearchName": "ab"
+            },
+            {
+              "PersonID": 3,
+              "FullName": "Q0003",
+              "PreferredName": "Q",
+              "IsSalesperson": false,
+              "IsEmployee": true,
+              "SearchName": "xab"
+            },
+            {
+              "PersonID": 5,
+              "FullName": "Q0005",
+              "PreferredName": "Q",
+              "IsSalesperson": false,
+              "IsEmployee": true,
+              "SearchName": "abx"
+            },
+            {
+              "PersonID": 7,
+              "FullName": "Q0007",
+              "PreferredName": "Q",
+              "IsSalesperson": false,
+              "IsEmployee": true,
+              "SearchName": "ZAB"
+            },
+            {
+              "PersonID": 9,
+              "FullName": "Q0009",
+              "PreferredName": "Q",
+              "IsSalesperson": false,
+              "IsEmployee": true,
+              "SearchName": "cab"
+            }
+          ],
+          "Sales.Customers": [],
+          "Purchasing.Suppliers": []
+        }
+      }
+    },
+    {
+      "id": "A06",
+      "label": "no row qualifies: FOR JSON ... ROOT('People') returns an empty string",
+      "traps": [],
+      "reasoning": "When nothing matches, FOR JSON AUTO with ROOT yields '' (not {\"People\":[]}); the conversion returns '' via the count(*) = 0 branch. Both engines produce the empty document.",
+      "fixedCase": {
+        "args": [
+          "zzz",
+          5
+        ],
+        "tables": {
+          "Application.People": [
+            {
+              "PersonID": 1,
+              "FullName": "Q0001",
+              "PreferredName": "Q",
+              "IsSalesperson": false,
+              "IsEmployee": true,
+              "SearchName": "abc"
+            }
+          ],
+          "Sales.Customers": [],
+          "Purchasing.Suppliers": []
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,969 @@
+{
+  "schemaVersion": 1,
+  "object": "Website.InvoiceCustomerOrders",
+  "database": "WideWorldImporters",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-19T05:20:49.498Z"
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "tax and line amounts round half away from zero: 3 x 0.95 x 0.505 % = 0.01438875 -> 0.01",
+      "traps": [
+        "numeric-rounding"
+      ],
+      "reasoning": "TaxAmount = ROUND(PickedQuantity * UnitPrice * TaxRate / 100.0, 2); UnitPrice 0.95 and TaxRate 0.505 both end in 5. Both engines must round half away from zero into decimal(18,2), and ExtendedPrice must be the sum of the two rounded parts.",
+      "fixedCase": {
+        "tables": {
+          "Website.OrderIDList": [
+            {
+              "OrderID": 1
+            }
+          ],
+          "Sales.Orders": [
+            {
+              "OrderID": 1,
+              "CustomerID": 1,
+              "ContactPersonID": 3,
+              "SalespersonPersonID": 7,
+              "CustomerPurchaseOrderNumber": "PO-1",
+              "PickingCompletedWhen": "2020-01-01T10:00:00.000000"
+            },
+            {
+              "OrderID": 2,
+              "CustomerID": 2,
+              "ContactPersonID": 4,
+              "SalespersonPersonID": 8,
+              "CustomerPurchaseOrderNumber": null,
+              "PickingCompletedWhen": "2020-01-01T10:00:00.000000"
+            }
+          ],
+          "Sales.OrderLines": [
+            {
+              "OrderLineID": 1,
+              "OrderID": 1,
+              "StockItemID": 1,
+              "Description": "dry",
+              "PackageTypeID": 7,
+              "PickedQuantity": 3,
+              "UnitPrice": "0.95",
+              "TaxRate": "0.505"
+            },
+            {
+              "OrderLineID": 2,
+              "OrderID": 1,
+              "StockItemID": 2,
+              "Description": "chilled",
+              "PackageTypeID": 9,
+              "PickedQuantity": 2,
+              "UnitPrice": "10.00",
+              "TaxRate": "15.000"
+            },
+            {
+              "OrderLineID": 3,
+              "OrderID": 2,
+              "StockItemID": 1,
+              "Description": "dry",
+              "PackageTypeID": 7,
+              "PickedQuantity": 1,
+              "UnitPrice": "5.55",
+              "TaxRate": "10.000"
+            }
+          ],
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "IsChillerStock": false
+            },
+            {
+              "StockItemID": 2,
+              "IsChillerStock": true
+            }
+          ],
+          "Warehouse.StockItemHoldings": [
+            {
+              "StockItemID": 1,
+              "QuantityOnHand": 100,
+              "LastCostPrice": "0.50",
+              "LastEditedBy": 1,
+              "LastEditedWhen": "2020-01-01T00:00:00.000000"
+            },
+            {
+              "StockItemID": 2,
+              "QuantityOnHand": 10,
+              "LastCostPrice": "6.00",
+              "LastEditedBy": 1,
+              "LastEditedWhen": "2020-01-01T00:00:00.000000"
+            }
+          ],
+          "Sales.Customers": [
+            {
+              "CustomerID": 1,
+              "BillToCustomerID": 2,
+              "DeliveryMethodID": 3,
+              "PrimaryContactPersonID": 11,
+              "DeliveryAddressLine1": "Shop 12",
+              "DeliveryAddressLine2": "1 Main St",
+              "DeliveryRun": "A",
+              "RunPosition": "1"
+            },
+            {
+              "CustomerID": 2,
+              "BillToCustomerID": 2,
+              "DeliveryMethodID": 3,
+              "PrimaryContactPersonID": 12,
+              "DeliveryAddressLine1": "Unit 5",
+              "DeliveryAddressLine2": null,
+              "DeliveryRun": null,
+              "RunPosition": null
+            }
+          ],
+          "Sales.Invoices": [],
+          "Sales.InvoiceLines": [],
+          "Warehouse.StockItemTransactions": [],
+          "Sales.CustomerTransactions": [],
+          "Application.TransactionTypes": [
+            {
+              "TransactionTypeID": 1,
+              "TransactionTypeName": "Customer Invoice"
+            },
+            {
+              "TransactionTypeID": 3,
+              "TransactionTypeName": "Customer Payment Received"
+            },
+            {
+              "TransactionTypeID": 10,
+              "TransactionTypeName": "Stock Issue"
+            },
+            {
+              "TransactionTypeID": 11,
+              "TransactionTypeName": "Stock Receipt"
+            }
+          ]
+        },
+        "args": [
+          5,
+          9
+        ]
+      }
+    },
+    {
+      "id": "A02",
+      "label": "PickingCompletedWhen at the maximum datetime2 (9999-12-31): the order still counts as picked",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "The WHERE requires PickingCompletedWhen IS NOT NULL; a boundary value 9999-12-31T23:59:59.999999 must satisfy it on both engines (datetime2 vs timestamp microseconds), so the invoice is generated.",
+      "fixedCase": {
+        "tables": {
+          "Website.OrderIDList": [
+            {
+              "OrderID": 1
+            }
+          ],
+          "Sales.Orders": [
+            {
+              "OrderID": 1,
+              "CustomerID": 1,
+              "ContactPersonID": 3,
+              "SalespersonPersonID": 7,
+              "CustomerPurchaseOrderNumber": "PO-1",
+              "PickingCompletedWhen": "9999-12-31T23:59:59.999999"
+            },
+            {
+              "OrderID": 2,
+              "CustomerID": 2,
+              "ContactPersonID": 4,
+              "SalespersonPersonID": 8,
+              "CustomerPurchaseOrderNumber": null,
+              "PickingCompletedWhen": "9999-12-31T23:59:59.999999"
+            }
+          ],
+          "Sales.OrderLines": [
+            {
+              "OrderLineID": 1,
+              "OrderID": 1,
+              "StockItemID": 1,
+              "Description": "dry",
+              "PackageTypeID": 7,
+              "PickedQuantity": 3,
+              "UnitPrice": "0.99",
+              "TaxRate": "0.505"
+            },
+            {
+              "OrderLineID": 2,
+              "OrderID": 1,
+              "StockItemID": 2,
+              "Description": "chilled",
+              "PackageTypeID": 9,
+              "PickedQuantity": 2,
+              "UnitPrice": "10.00",
+              "TaxRate": "15.000"
+            },
+            {
+              "OrderLineID": 3,
+              "OrderID": 2,
+              "StockItemID": 1,
+              "Description": "dry",
+              "PackageTypeID": 7,
+              "PickedQuantity": 1,
+              "UnitPrice": "5.55",
+              "TaxRate": "10.000"
+            }
+          ],
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "IsChillerStock": false
+            },
+            {
+              "StockItemID": 2,
+              "IsChillerStock": true
+            }
+          ],
+          "Warehouse.StockItemHoldings": [
+            {
+              "StockItemID": 1,
+              "QuantityOnHand": 100,
+              "LastCostPrice": "0.50",
+              "LastEditedBy": 1,
+              "LastEditedWhen": "2020-01-01T00:00:00.000000"
+            },
+            {
+              "StockItemID": 2,
+              "QuantityOnHand": 10,
+              "LastCostPrice": "6.00",
+              "LastEditedBy": 1,
+              "LastEditedWhen": "2020-01-01T00:00:00.000000"
+            }
+          ],
+          "Sales.Customers": [
+            {
+              "CustomerID": 1,
+              "BillToCustomerID": 2,
+              "DeliveryMethodID": 3,
+              "PrimaryContactPersonID": 11,
+              "DeliveryAddressLine1": "Shop 12",
+              "DeliveryAddressLine2": "1 Main St",
+              "DeliveryRun": "A",
+              "RunPosition": "1"
+            },
+            {
+              "CustomerID": 2,
+              "BillToCustomerID": 2,
+              "DeliveryMethodID": 3,
+              "PrimaryContactPersonID": 12,
+              "DeliveryAddressLine1": "Unit 5",
+              "DeliveryAddressLine2": null,
+              "DeliveryRun": null,
+              "RunPosition": null
+            }
+          ],
+          "Sales.Invoices": [],
+          "Sales.InvoiceLines": [],
+          "Warehouse.StockItemTransactions": [],
+          "Sales.CustomerTransactions": [],
+          "Application.TransactionTypes": [
+            {
+              "TransactionTypeID": 1,
+              "TransactionTypeName": "Customer Invoice"
+            },
+            {
+              "TransactionTypeID": 3,
+              "TransactionTypeName": "Customer Payment Received"
+            },
+            {
+              "TransactionTypeID": 10,
+              "TransactionTypeName": "Stock Issue"
+            },
+            {
+              "TransactionTypeID": 11,
+              "TransactionTypeName": "Stock Receipt"
+            }
+          ]
+        },
+        "args": [
+          5,
+          9
+        ]
+      }
+    },
+    {
+      "id": "A03",
+      "label": "empty DeliveryAddressLine1 with NULL DeliveryAddressLine2 makes DeliveryInstructions NULL (+ semantics)",
+      "traps": [
+        "null-vs-empty"
+      ],
+      "reasoning": "DeliveryInstructions = c.DeliveryAddressLine1 + N', ' + c.DeliveryAddressLine2; with line2 NULL the whole concatenation is NULL on SQL Server, and the conversion uses || which also yields NULL (concat() would not). Line1 is '' to keep '' distinct from NULL.",
+      "fixedCase": {
+        "tables": {
+          "Website.OrderIDList": [
+            {
+              "OrderID": 1
+            }
+          ],
+          "Sales.Orders": [
+            {
+              "OrderID": 1,
+              "CustomerID": 1,
+              "ContactPersonID": 3,
+              "SalespersonPersonID": 7,
+              "CustomerPurchaseOrderNumber": "PO-1",
+              "PickingCompletedWhen": "2020-01-01T10:00:00.000000"
+            },
+            {
+              "OrderID": 2,
+              "CustomerID": 2,
+              "ContactPersonID": 4,
+              "SalespersonPersonID": 8,
+              "CustomerPurchaseOrderNumber": null,
+              "PickingCompletedWhen": "2020-01-01T10:00:00.000000"
+            }
+          ],
+          "Sales.OrderLines": [
+            {
+              "OrderLineID": 1,
+              "OrderID": 1,
+              "StockItemID": 1,
+              "Description": "dry",
+              "PackageTypeID": 7,
+              "PickedQuantity": 3,
+              "UnitPrice": "0.99",
+              "TaxRate": "0.505"
+            },
+            {
+              "OrderLineID": 2,
+              "OrderID": 1,
+              "StockItemID": 2,
+              "Description": "chilled",
+              "PackageTypeID": 9,
+              "PickedQuantity": 2,
+              "UnitPrice": "10.00",
+              "TaxRate": "15.000"
+            },
+            {
+              "OrderLineID": 3,
+              "OrderID": 2,
+              "StockItemID": 1,
+              "Description": "dry",
+              "PackageTypeID": 7,
+              "PickedQuantity": 1,
+              "UnitPrice": "5.55",
+              "TaxRate": "10.000"
+            }
+          ],
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "IsChillerStock": false
+            },
+            {
+              "StockItemID": 2,
+              "IsChillerStock": true
+            }
+          ],
+          "Warehouse.StockItemHoldings": [
+            {
+              "StockItemID": 1,
+              "QuantityOnHand": 100,
+              "LastCostPrice": "0.50",
+              "LastEditedBy": 1,
+              "LastEditedWhen": "2020-01-01T00:00:00.000000"
+            },
+            {
+              "StockItemID": 2,
+              "QuantityOnHand": 10,
+              "LastCostPrice": "6.00",
+              "LastEditedBy": 1,
+              "LastEditedWhen": "2020-01-01T00:00:00.000000"
+            }
+          ],
+          "Sales.Customers": [
+            {
+              "CustomerID": 1,
+              "BillToCustomerID": 2,
+              "DeliveryMethodID": 3,
+              "PrimaryContactPersonID": 11,
+              "DeliveryAddressLine1": "",
+              "DeliveryAddressLine2": null,
+              "DeliveryRun": "A",
+              "RunPosition": "1"
+            },
+            {
+              "CustomerID": 2,
+              "BillToCustomerID": 2,
+              "DeliveryMethodID": 3,
+              "PrimaryContactPersonID": 12,
+              "DeliveryAddressLine1": "Unit 5",
+              "DeliveryAddressLine2": null,
+              "DeliveryRun": null,
+              "RunPosition": null
+            }
+          ],
+          "Sales.Invoices": [],
+          "Sales.InvoiceLines": [],
+          "Warehouse.StockItemTransactions": [],
+          "Sales.CustomerTransactions": [],
+          "Application.TransactionTypes": [
+            {
+              "TransactionTypeID": 1,
+              "TransactionTypeName": "Customer Invoice"
+            },
+            {
+              "TransactionTypeID": 3,
+              "TransactionTypeName": "Customer Payment Received"
+            },
+            {
+              "TransactionTypeID": 10,
+              "TransactionTypeName": "Stock Issue"
+            },
+            {
+              "TransactionTypeID": 11,
+              "TransactionTypeName": "Stock Receipt"
+            }
+          ]
+        },
+        "args": [
+          5,
+          9
+        ]
+      }
+    },
+    {
+      "id": "A04",
+      "label": "two invoice lines whose descriptions differ only in case are both written",
+      "traps": [
+        "collation-case",
+        "top-ties"
+      ],
+      "reasoning": "Order lines 'dry' and 'DRY' differ only in case and share PackageTypeID/TaxRate ties; both are inserted into Sales.InvoiceLines verbatim, with no case folding on either engine.",
+      "fixedCase": {
+        "tables": {
+          "Website.OrderIDList": [
+            {
+              "OrderID": 1
+            }
+          ],
+          "Sales.Orders": [
+            {
+              "OrderID": 1,
+              "CustomerID": 1,
+              "ContactPersonID": 3,
+              "SalespersonPersonID": 7,
+              "CustomerPurchaseOrderNumber": "PO-1",
+              "PickingCompletedWhen": "2020-01-01T10:00:00.000000"
+            },
+            {
+              "OrderID": 2,
+              "CustomerID": 2,
+              "ContactPersonID": 4,
+              "SalespersonPersonID": 8,
+              "CustomerPurchaseOrderNumber": null,
+              "PickingCompletedWhen": "2020-01-01T10:00:00.000000"
+            }
+          ],
+          "Sales.OrderLines": [
+            {
+              "OrderLineID": 1,
+              "OrderID": 1,
+              "StockItemID": 1,
+              "Description": "dry",
+              "PackageTypeID": 7,
+              "PickedQuantity": 3,
+              "UnitPrice": "0.99",
+              "TaxRate": "0.505"
+            },
+            {
+              "OrderLineID": 2,
+              "OrderID": 1,
+              "StockItemID": 2,
+              "Description": "DRY",
+              "PackageTypeID": 9,
+              "PickedQuantity": 2,
+              "UnitPrice": "10.00",
+              "TaxRate": "15.000"
+            },
+            {
+              "OrderLineID": 3,
+              "OrderID": 2,
+              "StockItemID": 1,
+              "Description": "dry",
+              "PackageTypeID": 7,
+              "PickedQuantity": 1,
+              "UnitPrice": "5.55",
+              "TaxRate": "10.000"
+            }
+          ],
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "IsChillerStock": false
+            },
+            {
+              "StockItemID": 2,
+              "IsChillerStock": true
+            }
+          ],
+          "Warehouse.StockItemHoldings": [
+            {
+              "StockItemID": 1,
+              "QuantityOnHand": 100,
+              "LastCostPrice": "0.50",
+              "LastEditedBy": 1,
+              "LastEditedWhen": "2020-01-01T00:00:00.000000"
+            },
+            {
+              "StockItemID": 2,
+              "QuantityOnHand": 10,
+              "LastCostPrice": "6.00",
+              "LastEditedBy": 1,
+              "LastEditedWhen": "2020-01-01T00:00:00.000000"
+            }
+          ],
+          "Sales.Customers": [
+            {
+              "CustomerID": 1,
+              "BillToCustomerID": 2,
+              "DeliveryMethodID": 3,
+              "PrimaryContactPersonID": 11,
+              "DeliveryAddressLine1": "Shop 12",
+              "DeliveryAddressLine2": "1 Main St",
+              "DeliveryRun": "A",
+              "RunPosition": "1"
+            },
+            {
+              "CustomerID": 2,
+              "BillToCustomerID": 2,
+              "DeliveryMethodID": 3,
+              "PrimaryContactPersonID": 12,
+              "DeliveryAddressLine1": "Unit 5",
+              "DeliveryAddressLine2": null,
+              "DeliveryRun": null,
+              "RunPosition": null
+            }
+          ],
+          "Sales.Invoices": [],
+          "Sales.InvoiceLines": [],
+          "Warehouse.StockItemTransactions": [],
+          "Sales.CustomerTransactions": [],
+          "Application.TransactionTypes": [
+            {
+              "TransactionTypeID": 1,
+              "TransactionTypeName": "Customer Invoice"
+            },
+            {
+              "TransactionTypeID": 3,
+              "TransactionTypeName": "Customer Payment Received"
+            },
+            {
+              "TransactionTypeID": 10,
+              "TransactionTypeName": "Stock Issue"
+            },
+            {
+              "TransactionTypeID": 11,
+              "TransactionTypeName": "Stock Receipt"
+            }
+          ]
+        },
+        "args": [
+          5,
+          9
+        ]
+      }
+    },
+    {
+      "id": "A05",
+      "label": "customer purchase order number with a trailing space is carried onto the invoice",
+      "traps": [
+        "trailing-spaces"
+      ],
+      "reasoning": "Invoices copy o.CustomerPurchaseOrderNumber; 'PO-1 ' keeps its trailing space in nvarchar(20) and in the converted varchar(20). A conversion that trimmed it would differ.",
+      "fixedCase": {
+        "tables": {
+          "Website.OrderIDList": [
+            {
+              "OrderID": 1
+            }
+          ],
+          "Sales.Orders": [
+            {
+              "OrderID": 1,
+              "CustomerID": 1,
+              "ContactPersonID": 3,
+              "SalespersonPersonID": 7,
+              "CustomerPurchaseOrderNumber": "PO-1 ",
+              "PickingCompletedWhen": "2020-01-01T10:00:00.000000"
+            },
+            {
+              "OrderID": 2,
+              "CustomerID": 2,
+              "ContactPersonID": 4,
+              "SalespersonPersonID": 8,
+              "CustomerPurchaseOrderNumber": null,
+              "PickingCompletedWhen": "2020-01-01T10:00:00.000000"
+            }
+          ],
+          "Sales.OrderLines": [
+            {
+              "OrderLineID": 1,
+              "OrderID": 1,
+              "StockItemID": 1,
+              "Description": "dry",
+              "PackageTypeID": 7,
+              "PickedQuantity": 3,
+              "UnitPrice": "0.99",
+              "TaxRate": "0.505"
+            },
+            {
+              "OrderLineID": 2,
+              "OrderID": 1,
+              "StockItemID": 2,
+              "Description": "chilled",
+              "PackageTypeID": 9,
+              "PickedQuantity": 2,
+              "UnitPrice": "10.00",
+              "TaxRate": "15.000"
+            },
+            {
+              "OrderLineID": 3,
+              "OrderID": 2,
+              "StockItemID": 1,
+              "Description": "dry",
+              "PackageTypeID": 7,
+              "PickedQuantity": 1,
+              "UnitPrice": "5.55",
+              "TaxRate": "10.000"
+            }
+          ],
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "IsChillerStock": false
+            },
+            {
+              "StockItemID": 2,
+              "IsChillerStock": true
+            }
+          ],
+          "Warehouse.StockItemHoldings": [
+            {
+              "StockItemID": 1,
+              "QuantityOnHand": 100,
+              "LastCostPrice": "0.50",
+              "LastEditedBy": 1,
+              "LastEditedWhen": "2020-01-01T00:00:00.000000"
+            },
+            {
+              "StockItemID": 2,
+              "QuantityOnHand": 10,
+              "LastCostPrice": "6.00",
+              "LastEditedBy": 1,
+              "LastEditedWhen": "2020-01-01T00:00:00.000000"
+            }
+          ],
+          "Sales.Customers": [
+            {
+              "CustomerID": 1,
+              "BillToCustomerID": 2,
+              "DeliveryMethodID": 3,
+              "PrimaryContactPersonID": 11,
+              "DeliveryAddressLine1": "Shop 12",
+              "DeliveryAddressLine2": "1 Main St",
+              "DeliveryRun": "A",
+              "RunPosition": "1"
+            },
+            {
+              "CustomerID": 2,
+              "BillToCustomerID": 2,
+              "DeliveryMethodID": 3,
+              "PrimaryContactPersonID": 12,
+              "DeliveryAddressLine1": "Unit 5",
+              "DeliveryAddressLine2": null,
+              "DeliveryRun": null,
+              "RunPosition": null
+            }
+          ],
+          "Sales.Invoices": [],
+          "Sales.InvoiceLines": [],
+          "Warehouse.StockItemTransactions": [],
+          "Sales.CustomerTransactions": [],
+          "Application.TransactionTypes": [
+            {
+              "TransactionTypeID": 1,
+              "TransactionTypeName": "Customer Invoice"
+            },
+            {
+              "TransactionTypeID": 3,
+              "TransactionTypeName": "Customer Payment Received"
+            },
+            {
+              "TransactionTypeID": 10,
+              "TransactionTypeName": "Stock Issue"
+            },
+            {
+              "TransactionTypeID": 11,
+              "TransactionTypeName": "Stock Receipt"
+            }
+          ]
+        },
+        "args": [
+          5,
+          9
+        ]
+      }
+    },
+    {
+      "id": "A06",
+      "label": "an order with no lines: its customer-transaction sums are NULL, hitting a NOT NULL violation that rolls everything back",
+      "traps": [],
+      "reasoning": "SUM over no invoice lines is NULL; Sales.CustomerTransactions.AmountExcludingTax is NOT NULL, so both engines raise and undo every write (the whole batch). The outcome compares the error class, not the message.",
+      "fixedCase": {
+        "tables": {
+          "Website.OrderIDList": [
+            {
+              "OrderID": 1
+            }
+          ],
+          "Sales.Orders": [
+            {
+              "OrderID": 1,
+              "CustomerID": 1,
+              "ContactPersonID": 3,
+              "SalespersonPersonID": 7,
+              "CustomerPurchaseOrderNumber": "PO-1",
+              "PickingCompletedWhen": "2020-01-01T10:00:00.000000"
+            },
+            {
+              "OrderID": 2,
+              "CustomerID": 2,
+              "ContactPersonID": 4,
+              "SalespersonPersonID": 8,
+              "CustomerPurchaseOrderNumber": null,
+              "PickingCompletedWhen": "2020-01-01T10:00:00.000000"
+            }
+          ],
+          "Sales.OrderLines": [],
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "IsChillerStock": false
+            },
+            {
+              "StockItemID": 2,
+              "IsChillerStock": true
+            }
+          ],
+          "Warehouse.StockItemHoldings": [
+            {
+              "StockItemID": 1,
+              "QuantityOnHand": 100,
+              "LastCostPrice": "0.50",
+              "LastEditedBy": 1,
+              "LastEditedWhen": "2020-01-01T00:00:00.000000"
+            },
+            {
+              "StockItemID": 2,
+              "QuantityOnHand": 10,
+              "LastCostPrice": "6.00",
+              "LastEditedBy": 1,
+              "LastEditedWhen": "2020-01-01T00:00:00.000000"
+            }
+          ],
+          "Sales.Customers": [
+            {
+              "CustomerID": 1,
+              "BillToCustomerID": 2,
+              "DeliveryMethodID": 3,
+              "PrimaryContactPersonID": 11,
+              "DeliveryAddressLine1": "Shop 12",
+              "DeliveryAddressLine2": "1 Main St",
+              "DeliveryRun": "A",
+              "RunPosition": "1"
+            },
+            {
+              "CustomerID": 2,
+              "BillToCustomerID": 2,
+              "DeliveryMethodID": 3,
+              "PrimaryContactPersonID": 12,
+              "DeliveryAddressLine1": "Unit 5",
+              "DeliveryAddressLine2": null,
+              "DeliveryRun": null,
+              "RunPosition": null
+            }
+          ],
+          "Sales.Invoices": [],
+          "Sales.InvoiceLines": [],
+          "Warehouse.StockItemTransactions": [],
+          "Sales.CustomerTransactions": [],
+          "Application.TransactionTypes": [
+            {
+              "TransactionTypeID": 1,
+              "TransactionTypeName": "Customer Invoice"
+            },
+            {
+              "TransactionTypeID": 3,
+              "TransactionTypeName": "Customer Payment Received"
+            },
+            {
+              "TransactionTypeID": 10,
+              "TransactionTypeName": "Stock Issue"
+            },
+            {
+              "TransactionTypeID": 11,
+              "TransactionTypeName": "Stock Receipt"
+            }
+          ]
+        },
+        "args": [
+          5,
+          9
+        ]
+      }
+    },
+    {
+      "id": "A07",
+      "label": "two orders with non-contiguous ids 1 and 3 are both invoiced; new invoice ids come from the sequence",
+      "traps": [
+        "identity-gaps"
+      ],
+      "reasoning": "OrderIDs 1 and 3 (a gap) are invoiced together. Each qualifying order consumes one NEXT VALUE FOR Sequences.InvoiceID / nextval; the invoices are matched by OrderID (the assignment of ids to orders is undefined), so both engines must create one invoice per order and leave the same holdings.",
+      "fixedCase": {
+        "tables": {
+          "Website.OrderIDList": [
+            {
+              "OrderID": 1
+            },
+            {
+              "OrderID": 3
+            }
+          ],
+          "Sales.Orders": [
+            {
+              "OrderID": 1,
+              "CustomerID": 1,
+              "ContactPersonID": 3,
+              "SalespersonPersonID": 7,
+              "CustomerPurchaseOrderNumber": "PO-1",
+              "PickingCompletedWhen": "2020-01-01T10:00:00.000000"
+            },
+            {
+              "OrderID": 3,
+              "CustomerID": 2,
+              "ContactPersonID": 4,
+              "SalespersonPersonID": 8,
+              "CustomerPurchaseOrderNumber": null,
+              "PickingCompletedWhen": "2020-01-01T10:00:00.000000"
+            }
+          ],
+          "Sales.OrderLines": [
+            {
+              "OrderLineID": 1,
+              "OrderID": 1,
+              "StockItemID": 1,
+              "Description": "dry",
+              "PackageTypeID": 7,
+              "PickedQuantity": 3,
+              "UnitPrice": "0.99",
+              "TaxRate": "0.505"
+            },
+            {
+              "OrderLineID": 2,
+              "OrderID": 1,
+              "StockItemID": 2,
+              "Description": "chilled",
+              "PackageTypeID": 9,
+              "PickedQuantity": 2,
+              "UnitPrice": "10.00",
+              "TaxRate": "15.000"
+            },
+            {
+              "OrderLineID": 3,
+              "OrderID": 3,
+              "StockItemID": 1,
+              "Description": "dry",
+              "PackageTypeID": 7,
+              "PickedQuantity": 1,
+              "UnitPrice": "5.55",
+              "TaxRate": "10.000"
+            }
+          ],
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "IsChillerStock": false
+            },
+            {
+              "StockItemID": 2,
+              "IsChillerStock": true
+            }
+          ],
+          "Warehouse.StockItemHoldings": [
+            {
+              "StockItemID": 1,
+              "QuantityOnHand": 100,
+              "LastCostPrice": "0.50",
+              "LastEditedBy": 1,
+              "LastEditedWhen": "2020-01-01T00:00:00.000000"
+            },
+            {
+              "StockItemID": 2,
+              "QuantityOnHand": 10,
+              "LastCostPrice": "6.00",
+              "LastEditedBy": 1,
+              "LastEditedWhen": "2020-01-01T00:00:00.000000"
+            }
+          ],
+          "Sales.Customers": [
+            {
+              "CustomerID": 1,
+              "BillToCustomerID": 2,
+              "DeliveryMethodID": 3,
+              "PrimaryContactPersonID": 11,
+              "DeliveryAddressLine1": "Shop 12",
+              "DeliveryAddressLine2": "1 Main St",
+              "DeliveryRun": "A",
+              "RunPosition": "1"
+            },
+            {
+              "CustomerID": 2,
+              "BillToCustomerID": 2,
+              "DeliveryMethodID": 3,
+              "PrimaryContactPersonID": 12,
+              "DeliveryAddressLine1": "Unit 5",
+              "DeliveryAddressLine2": null,
+              "DeliveryRun": null,
+              "RunPosition": null
+            }
+          ],
+          "Sales.Invoices": [],
+          "Sales.InvoiceLines": [],
+          "Warehouse.StockItemTransactions": [],
+          "Sales.CustomerTransactions": [],
+          "Application.TransactionTypes": [
+            {
+              "TransactionTypeID": 1,
+              "TransactionTypeName": "Customer Invoice"
+            },
+            {
+              "TransactionTypeID": 3,
+              "TransactionTypeName": "Customer Payment Received"
+            },
+            {
+              "TransactionTypeID": 10,
+              "TransactionTypeName": "Stock Issue"
+            },
+            {
+              "TransactionTypeID": 11,
+              "TransactionTypeName": "Stock Receipt"
+            }
+          ]
+        },
+        "args": [
+          5,
+          9
+        ]
+      }
+    }
+  ]
+}

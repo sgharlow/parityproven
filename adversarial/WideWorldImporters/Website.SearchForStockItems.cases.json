@@ -1,0 +1,214 @@
+{
+  "schemaVersion": 1,
+  "object": "Website.SearchForStockItems",
+  "database": "WideWorldImporters",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-19T05:20:49.498Z"
+  },
+  "notApplicable": {
+    "null-vs-empty": "SearchDetails is NOT NULL and the only text parameter (SearchText) cannot be both '' and NULL in one case, and a NULL SearchText is outside the object's stated precondition; '' is covered by the empty-search case."
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "SearchDetails: values differing only in case both match a case-insensitive search and keep their own case in the result",
+      "traps": [
+        "collation-case"
+      ],
+      "reasoning": "T-SQL LIKE under the CI_AS collation is case-insensitive, so searching 'ab' matches SearchDetails 'ab' and 'AB'; the conversion uses ~* (case-insensitive regex). Both rows are ordered by distinct names; the JSON must list both.",
+      "fixedCase": {
+        "args": [
+          "ab",
+          5
+        ],
+        "tables": {
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "StockItemName": "Item A",
+              "SearchDetails": "ab"
+            },
+            {
+              "StockItemID": 3,
+              "StockItemName": "Item B",
+              "SearchDetails": "AB"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A02",
+      "label": "SearchDetails: two matching rows share the same SearchDetails value (a non-key tie); both are returned in name order",
+      "traps": [
+        "top-ties"
+      ],
+      "reasoning": "Rows 1 and 3 share SearchDetails = 'dup' (a non-key value) and both match the search; their StockItemNames differ, so the Windows-collation ORDER BY is deterministic and both must appear on each engine.",
+      "fixedCase": {
+        "args": [
+          "dup",
+          5
+        ],
+        "tables": {
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "StockItemName": "Item A",
+              "SearchDetails": "dup"
+            },
+            {
+              "StockItemID": 3,
+              "StockItemName": "Item B",
+              "SearchDetails": "dup"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A03",
+      "label": "SearchDetails: a trailing space in the data is matched by LIKE '%x%'",
+      "traps": [
+        "trailing-spaces"
+      ],
+      "reasoning": "SearchDetails 'abc ' ends in a space; LIKE N'%abc%' matches it on SQL Server and the translated regex matches it too. A conversion that rtrimmed the column would still match here, but the stored/compared value must keep the space.",
+      "fixedCase": {
+        "args": [
+          "abc",
+          5
+        ],
+        "tables": {
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "StockItemName": "Only",
+              "SearchDetails": "abc "
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A04",
+      "label": "SearchDetails: character class [a-c] matches one of a, b, c (T-SQL LIKE, not PostgreSQL LIKE)",
+      "traps": [],
+      "reasoning": "T-SQL LIKE treats [a-c] as a character class; PostgreSQL LIKE does not, so the conversion must translate it to a regex class. 'b' matches, 'd' does not, 'x[a-c]' does not (literal class only when escaped).",
+      "fixedCase": {
+        "args": [
+          "[a-c]",
+          5
+        ],
+        "tables": {
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "StockItemName": "I1",
+              "SearchDetails": "b"
+            },
+            {
+              "StockItemID": 2,
+              "StockItemName": "I2",
+              "SearchDetails": "d"
+            },
+            {
+              "StockItemID": 3,
+              "StockItemName": "I3",
+              "SearchDetails": "aaa"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A05",
+      "label": "SearchDetails: a backslash is an ordinary character in T-SQL LIKE (no escape)",
+      "traps": [],
+      "reasoning": "T-SQL LIKE has no escape character, so 'a\\b' matches the literal 'a\\b'; PostgreSQL LIKE would treat backslash specially, so the translation must emit a literal backslash in the regex.",
+      "fixedCase": {
+        "args": [
+          "a\\b",
+          5
+        ],
+        "tables": {
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "StockItemName": "I1",
+              "SearchDetails": "a\\b"
+            },
+            {
+              "StockItemID": 2,
+              "StockItemName": "I2",
+              "SearchDetails": "ab"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A06",
+      "label": "SearchDetails: TOP(@MaximumRowsToReturn) returns exactly two of five hits, ordered by the Windows collation",
+      "traps": [
+        "identity-gaps"
+      ],
+      "reasoning": "Five rows match; @MaximumRowsToReturn = 2 returns the first two in Latin1_General_100_CI_AS order (LIMIT 2 in the conversion, same ordering collation). StockItemIDs 1,3,5,7,9 (gaps) confirm the key is by value, and the two-row limit must agree.",
+      "fixedCase": {
+        "args": [
+          "ab",
+          2
+        ],
+        "tables": {
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "StockItemName": "Item 1",
+              "SearchDetails": "ab"
+            },
+            {
+              "StockItemID": 3,
+              "StockItemName": "Item 2",
+              "SearchDetails": "xab"
+            },
+            {
+              "StockItemID": 5,
+              "StockItemName": "Item 3",
+              "SearchDetails": "abx"
+            },
+            {
+              "StockItemID": 7,
+              "StockItemName": "Item 4",
+              "SearchDetails": "ZAB"
+            },
+            {
+              "StockItemID": 9,
+              "StockItemName": "Item 5",
+              "SearchDetails": "cab"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A07",
+      "label": "SearchDetails: no row qualifies, so FOR JSON ... ROOT returns an empty string, not an empty array",
+      "traps": [],
+      "reasoning": "When nothing matches, FOR JSON AUTO with ROOT yields '' on SQL Server (not {\"StockItems\":[]}); the conversion returns '' via the count(*) = 0 branch. Both must produce the empty document.",
+      "fixedCase": {
+        "args": [
+          "zzz",
+          5
+        ],
+        "tables": {
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "StockItemName": "I1",
+              "SearchDetails": "abc"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

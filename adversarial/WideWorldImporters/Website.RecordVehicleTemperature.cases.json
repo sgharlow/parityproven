@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "object": "Website.RecordVehicleTemperature",
+  "database": "WideWorldImporters",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-19T05:20:49.498Z"
+  },
+  "notApplicable": {
+    "null-vs-empty": "The only parameter is one nvarchar(1000) JSON document; NULL vs '' (NULL document inserts nothing without error, '' fails ISJSON) is exercised by named cases on the payload, not by a typed text column the trap checker inspects.",
+    "collation-case": "Case sensitivity of the stored VehicleRegistration is exercised by a named case ('WWI-A' vs an existing 'wwi-a' row); the rego value itself is a JSON token inside the string argument, not a typed text column.",
+    "dates-datetime": "The datetime boundary is a 'when' token inside the JSON string (covered by a named case), not a typed date column or a cutoff window the trap checker reads.",
+    "numeric-rounding": "The decimal rounding is a 'temp' token inside the JSON string (covered by the 3.965 case), not a typed decimal column the trap checker reads.",
+    "top-ties": "The procedure inserts rows parsed from one JSON document and reads no table for row selection, so there is no two-row tie in a typed input to construct; array order within the document is covered by the parsing cases."
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "a trailing space after the JSON object: still valid JSON, so the recording is inserted",
+      "traps": [
+        "trailing-spaces"
+      ],
+      "reasoning": "The nvarchar(1000) argument ends in a space. ISJSON ignores trailing whitespace and the conversion's IS JSON test does too, so the single recording must still be parsed and inserted on both engines.",
+      "fixedCase": {
+        "args": [
+          "{\"Recordings\":[{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-89.76,50.47]},\"properties\":{\"rego\":\"WWI-1\",\"sensor\":1,\"when\":\"2016-01-01T07:00:00\",\"temp\":3.96}}]} "
+        ],
+        "tables": {
+          "Warehouse.VehicleTemperatures": []
+        }
+      }
+    },
+    {
+      "id": "A02",
+      "label": "duplicate 'rego' key: the first occurrence wins",
+      "traps": [],
+      "reasoning": "OPENJSON ... WITH takes the first of duplicate keys; the conversion's json_member does the same (json, not jsonb, keeps order). VehicleRegistration must be 'first' on both engines.",
+      "fixedCase": {
+        "args": [
+          "{\"Recordings\":[{\"type\":\"Feature\",\"properties\":{\"rego\":\"first\",\"rego\":\"second\",\"sensor\":1,\"when\":\"2016-01-01T07:00:00\",\"temp\":1}}]}"
+        ],
+        "tables": {
+          "Warehouse.VehicleTemperatures": []
+        }
+      }
+    },
+    {
+      "id": "A03",
+      "label": "temperature 3.965 rounds half away from zero to 3.97",
+      "traps": [],
+      "reasoning": "CAST of 3.965 to decimal(18,2) rounds half away from zero to 3.97; tsql_compat.to_decimal_18_2 uses round(numeric,2) which must match, not banker's rounding.",
+      "fixedCase": {
+        "args": [
+          "{\"Recordings\":[{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-89.76,50.47]},\"properties\":{\"rego\":\"a\",\"sensor\":1,\"when\":\"2016-01-01T07:00:00\",\"temp\":3.965}}]}"
+        ],
+        "tables": {
+          "Warehouse.VehicleTemperatures": []
+        }
+      }
+    },
+    {
+      "id": "A04",
+      "label": "boundary datetime 9999-12-31 in 'when'",
+      "traps": [],
+      "reasoning": "A 'when' of 9999-12-31T23:59:59.999999 is parsed by to_datetime2 and stored in datetime2(7)/timestamp; the maximum date tests the mapping's microsecond rounding against SQL Server's tick resolution.",
+      "fixedCase": {
+        "args": [
+          "{\"Recordings\":[{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-89.76,50.47]},\"properties\":{\"rego\":\"a\",\"sensor\":1,\"when\":\"9999-12-31T23:59:59.999999\",\"temp\":1}}]}"
+        ],
+        "tables": {
+          "Warehouse.VehicleTemperatures": []
+        }
+      }
+    },
+    {
+      "id": "A05",
+      "label": "registration whose name differs only in case from an existing row",
+      "traps": [],
+      "reasoning": "VehicleRegistration is stored verbatim; 'WWI-A' is inserted alongside an existing 'wwi-a' row. No case folding on either engine, so both rows remain distinct in Warehouse.VehicleTemperatures.",
+      "fixedCase": {
+        "args": [
+          "{\"Recordings\":[{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-89.76,50.47]},\"properties\":{\"rego\":\"WWI-A\",\"sensor\":1,\"when\":\"2016-01-01T07:00:00\",\"temp\":1}}]}"
+        ],
+        "tables": {
+          "Warehouse.VehicleTemperatures": [
+            {
+              "VehicleRegistration": "wwi-a",
+              "ChillerSensorNumber": 9,
+              "RecordedWhen": "2016-01-01T00:00:00.000000",
+              "Temperature": "2.00",
+              "FullSensorData": null,
+              "IsCompressed": false,
+              "CompressedSensorData": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A06",
+      "label": "NULL document: ISJSON(NULL) is NULL, so nothing is inserted and no error is raised",
+      "traps": [],
+      "reasoning": "ISJSON returns NULL for a NULL argument, which is not = 0, so the THROW is skipped; OPENJSON over NULL yields no rows. The conversion's isjson() returns NULL and inserts nothing. No error on either engine.",
+      "fixedCase": {
+        "args": [
+          null
+        ],
+        "tables": {
+          "Warehouse.VehicleTemperatures": []
+        }
+      }
+    }
+  ]
+}

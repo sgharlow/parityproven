@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 1,
+  "object": "Website.RecordColdRoomTemperatures",
+  "database": "WideWorldImporters",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-19T05:20:49.498Z"
+  },
+  "notApplicable": {
+    "identity-gaps": "The only key column is Website.SensorDataList.SensorDataListID, an IDENTITY the harness renumbers 1..n for each call (tvpJson), so a planted gap in it cannot reach either engine; Warehouse.ColdRoomTemperatures has no key the procedure uses."
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "a reading at the maximum datetime2 (9999-12-31) updates every existing row for its sensor",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "A new reading for sensor 1 with RecordedWhen 9999-12-31T23:59:59.999999 updates all existing sensor-1 rows. datetime2(7) holds 100 ns ticks and timestamp holds microseconds, so the boundary value tests that the stored RecordedWhen matches after the mapping.",
+      "fixedCase": {
+        "args": [],
+        "tables": {
+          "Website.SensorDataList": [
+            {
+              "SensorDataListID": 1,
+              "ColdRoomSensorNumber": 1,
+              "RecordedWhen": "9999-12-31T23:59:59.999999",
+              "Temperature": "5.25"
+            }
+          ],
+          "Warehouse.ColdRoomTemperatures": [
+            {
+              "ColdRoomSensorNumber": 1,
+              "RecordedWhen": "2020-01-01T00:00:00.000000",
+              "Temperature": "1.00"
+            },
+            {
+              "ColdRoomSensorNumber": 1,
+              "RecordedWhen": "2020-01-01T00:00:00.000000",
+              "Temperature": "2.00"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A02",
+      "label": "temperature 4.25 is stored exactly; a second reading overflows decimal(10,2) and rolls both back",
+      "traps": [
+        "numeric-rounding"
+      ],
+      "reasoning": "Reading 1 stores 4.25 (ends in 5, exact in decimal(10,2)); reading 2 is 123456789.00 which overflows decimal(10,2). ATOMIC/exception semantics mean both engines raise and leave Warehouse.ColdRoomTemperatures unchanged (reading 1 undone too).",
+      "fixedCase": {
+        "args": [],
+        "tables": {
+          "Website.SensorDataList": [
+            {
+              "SensorDataListID": 1,
+              "ColdRoomSensorNumber": 2,
+              "RecordedWhen": "2020-01-01T00:00:00.000000",
+              "Temperature": "4.25"
+            },
+            {
+              "SensorDataListID": 2,
+              "ColdRoomSensorNumber": 2,
+              "RecordedWhen": "2020-01-01T00:00:00.000000",
+              "Temperature": "123456789.00"
+            }
+          ],
+          "Warehouse.ColdRoomTemperatures": []
+        }
+      }
+    },
+    {
+      "id": "A03",
+      "label": "three existing rows for one sensor share a temperature; one reading updates all of them",
+      "traps": [
+        "top-ties"
+      ],
+      "reasoning": "Two existing sensor-3 rows share Temperature 1.00 (a non-key tie; the table has no key the procedure uses). The single reading's UPDATE ... WHERE ColdRoomSensorNumber = 3 must rewrite every matching row on both engines.",
+      "fixedCase": {
+        "args": [],
+        "tables": {
+          "Website.SensorDataList": [
+            {
+              "SensorDataListID": 1,
+              "ColdRoomSensorNumber": 3,
+              "RecordedWhen": "2020-01-02T00:00:00.000000",
+              "Temperature": "7.00"
+            }
+          ],
+          "Warehouse.ColdRoomTemperatures": [
+            {
+              "ColdRoomSensorNumber": 3,
+              "RecordedWhen": "2020-01-01T00:00:00.000000",
+              "Temperature": "1.00"
+            },
+            {
+              "ColdRoomSensorNumber": 3,
+              "RecordedWhen": "2020-01-01T00:00:00.000000",
+              "Temperature": "1.00"
+            },
+            {
+              "ColdRoomSensorNumber": 3,
+              "RecordedWhen": "2020-01-01T00:00:00.000000",
+              "Temperature": "2.00"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A04",
+      "label": "two readings for the same new sensor: the first inserts, the second updates it (loop order preserved)",
+      "traps": [],
+      "reasoning": "Readings are applied in SensorDataListID order; for a brand-new sensor the first inserts and the second updates. A conversion that swapped the loop bounds, or inserted even when the update matched, would differ.",
+      "fixedCase": {
+        "args": [],
+        "tables": {
+          "Website.SensorDataList": [
+            {
+              "SensorDataListID": 1,
+              "ColdRoomSensorNumber": 4,
+              "RecordedWhen": "2020-01-01T00:00:00.000000",
+              "Temperature": "4.00"
+            },
+            {
+              "SensorDataListID": 2,
+              "ColdRoomSensorNumber": 4,
+              "RecordedWhen": "2020-01-01T00:00:05.123456",
+              "Temperature": "4.50"
+            }
+          ],
+          "Warehouse.ColdRoomTemperatures": []
+        }
+      }
+    }
+  ]
+}
