@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "object": "dbo.ufnLeadingZeros",
   "database": "AdventureWorks2025",
-  "runAt": "2026-11-19T17:40:25.704Z",
+  "runAt": "2026-11-19T17:49:03.769Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "71fbec7f435258e2d71571bdf1980b124670f38daa9b4d97753eba7d5fb418e2",
   "attacker": {
@@ -13,9 +13,9 @@
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-19T06:06:57.652Z",
+    "at": "2026-11-19T17:43:51.5194020Z",
     "file": "adversarial/AdventureWorks2025/dbo.ufnLeadingZeros.audit.json",
-    "sha256": "cd8a1c7054d883ef3b2fd0456ee97f781e1c85ab4c89a91016891a9c4c28f079"
+    "sha256": "6a2a7a6d3bbe57a79af17da860ff5d911ad4f4cda153846938dab01ac463c6b6"
   },
   "sameModel": false,
   "casesAudited": [
@@ -26,7 +26,10 @@
     "A05",
     "A06",
     "A07",
-    "A08"
+    "A08",
+    "A09",
+    "A10",
+    "A11"
   ],
   "traps": {
     "null-vs-empty": {
@@ -328,10 +331,8 @@
     "equivalentRecorded": []
   },
   "gate": {
-    "passed": false,
-    "reasons": [
-      "audited case ids differ from the case ids"
-    ]
+    "passed": true,
+    "reasons": []
   },
   "wording": "11 adversarial cases ran, 0 differed"
 }

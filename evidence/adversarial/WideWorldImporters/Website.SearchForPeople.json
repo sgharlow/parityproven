@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "object": "Website.SearchForPeople",
   "database": "WideWorldImporters",
-  "runAt": "2026-11-19T17:41:01.081Z",
+  "runAt": "2026-11-19T17:48:05.348Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "ccbeeb76bd739e4f53ebbec023b5353bb95f68f05ca65e1774582ea33385a895",
   "attacker": {
@@ -13,9 +13,9 @@
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-19T06:06:57.652Z",
+    "at": "2026-11-19T17:43:51.5194020Z",
     "file": "adversarial/WideWorldImporters/Website.SearchForPeople.audit.json",
-    "sha256": "3dea5af5dbdb3ce64d3a1bf8d4a42f9677a7e207ff8f2ed40b389ba145649022"
+    "sha256": "1172753e1962c1e64e3c8ab502f2fa1a31c5d8a04e07aebe37271904ee6cbcb1"
   },
   "sameModel": false,
   "casesAudited": [
@@ -24,7 +24,8 @@
     "A03",
     "A04",
     "A05",
-    "A06"
+    "A06",
+    "A07"
   ],
   "traps": {
     "null-vs-empty": {
@@ -270,10 +271,8 @@
     "equivalentRecorded": []
   },
   "gate": {
-    "passed": false,
-    "reasons": [
-      "audited case ids differ from the case ids"
-    ]
+    "passed": true,
+    "reasons": []
   },
   "wording": "7 adversarial cases ran, 0 differed"
 }

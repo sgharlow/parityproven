@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "object": "Purchasing.vVendorWithAddresses",
   "database": "AdventureWorks2025",
-  "runAt": "2026-11-19T17:41:34.251Z",
+  "runAt": "2026-11-19T17:49:25.364Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "4b355893ca70ec3718151f81cce63b8e674e0a782da97f1a9b9bf92ce199f64c",
   "attacker": {
@@ -13,9 +13,9 @@
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-19T06:06:57.652Z",
+    "at": "2026-11-19T17:43:51.5194020Z",
     "file": "adversarial/AdventureWorks2025/Purchasing.vVendorWithAddresses.audit.json",
-    "sha256": "9fd4d60790d62fb163b8a23bec8c2fa908503b8b81547b62e70e36207b4ebf79"
+    "sha256": "983d0225fccf67d69a59fb866987e6801266b1d4d0f88d716eef279e0c00277e"
   },
   "sameModel": false,
   "casesAudited": [
@@ -27,8 +27,7 @@
     "A06",
     "A07",
     "A08",
-    "A09",
-    "A10"
+    "A09"
   ],
   "traps": {
     "null-vs-empty": {
@@ -327,7 +326,12 @@
       "caseId": "A10",
       "kind": "not-an-attack",
       "text": "A10 sends BusinessEntityAddress.AddressTypeID 9 without a matching AddressType row. The source foreign key requires that match, so the new case is outside the source schema preconditions. The inner-to-left-join mutant is unobservable for valid source inputs and is recorded in equivalentMutants instead.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A10 is absent from the current case file, whose case ids are A01 through A09. The invalid input was withdrawn, and the unobservable inner-to-left-join defect remains documented in equivalentMutants.",
+      "confirmedBy": {
+        "model": "gpt-5.6-sol",
+        "at": "2026-11-19T17:43:51.5194020Z"
+      }
     }
   ],
   "mutantAdequacy": {
@@ -345,11 +349,8 @@
     ]
   },
   "gate": {
-    "passed": false,
-    "reasons": [
-      "objection O03 is open",
-      "audited case ids differ from the case ids"
-    ]
+    "passed": true,
+    "reasons": []
   },
   "wording": "9 adversarial cases ran, 0 differed"
 }

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "object": "dbo.ufnGetProductDealerPrice",
   "database": "AdventureWorks2025",
-  "runAt": "2026-11-19T17:42:00.109Z",
+  "runAt": "2026-11-19T17:49:46.385Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "0a07be4a3387abb04b2790e5877b00f07566b22d8e38dc91cc9b1753f15d3d8d",
   "attacker": {
@@ -13,9 +13,9 @@
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-18T19:19:51.7066204-07:00",
+    "at": "2026-11-19T17:43:51.5194020Z",
     "file": "adversarial/AdventureWorks2025/dbo.ufnGetProductDealerPrice.audit.json",
-    "sha256": "bf304635855d036f546cc21cf643cde578fd9adc591be77e566c244e44c01fd0"
+    "sha256": "a659f5618fb12ad29471807bb220ca8441f6c486bdd1de8e275f12c7b9ac01e1"
   },
   "sameModel": false,
   "casesAudited": [

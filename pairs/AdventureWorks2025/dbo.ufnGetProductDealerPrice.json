@@ -109,7 +109,7 @@
       "differed": 0,
       "evidencePath": "evidence/adversarial/AdventureWorks2025/dbo.ufnGetProductDealerPrice.json",
       "conversionSha256": "0a07be4a3387abb04b2790e5877b00f07566b22d8e38dc91cc9b1753f15d3d8d",
-      "runAt": "2026-11-19T17:42:00.109Z"
+      "runAt": "2026-11-19T17:49:46.385Z"
     }
   },
   "effort": {

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "object": "Website.SearchForStockItems",
   "database": "WideWorldImporters",
-  "runAt": "2026-11-19T17:41:07.975Z",
+  "runAt": "2026-11-19T17:48:19.660Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "9a1a731fc0a4e10ffb460058bb38b6fac185831a93e053d660f0ecad439932eb",
   "attacker": {
@@ -13,9 +13,9 @@
   },
   "auditor": {
     "model": "gpt-5.6-sol",
-    "at": "2026-11-19T06:06:57.652Z",
+    "at": "2026-11-19T17:43:51.5194020Z",
     "file": "adversarial/WideWorldImporters/Website.SearchForStockItems.audit.json",
-    "sha256": "6bad283907fc7e145c9565a58f03e9a90e84c6414c3285c3f92fefeae4faed45"
+    "sha256": "f1cca1255a4753a460ce9387e95c0a7cd54342a387b28cb164db51bdc5d2b863"
   },
   "sameModel": false,
   "casesAudited": [
@@ -26,7 +26,9 @@
     "A05",
     "A06",
     "A07",
-    "A08"
+    "A08",
+    "A09",
+    "A10"
   ],
   "traps": {
     "null-vs-empty": {
@@ -317,10 +319,8 @@
     "equivalentRecorded": []
   },
   "gate": {
-    "passed": false,
-    "reasons": [
-      "audited case ids differ from the case ids"
-    ]
+    "passed": true,
+    "reasons": []
   },
   "wording": "10 adversarial cases ran, 0 differed"
 }
