@@ -1,0 +1,344 @@
+{
+  "schemaVersion": 1,
+  "object": "Integration.GetMovementUpdates",
+  "database": "WideWorldImporters",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-19T04:36:25.160Z"
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "Quantity truncates toward zero at the int limits and on halves: 2147483647.999, -2147483648.999, 0.500, -0.500, 1.500, -1.505, 0.005; rows inserted in descending id order with gaps",
+      "traps": [
+        "numeric-rounding",
+        "identity-gaps",
+        "top-ties"
+      ],
+      "reasoning": "CAST(decimal(18,3) AS int) truncates in T-SQL. The conversion uses TRUNC then a cast; a plain ::integer cast rounds half away from zero (0.5 -> 1, -0.5 -> -1) and would overflow on 2147483647.999. Ids 21, 13, 8, 5, 3, 2, 1 are inserted in that order, so a result relying on insertion order instead of ORDER BY would come back reversed. All rows share StockItemID 1.",
+      "fixedCase": {
+        "cutoffs": {
+          "last": "2020-06-15T11:00:00.000000",
+          "new": "2020-06-15T13:00:00.000000"
+        },
+        "tables": {
+          "Warehouse.StockItemTransactions": [
+            {
+              "StockItemTransactionID": 21,
+              "StockItemID": 1,
+              "TransactionTypeID": 10,
+              "CustomerID": null,
+              "InvoiceID": null,
+              "SupplierID": null,
+              "PurchaseOrderID": null,
+              "TransactionOccurredWhen": "2020-06-15T12:00:00.000000",
+              "Quantity": "2147483647.999",
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "StockItemTransactionID": 13,
+              "StockItemID": 1,
+              "TransactionTypeID": 10,
+              "CustomerID": null,
+              "InvoiceID": null,
+              "SupplierID": null,
+              "PurchaseOrderID": null,
+              "TransactionOccurredWhen": "2020-06-15T12:00:00.000000",
+              "Quantity": "-2147483648.999",
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "StockItemTransactionID": 8,
+              "StockItemID": 1,
+              "TransactionTypeID": 10,
+              "CustomerID": null,
+              "InvoiceID": null,
+              "SupplierID": null,
+              "PurchaseOrderID": null,
+              "TransactionOccurredWhen": "2020-06-15T12:00:00.000000",
+              "Quantity": "0.500",
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "StockItemTransactionID": 5,
+              "StockItemID": 1,
+              "TransactionTypeID": 10,
+              "CustomerID": null,
+              "InvoiceID": null,
+              "SupplierID": null,
+              "PurchaseOrderID": null,
+              "TransactionOccurredWhen": "2020-06-15T12:00:00.000000",
+              "Quantity": "-0.500",
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "StockItemTransactionID": 3,
+              "StockItemID": 1,
+              "TransactionTypeID": 10,
+              "CustomerID": null,
+              "InvoiceID": null,
+              "SupplierID": null,
+              "PurchaseOrderID": null,
+              "TransactionOccurredWhen": "2020-06-15T12:00:00.000000",
+              "Quantity": "1.500",
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "StockItemTransactionID": 2,
+              "StockItemID": 1,
+              "TransactionTypeID": 10,
+              "CustomerID": null,
+              "InvoiceID": null,
+              "SupplierID": null,
+              "PurchaseOrderID": null,
+              "TransactionOccurredWhen": "2020-06-15T12:00:00.000000",
+              "Quantity": "-1.505",
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "StockItemTransactionID": 1,
+              "StockItemID": 1,
+              "TransactionTypeID": 10,
+              "CustomerID": null,
+              "InvoiceID": null,
+              "SupplierID": null,
+              "PurchaseOrderID": null,
+              "TransactionOccurredWhen": "2020-06-15T12:00:00.000000",
+              "Quantity": "0.005",
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A02",
+      "label": "window at the extremes of datetime2: @LastCutoff 0001-01-01 00:00:00, @NewCutoff 9999-12-31 23:59:59.999999; rows at both instants and 1 µs inside",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "A row edited exactly at 0001-01-01 is excluded (> is strict); 1 µs later is included; 9999-12-31 23:59:59.999999 equals @NewCutoff and is included (<=). TransactionOccurredWhen 9999-12-31 23:59:59.999999 must give Date Key 9999-12-31 (truncation, not rounding into year 10000) and 1753-01-01 must stay 1753-01-01.",
+      "fixedCase": {
+        "cutoffs": {
+          "last": "0001-01-01T00:00:00.000000",
+          "new": "9999-12-31T23:59:59.999999"
+        },
+        "tables": {
+          "Warehouse.StockItemTransactions": [
+            {
+              "StockItemTransactionID": 1,
+              "StockItemID": 1,
+              "TransactionTypeID": 10,
+              "CustomerID": null,
+              "InvoiceID": null,
+              "SupplierID": null,
+              "PurchaseOrderID": null,
+              "TransactionOccurredWhen": "2020-06-15T12:00:00.000000",
+              "Quantity": "1.000",
+              "LastEditedWhen": "0001-01-01T00:00:00.000000"
+            },
+            {
+              "StockItemTransactionID": 2,
+              "StockItemID": 1,
+              "TransactionTypeID": 10,
+              "CustomerID": null,
+              "InvoiceID": null,
+              "SupplierID": null,
+              "PurchaseOrderID": null,
+              "TransactionOccurredWhen": "1753-01-01T00:00:00.000000",
+              "Quantity": "1.000",
+              "LastEditedWhen": "0001-01-01T00:00:00.000001"
+            },
+            {
+              "StockItemTransactionID": 3,
+              "StockItemID": 1,
+              "TransactionTypeID": 10,
+              "CustomerID": null,
+              "InvoiceID": null,
+              "SupplierID": null,
+              "PurchaseOrderID": null,
+              "TransactionOccurredWhen": "9999-12-31T23:59:59.999999",
+              "Quantity": "1.000",
+              "LastEditedWhen": "9999-12-31T23:59:59.999999"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A03",
+      "label": "empty window: @LastCutoff equal to @NewCutoff; rows at that instant and 1 µs either side are all excluded",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "> @LastCutoff AND <= @NewCutoff with equal cutoffs can never hold. A conversion that used BETWEEN or >= on the lower bound would return the row edited at exactly 12:00:00.",
+      "fixedCase": {
+        "cutoffs": {
+          "last": "2020-06-15T12:00:00.000000",
+          "new": "2020-06-15T12:00:00.000000"
+        },
+        "tables": {
+          "Warehouse.StockItemTransactions": [
+            {
+              "StockItemTransactionID": 1,
+              "StockItemID": 1,
+              "TransactionTypeID": 10,
+              "CustomerID": null,
+              "InvoiceID": null,
+              "SupplierID": null,
+              "PurchaseOrderID": null,
+              "TransactionOccurredWhen": "2020-06-15T12:00:00.000000",
+              "Quantity": "1.000",
+              "LastEditedWhen": "2020-06-15T11:59:59.999999"
+            },
+            {
+              "StockItemTransactionID": 2,
+              "StockItemID": 1,
+              "TransactionTypeID": 10,
+              "CustomerID": null,
+              "InvoiceID": null,
+              "SupplierID": null,
+              "PurchaseOrderID": null,
+              "TransactionOccurredWhen": "2020-06-15T12:00:00.000000",
+              "Quantity": "1.000",
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "StockItemTransactionID": 3,
+              "StockItemID": 1,
+              "TransactionTypeID": 10,
+              "CustomerID": null,
+              "InvoiceID": null,
+              "SupplierID": null,
+              "PurchaseOrderID": null,
+              "TransactionOccurredWhen": "2020-06-15T12:00:00.000000",
+              "Quantity": "1.000",
+              "LastEditedWhen": "2020-06-15T12:00:00.000001"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A04",
+      "label": "inverted window: @LastCutoff after @NewCutoff returns nothing, even for rows between them",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "With @LastCutoff = 13:00 and @NewCutoff = 11:00 both predicates are never true together. A conversion that normalised the window (LEAST/GREATEST) or swapped the parameters would return the rows at 11:00, 12:00 and 13:00.",
+      "fixedCase": {
+        "cutoffs": {
+          "last": "2020-06-15T13:00:00.000000",
+          "new": "2020-06-15T11:00:00.000000"
+        },
+        "tables": {
+          "Warehouse.StockItemTransactions": [
+            {
+              "StockItemTransactionID": 1,
+              "StockItemID": 1,
+              "TransactionTypeID": 10,
+              "CustomerID": null,
+              "InvoiceID": null,
+              "SupplierID": null,
+              "PurchaseOrderID": null,
+              "TransactionOccurredWhen": "2020-06-15T12:00:00.000000",
+              "Quantity": "1.000",
+              "LastEditedWhen": "2020-06-15T11:00:00.000000"
+            },
+            {
+              "StockItemTransactionID": 2,
+              "StockItemID": 1,
+              "TransactionTypeID": 10,
+              "CustomerID": null,
+              "InvoiceID": null,
+              "SupplierID": null,
+              "PurchaseOrderID": null,
+              "TransactionOccurredWhen": "2020-06-15T12:00:00.000000",
+              "Quantity": "1.000",
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "StockItemTransactionID": 3,
+              "StockItemID": 1,
+              "TransactionTypeID": 10,
+              "CustomerID": null,
+              "InvoiceID": null,
+              "SupplierID": null,
+              "PurchaseOrderID": null,
+              "TransactionOccurredWhen": "2020-06-15T12:00:00.000000",
+              "Quantity": "1.000",
+              "LastEditedWhen": "2020-06-15T13:00:00.000000"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A05",
+      "label": "day rollover in the microsecond digits: cutoffs at 23:59:59.999999; Date Key of 23:59:59.999999 stays on that day; Quantity 0.999 and -0.995 truncate to 0",
+      "traps": [
+        "dates-datetime",
+        "numeric-rounding"
+      ],
+      "reasoning": "@LastCutoff 2020-06-14 23:59:59.999999 excludes a row at that instant and includes the next midnight; @NewCutoff 2020-06-15 23:59:59.999999 includes a row at that instant and excludes the next midnight. The included rows occurred at 23:59:59.999999, whose CAST to date keeps the day. -0.995 and 0.999 truncate to 0 (a rounding cast would give -1 and 1).",
+      "fixedCase": {
+        "cutoffs": {
+          "last": "2020-06-14T23:59:59.999999",
+          "new": "2020-06-15T23:59:59.999999"
+        },
+        "tables": {
+          "Warehouse.StockItemTransactions": [
+            {
+              "StockItemTransactionID": 1,
+              "StockItemID": 1,
+              "TransactionTypeID": 10,
+              "CustomerID": null,
+              "InvoiceID": null,
+              "SupplierID": null,
+              "PurchaseOrderID": null,
+              "TransactionOccurredWhen": "2020-06-15T12:00:00.000000",
+              "Quantity": "1.000",
+              "LastEditedWhen": "2020-06-14T23:59:59.999999"
+            },
+            {
+              "StockItemTransactionID": 2,
+              "StockItemID": 1,
+              "TransactionTypeID": 10,
+              "CustomerID": null,
+              "InvoiceID": null,
+              "SupplierID": null,
+              "PurchaseOrderID": null,
+              "TransactionOccurredWhen": "2020-06-14T23:59:59.999999",
+              "Quantity": "0.999",
+              "LastEditedWhen": "2020-06-15T00:00:00.000000"
+            },
+            {
+              "StockItemTransactionID": 3,
+              "StockItemID": 1,
+              "TransactionTypeID": 10,
+              "CustomerID": null,
+              "InvoiceID": null,
+              "SupplierID": null,
+              "PurchaseOrderID": null,
+              "TransactionOccurredWhen": "2020-06-15T23:59:59.999999",
+              "Quantity": "-0.995",
+              "LastEditedWhen": "2020-06-15T23:59:59.999999"
+            },
+            {
+              "StockItemTransactionID": 4,
+              "StockItemID": 1,
+              "TransactionTypeID": 10,
+              "CustomerID": null,
+              "InvoiceID": null,
+              "SupplierID": null,
+              "PurchaseOrderID": null,
+              "TransactionOccurredWhen": "2020-06-15T12:00:00.000000",
+              "Quantity": "1.000",
+              "LastEditedWhen": "2020-06-16T00:00:00.000000"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

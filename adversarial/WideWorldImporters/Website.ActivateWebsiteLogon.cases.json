@@ -1,0 +1,446 @@
+{
+  "schemaVersion": 1,
+  "object": "Website.ActivateWebsiteLogon",
+  "database": "WideWorldImporters",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-19T04:36:25.160Z"
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "initial password of 41 characters ending in a space: SQL Server truncates the nvarchar(40) parameter, PostgreSQL's text parameter keeps the space",
+      "traps": [
+        "trailing-spaces"
+      ],
+      "reasoning": "A string longer than a procedure parameter's declared length is silently truncated by SQL Server, so HASHBYTES hashes 40 'p' + FullName. The conversion declares initial_password as text, so it hashes 40 'p' + ' ' + FullName and the stored hash differs.",
+      "fixedCase": {
+        "args": [
+          2,
+          "amy@example.com",
+          "pppppppppppppppppppppppppppppppppppppppp "
+        ],
+        "tables": {
+          "Application.People": [
+            {
+              "PersonID": 1,
+              "FullName": "Person 1",
+              "IsPermittedToLogon": true,
+              "LogonName": null,
+              "HashedPassword": null,
+              "UserPreferences": "{\"theme\":\"blue\"}"
+            },
+            {
+              "PersonID": 2,
+              "FullName": "Amy Trefl",
+              "IsPermittedToLogon": false,
+              "LogonName": null,
+              "HashedPassword": null,
+              "UserPreferences": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A02",
+      "label": "initial password of 21 emoji (42 UTF-16 code units): SQL Server keeps 20 of them, PostgreSQL hashes all 21",
+      "traps": [],
+      "reasoning": "nvarchar(40) counts UTF-16 code units; each emoji is a surrogate pair, so the parameter keeps 20 emoji. PostgreSQL's text keeps 21, and tsql_compat.utf16le encodes all of them, so the hash differs.",
+      "fixedCase": {
+        "args": [
+          2,
+          "e@example.com",
+          "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀"
+        ],
+        "tables": {
+          "Application.People": [
+            {
+              "PersonID": 1,
+              "FullName": "Person 1",
+              "IsPermittedToLogon": true,
+              "LogonName": null,
+              "HashedPassword": null,
+              "UserPreferences": "{\"theme\":\"blue\"}"
+            },
+            {
+              "PersonID": 2,
+              "FullName": "Person 2",
+              "IsPermittedToLogon": false,
+              "LogonName": null,
+              "HashedPassword": null,
+              "UserPreferences": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A03",
+      "label": "password of 20 emoji (exactly 40 UTF-16 code units) and a full name with an emoji and a combining accent: surrogate pairs hashed as UTF-16LE",
+      "traps": [],
+      "reasoning": "No truncation here: 20 emoji fill nvarchar(40) exactly. HASHBYTES hashes the UTF-16LE bytes including surrogate pairs; utf16le() must build the same pairs for code points above U+FFFF and leave 'e' + U+0301 unnormalised. A UTF-8 hash would differ.",
+      "fixedCase": {
+        "args": [
+          2,
+          "e@example.com",
+          "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀"
+        ],
+        "tables": {
+          "Application.People": [
+            {
+              "PersonID": 1,
+              "FullName": "Person 1",
+              "IsPermittedToLogon": true,
+              "LogonName": null,
+              "HashedPassword": null,
+              "UserPreferences": "{\"theme\":\"blue\"}"
+            },
+            {
+              "PersonID": 2,
+              "FullName": "Zoë é 🎉",
+              "IsPermittedToLogon": false,
+              "LogonName": null,
+              "HashedPassword": null,
+              "UserPreferences": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A04",
+      "label": "logon name of 51 characters: SQL Server truncates the nvarchar(50) parameter and completes; PostgreSQL's varchar(50) column rejects the value",
+      "traps": [],
+      "reasoning": "SQL Server stores the first 50 characters in LogonName and the call completes. The conversion passes text into a varchar(50) column; PostgreSQL raises string_data_right_truncation (22001) because the extra character is not a space.",
+      "fixedCase": {
+        "args": [
+          2,
+          "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "pw"
+        ],
+        "tables": {
+          "Application.People": [
+            {
+              "PersonID": 1,
+              "FullName": "Person 1",
+              "IsPermittedToLogon": true,
+              "LogonName": null,
+              "HashedPassword": null,
+              "UserPreferences": "{\"theme\":\"blue\"}"
+            },
+            {
+              "PersonID": 2,
+              "FullName": "Person 2",
+              "IsPermittedToLogon": false,
+              "LogonName": null,
+              "HashedPassword": null,
+              "UserPreferences": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A05",
+      "label": "logon name of 50 characters followed by three spaces: both engines store the 50 characters",
+      "traps": [
+        "trailing-spaces"
+      ],
+      "reasoning": "SQL Server truncates the parameter to 50. PostgreSQL truncates a value for varchar(50) silently when the excess characters are all spaces, so both store the same 50 characters. The password 'pw ' keeps its own trailing space in the hash on both.",
+      "fixedCase": {
+        "args": [
+          2,
+          "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy   ",
+          "pw "
+        ],
+        "tables": {
+          "Application.People": [
+            {
+              "PersonID": 1,
+              "FullName": "Person 1",
+              "IsPermittedToLogon": true,
+              "LogonName": null,
+              "HashedPassword": null,
+              "UserPreferences": "{\"theme\":\"blue\"}"
+            },
+            {
+              "PersonID": 2,
+              "FullName": "Person 2",
+              "IsPermittedToLogon": false,
+              "LogonName": null,
+              "HashedPassword": null,
+              "UserPreferences": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A06",
+      "label": "NULL password and '' logon name; person 1's preferences are ''; the target's own preferences are replaced",
+      "traps": [
+        "null-vs-empty"
+      ],
+      "reasoning": "NULL + FullName is NULL in T-SQL, so HASHBYTES returns NULL and HashedPassword becomes NULL; || and the STRICT utf16le() give NULL too. LogonName '' is stored as '' (not NULL). UserPreferences becomes person 1's '' even though person 2 had 'old'.",
+      "fixedCase": {
+        "args": [
+          2,
+          "",
+          null
+        ],
+        "tables": {
+          "Application.People": [
+            {
+              "PersonID": 1,
+              "FullName": "Person 1",
+              "IsPermittedToLogon": false,
+              "LogonName": null,
+              "HashedPassword": null,
+              "UserPreferences": ""
+            },
+            {
+              "PersonID": 2,
+              "FullName": "Person 2",
+              "IsPermittedToLogon": false,
+              "LogonName": null,
+              "HashedPassword": null,
+              "UserPreferences": "old"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A07",
+      "label": "'' password and '' full name: SHA2_256 of zero bytes; LogonName NULL before",
+      "traps": [
+        "null-vs-empty"
+      ],
+      "reasoning": "'' + '' is '' (not NULL), and HASHBYTES of an empty nvarchar is the SHA-256 of zero bytes. utf16le('') must return an empty bytea, not NULL, so sha256 gives the same digest.",
+      "fixedCase": {
+        "args": [
+          2,
+          "z",
+          ""
+        ],
+        "tables": {
+          "Application.People": [
+            {
+              "PersonID": 1,
+              "FullName": "Person 1",
+              "IsPermittedToLogon": true,
+              "LogonName": null,
+              "HashedPassword": null,
+              "UserPreferences": "{\"theme\":\"blue\"}"
+            },
+            {
+              "PersonID": 2,
+              "FullName": "",
+              "IsPermittedToLogon": false,
+              "LogonName": null,
+              "HashedPassword": null,
+              "UserPreferences": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A08",
+      "label": "full name and password differ only in case; the logon name keeps its case; two people share a full name",
+      "traps": [
+        "collation-case",
+        "top-ties"
+      ],
+      "reasoning": "HASHBYTES is binary: 'AMY TREFL' + 'amy trefl' hashes differently from any case-folded form. Person 3 has the same FullName as person 2 and must stay untouched. LogonName 'Amy@Example.COM' is stored as given.",
+      "fixedCase": {
+        "args": [
+          2,
+          "Amy@Example.COM",
+          "AMY TREFL"
+        ],
+        "tables": {
+          "Application.People": [
+            {
+              "PersonID": 1,
+              "FullName": "Person 1",
+              "IsPermittedToLogon": true,
+              "LogonName": null,
+              "HashedPassword": null,
+              "UserPreferences": "{\"theme\":\"blue\"}"
+            },
+            {
+              "PersonID": 2,
+              "FullName": "amy trefl",
+              "IsPermittedToLogon": false,
+              "LogonName": null,
+              "HashedPassword": null,
+              "UserPreferences": null
+            },
+            {
+              "PersonID": 3,
+              "FullName": "amy trefl",
+              "IsPermittedToLogon": false,
+              "LogonName": null,
+              "HashedPassword": null,
+              "UserPreferences": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A09",
+      "label": "person ids at the int limits and with gaps: activate 2147483647 while -2147483648 and 0 exist",
+      "traps": [
+        "identity-gaps"
+      ],
+      "reasoning": "PersonID is compared as int; the target sits at the int maximum and the other rows (0, -2147483648) must not change.",
+      "fixedCase": {
+        "args": [
+          2147483647,
+          "max@example.com",
+          "pw"
+        ],
+        "tables": {
+          "Application.People": [
+            {
+              "PersonID": 1,
+              "FullName": "Person 1",
+              "IsPermittedToLogon": true,
+              "LogonName": null,
+              "HashedPassword": null,
+              "UserPreferences": "{\"theme\":\"blue\"}"
+            },
+            {
+              "PersonID": 0,
+              "FullName": "Person 0",
+              "IsPermittedToLogon": false,
+              "LogonName": null,
+              "HashedPassword": null,
+              "UserPreferences": null
+            },
+            {
+              "PersonID": -2147483648,
+              "FullName": "Person -2147483648",
+              "IsPermittedToLogon": false,
+              "LogonName": null,
+              "HashedPassword": null,
+              "UserPreferences": null
+            },
+            {
+              "PersonID": 2147483647,
+              "FullName": "Max",
+              "IsPermittedToLogon": false,
+              "LogonName": null,
+              "HashedPassword": null,
+              "UserPreferences": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A10",
+      "label": "NULL person id: nothing is updated and both engines raise",
+      "traps": [],
+      "reasoning": "PersonID = NULL is never true, so @@ROWCOUNT is 0 and THROW 51000 runs; the conversion's NOT FOUND path raises P0001. No row changes.",
+      "fixedCase": {
+        "args": [
+          null,
+          "x",
+          "pw"
+        ],
+        "tables": {
+          "Application.People": [
+            {
+              "PersonID": 1,
+              "FullName": "Person 1",
+              "IsPermittedToLogon": true,
+              "LogonName": null,
+              "HashedPassword": null,
+              "UserPreferences": "{\"theme\":\"blue\"}"
+            },
+            {
+              "PersonID": 2,
+              "FullName": "Person 2",
+              "IsPermittedToLogon": false,
+              "LogonName": null,
+              "HashedPassword": null,
+              "UserPreferences": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A11",
+      "label": "person 1 not yet enabled, called directly: refused, and its own row is unchanged",
+      "traps": [],
+      "reasoning": "PersonID <> 1 excludes the template even when IsPermittedToLogon is 0, so the call raises and person 1 keeps its NULL logon and hash.",
+      "fixedCase": {
+        "args": [
+          1,
+          "admin",
+          "pw"
+        ],
+        "tables": {
+          "Application.People": [
+            {
+              "PersonID": 1,
+              "FullName": "Person 1",
+              "IsPermittedToLogon": false,
+              "LogonName": null,
+              "HashedPassword": null,
+              "UserPreferences": "{\"theme\":\"red\"}"
+            },
+            {
+              "PersonID": 2,
+              "FullName": "Person 2",
+              "IsPermittedToLogon": false,
+              "LogonName": null,
+              "HashedPassword": null,
+              "UserPreferences": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A12",
+      "label": "an already-enabled person with an existing hash is refused and keeps the hash",
+      "traps": [],
+      "reasoning": "IsPermittedToLogon = 0 is required. Person 2 is enabled with HashedPassword 0x00FF10; the call raises and the hash, logon name and preferences stay as they were.",
+      "fixedCase": {
+        "args": [
+          2,
+          "again",
+          "pw"
+        ],
+        "tables": {
+          "Application.People": [
+            {
+              "PersonID": 1,
+              "FullName": "Person 1",
+              "IsPermittedToLogon": true,
+              "LogonName": null,
+              "HashedPassword": null,
+              "UserPreferences": "{\"theme\":\"blue\"}"
+            },
+            {
+              "PersonID": 2,
+              "FullName": "Person 2",
+              "IsPermittedToLogon": true,
+              "LogonName": "amy",
+              "HashedPassword": {
+                "$hex": "00ff10"
+              },
+              "UserPreferences": "mine"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

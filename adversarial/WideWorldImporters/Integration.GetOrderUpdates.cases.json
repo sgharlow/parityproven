@@ -1,0 +1,766 @@
+{
+  "schemaVersion": 1,
+  "object": "Integration.GetOrderUpdates",
+  "database": "WideWorldImporters",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-19T04:36:25.160Z"
+  },
+  "notApplicable": {
+    "null-vs-empty": "Every text column this procedure reads (Sales.OrderLines.Description, Warehouse.PackageTypes.PackageTypeName) is NOT NULL, so no NULL text value can be sent. '' is sent as a Description in the text case."
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "the later of order and line time decides: order inside with line after @NewCutoff (excluded); order after @NewCutoff with line inside (excluded); both at @NewCutoff (included); later time exactly @LastCutoff (excluded)",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "Last Modified When is the later of the two LastEditedWhen values and both bounds apply to it. Order 1 is in the window but its line is 1 µs after @NewCutoff; order 2 is 1 µs after @NewCutoff with its line inside; order 3 and its line are both exactly @NewCutoff; order 4's later time is exactly @LastCutoff. A conversion that filtered the order and the line separately, or used the earlier time, would differ.",
+      "fixedCase": {
+        "cutoffs": {
+          "last": "2020-06-15T11:00:00.000000",
+          "new": "2020-06-15T13:00:00.000000"
+        },
+        "tables": {
+          "Warehouse.PackageTypes": [
+            {
+              "PackageTypeID": 1,
+              "PackageTypeName": "Each"
+            }
+          ],
+          "Sales.Customers": [
+            {
+              "CustomerID": 1,
+              "DeliveryCityID": 10
+            }
+          ],
+          "Sales.Orders": [
+            {
+              "OrderID": 1,
+              "CustomerID": 1,
+              "SalespersonPersonID": 2,
+              "PickedByPersonID": null,
+              "BackorderOrderID": null,
+              "OrderDate": "2020-06-15",
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "OrderID": 2,
+              "CustomerID": 1,
+              "SalespersonPersonID": 2,
+              "PickedByPersonID": null,
+              "BackorderOrderID": null,
+              "OrderDate": "2020-06-15",
+              "LastEditedWhen": "2020-06-15T13:00:00.000001"
+            },
+            {
+              "OrderID": 3,
+              "CustomerID": 1,
+              "SalespersonPersonID": 2,
+              "PickedByPersonID": null,
+              "BackorderOrderID": null,
+              "OrderDate": "2020-06-15",
+              "LastEditedWhen": "2020-06-15T13:00:00.000000"
+            },
+            {
+              "OrderID": 4,
+              "CustomerID": 1,
+              "SalespersonPersonID": 2,
+              "PickedByPersonID": null,
+              "BackorderOrderID": null,
+              "OrderDate": "2020-06-15",
+              "LastEditedWhen": "2020-06-15T11:00:00.000000"
+            }
+          ],
+          "Sales.OrderLines": [
+            {
+              "OrderLineID": 1,
+              "OrderID": 1,
+              "StockItemID": 1,
+              "Description": "line 1",
+              "PackageTypeID": 1,
+              "Quantity": 1,
+              "UnitPrice": "1.00",
+              "TaxRate": "15.000",
+              "PickingCompletedWhen": null,
+              "LastEditedWhen": "2020-06-15T13:00:00.000001"
+            },
+            {
+              "OrderLineID": 2,
+              "OrderID": 2,
+              "StockItemID": 1,
+              "Description": "line 2",
+              "PackageTypeID": 1,
+              "Quantity": 1,
+              "UnitPrice": "1.00",
+              "TaxRate": "15.000",
+              "PickingCompletedWhen": null,
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "OrderLineID": 3,
+              "OrderID": 3,
+              "StockItemID": 1,
+              "Description": "line 3",
+              "PackageTypeID": 1,
+              "Quantity": 1,
+              "UnitPrice": "1.00",
+              "TaxRate": "15.000",
+              "PickingCompletedWhen": null,
+              "LastEditedWhen": "2020-06-15T13:00:00.000000"
+            },
+            {
+              "OrderLineID": 4,
+              "OrderID": 4,
+              "StockItemID": 1,
+              "Description": "line 4",
+              "PackageTypeID": 1,
+              "Quantity": 1,
+              "UnitPrice": "1.00",
+              "TaxRate": "15.000",
+              "PickingCompletedWhen": null,
+              "LastEditedWhen": "2020-06-15T09:00:00.000000"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A02",
+      "label": "one order, lines edited at different times: only the lines whose later time is inside the window are listed",
+      "traps": [
+        "dates-datetime",
+        "top-ties"
+      ],
+      "reasoning": "Order 1 was edited before the window. Line 1 is 1 µs after @LastCutoff (in), line 2 1 µs after @NewCutoff (out), line 3 exactly @NewCutoff (in), line 4 exactly @LastCutoff (out). The listed rows share WWI Order ID and every order column; ORDER BY o.OrderID does not order them further.",
+      "fixedCase": {
+        "cutoffs": {
+          "last": "2020-06-15T11:00:00.000000",
+          "new": "2020-06-15T13:00:00.000000"
+        },
+        "tables": {
+          "Warehouse.PackageTypes": [
+            {
+              "PackageTypeID": 1,
+              "PackageTypeName": "Each"
+            }
+          ],
+          "Sales.Customers": [
+            {
+              "CustomerID": 1,
+              "DeliveryCityID": 10
+            }
+          ],
+          "Sales.Orders": [
+            {
+              "OrderID": 1,
+              "CustomerID": 1,
+              "SalespersonPersonID": 2,
+              "PickedByPersonID": null,
+              "BackorderOrderID": null,
+              "OrderDate": "2020-06-15",
+              "LastEditedWhen": "2020-06-15T09:00:00.000000"
+            }
+          ],
+          "Sales.OrderLines": [
+            {
+              "OrderLineID": 1,
+              "OrderID": 1,
+              "StockItemID": 1,
+              "Description": "line 1",
+              "PackageTypeID": 1,
+              "Quantity": 1,
+              "UnitPrice": "1.00",
+              "TaxRate": "15.000",
+              "PickingCompletedWhen": null,
+              "LastEditedWhen": "2020-06-15T11:00:00.000001"
+            },
+            {
+              "OrderLineID": 2,
+              "OrderID": 1,
+              "StockItemID": 1,
+              "Description": "line 2",
+              "PackageTypeID": 1,
+              "Quantity": 1,
+              "UnitPrice": "1.00",
+              "TaxRate": "15.000",
+              "PickingCompletedWhen": null,
+              "LastEditedWhen": "2020-06-15T13:00:00.000001"
+            },
+            {
+              "OrderLineID": 3,
+              "OrderID": 1,
+              "StockItemID": 1,
+              "Description": "line 3",
+              "PackageTypeID": 1,
+              "Quantity": 1,
+              "UnitPrice": "1.00",
+              "TaxRate": "15.000",
+              "PickingCompletedWhen": null,
+              "LastEditedWhen": "2020-06-15T13:00:00.000000"
+            },
+            {
+              "OrderLineID": 4,
+              "OrderID": 1,
+              "StockItemID": 1,
+              "Description": "line 4",
+              "PackageTypeID": 1,
+              "Quantity": 1,
+              "UnitPrice": "1.00",
+              "TaxRate": "15.000",
+              "PickingCompletedWhen": null,
+              "LastEditedWhen": "2020-06-15T11:00:00.000000"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A03",
+      "label": "tax rounds half away from zero at 2 places, also for negative quantities: 0.005 -> 0.01, -0.105 -> -0.11, 1.2075 -> 1.21, 0.087535 -> 0.09, 14994998.5005 -> 14994998.50",
+      "traps": [
+        "numeric-rounding"
+      ],
+      "reasoning": "ROUND(Quantity * UnitPrice * TaxRate / 100.0, 2) on decimal rounds half away from zero; PostgreSQL round(numeric) does too, but trunc() or a float round-half-even would not. Quantity -3 makes the tax and both totals negative; 1000 x 99999.99 x 14.995 checks a large product.",
+      "fixedCase": {
+        "cutoffs": {
+          "last": "2020-06-15T11:00:00.000000",
+          "new": "2020-06-15T13:00:00.000000"
+        },
+        "tables": {
+          "Warehouse.PackageTypes": [
+            {
+              "PackageTypeID": 1,
+              "PackageTypeName": "Each"
+            }
+          ],
+          "Sales.Customers": [
+            {
+              "CustomerID": 1,
+              "DeliveryCityID": 10
+            }
+          ],
+          "Sales.Orders": [
+            {
+              "OrderID": 1,
+              "CustomerID": 1,
+              "SalespersonPersonID": 2,
+              "PickedByPersonID": null,
+              "BackorderOrderID": null,
+              "OrderDate": "2020-06-15",
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "OrderID": 2,
+              "CustomerID": 1,
+              "SalespersonPersonID": 2,
+              "PickedByPersonID": null,
+              "BackorderOrderID": null,
+              "OrderDate": "2020-06-15",
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "OrderID": 3,
+              "CustomerID": 1,
+              "SalespersonPersonID": 2,
+              "PickedByPersonID": null,
+              "BackorderOrderID": null,
+              "OrderDate": "2020-06-15",
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "OrderID": 4,
+              "CustomerID": 1,
+              "SalespersonPersonID": 2,
+              "PickedByPersonID": null,
+              "BackorderOrderID": null,
+              "OrderDate": "2020-06-15",
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "OrderID": 5,
+              "CustomerID": 1,
+              "SalespersonPersonID": 2,
+              "PickedByPersonID": null,
+              "BackorderOrderID": null,
+              "OrderDate": "2020-06-15",
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            }
+          ],
+          "Sales.OrderLines": [
+            {
+              "OrderLineID": 1,
+              "OrderID": 1,
+              "StockItemID": 1,
+              "Description": "line 1",
+              "PackageTypeID": 1,
+              "Quantity": 1,
+              "UnitPrice": "0.01",
+              "TaxRate": "50.000",
+              "PickingCompletedWhen": null,
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "OrderLineID": 2,
+              "OrderID": 2,
+              "StockItemID": 1,
+              "Description": "line 2",
+              "PackageTypeID": 1,
+              "Quantity": -3,
+              "UnitPrice": "0.35",
+              "TaxRate": "10.000",
+              "PickingCompletedWhen": null,
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "OrderLineID": 3,
+              "OrderID": 3,
+              "StockItemID": 1,
+              "Description": "line 3",
+              "PackageTypeID": 1,
+              "Quantity": 7,
+              "UnitPrice": "1.15",
+              "TaxRate": "15.000",
+              "PickingCompletedWhen": null,
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "OrderLineID": 4,
+              "OrderID": 4,
+              "StockItemID": 1,
+              "Description": "line 4",
+              "PackageTypeID": 1,
+              "Quantity": 2,
+              "UnitPrice": "0.35",
+              "TaxRate": "12.505",
+              "PickingCompletedWhen": null,
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "OrderLineID": 5,
+              "OrderID": 5,
+              "StockItemID": 1,
+              "Description": "line 5",
+              "PackageTypeID": 1,
+              "Quantity": 1000,
+              "UnitPrice": "99999.99",
+              "TaxRate": "14.995",
+              "PickingCompletedWhen": null,
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A04",
+      "label": "SQL Server's decimal scale: Quantity x UnitPrice x TaxRate / 100.0 is decimal(38,6), so 0.0049999 becomes 0.004999 before ROUND; NULL UnitPrice and a zero rate",
+      "traps": [
+        "numeric-rounding"
+      ],
+      "reasoning": "The product int x decimal(18,2) x decimal(18,3) exceeds precision 38, and the division by 100.0 is cut to scale 6 on SQL Server; PostgreSQL keeps all digits. 0.0049999 and 0.0050001 sit on either side of the 2-place midpoint. UnitPrice NULL gives NULL for every total; TaxRate 0.000 gives a tax of 0.00.",
+      "fixedCase": {
+        "cutoffs": {
+          "last": "2020-06-15T11:00:00.000000",
+          "new": "2020-06-15T13:00:00.000000"
+        },
+        "tables": {
+          "Warehouse.PackageTypes": [
+            {
+              "PackageTypeID": 1,
+              "PackageTypeName": "Each"
+            }
+          ],
+          "Sales.Customers": [
+            {
+              "CustomerID": 1,
+              "DeliveryCityID": 10
+            }
+          ],
+          "Sales.Orders": [
+            {
+              "OrderID": 1,
+              "CustomerID": 1,
+              "SalespersonPersonID": 2,
+              "PickedByPersonID": null,
+              "BackorderOrderID": null,
+              "OrderDate": "2020-06-15",
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            }
+          ],
+          "Sales.OrderLines": [
+            {
+              "OrderLineID": 1,
+              "OrderID": 1,
+              "StockItemID": 1,
+              "Description": "line 1",
+              "PackageTypeID": 1,
+              "Quantity": 1,
+              "UnitPrice": "0.01",
+              "TaxRate": "49.999",
+              "PickingCompletedWhen": null,
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "OrderLineID": 2,
+              "OrderID": 1,
+              "StockItemID": 1,
+              "Description": "line 2",
+              "PackageTypeID": 1,
+              "Quantity": 1,
+              "UnitPrice": "0.01",
+              "TaxRate": "50.001",
+              "PickingCompletedWhen": null,
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "OrderLineID": 3,
+              "OrderID": 1,
+              "StockItemID": 1,
+              "Description": "line 3",
+              "PackageTypeID": 1,
+              "Quantity": 7,
+              "UnitPrice": "0.07",
+              "TaxRate": "1.025",
+              "PickingCompletedWhen": null,
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "OrderLineID": 4,
+              "OrderID": 1,
+              "StockItemID": 1,
+              "Description": "line 4",
+              "PackageTypeID": 1,
+              "Quantity": 1,
+              "UnitPrice": null,
+              "TaxRate": "15.000",
+              "PickingCompletedWhen": null,
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "OrderLineID": 5,
+              "OrderID": 1,
+              "StockItemID": 1,
+              "Description": "line 5",
+              "PackageTypeID": 1,
+              "Quantity": 9,
+              "UnitPrice": "1.00",
+              "TaxRate": "0.000",
+              "PickingCompletedWhen": null,
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A05",
+      "label": "text as stored: descriptions differing only in case or by a trailing space, an empty description, an emoji; a package name with a trailing space",
+      "traps": [
+        "collation-case",
+        "trailing-spaces"
+      ],
+      "reasoning": "Nothing is compared on text; Description and Package must keep their spelling. 'Widget', 'WIDGET' and 'widget ' are three lines; '' is not NULL; the emoji is a surrogate pair in nvarchar(100). Package 'Bag ' keeps its space (package names stay distinct under the unique name).",
+      "fixedCase": {
+        "cutoffs": {
+          "last": "2020-06-15T11:00:00.000000",
+          "new": "2020-06-15T13:00:00.000000"
+        },
+        "tables": {
+          "Sales.Customers": [
+            {
+              "CustomerID": 1,
+              "DeliveryCityID": 10
+            }
+          ],
+          "Warehouse.PackageTypes": [
+            {
+              "PackageTypeID": 1,
+              "PackageTypeName": "Each"
+            },
+            {
+              "PackageTypeID": 2,
+              "PackageTypeName": "Bag "
+            }
+          ],
+          "Sales.Orders": [
+            {
+              "OrderID": 1,
+              "CustomerID": 1,
+              "SalespersonPersonID": 2,
+              "PickedByPersonID": null,
+              "BackorderOrderID": null,
+              "OrderDate": "2020-06-15",
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            }
+          ],
+          "Sales.OrderLines": [
+            {
+              "OrderLineID": 1,
+              "OrderID": 1,
+              "StockItemID": 1,
+              "Description": "Widget",
+              "PackageTypeID": 1,
+              "Quantity": 1,
+              "UnitPrice": "1.00",
+              "TaxRate": "15.000",
+              "PickingCompletedWhen": null,
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "OrderLineID": 2,
+              "OrderID": 1,
+              "StockItemID": 1,
+              "Description": "WIDGET",
+              "PackageTypeID": 2,
+              "Quantity": 1,
+              "UnitPrice": "1.00",
+              "TaxRate": "15.000",
+              "PickingCompletedWhen": null,
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "OrderLineID": 3,
+              "OrderID": 1,
+              "StockItemID": 1,
+              "Description": "widget ",
+              "PackageTypeID": 1,
+              "Quantity": 1,
+              "UnitPrice": "1.00",
+              "TaxRate": "15.000",
+              "PickingCompletedWhen": null,
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "OrderLineID": 4,
+              "OrderID": 1,
+              "StockItemID": 1,
+              "Description": "",
+              "PackageTypeID": 1,
+              "Quantity": 1,
+              "UnitPrice": "1.00",
+              "TaxRate": "15.000",
+              "PickingCompletedWhen": null,
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "OrderLineID": 5,
+              "OrderID": 1,
+              "StockItemID": 1,
+              "Description": "Café 😀 é",
+              "PackageTypeID": 1,
+              "Quantity": 1,
+              "UnitPrice": "1.00",
+              "TaxRate": "15.000",
+              "PickingCompletedWhen": null,
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A06",
+      "label": "dates at the limits: OrderDate 1753-01-01 and 9999-12-31; PickingCompletedWhen 9999-12-31 23:59:59.999999, 1753-01-01 00:00:00 and NULL",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "CAST(... AS date) of 9999-12-31 23:59:59.999999 must keep 9999-12-31 (a rounding conversion would overflow); 1753-01-01 is the datetime minimum many converters assume; NULL picking time gives a NULL Picked Date Key.",
+      "fixedCase": {
+        "cutoffs": {
+          "last": "2020-06-15T11:00:00.000000",
+          "new": "2020-06-15T13:00:00.000000"
+        },
+        "tables": {
+          "Warehouse.PackageTypes": [
+            {
+              "PackageTypeID": 1,
+              "PackageTypeName": "Each"
+            }
+          ],
+          "Sales.Customers": [
+            {
+              "CustomerID": 1,
+              "DeliveryCityID": 10
+            }
+          ],
+          "Sales.Orders": [
+            {
+              "OrderID": 1,
+              "CustomerID": 1,
+              "SalespersonPersonID": 2,
+              "PickedByPersonID": null,
+              "BackorderOrderID": null,
+              "OrderDate": "1753-01-01",
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "OrderID": 2,
+              "CustomerID": 1,
+              "SalespersonPersonID": 2,
+              "PickedByPersonID": null,
+              "BackorderOrderID": null,
+              "OrderDate": "9999-12-31",
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            }
+          ],
+          "Sales.OrderLines": [
+            {
+              "OrderLineID": 1,
+              "OrderID": 1,
+              "StockItemID": 1,
+              "Description": "line 1",
+              "PackageTypeID": 1,
+              "Quantity": 1,
+              "UnitPrice": "1.00",
+              "TaxRate": "15.000",
+              "PickingCompletedWhen": "9999-12-31T23:59:59.999999",
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "OrderLineID": 2,
+              "OrderID": 2,
+              "StockItemID": 1,
+              "Description": "line 2",
+              "PackageTypeID": 1,
+              "Quantity": 1,
+              "UnitPrice": "1.00",
+              "TaxRate": "15.000",
+              "PickingCompletedWhen": "1753-01-01T00:00:00.000000",
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "OrderLineID": 3,
+              "OrderID": 2,
+              "StockItemID": 1,
+              "Description": "line 3",
+              "PackageTypeID": 1,
+              "Quantity": 1,
+              "UnitPrice": "1.00",
+              "TaxRate": "15.000",
+              "PickingCompletedWhen": null,
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A07",
+      "label": "inner joins and keys: an unknown package type and an unknown customer drop their rows; an order without lines; ids with gaps and at the int limits",
+      "traps": [
+        "identity-gaps"
+      ],
+      "reasoning": "Order 2147483647's line uses package type 9 (missing): dropped. Order 1000's customer 77 is missing: dropped. Order 5 has no lines. Order -2147483648 has a backorder id and a picker. WWI City ID comes from the customer row (city 2147483647).",
+      "fixedCase": {
+        "cutoffs": {
+          "last": "2020-06-15T11:00:00.000000",
+          "new": "2020-06-15T13:00:00.000000"
+        },
+        "tables": {
+          "Warehouse.PackageTypes": [
+            {
+              "PackageTypeID": 1,
+              "PackageTypeName": "Each"
+            }
+          ],
+          "Sales.Customers": [
+            {
+              "CustomerID": 1,
+              "DeliveryCityID": 2147483647
+            }
+          ],
+          "Sales.Orders": [
+            {
+              "OrderID": 2147483647,
+              "CustomerID": 1,
+              "SalespersonPersonID": 2,
+              "PickedByPersonID": null,
+              "BackorderOrderID": null,
+              "OrderDate": "2020-06-15",
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "OrderID": 1000,
+              "CustomerID": 77,
+              "SalespersonPersonID": 2,
+              "PickedByPersonID": null,
+              "BackorderOrderID": null,
+              "OrderDate": "2020-06-15",
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "OrderID": 5,
+              "CustomerID": 1,
+              "SalespersonPersonID": 2,
+              "PickedByPersonID": null,
+              "BackorderOrderID": null,
+              "OrderDate": "2020-06-15",
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "OrderID": -2147483648,
+              "CustomerID": 1,
+              "SalespersonPersonID": 2,
+              "PickedByPersonID": 0,
+              "BackorderOrderID": 5,
+              "OrderDate": "2020-06-15",
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            }
+          ],
+          "Sales.OrderLines": [
+            {
+              "OrderLineID": 9,
+              "OrderID": 2147483647,
+              "StockItemID": 1,
+              "Description": "line 9",
+              "PackageTypeID": 9,
+              "Quantity": 1,
+              "UnitPrice": "1.00",
+              "TaxRate": "15.000",
+              "PickingCompletedWhen": null,
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "OrderLineID": 3,
+              "OrderID": 1000,
+              "StockItemID": 1,
+              "Description": "line 3",
+              "PackageTypeID": 1,
+              "Quantity": 1,
+              "UnitPrice": "1.00",
+              "TaxRate": "15.000",
+              "PickingCompletedWhen": null,
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "OrderLineID": -2147483648,
+              "OrderID": -2147483648,
+              "StockItemID": 1,
+              "Description": "line -2147483648",
+              "PackageTypeID": 1,
+              "Quantity": 1,
+              "UnitPrice": "1.00",
+              "TaxRate": "15.000",
+              "PickingCompletedWhen": null,
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "OrderLineID": 2147483647,
+              "OrderID": 2147483647,
+              "StockItemID": 1,
+              "Description": "line 2147483647",
+              "PackageTypeID": 1,
+              "Quantity": 1,
+              "UnitPrice": "1.00",
+              "TaxRate": "15.000",
+              "PickingCompletedWhen": null,
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

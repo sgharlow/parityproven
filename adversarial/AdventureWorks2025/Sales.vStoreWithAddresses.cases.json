@@ -1,0 +1,905 @@
+{
+  "schemaVersion": 1,
+  "object": "Sales.vStoreWithAddresses",
+  "database": "AdventureWorks2025",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-19T04:36:25.160Z"
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "trailing space and case on the country side: country codes 'CA ' and 'mx' joined by province codes 'ca' and 'MX'",
+      "traps": [
+        "trailing-spaces",
+        "collation-case"
+      ],
+      "reasoning": "The fixed cases put the variant on the province side only. Here the CountryRegion key itself is stored as 'CA ' (nvarchar keeps the space) and 'mx'. SQL Server pads and compares case-insensitively, so 'ca' joins 'CA ' and 'MX' joins 'mx'. The conversion must trim and fold the country side too.",
+      "fixedCase": {
+        "tables": {
+          "Sales.Store": [
+            {
+              "BusinessEntityID": 1,
+              "Name": "Store 1"
+            },
+            {
+              "BusinessEntityID": 2,
+              "Name": "Store 2"
+            }
+          ],
+          "Person.BusinessEntityAddress": [
+            {
+              "BusinessEntityID": 1,
+              "AddressID": 1,
+              "AddressTypeID": 1
+            },
+            {
+              "BusinessEntityID": 2,
+              "AddressID": 2,
+              "AddressTypeID": 1
+            }
+          ],
+          "Person.Address": [
+            {
+              "AddressID": 1,
+              "AddressLine1": "1 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 1,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 2,
+              "AddressLine1": "2 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 2,
+              "PostalCode": "98011"
+            }
+          ],
+          "Person.AddressType": [
+            {
+              "AddressTypeID": 1,
+              "Name": "Main Office"
+            }
+          ],
+          "Person.StateProvince": [
+            {
+              "StateProvinceID": 1,
+              "CountryRegionCode": "ca",
+              "Name": "Alberta"
+            },
+            {
+              "StateProvinceID": 2,
+              "CountryRegionCode": "MX",
+              "Name": "Jalisco"
+            }
+          ],
+          "Person.CountryRegion": [
+            {
+              "CountryRegionCode": "CA ",
+              "Name": "Canada"
+            },
+            {
+              "CountryRegionCode": "mx",
+              "Name": "Mexico"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A02",
+      "label": "expansions: province code 'Æ' against country 'AE' and 'ß' against 'SS', with 'ae' and 'ss' as case-only controls",
+      "traps": [
+        "collation-case"
+      ],
+      "reasoning": "Windows collation rules (used by SQL_Latin1_General_CP1_CI_AS for nvarchar) treat 'Æ' as equal to 'AE' and 'ß' as equal to 'ss'. The ICU root collation at strength 2 gives 'æ' its own primary weight (not equal to 'ae') while 'ß' = 'ss' differs only at the tertiary level. The engines may disagree on whether the 'Æ' province joins. Same join as Purchasing.vVendorWithAddresses, whose conversion was corrected after this input differed; this conversion still uses rtrim + the ICU collation alone.",
+      "fixedCase": {
+        "tables": {
+          "Person.BusinessEntityAddress": [
+            {
+              "BusinessEntityID": 1,
+              "AddressID": 1,
+              "AddressTypeID": 1
+            },
+            {
+              "BusinessEntityID": 2,
+              "AddressID": 2,
+              "AddressTypeID": 1
+            },
+            {
+              "BusinessEntityID": 3,
+              "AddressID": 3,
+              "AddressTypeID": 1
+            },
+            {
+              "BusinessEntityID": 4,
+              "AddressID": 4,
+              "AddressTypeID": 1
+            }
+          ],
+          "Person.Address": [
+            {
+              "AddressID": 1,
+              "AddressLine1": "1 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 1,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 2,
+              "AddressLine1": "2 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 2,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 3,
+              "AddressLine1": "3 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 3,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 4,
+              "AddressLine1": "4 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 4,
+              "PostalCode": "98011"
+            }
+          ],
+          "Person.AddressType": [
+            {
+              "AddressTypeID": 1,
+              "Name": "Main Office"
+            }
+          ],
+          "Person.StateProvince": [
+            {
+              "StateProvinceID": 1,
+              "CountryRegionCode": "Æ",
+              "Name": "Province 1"
+            },
+            {
+              "StateProvinceID": 2,
+              "CountryRegionCode": "ß",
+              "Name": "Province 2"
+            },
+            {
+              "StateProvinceID": 3,
+              "CountryRegionCode": "ae",
+              "Name": "Province 3"
+            },
+            {
+              "StateProvinceID": 4,
+              "CountryRegionCode": "ss",
+              "Name": "Province 4"
+            }
+          ],
+          "Person.CountryRegion": [
+            {
+              "CountryRegionCode": "AE",
+              "Name": "United Arab Emirates"
+            },
+            {
+              "CountryRegionCode": "SS",
+              "Name": "South Sudan"
+            }
+          ],
+          "Sales.Store": [
+            {
+              "BusinessEntityID": 1,
+              "Name": "Store 1"
+            },
+            {
+              "BusinessEntityID": 2,
+              "Name": "Store 2"
+            },
+            {
+              "BusinessEntityID": 3,
+              "Name": "Store 3"
+            },
+            {
+              "BusinessEntityID": 4,
+              "Name": "Store 4"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A03",
+      "label": "compatibility forms: full-width U+FF35 U+FF33 against 'US' and the Kelvin sign U+212A followed by 'E' against 'KE', with 'ke' as a case-only control",
+      "traps": [
+        "collation-case"
+      ],
+      "reasoning": "SQL Server collations without _WS are width-insensitive, so full-width 'ＵＳ' equals 'US'; U+212A KELVIN SIGN is canonically equivalent to 'K'. ICU at strength 2 ignores width (a tertiary difference) and normalises canonical equivalents. Either engine may treat one of these differently. Same join as Purchasing.vVendorWithAddresses, whose conversion was corrected after this input differed; this conversion still uses rtrim + the ICU collation alone.",
+      "fixedCase": {
+        "tables": {
+          "Person.BusinessEntityAddress": [
+            {
+              "BusinessEntityID": 1,
+              "AddressID": 1,
+              "AddressTypeID": 1
+            },
+            {
+              "BusinessEntityID": 2,
+              "AddressID": 2,
+              "AddressTypeID": 1
+            },
+            {
+              "BusinessEntityID": 3,
+              "AddressID": 3,
+              "AddressTypeID": 1
+            }
+          ],
+          "Person.Address": [
+            {
+              "AddressID": 1,
+              "AddressLine1": "1 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 1,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 2,
+              "AddressLine1": "2 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 2,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 3,
+              "AddressLine1": "3 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 3,
+              "PostalCode": "98011"
+            }
+          ],
+          "Person.AddressType": [
+            {
+              "AddressTypeID": 1,
+              "Name": "Main Office"
+            }
+          ],
+          "Person.StateProvince": [
+            {
+              "StateProvinceID": 1,
+              "CountryRegionCode": "ＵＳ",
+              "Name": "Province 1"
+            },
+            {
+              "StateProvinceID": 2,
+              "CountryRegionCode": "KE",
+              "Name": "Province 2"
+            },
+            {
+              "StateProvinceID": 3,
+              "CountryRegionCode": "ke",
+              "Name": "Province 3"
+            }
+          ],
+          "Person.CountryRegion": [
+            {
+              "CountryRegionCode": "US",
+              "Name": "United States"
+            },
+            {
+              "CountryRegionCode": "KE",
+              "Name": "Kenya"
+            }
+          ],
+          "Sales.Store": [
+            {
+              "BusinessEntityID": 1,
+              "Name": "Store 1"
+            },
+            {
+              "BusinessEntityID": 2,
+              "Name": "Store 2"
+            },
+            {
+              "BusinessEntityID": 3,
+              "Name": "Store 3"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A04",
+      "label": "whitespace look-alikes: 'US' with a trailing no-break space (U+00A0), a trailing tab, a leading space, a soft hyphen (U+00AD) inside, and 'CA ' (a real trailing space)",
+      "traps": [
+        "trailing-spaces"
+      ],
+      "reasoning": "SQL Server pads the shorter value with U+0020 before comparing, so only 'CA ' is certain to join. Whether U+00A0 compares equal to the pad space, and whether the soft hyphen U+00AD is ignorable, are collation rules; PostgreSQL rtrim(' ') removes U+0020 only and ICU treats U+00AD as ignorable and U+00A0 as a space variant. A tab and a leading space should join on neither engine. Same join as Purchasing.vVendorWithAddresses, whose conversion was corrected after this input differed; this conversion still uses rtrim + the ICU collation alone.",
+      "fixedCase": {
+        "tables": {
+          "Person.BusinessEntityAddress": [
+            {
+              "BusinessEntityID": 1,
+              "AddressID": 1,
+              "AddressTypeID": 1
+            },
+            {
+              "BusinessEntityID": 2,
+              "AddressID": 2,
+              "AddressTypeID": 1
+            },
+            {
+              "BusinessEntityID": 3,
+              "AddressID": 3,
+              "AddressTypeID": 1
+            },
+            {
+              "BusinessEntityID": 4,
+              "AddressID": 4,
+              "AddressTypeID": 1
+            },
+            {
+              "BusinessEntityID": 5,
+              "AddressID": 5,
+              "AddressTypeID": 1
+            }
+          ],
+          "Person.Address": [
+            {
+              "AddressID": 1,
+              "AddressLine1": "1 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 1,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 2,
+              "AddressLine1": "2 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 2,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 3,
+              "AddressLine1": "3 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 3,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 4,
+              "AddressLine1": "4 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 4,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 5,
+              "AddressLine1": "5 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 5,
+              "PostalCode": "98011"
+            }
+          ],
+          "Person.AddressType": [
+            {
+              "AddressTypeID": 1,
+              "Name": "Main Office"
+            }
+          ],
+          "Person.StateProvince": [
+            {
+              "StateProvinceID": 1,
+              "CountryRegionCode": "US ",
+              "Name": "Province 1"
+            },
+            {
+              "StateProvinceID": 2,
+              "CountryRegionCode": "US\t",
+              "Name": "Province 2"
+            },
+            {
+              "StateProvinceID": 3,
+              "CountryRegionCode": " US",
+              "Name": "Province 3"
+            },
+            {
+              "StateProvinceID": 4,
+              "CountryRegionCode": "U­S",
+              "Name": "Province 4"
+            },
+            {
+              "StateProvinceID": 5,
+              "CountryRegionCode": "CA ",
+              "Name": "Province 5"
+            }
+          ],
+          "Person.CountryRegion": [
+            {
+              "CountryRegionCode": "US",
+              "Name": "United States"
+            },
+            {
+              "CountryRegionCode": "CA",
+              "Name": "Canada"
+            }
+          ],
+          "Sales.Store": [
+            {
+              "BusinessEntityID": 1,
+              "Name": "Store 1"
+            },
+            {
+              "BusinessEntityID": 2,
+              "Name": "Store 2"
+            },
+            {
+              "BusinessEntityID": 3,
+              "Name": "Store 3"
+            },
+            {
+              "BusinessEntityID": 4,
+              "Name": "Store 4"
+            },
+            {
+              "BusinessEntityID": 5,
+              "Name": "Store 5"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A05",
+      "label": "accents and dotted/dotless I: 'ÜS' against 'US' (accent-sensitive); U+0131 and U+0130 followed by 'T' against 'IT', with 'it' as a case-only control",
+      "traps": [
+        "collation-case"
+      ],
+      "reasoning": "CI_AS is accent-sensitive, so 'ÜS' must not join 'US'. U+0131 (dotless i) and U+0130 (I with dot above) case-fold differently by rule set: Windows rules and ICU root may each match or not match 'IT'. 'it' joins on both. Same join as Purchasing.vVendorWithAddresses, whose conversion was corrected after this input differed; this conversion still uses rtrim + the ICU collation alone.",
+      "fixedCase": {
+        "tables": {
+          "Person.BusinessEntityAddress": [
+            {
+              "BusinessEntityID": 1,
+              "AddressID": 1,
+              "AddressTypeID": 1
+            },
+            {
+              "BusinessEntityID": 2,
+              "AddressID": 2,
+              "AddressTypeID": 1
+            },
+            {
+              "BusinessEntityID": 3,
+              "AddressID": 3,
+              "AddressTypeID": 1
+            },
+            {
+              "BusinessEntityID": 4,
+              "AddressID": 4,
+              "AddressTypeID": 1
+            }
+          ],
+          "Person.Address": [
+            {
+              "AddressID": 1,
+              "AddressLine1": "1 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 1,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 2,
+              "AddressLine1": "2 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 2,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 3,
+              "AddressLine1": "3 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 3,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 4,
+              "AddressLine1": "4 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 4,
+              "PostalCode": "98011"
+            }
+          ],
+          "Person.AddressType": [
+            {
+              "AddressTypeID": 1,
+              "Name": "Main Office"
+            }
+          ],
+          "Person.StateProvince": [
+            {
+              "StateProvinceID": 1,
+              "CountryRegionCode": "ÜS",
+              "Name": "Province 1"
+            },
+            {
+              "StateProvinceID": 2,
+              "CountryRegionCode": "ıT",
+              "Name": "Province 2"
+            },
+            {
+              "StateProvinceID": 3,
+              "CountryRegionCode": "İT",
+              "Name": "Province 3"
+            },
+            {
+              "StateProvinceID": 4,
+              "CountryRegionCode": "it",
+              "Name": "Province 4"
+            }
+          ],
+          "Person.CountryRegion": [
+            {
+              "CountryRegionCode": "US",
+              "Name": "United States"
+            },
+            {
+              "CountryRegionCode": "IT",
+              "Name": "Italy"
+            }
+          ],
+          "Sales.Store": [
+            {
+              "BusinessEntityID": 1,
+              "Name": "Store 1"
+            },
+            {
+              "BusinessEntityID": 2,
+              "Name": "Store 2"
+            },
+            {
+              "BusinessEntityID": 3,
+              "Name": "Store 3"
+            },
+            {
+              "BusinessEntityID": 4,
+              "Name": "Store 4"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A06",
+      "label": "an empty country code: province codes '' and ' ' both join country '' (trailing spaces ignored)",
+      "traps": [
+        "trailing-spaces"
+      ],
+      "reasoning": "SQL Server compares '' and ' ' as equal (padding), so both provinces join the country whose code is ''. rtrim(' ') gives '' on PostgreSQL; this checks the empty-string edge of the rtrim + ICU equality and that '' is not treated as NULL. Same join as Purchasing.vVendorWithAddresses, whose conversion was corrected after this input differed; this conversion still uses rtrim + the ICU collation alone.",
+      "fixedCase": {
+        "tables": {
+          "Person.BusinessEntityAddress": [
+            {
+              "BusinessEntityID": 1,
+              "AddressID": 1,
+              "AddressTypeID": 1
+            },
+            {
+              "BusinessEntityID": 2,
+              "AddressID": 2,
+              "AddressTypeID": 1
+            }
+          ],
+          "Person.Address": [
+            {
+              "AddressID": 1,
+              "AddressLine1": "1 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 1,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 2,
+              "AddressLine1": "2 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 2,
+              "PostalCode": "98011"
+            }
+          ],
+          "Person.AddressType": [
+            {
+              "AddressTypeID": 1,
+              "Name": "Main Office"
+            }
+          ],
+          "Person.StateProvince": [
+            {
+              "StateProvinceID": 1,
+              "CountryRegionCode": "",
+              "Name": "Province 1"
+            },
+            {
+              "StateProvinceID": 2,
+              "CountryRegionCode": " ",
+              "Name": "Province 2"
+            }
+          ],
+          "Person.CountryRegion": [
+            {
+              "CountryRegionCode": "",
+              "Name": "Nowhere"
+            },
+            {
+              "CountryRegionCode": "US",
+              "Name": "United States"
+            }
+          ],
+          "Sales.Store": [
+            {
+              "BusinessEntityID": 1,
+              "Name": "Store 1"
+            },
+            {
+              "BusinessEntityID": 2,
+              "Name": "Store 2"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A07",
+      "label": "NULL versus '' in AddressLine2, an empty vendor name, address type name and city, and a single-space AddressLine2",
+      "traps": [
+        "null-vs-empty",
+        "trailing-spaces"
+      ],
+      "reasoning": "AddressLine2 is the only nullable text column: NULL, '' and ' ' are three different values on output (nvarchar keeps the space). The NOT NULL columns are sent as ''. Same join as Purchasing.vVendorWithAddresses, whose conversion was corrected after this input differed; this conversion still uses rtrim + the ICU collation alone.",
+      "fixedCase": {
+        "tables": {
+          "Person.BusinessEntityAddress": [
+            {
+              "BusinessEntityID": 1,
+              "AddressID": 1,
+              "AddressTypeID": 1
+            },
+            {
+              "BusinessEntityID": 2,
+              "AddressID": 2,
+              "AddressTypeID": 1
+            },
+            {
+              "BusinessEntityID": 3,
+              "AddressID": 3,
+              "AddressTypeID": 1
+            }
+          ],
+          "Person.Address": [
+            {
+              "AddressID": 1,
+              "AddressLine1": "1 Main St",
+              "AddressLine2": null,
+              "City": "",
+              "StateProvinceID": 1,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 2,
+              "AddressLine1": "2 Main St",
+              "AddressLine2": "",
+              "City": "Bothell",
+              "StateProvinceID": 1,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 3,
+              "AddressLine1": "3 Main St",
+              "AddressLine2": " ",
+              "City": "Bothell",
+              "StateProvinceID": 1,
+              "PostalCode": "98011"
+            }
+          ],
+          "Person.AddressType": [
+            {
+              "AddressTypeID": 1,
+              "Name": ""
+            }
+          ],
+          "Person.StateProvince": [
+            {
+              "StateProvinceID": 1,
+              "CountryRegionCode": "US",
+              "Name": "Province 1"
+            }
+          ],
+          "Person.CountryRegion": [
+            {
+              "CountryRegionCode": "US",
+              "Name": "United States"
+            }
+          ],
+          "Sales.Store": [
+            {
+              "BusinessEntityID": 1,
+              "Name": ""
+            },
+            {
+              "BusinessEntityID": 2,
+              "Name": "Two"
+            },
+            {
+              "BusinessEntityID": 3,
+              "Name": "Three"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A08",
+      "label": "keys with gaps and at the int limits: vendor 2147483647, address -2147483648, address type 0; text with an emoji and full length",
+      "traps": [
+        "identity-gaps"
+      ],
+      "reasoning": "BusinessEntityID, AddressID and AddressTypeID jump and sit at the int limits. AddressLine1 is 60 characters with non-ASCII letters and City contains an emoji, checking the nvarchar -> varchar load. Same join as Purchasing.vVendorWithAddresses, whose conversion was corrected after this input differed; this conversion still uses rtrim + the ICU collation alone.",
+      "fixedCase": {
+        "tables": {
+          "Person.BusinessEntityAddress": [
+            {
+              "BusinessEntityID": 2147483647,
+              "AddressID": -2147483648,
+              "AddressTypeID": 0
+            },
+            {
+              "BusinessEntityID": 3,
+              "AddressID": 10,
+              "AddressTypeID": 0
+            }
+          ],
+          "Person.Address": [
+            {
+              "AddressID": -2147483648,
+              "AddressLine1": "ÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖ",
+              "AddressLine2": null,
+              "City": "Köln 😀",
+              "StateProvinceID": 5,
+              "PostalCode": "98011"
+            },
+            {
+              "AddressID": 10,
+              "AddressLine1": "10 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 5,
+              "PostalCode": "98011"
+            }
+          ],
+          "Person.AddressType": [
+            {
+              "AddressTypeID": 0,
+              "Name": "Zero"
+            }
+          ],
+          "Person.StateProvince": [
+            {
+              "StateProvinceID": 5,
+              "CountryRegionCode": "DE",
+              "Name": "Nordrhein-Westfalen"
+            }
+          ],
+          "Person.CountryRegion": [
+            {
+              "CountryRegionCode": "DE",
+              "Name": "Germany"
+            }
+          ],
+          "Sales.Store": [
+            {
+              "BusinessEntityID": 2147483647,
+              "Name": "Max"
+            },
+            {
+              "BusinessEntityID": 3,
+              "Name": "Three"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A09",
+      "label": "fan-out without duplicate keys: one address shared by two stores, one store with the same address under two types, and an unknown address type",
+      "traps": [
+        "top-ties"
+      ],
+      "reasoning": "Address 1 is linked to store 1 as Billing and as Shipping, and to store 2 as Billing: three rows that share every address column. A BusinessEntityAddress row with address type 9 (no AddressType row) is dropped by the inner join; a conversion that made that join outer would keep it with a NULL AddressType.",
+      "fixedCase": {
+        "tables": {
+          "Sales.Store": [
+            {
+              "BusinessEntityID": 1,
+              "Name": "Store 1"
+            },
+            {
+              "BusinessEntityID": 2,
+              "Name": "Store 2"
+            }
+          ],
+          "Person.BusinessEntityAddress": [
+            {
+              "BusinessEntityID": 1,
+              "AddressID": 1,
+              "AddressTypeID": 1
+            },
+            {
+              "BusinessEntityID": 1,
+              "AddressID": 1,
+              "AddressTypeID": 2
+            },
+            {
+              "BusinessEntityID": 2,
+              "AddressID": 1,
+              "AddressTypeID": 1
+            },
+            {
+              "BusinessEntityID": 2,
+              "AddressID": 1,
+              "AddressTypeID": 9
+            }
+          ],
+          "Person.Address": [
+            {
+              "AddressID": 1,
+              "AddressLine1": "1 Main St",
+              "AddressLine2": null,
+              "City": "Bothell",
+              "StateProvinceID": 1,
+              "PostalCode": "98011"
+            }
+          ],
+          "Person.AddressType": [
+            {
+              "AddressTypeID": 1,
+              "Name": "Billing"
+            },
+            {
+              "AddressTypeID": 2,
+              "Name": "Shipping"
+            }
+          ],
+          "Person.StateProvince": [
+            {
+              "StateProvinceID": 1,
+              "CountryRegionCode": "US",
+              "Name": "Washington"
+            }
+          ],
+          "Person.CountryRegion": [
+            {
+              "CountryRegionCode": "US",
+              "Name": "United States"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

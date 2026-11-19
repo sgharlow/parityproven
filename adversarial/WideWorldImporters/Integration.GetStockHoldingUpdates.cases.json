@@ -1,0 +1,271 @@
+{
+  "schemaVersion": 1,
+  "object": "Integration.GetStockHoldingUpdates",
+  "database": "WideWorldImporters",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-19T04:36:25.160Z"
+  },
+  "notApplicable": {
+    "null-vs-empty": "Every column of Warehouse.StockItemHoldings that the procedure reads is NOT NULL, including BinLocation, so no NULL text value can be sent. '' and ' ' are sent as bin locations in the text case."
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "rows inserted in descending key order, keys at the int limits and with gaps: listed by StockItemID ascending; reorder and target levels differ on every row",
+      "traps": [
+        "identity-gaps"
+      ],
+      "reasoning": "Ids 2147483647, 1000, 0, -1, -2147483648 are inserted in that order. ORDER BY sih.StockItemID must sort negatives first; a result in insertion order or descending would differ. ReorderLevel and TargetStockLevel differ on every row so a swapped pair shows.",
+      "fixedCase": {
+        "tables": {
+          "Warehouse.StockItemHoldings": [
+            {
+              "StockItemID": 2147483647,
+              "QuantityOnHand": 10,
+              "BinLocation": "A-1",
+              "LastStocktakeQuantity": 10,
+              "LastCostPrice": "1.00",
+              "ReorderLevel": 1,
+              "TargetStockLevel": 2
+            },
+            {
+              "StockItemID": 1000,
+              "QuantityOnHand": 10,
+              "BinLocation": "A-1",
+              "LastStocktakeQuantity": 10,
+              "LastCostPrice": "1.00",
+              "ReorderLevel": 3,
+              "TargetStockLevel": 4
+            },
+            {
+              "StockItemID": 0,
+              "QuantityOnHand": 10,
+              "BinLocation": "A-1",
+              "LastStocktakeQuantity": 10,
+              "LastCostPrice": "1.00",
+              "ReorderLevel": 0,
+              "TargetStockLevel": -1
+            },
+            {
+              "StockItemID": -1,
+              "QuantityOnHand": 10,
+              "BinLocation": "A-1",
+              "LastStocktakeQuantity": 10,
+              "LastCostPrice": "1.00",
+              "ReorderLevel": 7,
+              "TargetStockLevel": 70
+            },
+            {
+              "StockItemID": -2147483648,
+              "QuantityOnHand": 10,
+              "BinLocation": "A-1",
+              "LastStocktakeQuantity": 10,
+              "LastCostPrice": "1.00",
+              "ReorderLevel": 2147483647,
+              "TargetStockLevel": -2147483648
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A02",
+      "label": "LastCostPrice ending in 5 and at 15 significant digits: 0.05, -0.15, 9999999999999.95, -9999999999999.95, 0.00",
+      "traps": [
+        "numeric-rounding"
+      ],
+      "reasoning": "decimal(18,2) is passed through. A conversion through float or money, or a column mapped to numeric with a smaller scale, would change 0.05 / -0.15 (not exact in binary) or the 15-digit values.",
+      "fixedCase": {
+        "tables": {
+          "Warehouse.StockItemHoldings": [
+            {
+              "StockItemID": 1,
+              "QuantityOnHand": 10,
+              "BinLocation": "A-1",
+              "LastStocktakeQuantity": 10,
+              "LastCostPrice": "0.05",
+              "ReorderLevel": 5,
+              "TargetStockLevel": 50
+            },
+            {
+              "StockItemID": 2,
+              "QuantityOnHand": 10,
+              "BinLocation": "A-1",
+              "LastStocktakeQuantity": 10,
+              "LastCostPrice": "-0.15",
+              "ReorderLevel": 5,
+              "TargetStockLevel": 50
+            },
+            {
+              "StockItemID": 3,
+              "QuantityOnHand": 10,
+              "BinLocation": "A-1",
+              "LastStocktakeQuantity": 10,
+              "LastCostPrice": "9999999999999.95",
+              "ReorderLevel": 5,
+              "TargetStockLevel": 50
+            },
+            {
+              "StockItemID": 4,
+              "QuantityOnHand": 10,
+              "BinLocation": "A-1",
+              "LastStocktakeQuantity": 10,
+              "LastCostPrice": "-9999999999999.95",
+              "ReorderLevel": 5,
+              "TargetStockLevel": 50
+            },
+            {
+              "StockItemID": 5,
+              "QuantityOnHand": 10,
+              "BinLocation": "A-1",
+              "LastStocktakeQuantity": 10,
+              "LastCostPrice": "0.00",
+              "ReorderLevel": 5,
+              "TargetStockLevel": 50
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A03",
+      "label": "bin locations as stored: case-only variants, trailing spaces, '' and a single space, ten emoji (20 UTF-16 code units)",
+      "traps": [
+        "collation-case",
+        "trailing-spaces"
+      ],
+      "reasoning": "BinLocation is passed through. 'a-1', 'A-1' and 'A-1 ' are three rows under CI_AS and must keep their spelling; '' and ' ' are different values on output (nvarchar keeps the space). Ten emoji fill nvarchar(20) exactly in UTF-16 code units (10 characters in varchar(20)).",
+      "fixedCase": {
+        "tables": {
+          "Warehouse.StockItemHoldings": [
+            {
+              "StockItemID": 1,
+              "QuantityOnHand": 10,
+              "BinLocation": "a-1",
+              "LastStocktakeQuantity": 10,
+              "LastCostPrice": "1.00",
+              "ReorderLevel": 5,
+              "TargetStockLevel": 50
+            },
+            {
+              "StockItemID": 2,
+              "QuantityOnHand": 10,
+              "BinLocation": "A-1",
+              "LastStocktakeQuantity": 10,
+              "LastCostPrice": "1.00",
+              "ReorderLevel": 5,
+              "TargetStockLevel": 50
+            },
+            {
+              "StockItemID": 3,
+              "QuantityOnHand": 10,
+              "BinLocation": "A-1 ",
+              "LastStocktakeQuantity": 10,
+              "LastCostPrice": "1.00",
+              "ReorderLevel": 5,
+              "TargetStockLevel": 50
+            },
+            {
+              "StockItemID": 4,
+              "QuantityOnHand": 10,
+              "BinLocation": "",
+              "LastStocktakeQuantity": 10,
+              "LastCostPrice": "1.00",
+              "ReorderLevel": 5,
+              "TargetStockLevel": 50
+            },
+            {
+              "StockItemID": 5,
+              "QuantityOnHand": 10,
+              "BinLocation": " ",
+              "LastStocktakeQuantity": 10,
+              "LastCostPrice": "1.00",
+              "ReorderLevel": 5,
+              "TargetStockLevel": 50
+            },
+            {
+              "StockItemID": 6,
+              "QuantityOnHand": 10,
+              "BinLocation": "😀😀😀😀😀😀😀😀😀😀",
+              "LastStocktakeQuantity": 10,
+              "LastCostPrice": "1.00",
+              "ReorderLevel": 5,
+              "TargetStockLevel": 50
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A04",
+      "label": "quantities at the int limits; equal QuantityOnHand and LastStocktakeQuantity on several rows; ReorderLevel greater than TargetStockLevel",
+      "traps": [
+        "top-ties"
+      ],
+      "reasoning": "QuantityOnHand 2147483647 and -2147483648; three rows share QuantityOnHand 0 and LastStocktakeQuantity 0, ordered only by StockItemID. ReorderLevel 100 > TargetStockLevel 10 on one row.",
+      "fixedCase": {
+        "tables": {
+          "Warehouse.StockItemHoldings": [
+            {
+              "StockItemID": 3,
+              "QuantityOnHand": 0,
+              "BinLocation": "A-1",
+              "LastStocktakeQuantity": 0,
+              "LastCostPrice": "1.00",
+              "ReorderLevel": 5,
+              "TargetStockLevel": 50
+            },
+            {
+              "StockItemID": 1,
+              "QuantityOnHand": 0,
+              "BinLocation": "A-1",
+              "LastStocktakeQuantity": 0,
+              "LastCostPrice": "1.00",
+              "ReorderLevel": 5,
+              "TargetStockLevel": 50
+            },
+            {
+              "StockItemID": 2,
+              "QuantityOnHand": 0,
+              "BinLocation": "A-1",
+              "LastStocktakeQuantity": 0,
+              "LastCostPrice": "1.00",
+              "ReorderLevel": 5,
+              "TargetStockLevel": 50
+            },
+            {
+              "StockItemID": 4,
+              "QuantityOnHand": 2147483647,
+              "BinLocation": "A-1",
+              "LastStocktakeQuantity": -2147483648,
+              "LastCostPrice": "1.00",
+              "ReorderLevel": 100,
+              "TargetStockLevel": 10
+            },
+            {
+              "StockItemID": 5,
+              "QuantityOnHand": -2147483648,
+              "BinLocation": "A-1",
+              "LastStocktakeQuantity": 2147483647,
+              "LastCostPrice": "1.00",
+              "ReorderLevel": 5,
+              "TargetStockLevel": 50
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A05",
+      "label": "empty table: no rows",
+      "traps": [],
+      "reasoning": "With no holdings the procedure returns an empty result set with its seven columns. A conversion that aggregated or LEFT JOINed to a driving row would return one row of NULLs.",
+      "fixedCase": {
+        "tables": {
+          "Warehouse.StockItemHoldings": []
+        }
+      }
+    }
+  ]
+}

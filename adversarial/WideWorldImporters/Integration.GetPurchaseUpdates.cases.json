@@ -1,0 +1,391 @@
+{
+  "schemaVersion": 1,
+  "object": "Integration.GetPurchaseUpdates",
+  "database": "WideWorldImporters",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-19T04:36:25.160Z"
+  },
+  "notApplicable": {
+    "null-vs-empty": "The only text column, Warehouse.PackageTypes.PackageTypeName, is NOT NULL, so no NULL text value can be sent; the procedure compares no text.",
+    "collation-case": "The only text column, PackageTypeName, has a unique constraint under the database's case-insensitive collation (UQ_Warehouse_PackageTypes_PackageTypeName), so two names differing only in case are not valid source data, and no text is compared or grouped.",
+    "numeric-rounding": "No decimal or money column or expression: every number is int (outers, quantity per outer) or a key."
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "the later of order and line time decides: order inside with line after @NewCutoff (excluded); order after @NewCutoff with line inside (excluded); both at @NewCutoff (included); later time exactly @LastCutoff (excluded)",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "Last Modified When is the later of the order's and the line's LastEditedWhen and both bounds apply to it. A conversion that filtered order and line separately, or took the earlier time, would list orders 1 and 2 or drop order 3.",
+      "fixedCase": {
+        "cutoffs": {
+          "last": "2020-06-15T11:00:00.000000",
+          "new": "2020-06-15T13:00:00.000000"
+        },
+        "tables": {
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "QuantityPerOuter": 12
+            }
+          ],
+          "Warehouse.PackageTypes": [
+            {
+              "PackageTypeID": 1,
+              "PackageTypeName": "Carton"
+            }
+          ],
+          "Purchasing.PurchaseOrders": [
+            {
+              "PurchaseOrderID": 1,
+              "SupplierID": 7,
+              "OrderDate": "2020-06-01",
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "PurchaseOrderID": 2,
+              "SupplierID": 7,
+              "OrderDate": "2020-06-01",
+              "LastEditedWhen": "2020-06-15T13:00:00.000001"
+            },
+            {
+              "PurchaseOrderID": 3,
+              "SupplierID": 7,
+              "OrderDate": "2020-06-01",
+              "LastEditedWhen": "2020-06-15T13:00:00.000000"
+            },
+            {
+              "PurchaseOrderID": 4,
+              "SupplierID": 7,
+              "OrderDate": "2020-06-01",
+              "LastEditedWhen": "2020-06-15T11:00:00.000000"
+            }
+          ],
+          "Purchasing.PurchaseOrderLines": [
+            {
+              "PurchaseOrderLineID": 1,
+              "PurchaseOrderID": 1,
+              "StockItemID": 1,
+              "OrderedOuters": 2,
+              "ReceivedOuters": 1,
+              "PackageTypeID": 1,
+              "IsOrderLineFinalized": 0,
+              "LastEditedWhen": "2020-06-15T13:00:00.000001"
+            },
+            {
+              "PurchaseOrderLineID": 2,
+              "PurchaseOrderID": 2,
+              "StockItemID": 1,
+              "OrderedOuters": 2,
+              "ReceivedOuters": 1,
+              "PackageTypeID": 1,
+              "IsOrderLineFinalized": 0,
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "PurchaseOrderLineID": 3,
+              "PurchaseOrderID": 3,
+              "StockItemID": 1,
+              "OrderedOuters": 2,
+              "ReceivedOuters": 1,
+              "PackageTypeID": 1,
+              "IsOrderLineFinalized": 0,
+              "LastEditedWhen": "2020-06-15T13:00:00.000000"
+            },
+            {
+              "PurchaseOrderLineID": 4,
+              "PurchaseOrderID": 4,
+              "StockItemID": 1,
+              "OrderedOuters": 2,
+              "ReceivedOuters": 1,
+              "PackageTypeID": 1,
+              "IsOrderLineFinalized": 0,
+              "LastEditedWhen": "2020-06-15T09:00:00.000000"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A02",
+      "label": "Ordered Quantity near the int limit: 46340 x 46340 = 2147395600, -46340 x 46341, zero outers, and QuantityPerOuter 0 and 1",
+      "traps": [
+        "top-ties"
+      ],
+      "reasoning": "OrderedOuters * QuantityPerOuter is int x int on both engines. The products stay inside int; a conversion that widened one side to numeric or narrowed to smallint would show. Lines share OrderedOuters and ReceivedOuters values.",
+      "fixedCase": {
+        "cutoffs": {
+          "last": "2020-06-15T11:00:00.000000",
+          "new": "2020-06-15T13:00:00.000000"
+        },
+        "tables": {
+          "Warehouse.PackageTypes": [
+            {
+              "PackageTypeID": 1,
+              "PackageTypeName": "Carton"
+            }
+          ],
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "QuantityPerOuter": 46340
+            },
+            {
+              "StockItemID": 2,
+              "QuantityPerOuter": 46341
+            },
+            {
+              "StockItemID": 3,
+              "QuantityPerOuter": 0
+            },
+            {
+              "StockItemID": 4,
+              "QuantityPerOuter": 1
+            }
+          ],
+          "Purchasing.PurchaseOrders": [
+            {
+              "PurchaseOrderID": 1,
+              "SupplierID": 7,
+              "OrderDate": "2020-06-01",
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            }
+          ],
+          "Purchasing.PurchaseOrderLines": [
+            {
+              "PurchaseOrderLineID": 1,
+              "PurchaseOrderID": 1,
+              "StockItemID": 1,
+              "OrderedOuters": 46340,
+              "ReceivedOuters": 1,
+              "PackageTypeID": 1,
+              "IsOrderLineFinalized": 0,
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "PurchaseOrderLineID": 2,
+              "PurchaseOrderID": 1,
+              "StockItemID": 2,
+              "OrderedOuters": -46340,
+              "ReceivedOuters": 1,
+              "PackageTypeID": 1,
+              "IsOrderLineFinalized": 0,
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "PurchaseOrderLineID": 3,
+              "PurchaseOrderID": 1,
+              "StockItemID": 1,
+              "OrderedOuters": 0,
+              "ReceivedOuters": 0,
+              "PackageTypeID": 1,
+              "IsOrderLineFinalized": 0,
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "PurchaseOrderLineID": 4,
+              "PurchaseOrderID": 1,
+              "StockItemID": 3,
+              "OrderedOuters": 5,
+              "ReceivedOuters": 1,
+              "PackageTypeID": 1,
+              "IsOrderLineFinalized": 0,
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "PurchaseOrderLineID": 5,
+              "PurchaseOrderID": 1,
+              "StockItemID": 4,
+              "OrderedOuters": 5,
+              "ReceivedOuters": 1,
+              "PackageTypeID": 1,
+              "IsOrderLineFinalized": 1,
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A03",
+      "label": "window at the extremes of datetime2 and dates at the limits: @NewCutoff 9999-12-31 23:59:59.999999; OrderDate 1753-01-01 and 9999-12-31",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "@LastCutoff 0001-01-01 00:00:00 excludes a row edited at that instant and includes one 1 µs later; a row edited at 9999-12-31 23:59:59.999999 equals @NewCutoff and is included. OrderDate is passed through CAST(... AS date) at both ends of the range.",
+      "fixedCase": {
+        "cutoffs": {
+          "last": "0001-01-01T00:00:00.000000",
+          "new": "9999-12-31T23:59:59.999999"
+        },
+        "tables": {
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "QuantityPerOuter": 12
+            }
+          ],
+          "Warehouse.PackageTypes": [
+            {
+              "PackageTypeID": 1,
+              "PackageTypeName": "Carton"
+            }
+          ],
+          "Purchasing.PurchaseOrders": [
+            {
+              "PurchaseOrderID": 1,
+              "SupplierID": 7,
+              "OrderDate": "2020-06-01",
+              "LastEditedWhen": "0001-01-01T00:00:00.000000"
+            },
+            {
+              "PurchaseOrderID": 2,
+              "SupplierID": 7,
+              "OrderDate": "1753-01-01",
+              "LastEditedWhen": "0001-01-01T00:00:00.000001"
+            },
+            {
+              "PurchaseOrderID": 3,
+              "SupplierID": 7,
+              "OrderDate": "9999-12-31",
+              "LastEditedWhen": "9999-12-31T23:59:59.999999"
+            }
+          ],
+          "Purchasing.PurchaseOrderLines": [
+            {
+              "PurchaseOrderLineID": 1,
+              "PurchaseOrderID": 1,
+              "StockItemID": 1,
+              "OrderedOuters": 2,
+              "ReceivedOuters": 1,
+              "PackageTypeID": 1,
+              "IsOrderLineFinalized": 0,
+              "LastEditedWhen": "0001-01-01T00:00:00.000000"
+            },
+            {
+              "PurchaseOrderLineID": 2,
+              "PurchaseOrderID": 2,
+              "StockItemID": 1,
+              "OrderedOuters": 2,
+              "ReceivedOuters": 1,
+              "PackageTypeID": 1,
+              "IsOrderLineFinalized": 0,
+              "LastEditedWhen": "0001-01-01T00:00:00.000000"
+            },
+            {
+              "PurchaseOrderLineID": 3,
+              "PurchaseOrderID": 3,
+              "StockItemID": 1,
+              "OrderedOuters": 2,
+              "ReceivedOuters": 1,
+              "PackageTypeID": 1,
+              "IsOrderLineFinalized": 0,
+              "LastEditedWhen": "0001-01-01T00:00:00.000000"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A04",
+      "label": "inner joins and keys: a missing stock item and a missing package type drop their lines; a package name with a trailing space; ids with gaps and at the int limits",
+      "traps": [
+        "identity-gaps",
+        "trailing-spaces"
+      ],
+      "reasoning": "Line 7 points at stock item 99 and line 8 at package type 99 (both dropped). Order ids 2147483647, 40 and -2147483648; line and stock item ids jump. Package 'Carton ' keeps its trailing space on output.",
+      "fixedCase": {
+        "cutoffs": {
+          "last": "2020-06-15T11:00:00.000000",
+          "new": "2020-06-15T13:00:00.000000"
+        },
+        "tables": {
+          "Warehouse.PackageTypes": [
+            {
+              "PackageTypeID": 1,
+              "PackageTypeName": "Carton "
+            },
+            {
+              "PackageTypeID": 5,
+              "PackageTypeName": "Pallet"
+            }
+          ],
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "QuantityPerOuter": 12
+            },
+            {
+              "StockItemID": 1000,
+              "QuantityPerOuter": 3
+            }
+          ],
+          "Purchasing.PurchaseOrders": [
+            {
+              "PurchaseOrderID": 2147483647,
+              "SupplierID": 7,
+              "OrderDate": "2020-06-01",
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "PurchaseOrderID": 40,
+              "SupplierID": 7,
+              "OrderDate": "2020-06-01",
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "PurchaseOrderID": -2147483648,
+              "SupplierID": 2147483647,
+              "OrderDate": "2020-06-01",
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            }
+          ],
+          "Purchasing.PurchaseOrderLines": [
+            {
+              "PurchaseOrderLineID": 2147483647,
+              "PurchaseOrderID": 2147483647,
+              "StockItemID": 1,
+              "OrderedOuters": 2,
+              "ReceivedOuters": 1,
+              "PackageTypeID": 1,
+              "IsOrderLineFinalized": 0,
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "PurchaseOrderLineID": 7,
+              "PurchaseOrderID": 40,
+              "StockItemID": 99,
+              "OrderedOuters": 2,
+              "ReceivedOuters": 1,
+              "PackageTypeID": 1,
+              "IsOrderLineFinalized": 0,
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "PurchaseOrderLineID": 8,
+              "PurchaseOrderID": 40,
+              "StockItemID": 1,
+              "OrderedOuters": 2,
+              "ReceivedOuters": 1,
+              "PackageTypeID": 99,
+              "IsOrderLineFinalized": 0,
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            },
+            {
+              "PurchaseOrderLineID": 9,
+              "PurchaseOrderID": -2147483648,
+              "StockItemID": 1000,
+              "OrderedOuters": 2,
+              "ReceivedOuters": 1,
+              "PackageTypeID": 5,
+              "IsOrderLineFinalized": 1,
+              "LastEditedWhen": "2020-06-15T12:00:00.000000"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

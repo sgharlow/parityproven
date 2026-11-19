@@ -1,0 +1,564 @@
+{
+  "schemaVersion": 1,
+  "object": "Sales.vSalesPersonSalesByFiscalYears",
+  "database": "AdventureWorks2025",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-19T04:36:25.160Z"
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "order dates stored at 23:59:59.999 on June 30: SQL Server's datetime rounds them to July 1, which starts the next fiscal year",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "OrderDate is datetime: '2003-06-30T23:59:59.999' is stored as 2003-07-01 00:00:00.000 (1/300 s ticks), so DATEADD(m, 6, ...) gives 2004-01-01 and the amount lands in [2004]. The PostgreSQL column is timestamp(3) and keeps .999, so + 6 months is 2003-12-30 23:59:59.999 and the amount lands in [2003]. Person 2's '2002-06-30T23:59:59.998' rounds down to .997 on SQL Server and stays in fiscal 2002 on both.",
+      "fixedCase": {
+        "tables": {
+          "Sales.SalesPerson": [
+            {
+              "BusinessEntityID": 1,
+              "TerritoryID": 1
+            },
+            {
+              "BusinessEntityID": 2,
+              "TerritoryID": 1
+            }
+          ],
+          "Sales.SalesTerritory": [
+            {
+              "TerritoryID": 1,
+              "Name": "Northwest"
+            },
+            {
+              "TerritoryID": 2,
+              "Name": "NORTHWEST"
+            }
+          ],
+          "HumanResources.Employee": [
+            {
+              "BusinessEntityID": 1,
+              "JobTitle": "Sales Representative"
+            },
+            {
+              "BusinessEntityID": 2,
+              "JobTitle": "Sales Representative"
+            }
+          ],
+          "Person.Person": [
+            {
+              "BusinessEntityID": 1,
+              "FirstName": "F1",
+              "MiddleName": null,
+              "LastName": "L1"
+            },
+            {
+              "BusinessEntityID": 2,
+              "FirstName": "F2",
+              "MiddleName": null,
+              "LastName": "L2"
+            }
+          ],
+          "Sales.SalesOrderHeader": [
+            {
+              "SalesPersonID": 1,
+              "OrderDate": "2003-06-30T23:59:59.999",
+              "SubTotal": "100.0000"
+            },
+            {
+              "SalesPersonID": 1,
+              "OrderDate": "2002-06-30T23:59:59.999",
+              "SubTotal": "7.0000"
+            },
+            {
+              "SalesPersonID": 2,
+              "OrderDate": "2002-06-30T23:59:59.998",
+              "SubTotal": "3.0000"
+            },
+            {
+              "SalesPersonID": 2,
+              "OrderDate": "2003-06-30T23:59:59.997",
+              "SubTotal": "4.0000"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A02",
+      "label": "sub-millisecond order times: 23:59:59.998500 and 23:59:59.999500 on June 30, and 00:00:00.001 on July 1",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "The harness writes datetime values through datetime2(7), so SQL Server rounds .9985 and .9995 to its nearest tick (.997 or the next midnight) and .001 to .000, while timestamp(3) on PostgreSQL rounds to the nearest millisecond (.999 / the next second, .001). The fiscal year flips wherever the two roundings land on different sides of July 1.",
+      "fixedCase": {
+        "tables": {
+          "Sales.SalesPerson": [
+            {
+              "BusinessEntityID": 1,
+              "TerritoryID": 1
+            },
+            {
+              "BusinessEntityID": 2,
+              "TerritoryID": 1
+            },
+            {
+              "BusinessEntityID": 3,
+              "TerritoryID": 1
+            }
+          ],
+          "Sales.SalesTerritory": [
+            {
+              "TerritoryID": 1,
+              "Name": "Northwest"
+            },
+            {
+              "TerritoryID": 2,
+              "Name": "NORTHWEST"
+            }
+          ],
+          "HumanResources.Employee": [
+            {
+              "BusinessEntityID": 1,
+              "JobTitle": "Sales Representative"
+            },
+            {
+              "BusinessEntityID": 2,
+              "JobTitle": "Sales Representative"
+            },
+            {
+              "BusinessEntityID": 3,
+              "JobTitle": "Sales Representative"
+            }
+          ],
+          "Person.Person": [
+            {
+              "BusinessEntityID": 1,
+              "FirstName": "F1",
+              "MiddleName": null,
+              "LastName": "L1"
+            },
+            {
+              "BusinessEntityID": 2,
+              "FirstName": "F2",
+              "MiddleName": null,
+              "LastName": "L2"
+            },
+            {
+              "BusinessEntityID": 3,
+              "FirstName": "F3",
+              "MiddleName": null,
+              "LastName": "L3"
+            }
+          ],
+          "Sales.SalesOrderHeader": [
+            {
+              "SalesPersonID": 1,
+              "OrderDate": "2003-06-30T23:59:59.998500",
+              "SubTotal": "1.0000"
+            },
+            {
+              "SalesPersonID": 2,
+              "OrderDate": "2003-06-30T23:59:59.999500",
+              "SubTotal": "2.0000"
+            },
+            {
+              "SalesPersonID": 3,
+              "OrderDate": "2003-07-01T00:00:00.001",
+              "SubTotal": "3.0000"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A03",
+      "label": "boundary dates: 1753-01-01 (fiscal 1753, no column) and 9999-06-30 23:59:59.997 (fiscal 9999); 2003-08-31 + 6 months clamps to 2004-02-29",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "The smallest datetime value and the last one DATEADD(m, 6, ...) can still move without overflow. Neither year is a pivot column, so they add nothing, but a conversion whose interval arithmetic overflowed or wrapped would raise or add them. 2003-08-31 + 6 months is the leap day 2004-02-29 (fiscal 2004) on both month-end rules.",
+      "fixedCase": {
+        "tables": {
+          "Sales.SalesPerson": [
+            {
+              "BusinessEntityID": 1,
+              "TerritoryID": 1
+            }
+          ],
+          "Sales.SalesTerritory": [
+            {
+              "TerritoryID": 1,
+              "Name": "Northwest"
+            },
+            {
+              "TerritoryID": 2,
+              "Name": "NORTHWEST"
+            }
+          ],
+          "HumanResources.Employee": [
+            {
+              "BusinessEntityID": 1,
+              "JobTitle": "Sales Representative"
+            }
+          ],
+          "Person.Person": [
+            {
+              "BusinessEntityID": 1,
+              "FirstName": "F1",
+              "MiddleName": null,
+              "LastName": "L1"
+            }
+          ],
+          "Sales.SalesOrderHeader": [
+            {
+              "SalesPersonID": 1,
+              "OrderDate": "1753-01-01T00:00:00.000",
+              "SubTotal": "11.0000"
+            },
+            {
+              "SalesPersonID": 1,
+              "OrderDate": "9999-06-30T23:59:59.997",
+              "SubTotal": "13.0000"
+            },
+            {
+              "SalesPersonID": 1,
+              "OrderDate": "2003-08-31T00:00:00.000",
+              "SubTotal": "17.0000"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A04",
+      "label": "money sums: amounts ending in 5 at the 4th decimal, a negative total, and two large amounts summing to 900000000000.0010",
+      "traps": [
+        "numeric-rounding",
+        "top-ties"
+      ],
+      "reasoning": "SUM(money) keeps 4 decimal places on SQL Server; numeric(19,4) must give the same digits. 0.0005 three times (identical rows), -0.0015, and 450000000000.0005 twice (just under the 9.007e11 limit above which money cannot be read exactly through the driver). Person 2's fiscal 2003 total is negative (-0.0010).",
+      "fixedCase": {
+        "tables": {
+          "Sales.SalesPerson": [
+            {
+              "BusinessEntityID": 1,
+              "TerritoryID": 1
+            },
+            {
+              "BusinessEntityID": 2,
+              "TerritoryID": 1
+            }
+          ],
+          "Sales.SalesTerritory": [
+            {
+              "TerritoryID": 1,
+              "Name": "Northwest"
+            },
+            {
+              "TerritoryID": 2,
+              "Name": "NORTHWEST"
+            }
+          ],
+          "HumanResources.Employee": [
+            {
+              "BusinessEntityID": 1,
+              "JobTitle": "Sales Representative"
+            },
+            {
+              "BusinessEntityID": 2,
+              "JobTitle": "Sales Representative"
+            }
+          ],
+          "Person.Person": [
+            {
+              "BusinessEntityID": 1,
+              "FirstName": "F1",
+              "MiddleName": null,
+              "LastName": "L1"
+            },
+            {
+              "BusinessEntityID": 2,
+              "FirstName": "F2",
+              "MiddleName": null,
+              "LastName": "L2"
+            }
+          ],
+          "Sales.SalesOrderHeader": [
+            {
+              "SalesPersonID": 1,
+              "OrderDate": "2002-01-15T00:00:00.000",
+              "SubTotal": "0.0005"
+            },
+            {
+              "SalesPersonID": 1,
+              "OrderDate": "2002-01-15T00:00:00.000",
+              "SubTotal": "0.0005"
+            },
+            {
+              "SalesPersonID": 1,
+              "OrderDate": "2002-01-15T00:00:00.000",
+              "SubTotal": "0.0005"
+            },
+            {
+              "SalesPersonID": 1,
+              "OrderDate": "2003-01-15T00:00:00.000",
+              "SubTotal": "450000000000.0005"
+            },
+            {
+              "SalesPersonID": 1,
+              "OrderDate": "2003-02-15T00:00:00.000",
+              "SubTotal": "450000000000.0005"
+            },
+            {
+              "SalesPersonID": 2,
+              "OrderDate": "2003-01-15T00:00:00.000",
+              "SubTotal": "-0.0015"
+            },
+            {
+              "SalesPersonID": 2,
+              "OrderDate": "2003-03-15T00:00:00.000",
+              "SubTotal": "0.0005"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A05",
+      "label": "full name: MiddleName '' and NULL both give two spaces; FirstName ''; names differing only in case; trailing spaces kept",
+      "traps": [
+        "null-vs-empty",
+        "collation-case",
+        "trailing-spaces"
+      ],
+      "reasoning": "FullName = FirstName + ' ' + COALESCE(MiddleName, '') + ' ' + LastName. MiddleName '' and NULL give the same 'Ann  Lee'; FirstName '' gives ' J Ng'; 'ann lee' and 'ANN LEE' are two people in territories 'Northwest' and 'NORTHWEST'; a trailing space in LastName stays. PIVOT groups by FullName under CI_AS, but SalesPersonID is in the same group, so no two people merge.",
+      "fixedCase": {
+        "tables": {
+          "Sales.SalesPerson": [
+            {
+              "BusinessEntityID": 1,
+              "TerritoryID": 1
+            },
+            {
+              "BusinessEntityID": 2,
+              "TerritoryID": 1
+            },
+            {
+              "BusinessEntityID": 3,
+              "TerritoryID": 1
+            },
+            {
+              "BusinessEntityID": 4,
+              "TerritoryID": 2
+            },
+            {
+              "BusinessEntityID": 5,
+              "TerritoryID": 2
+            }
+          ],
+          "Sales.SalesTerritory": [
+            {
+              "TerritoryID": 1,
+              "Name": "Northwest"
+            },
+            {
+              "TerritoryID": 2,
+              "Name": "NORTHWEST"
+            }
+          ],
+          "HumanResources.Employee": [
+            {
+              "BusinessEntityID": 1,
+              "JobTitle": "Sales Representative"
+            },
+            {
+              "BusinessEntityID": 2,
+              "JobTitle": "Sales Representative"
+            },
+            {
+              "BusinessEntityID": 3,
+              "JobTitle": "Sales Representative"
+            },
+            {
+              "BusinessEntityID": 4,
+              "JobTitle": "Sales Representative"
+            },
+            {
+              "BusinessEntityID": 5,
+              "JobTitle": "SALES REPRESENTATIVE"
+            }
+          ],
+          "Person.Person": [
+            {
+              "BusinessEntityID": 1,
+              "FirstName": "Ann",
+              "MiddleName": "",
+              "LastName": "Lee"
+            },
+            {
+              "BusinessEntityID": 2,
+              "FirstName": "Ann",
+              "MiddleName": null,
+              "LastName": "Lee"
+            },
+            {
+              "BusinessEntityID": 3,
+              "FirstName": "",
+              "MiddleName": "J",
+              "LastName": "Ng "
+            },
+            {
+              "BusinessEntityID": 4,
+              "FirstName": "ann",
+              "MiddleName": null,
+              "LastName": "lee"
+            },
+            {
+              "BusinessEntityID": 5,
+              "FirstName": "ANN",
+              "MiddleName": null,
+              "LastName": "LEE"
+            }
+          ],
+          "Sales.SalesOrderHeader": [
+            {
+              "SalesPersonID": 1,
+              "OrderDate": "2003-01-15T00:00:00.000",
+              "SubTotal": "1.0000"
+            },
+            {
+              "SalesPersonID": 2,
+              "OrderDate": "2003-01-15T00:00:00.000",
+              "SubTotal": "2.0000"
+            },
+            {
+              "SalesPersonID": 3,
+              "OrderDate": "2003-01-15T00:00:00.000",
+              "SubTotal": "3.0000"
+            },
+            {
+              "SalesPersonID": 4,
+              "OrderDate": "2003-01-15T00:00:00.000",
+              "SubTotal": "4.0000"
+            },
+            {
+              "SalesPersonID": 5,
+              "OrderDate": "2003-01-15T00:00:00.000",
+              "SubTotal": "5.0000"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A06",
+      "label": "join keys and gaps: sales persons 7 and 2147483647 with orders in all three years; an order for an id that is not a sales person; a sales person without an Employee row",
+      "traps": [
+        "identity-gaps"
+      ],
+      "reasoning": "Each sales person's orders must stay with that person: a join on the wrong key (e.g. sp.BusinessEntityID = sp.BusinessEntityID) would give every person every order. Order 99 has no SalesPerson row and person 8 no Employee row (both dropped by inner joins). Ids jump from 7 to 8 to 2147483647.",
+      "fixedCase": {
+        "tables": {
+          "Sales.SalesPerson": [
+            {
+              "BusinessEntityID": 7,
+              "TerritoryID": 1
+            },
+            {
+              "BusinessEntityID": 8,
+              "TerritoryID": 1
+            },
+            {
+              "BusinessEntityID": 2147483647,
+              "TerritoryID": 1
+            }
+          ],
+          "Sales.SalesTerritory": [
+            {
+              "TerritoryID": 1,
+              "Name": "Northwest"
+            },
+            {
+              "TerritoryID": 2,
+              "Name": "NORTHWEST"
+            }
+          ],
+          "HumanResources.Employee": [
+            {
+              "BusinessEntityID": 7,
+              "JobTitle": "Sales Representative"
+            },
+            {
+              "BusinessEntityID": 2147483647,
+              "JobTitle": "Sales Representative"
+            }
+          ],
+          "Person.Person": [
+            {
+              "BusinessEntityID": 7,
+              "FirstName": "F7",
+              "MiddleName": null,
+              "LastName": "L7"
+            },
+            {
+              "BusinessEntityID": 8,
+              "FirstName": "F8",
+              "MiddleName": null,
+              "LastName": "L8"
+            },
+            {
+              "BusinessEntityID": 2147483647,
+              "FirstName": "F2147483647",
+              "MiddleName": null,
+              "LastName": "L2147483647"
+            }
+          ],
+          "Sales.SalesOrderHeader": [
+            {
+              "SalesPersonID": 7,
+              "OrderDate": "2001-07-01T00:00:00.000",
+              "SubTotal": "1.0000"
+            },
+            {
+              "SalesPersonID": 7,
+              "OrderDate": "2002-07-01T00:00:00.000",
+              "SubTotal": "2.0000"
+            },
+            {
+              "SalesPersonID": 7,
+              "OrderDate": "2003-07-01T00:00:00.000",
+              "SubTotal": "3.0000"
+            },
+            {
+              "SalesPersonID": 2147483647,
+              "OrderDate": "2001-12-31T00:00:00.000",
+              "SubTotal": "10.0000"
+            },
+            {
+              "SalesPersonID": 2147483647,
+              "OrderDate": "2002-12-31T00:00:00.000",
+              "SubTotal": "20.0000"
+            },
+            {
+              "SalesPersonID": 2147483647,
+              "OrderDate": "2003-12-31T00:00:00.000",
+              "SubTotal": "30.0000"
+            },
+            {
+              "SalesPersonID": 8,
+              "OrderDate": "2002-01-01T00:00:00.000",
+              "SubTotal": "40.0000"
+            },
+            {
+              "SalesPersonID": 99,
+              "OrderDate": "2002-01-01T00:00:00.000",
+              "SubTotal": "50.0000"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,437 @@
+{
+  "schemaVersion": 1,
+  "object": "Sales.vStoreWithContacts",
+  "database": "AdventureWorks2025",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-19T04:36:25.160Z"
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "NULL versus '': Title, MiddleName and Suffix as NULL and as ''; an email row whose address is NULL, one with '', and no email row",
+      "traps": [
+        "null-vs-empty"
+      ],
+      "reasoning": "Person 10 has an EmailAddress row whose address is NULL, person 11 one whose address is '', person 12 none (LEFT JOIN: NULL). Title, MiddleName and Suffix are NULL on one person and '' on another. '' must stay '' on output and the NULLs stay NULL.",
+      "fixedCase": {
+        "tables": {
+          "Sales.Store": [
+            {
+              "BusinessEntityID": 1,
+              "Name": "Store 1"
+            }
+          ],
+          "Person.ContactType": [
+            {
+              "ContactTypeID": 1,
+              "Name": "Owner"
+            }
+          ],
+          "Person.BusinessEntityContact": [
+            {
+              "BusinessEntityID": 1,
+              "PersonID": 10,
+              "ContactTypeID": 1
+            },
+            {
+              "BusinessEntityID": 1,
+              "PersonID": 11,
+              "ContactTypeID": 1
+            },
+            {
+              "BusinessEntityID": 1,
+              "PersonID": 12,
+              "ContactTypeID": 1
+            }
+          ],
+          "Person.Person": [
+            {
+              "BusinessEntityID": 10,
+              "Title": null,
+              "FirstName": "First10",
+              "MiddleName": null,
+              "LastName": "Last10",
+              "Suffix": null,
+              "EmailPromotion": 0
+            },
+            {
+              "BusinessEntityID": 11,
+              "Title": "",
+              "FirstName": "First11",
+              "MiddleName": "",
+              "LastName": "Last11",
+              "Suffix": "",
+              "EmailPromotion": 0
+            },
+            {
+              "BusinessEntityID": 12,
+              "Title": "Dr.",
+              "FirstName": "First12",
+              "MiddleName": null,
+              "LastName": "Last12",
+              "Suffix": null,
+              "EmailPromotion": 0
+            }
+          ],
+          "Person.EmailAddress": [
+            {
+              "BusinessEntityID": 10,
+              "EmailAddress": null
+            },
+            {
+              "BusinessEntityID": 11,
+              "EmailAddress": ""
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A02",
+      "label": "text returned as stored: first names differing only in case or by a trailing space, a store name with a trailing space, an emoji and combining accents",
+      "traps": [
+        "collation-case",
+        "trailing-spaces"
+      ],
+      "reasoning": "Nothing is compared on text in this view; every value must come back with its own spelling and length. 'Ann', 'ANN' and 'ann ' are three contacts; 'e' + U+0301 (combining acute) is not normalised to 'é' by either engine; the emoji is a surrogate pair in nvarchar.",
+      "fixedCase": {
+        "tables": {
+          "Sales.Store": [
+            {
+              "BusinessEntityID": 1,
+              "Name": "Store 1 "
+            }
+          ],
+          "Person.ContactType": [
+            {
+              "ContactTypeID": 1,
+              "Name": "Owner"
+            },
+            {
+              "ContactTypeID": 2,
+              "Name": "Store Contact"
+            }
+          ],
+          "Person.BusinessEntityContact": [
+            {
+              "BusinessEntityID": 1,
+              "PersonID": 10,
+              "ContactTypeID": 1
+            },
+            {
+              "BusinessEntityID": 1,
+              "PersonID": 11,
+              "ContactTypeID": 2
+            },
+            {
+              "BusinessEntityID": 1,
+              "PersonID": 12,
+              "ContactTypeID": 1
+            }
+          ],
+          "Person.Person": [
+            {
+              "BusinessEntityID": 10,
+              "Title": null,
+              "FirstName": "Ann",
+              "MiddleName": null,
+              "LastName": "Last10",
+              "Suffix": null,
+              "EmailPromotion": 0
+            },
+            {
+              "BusinessEntityID": 11,
+              "Title": null,
+              "FirstName": "ANN",
+              "MiddleName": null,
+              "LastName": "Zoë 😀",
+              "Suffix": null,
+              "EmailPromotion": 0
+            },
+            {
+              "BusinessEntityID": 12,
+              "Title": null,
+              "FirstName": "ann ",
+              "MiddleName": null,
+              "LastName": "été ",
+              "Suffix": null,
+              "EmailPromotion": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A03",
+      "label": "fan-out without duplicate keys: a contact under two contact types, with one email and three phones (one of an unknown phone type)",
+      "traps": [
+        "top-ties"
+      ],
+      "reasoning": "Person 10 is an Owner and a Store Contact of store 1, has one email and three PersonPhone rows with distinct keys (two of type 1, one of type 9 with no PhoneNumberType row: NULL). 2 x 1 x 3 = 6 rows, with repeated values in every column but PhoneNumber and ContactType.",
+      "fixedCase": {
+        "tables": {
+          "Sales.Store": [
+            {
+              "BusinessEntityID": 1,
+              "Name": "Store 1"
+            }
+          ],
+          "Person.ContactType": [
+            {
+              "ContactTypeID": 1,
+              "Name": "Owner"
+            },
+            {
+              "ContactTypeID": 2,
+              "Name": "Store Contact"
+            }
+          ],
+          "Person.BusinessEntityContact": [
+            {
+              "BusinessEntityID": 1,
+              "PersonID": 10,
+              "ContactTypeID": 1
+            },
+            {
+              "BusinessEntityID": 1,
+              "PersonID": 10,
+              "ContactTypeID": 2
+            }
+          ],
+          "Person.Person": [
+            {
+              "BusinessEntityID": 10,
+              "Title": null,
+              "FirstName": "First10",
+              "MiddleName": null,
+              "LastName": "Last10",
+              "Suffix": null,
+              "EmailPromotion": 0
+            }
+          ],
+          "Person.EmailAddress": [
+            {
+              "BusinessEntityID": 10,
+              "EmailAddress": "p10@example.com"
+            }
+          ],
+          "Person.PersonPhone": [
+            {
+              "BusinessEntityID": 10,
+              "PhoneNumber": "555-0100",
+              "PhoneNumberTypeID": 1
+            },
+            {
+              "BusinessEntityID": 10,
+              "PhoneNumber": "555-0101",
+              "PhoneNumberTypeID": 1
+            },
+            {
+              "BusinessEntityID": 10,
+              "PhoneNumber": "555-0199",
+              "PhoneNumberTypeID": 9
+            }
+          ],
+          "Person.PhoneNumberType": [
+            {
+              "PhoneNumberTypeID": 1,
+              "Name": "Cell"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A04",
+      "label": "join keys: the store's own BusinessEntityID is also a person with an email and a phone, which must not be attached to the contact",
+      "traps": [
+        "identity-gaps"
+      ],
+      "reasoning": "AdventureWorks business entities share one id space. Store 20 and person 20 both exist; person 20 has an email and a phone. The email and phone joins use the contact person's id (p.BusinessEntityID = 30), not the store's. A conversion joining on s.BusinessEntityID or bec.BusinessEntityID would attach person 20's email and phone to contact 30.",
+      "fixedCase": {
+        "tables": {
+          "Sales.Store": [
+            {
+              "BusinessEntityID": 20,
+              "Name": "Store 20"
+            }
+          ],
+          "Person.ContactType": [
+            {
+              "ContactTypeID": 1,
+              "Name": "Owner"
+            }
+          ],
+          "Person.BusinessEntityContact": [
+            {
+              "BusinessEntityID": 20,
+              "PersonID": 30,
+              "ContactTypeID": 1
+            }
+          ],
+          "Person.Person": [
+            {
+              "BusinessEntityID": 20,
+              "Title": null,
+              "FirstName": "First20",
+              "MiddleName": null,
+              "LastName": "Last20",
+              "Suffix": null,
+              "EmailPromotion": 0
+            },
+            {
+              "BusinessEntityID": 30,
+              "Title": null,
+              "FirstName": "First30",
+              "MiddleName": null,
+              "LastName": "Last30",
+              "Suffix": null,
+              "EmailPromotion": 0
+            }
+          ],
+          "Person.EmailAddress": [
+            {
+              "BusinessEntityID": 20,
+              "EmailAddress": "store-person@example.com"
+            }
+          ],
+          "Person.PersonPhone": [
+            {
+              "BusinessEntityID": 20,
+              "PhoneNumber": "555-0020",
+              "PhoneNumberTypeID": 1
+            }
+          ],
+          "Person.PhoneNumberType": [
+            {
+              "PhoneNumberTypeID": 1,
+              "Name": "Cell"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A05",
+      "label": "keys with gaps and at the int limits: store 0, person 2147483647, contact type -2147483648; EmailPromotion at the int limits; a contact without email or phone",
+      "traps": [
+        "identity-gaps"
+      ],
+      "reasoning": "BusinessEntityID, PersonID and ContactTypeID jump and sit at the int limits; EmailPromotion (int, passed through) is 2147483647 and -2147483648. Person 3 has no email and no phone, so the two LEFT JOINs give NULLs; an inner join would drop the row.",
+      "fixedCase": {
+        "tables": {
+          "Sales.Store": [
+            {
+              "BusinessEntityID": 0,
+              "Name": "Zero"
+            },
+            {
+              "BusinessEntityID": 5,
+              "Name": "Five"
+            }
+          ],
+          "Person.ContactType": [
+            {
+              "ContactTypeID": -2147483648,
+              "Name": "Min"
+            }
+          ],
+          "Person.BusinessEntityContact": [
+            {
+              "BusinessEntityID": 0,
+              "PersonID": 2147483647,
+              "ContactTypeID": -2147483648
+            },
+            {
+              "BusinessEntityID": 5,
+              "PersonID": 3,
+              "ContactTypeID": -2147483648
+            }
+          ],
+          "Person.Person": [
+            {
+              "BusinessEntityID": 2147483647,
+              "Title": null,
+              "FirstName": "First2147483647",
+              "MiddleName": null,
+              "LastName": "Last2147483647",
+              "Suffix": null,
+              "EmailPromotion": 2147483647
+            },
+            {
+              "BusinessEntityID": 3,
+              "Title": null,
+              "FirstName": "First3",
+              "MiddleName": null,
+              "LastName": "Last3",
+              "Suffix": null,
+              "EmailPromotion": -2147483648
+            }
+          ],
+          "Person.EmailAddress": [
+            {
+              "BusinessEntityID": 2147483647,
+              "EmailAddress": "max@example.com"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A06",
+      "label": "rows dropped by the inner joins: a contact of a missing contact type, a missing person, and a business entity that is not a store",
+      "traps": [],
+      "reasoning": "ContactType and Person are inner joins: contact type 99 and person 98 do not exist. Entity 300 has a contact but no Store row. Only person 10's row remains, with no email and no phone.",
+      "fixedCase": {
+        "tables": {
+          "Sales.Store": [
+            {
+              "BusinessEntityID": 1,
+              "Name": "Store 1"
+            }
+          ],
+          "Person.ContactType": [
+            {
+              "ContactTypeID": 1,
+              "Name": "Owner"
+            }
+          ],
+          "Person.BusinessEntityContact": [
+            {
+              "BusinessEntityID": 1,
+              "PersonID": 10,
+              "ContactTypeID": 1
+            },
+            {
+              "BusinessEntityID": 1,
+              "PersonID": 10,
+              "ContactTypeID": 99
+            },
+            {
+              "BusinessEntityID": 1,
+              "PersonID": 98,
+              "ContactTypeID": 1
+            },
+            {
+              "BusinessEntityID": 300,
+              "PersonID": 10,
+              "ContactTypeID": 1
+            }
+          ],
+          "Person.Person": [
+            {
+              "BusinessEntityID": 10,
+              "Title": null,
+              "FirstName": "First10",
+              "MiddleName": null,
+              "LastName": "Last10",
+              "Suffix": null,
+              "EmailPromotion": 0
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
