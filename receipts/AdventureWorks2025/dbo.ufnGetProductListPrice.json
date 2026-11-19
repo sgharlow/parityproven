@@ -15,7 +15,7 @@
     "notes": [
       "At most one price period per product (precondition): with overlapping periods the T-SQL `SELECT @x = ...` keeps the last row read, which is undefined.",
       "Step 4 finding: SQL Server 2025 inlines this scalar function into the calling query (sys.sql_modules.is_inlineable = 1, Froid). PostgreSQL runs the function once per call, so per-row calls cost about 2x more at 20,000 calls. Equivalence is unaffected; a caller that needs the speed would inline the expression or use a set-based join. A PL/pgSQL version (dbo.ufnGetStock, 2026-11-12) measured slower than the LANGUAGE sql one (160 ms vs 123 ms at 20,000 calls), so the SQL version is kept.",
-      "Step 4 factor: 2.5x, not the default 1.5x, agreed by Steve Harlow (project owner, ruling F1) on 2026-11-18 (verification-standard.md, \"unless the object's record states a different agreed factor\"). Reason: SQL Server 2025 inlines this scalar function into the calling query (Froid); PostgreSQL cannot inline a function that reads a table, and 20,000 calls that read no row at all already take 99-116 ms (measured 2026-11-18), at or above 1.5x before any lookup. An extra or covering index does not help (measured: 110 -> 101 ms, 144 -> 153 ms). Results are the same (step 3); a caller that needs the speed uses a set-based join (7 ms measured). Agreed after the 1.5x measurements, not before.",
+      "Step 4 factor: 3x, not the default 1.5x, agreed by Steve Harlow (project owner, ruling R1, replacing F1's 2.5x for this function) on 2026-11-19 (verification-standard.md, \"unless the object's record states a different agreed factor\"). Reason: SQL Server 2025 inlines this scalar function into the calling query (Froid); PostgreSQL cannot inline a function that reads a table, and 20,000 calls that read no row at all already take 99-116 ms (measured 2026-11-18), at or above 1.5x before any lookup. An extra or covering index does not help (measured: 110 -> 101 ms, 144 -> 153 ms). Results are the same (step 3); a caller that needs the speed uses a set-based join (7 ms measured). Agreed after the 1.5x measurements, not before. The datetime tick-rounding fix of 2026-11-19 (adversarial cases A01-A06) adds per-call work on PostgreSQL. Across 12 step-4 runs of the three price functions (2026-11-18/19; evidence/runtime/price-functions-repeat-2026-11-19.jsonl) the ratio was 2.10x-2.75x: PostgreSQL steady at 182-210 ms, SQL Server 69-87 ms, so pass or fail at 2.5x depended on the run. Agreed after these measurements, not before.",
       "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
     ]
   },
@@ -74,11 +74,11 @@
   ],
   "evidence": {
     "pbtSeeds": [
-      123175731
+      1843240286
     ],
     "rowsCompared": 208,
     "samples": 200,
-    "samplesWithRows": 117,
+    "samplesWithRows": 129,
     "trapsCovered": [
       "NULL in every nullable column"
     ],
@@ -89,10 +89,10 @@
     "runtime": {
       "volume": 2000,
       "timedRuns": 7,
-      "sqlServerMs": 87,
-      "postgresMs": 203.62,
-      "ratio": 2.34,
-      "threshold": 2.5,
+      "sqlServerMs": 83,
+      "postgresMs": 184.7,
+      "ratio": 2.23,
+      "threshold": 3,
       "passed": true,
       "belowResolution": false,
       "resultRows": 100,
@@ -100,7 +100,7 @@
     },
     "engineOutputCheck": {
       "step3": "pass",
-      "seed": 123175731
+      "seed": 1843240286
     },
     "subMicrosecondNormalised": 0,
     "harnessVersion": "harness-generic-0.3.0",
@@ -331,5 +331,5 @@
     "p50Hours": 1.5,
     "p90Hours": 4
   },
-  "builtAt": "2026-11-19T15:58:24.717Z"
+  "builtAt": "2026-11-19T18:00:02.555Z"
 }

@@ -112,20 +112,18 @@
       "planted defects caught by the agreed tests: 4 of 4"
     ],
     "adversarial": {
-      "gate": "fail",
-      "ran": 10,
+      "gate": "pass",
+      "ran": 12,
       "differed": 0,
       "evidencePath": "evidence/adversarial/WideWorldImporters/Sequences.ReseedSequenceBeyondTableValues.json",
-      "runAt": "2026-11-19T06:21:09.540Z",
+      "runAt": "2026-11-19T17:47:22.088Z",
       "agentWritten": true,
-      "wording": "10 adversarial cases ran, 0 differed",
+      "wording": "12 adversarial cases ran, 0 differed",
       "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
       "auditorModel": "gpt-5.6-sol",
       "sameModel": false,
-      "mutantAdequacy": "inadequate",
-      "gateReasons": [
-        "mutant adequacy is inadequate (unexplained misses: strictly greater instead of >=)"
-      ],
+      "mutantAdequacy": "adequate",
+      "gateReasons": [],
       "cases": [
         {
           "id": "A01",
@@ -217,6 +215,22 @@
           "status": "ran",
           "sqlServer": "pass",
           "postgres": "pass"
+        },
+        {
+          "id": "A11",
+          "label": "table maximum equals the current value of an unused sequence (start 20, maximum 20): restart at 21, which a strict '>' would not do",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A12",
+          "label": "the same boundary with negative values on Warehouse.StockItems (start -3, maximum -3): restart at -2, which a strict '>' would not do",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
         }
       ]
     }
@@ -230,5 +244,5 @@
     "p50Hours": 3,
     "p90Hours": 6
   },
-  "builtAt": "2026-11-19T15:58:24.824Z"
+  "builtAt": "2026-11-19T18:00:02.571Z"
 }

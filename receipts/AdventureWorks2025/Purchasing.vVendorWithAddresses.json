@@ -126,20 +126,18 @@
       "planted defects caught by the agreed tests: 3 of 3"
     ],
     "adversarial": {
-      "gate": "fail",
-      "ran": 10,
+      "gate": "pass",
+      "ran": 9,
       "differed": 0,
       "evidencePath": "evidence/adversarial/AdventureWorks2025/Purchasing.vVendorWithAddresses.json",
-      "runAt": "2026-11-19T06:17:32.872Z",
+      "runAt": "2026-11-19T17:49:25.364Z",
       "agentWritten": true,
-      "wording": "10 adversarial cases ran, 0 differed",
+      "wording": "9 adversarial cases ran, 0 differed",
       "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
       "auditorModel": "gpt-5.6-sol",
       "sameModel": false,
       "mutantAdequacy": "adequate",
-      "gateReasons": [
-        "objection O03 is open"
-      ],
+      "gateReasons": [],
       "cases": [
         {
           "id": "A01",
@@ -233,14 +231,6 @@
           "status": "ran",
           "sqlServer": "pass",
           "postgres": "pass"
-        },
-        {
-          "id": "A10",
-          "label": "a vendor address whose address type has no AddressType row is dropped by the inner join",
-          "traps": [],
-          "status": "ran",
-          "sqlServer": "pass",
-          "postgres": "pass"
         }
       ]
     }
@@ -254,5 +244,5 @@
     "p50Hours": 0.75,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-19T15:58:24.757Z"
+  "builtAt": "2026-11-19T18:00:02.561Z"
 }

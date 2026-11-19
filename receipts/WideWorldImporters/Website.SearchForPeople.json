@@ -133,20 +133,18 @@
       "planted defects caught by the agreed tests: 7 of 7"
     ],
     "adversarial": {
-      "gate": "fail",
-      "ran": 6,
+      "gate": "pass",
+      "ran": 7,
       "differed": 0,
       "evidencePath": "evidence/adversarial/WideWorldImporters/Website.SearchForPeople.json",
-      "runAt": "2026-11-19T06:23:28.819Z",
+      "runAt": "2026-11-19T17:48:05.348Z",
       "agentWritten": true,
-      "wording": "6 adversarial cases ran, 0 differed",
+      "wording": "7 adversarial cases ran, 0 differed",
       "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
       "auditorModel": "gpt-5.6-sol",
       "sameModel": false,
-      "mutantAdequacy": "inadequate",
-      "gateReasons": [
-        "mutant adequacy is inadequate (unexplained misses: employee tested before salesperson)"
-      ],
+      "mutantAdequacy": "adequate",
+      "gateReasons": [],
       "cases": [
         {
           "id": "A01",
@@ -202,6 +200,14 @@
           "status": "ran",
           "sqlServer": "pass",
           "postgres": "pass"
+        },
+        {
+          "id": "A07",
+          "label": "people flagged both salesperson and employee are 'Salesperson' (the order of the two WHEN branches), beside a salesperson only and an employee only",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
         }
       ]
     }
@@ -215,5 +221,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-19T15:58:24.865Z"
+  "builtAt": "2026-11-19T18:00:02.576Z"
 }

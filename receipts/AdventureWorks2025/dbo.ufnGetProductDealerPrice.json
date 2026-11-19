@@ -5,7 +5,7 @@
   "objectClass": "function",
   "tier": "simple",
   "predictionTier": "simple",
-  "status": "failed",
+  "status": "pending",
   "code": {
     "source": "\r\nCREATE FUNCTION [dbo].[ufnGetProductDealerPrice](@ProductID [int], @OrderDate [datetime])\r\nRETURNS [money]\r\nAS\r\n-- Returns the dealer price for the product on a specific date.\r\nBEGIN\r\n    DECLARE @DealerPrice money;\r\n    DECLARE @DealerDiscount money;\r\n\r\n    SET @DealerDiscount = 0.60  -- 60% of list price\r\n\r\n    SELECT @DealerPrice = plph.[ListPrice] * @DealerDiscount\r\n    FROM [Production].[Product] p\r\n        INNER JOIN [Production].[ProductListPriceHistory] plph\r\n        ON p.[ProductID] = plph.[ProductID]\r\n            AND p.[ProductID] = @ProductID\r\n            AND @OrderDate BETWEEN plph.[StartDate] AND COALESCE(plph.[EndDate], CONVERT(datetime, '99991231', 112)); -- Make sure we get all the prices!\r\n\r\n    RETURN @DealerPrice;\r\nEND;\r\n",
     "engineOutput": "-- First draft: multiply list price by 0.60 in numeric arithmetic.\n\nCREATE OR REPLACE FUNCTION dbo.ufn_get_product_dealer_price(product_id integer, order_date timestamp)\nRETURNS numeric(19,4)\nLANGUAGE sql\nSTABLE\nAS $$\n    SELECT plph.\"ListPrice\" * 0.60            -- 60% of list price\n      FROM production.product AS p\n     INNER JOIN production.product_list_price_history AS plph\n        ON p.\"ProductID\" = plph.\"ProductID\"\n       AND p.\"ProductID\" = product_id\n       AND order_date BETWEEN plph.\"StartDate\" AND COALESCE(plph.\"EndDate\", TIMESTAMP '9999-12-31 00:00:00')\n     LIMIT 1\n$$;\n",
@@ -15,7 +15,7 @@
     "notes": [
       "At most one price period per product (precondition): with overlapping periods the T-SQL `SELECT @x = ...` keeps the last row read, which is undefined.",
       "Step 4 finding: SQL Server 2025 inlines this scalar function into the calling query (sys.sql_modules.is_inlineable = 1, Froid). PostgreSQL runs the function once per call, so per-row calls cost about 2x more at 20,000 calls. Equivalence is unaffected; a caller that needs the speed would inline the expression or use a set-based join. A PL/pgSQL version (dbo.ufnGetStock, 2026-11-12) measured slower than the LANGUAGE sql one (160 ms vs 123 ms at 20,000 calls), so the SQL version is kept.",
-      "Step 4 factor: 2.5x, not the default 1.5x, agreed by Steve Harlow (project owner, ruling F1) on 2026-11-18 (verification-standard.md, \"unless the object's record states a different agreed factor\"). Reason: SQL Server 2025 inlines this scalar function into the calling query (Froid); PostgreSQL cannot inline a function that reads a table, and 20,000 calls that read no row at all already take 99-116 ms (measured 2026-11-18), at or above 1.5x before any lookup. An extra or covering index does not help (measured: 110 -> 101 ms, 144 -> 153 ms). Results are the same (step 3); a caller that needs the speed uses a set-based join (7 ms measured). Agreed after the 1.5x measurements, not before.",
+      "Step 4 factor: 3x, not the default 1.5x, agreed by Steve Harlow (project owner, ruling R1, replacing F1's 2.5x for this function) on 2026-11-19 (verification-standard.md, \"unless the object's record states a different agreed factor\"). Reason: SQL Server 2025 inlines this scalar function into the calling query (Froid); PostgreSQL cannot inline a function that reads a table, and 20,000 calls that read no row at all already take 99-116 ms (measured 2026-11-18), at or above 1.5x before any lookup. An extra or covering index does not help (measured: 110 -> 101 ms, 144 -> 153 ms). Results are the same (step 3); a caller that needs the speed uses a set-based join (7 ms measured). Agreed after the 1.5x measurements, not before. The datetime tick-rounding fix of 2026-11-19 (adversarial cases A01-A06) adds per-call work on PostgreSQL. Across 12 step-4 runs of the three price functions (2026-11-18/19; evidence/runtime/price-functions-repeat-2026-11-19.jsonl) the ratio was 2.10x-2.75x: PostgreSQL steady at 182-210 ms, SQL Server 69-87 ms, so pass or fail at 2.5x depended on the run. Agreed after these measurements, not before.",
       "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
     ]
   },
@@ -59,7 +59,7 @@
     {
       "step": 4,
       "label": "Runtime within 1.5× factor",
-      "status": "fail"
+      "status": "pass"
     },
     {
       "step": 5,
@@ -74,11 +74,11 @@
   ],
   "evidence": {
     "pbtSeeds": [
-      1296714984
+      744861575
     ],
     "rowsCompared": 208,
     "samples": 200,
-    "samplesWithRows": 126,
+    "samplesWithRows": 129,
     "trapsCovered": [
       "NULL in every nullable column"
     ],
@@ -86,22 +86,21 @@
       "auto: join condition uses a different key",
       "auto: first numeric literal changed"
     ],
-    "failureDetail": "Step 4: PostgreSQL 210.5 ms vs SQL Server 77 ms = 2.73x, above the 2.5x limit. Results are equivalent (step 3 pass); see the notes for the cause.",
     "runtime": {
       "volume": 2000,
       "timedRuns": 7,
-      "sqlServerMs": 77,
-      "postgresMs": 210.5,
-      "ratio": 2.73,
-      "threshold": 2.5,
-      "passed": false,
+      "sqlServerMs": 70,
+      "postgresMs": 189.07,
+      "ratio": 2.7,
+      "threshold": 3,
+      "passed": true,
       "belowResolution": false,
       "resultRows": 100,
       "volumeMismatch": null
     },
     "engineOutputCheck": {
       "step3": "fail",
-      "seed": 1296714984,
+      "seed": 744861575,
       "detail": "fixed case \"open-ended period (EndDate NULL -> 9999-12-31) on 9999-12-30: 60% of an odd price (3.3333 x 0.60), kept to money's 4 places\": value differs in group 0 (key \"*\"), column \"result\": SQL Server n:2 vs PostgreSQL n:1.99998"
     },
     "subMicrosecondNormalised": 0,
@@ -125,7 +124,204 @@
       "PostgreSQL: AgreedTests.[test 07 a product with no history: NULL]: pass",
       "PostgreSQL: AgreedTests.[test 08 NULL ProductID: NULL]: pass",
       "planted defects caught by the agreed tests: 2 of 2"
-    ]
+    ],
+    "adversarial": {
+      "gate": "pass",
+      "ran": 19,
+      "differed": 0,
+      "evidencePath": "evidence/adversarial/AdventureWorks2025/dbo.ufnGetProductDealerPrice.json",
+      "runAt": "2026-11-19T17:49:46.385Z",
+      "agentWritten": true,
+      "wording": "19 adversarial cases ran, 0 differed",
+      "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
+      "auditorModel": "gpt-5.6-sol",
+      "sameModel": false,
+      "mutantAdequacy": "adequate",
+      "gateReasons": [],
+      "cases": [
+        {
+          "id": "A01",
+          "label": "order instant 1 ms after the end date (.001): SQL Server rounds the datetime argument to .000, inside the period",
+          "traps": [
+            "dates-datetime"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A02",
+          "label": "order instant 1 ms before the start date (.999): SQL Server rounds it up to the start, inside the period",
+          "traps": [
+            "dates-datetime"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A03",
+          "label": "StartDate stored as .001 (datetime keeps .000) and an order instant at .000: inside the period on SQL Server",
+          "traps": [
+            "dates-datetime"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A04",
+          "label": "EndDate stored as 23:59:59.999 (datetime rounds to the next midnight) and an order instant at that midnight",
+          "traps": [
+            "dates-datetime"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A05",
+          "label": "EndDate stored as .002 (datetime keeps .003) and an order instant at .003",
+          "traps": [
+            "dates-datetime"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A06",
+          "label": "StartDate stored as half a millisecond (.0005) and an order instant at .000",
+          "traps": [
+            "dates-datetime"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A07",
+          "label": "a period starting on 1753-01-01 (datetime minimum), order instant at that minimum, value 0.0005: 60% of the list price",
+          "traps": [
+            "dates-datetime",
+            "numeric-rounding"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A08",
+          "label": "open-ended period on 9999-12-31 00:00 exactly (the COALESCE end, inclusive): 60% of the list price",
+          "traps": [
+            "dates-datetime"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A09",
+          "label": "open-ended period on 9999-12-31 23:59:59.997 (after the COALESCE end at midnight): NULL",
+          "traps": [
+            "dates-datetime"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A10",
+          "label": "an explicit EndDate at the datetime maximum (9999-12-31 23:59:59.997), order instant equal to it: 60% of the list price",
+          "traps": [
+            "dates-datetime"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A11",
+          "label": "a value with 5 decimals (10.00005) rounds to money's 4 places on load: 60% of the list price",
+          "traps": [
+            "numeric-rounding"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A12",
+          "label": "a negative value at the last place (-0.0005): 60% of the list price",
+          "traps": [
+            "numeric-rounding"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A13",
+          "label": "a negative value -1.0001: 60% of the list price (-0.60006 rounds away from zero to -0.6001)",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A14",
+          "label": "a large list price 9999999.9999: 60% is 5999999.99994, rounded to 5999999.9999",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A15",
+          "label": "product keys with gaps (10, 20, 2147483647): the int-maximum product's dealer price",
+          "traps": [
+            "identity-gaps"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A16",
+          "label": "a one-instant period (StartDate = EndDate = 12:34:56.789) and an order instant equal to it",
+          "traps": [
+            "dates-datetime"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A17",
+          "label": "an inverted period (EndDate before StartDate) and an order instant between them: NULL",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A18",
+          "label": "a period starting at 08:00 on 2020-01-01 and an order instant at midnight that day: NULL",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A19",
+          "label": "a product whose only period ended, with the queried instant in a later year and a different product's period covering it: NULL",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        }
+      ]
+    }
   },
   "effort": {
     "humanMinutes": 0,
@@ -136,5 +332,5 @@
     "p50Hours": 1.5,
     "p90Hours": 4
   },
-  "builtAt": "2026-11-19T15:58:24.713Z"
+  "builtAt": "2026-11-19T18:00:02.554Z"
 }

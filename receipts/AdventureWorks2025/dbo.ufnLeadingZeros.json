@@ -107,20 +107,18 @@
       "planted defects caught by the agreed tests: 1 of 1"
     ],
     "adversarial": {
-      "gate": "fail",
-      "ran": 8,
+      "gate": "pass",
+      "ran": 11,
       "differed": 0,
       "evidencePath": "evidence/adversarial/AdventureWorks2025/dbo.ufnLeadingZeros.json",
-      "runAt": "2026-11-19T06:19:58.663Z",
+      "runAt": "2026-11-19T17:49:03.769Z",
       "agentWritten": true,
-      "wording": "8 adversarial cases ran, 0 differed",
+      "wording": "11 adversarial cases ran, 0 differed",
       "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
       "auditorModel": "gpt-5.6-sol",
       "sameModel": false,
-      "mutantAdequacy": "inadequate",
-      "gateReasons": [
-        "mutant adequacy is inadequate (unexplained misses: auto: strict comparison made inclusive)"
-      ],
+      "mutantAdequacy": "adequate",
+      "gateReasons": [],
       "cases": [
         {
           "id": "A01",
@@ -185,6 +183,30 @@
           "status": "ran",
           "sqlServer": "pass",
           "postgres": "pass"
+        },
+        {
+          "id": "A09",
+          "label": "10000000 (exactly 8 digits) is returned unchanged: '10000000'",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A10",
+          "label": "-1000000 (7 digits and a sign, exactly 8 characters) is returned unchanged: '-1000000'",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A11",
+          "label": "987654321 (9 digits) does not fit varchar(8): '0000000*'",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
         }
       ]
     }
@@ -198,5 +220,5 @@
     "p50Hours": 1.5,
     "p90Hours": 4
   },
-  "builtAt": "2026-11-19T15:58:24.731Z"
+  "builtAt": "2026-11-19T18:00:02.557Z"
 }

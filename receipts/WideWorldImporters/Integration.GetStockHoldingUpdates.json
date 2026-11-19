@@ -96,24 +96,21 @@
       "tSQLt V1.0.8083.3529 on SQL Server (tests/WideWorldImporters/Integration.GetStockHoldingUpdates.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/WideWorldImporters/Integration.GetStockHoldingUpdates.pg.sql); expected results tests/WideWorldImporters/Integration.GetStockHoldingUpdates.expected.json",
       "SQL Server: AgreedTests.[test 01 every holding is listed: empty and trailing-space bin locations kept, zero and negative quantities, c…]: pass",
       "PostgreSQL: AgreedTests.[test 01 every holding is listed: empty and trailing-space bin locations kept, zero and negative quantities, c…]: pass",
-      "planted defects caught by the agreed tests: 1 of 2"
+      "planted defects caught by the agreed tests: 2 of 2"
     ],
     "adversarial": {
-      "gate": "fail",
+      "gate": "pass",
       "ran": 5,
       "differed": 0,
       "evidencePath": "evidence/adversarial/WideWorldImporters/Integration.GetStockHoldingUpdates.json",
-      "runAt": "2026-11-19T06:24:02.904Z",
+      "runAt": "2026-11-19T17:48:46.523Z",
       "agentWritten": true,
       "wording": "5 adversarial cases ran, 0 differed",
       "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
       "auditorModel": "gpt-5.6-sol",
       "sameModel": false,
-      "mutantAdequacy": "inadequate",
-      "gateReasons": [
-        "objection O01 is open",
-        "mutant adequacy is inadequate (unexplained misses: descending order)"
-      ],
+      "mutantAdequacy": "adequate",
+      "gateReasons": [],
       "cases": [
         {
           "id": "A01",
@@ -176,5 +173,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-19T15:58:24.818Z"
+  "builtAt": "2026-11-19T18:00:02.570Z"
 }
