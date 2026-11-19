@@ -1,5 +1,5 @@
 {
-  "builtAt": "2026-11-19T00:46:13.909Z",
+  "builtAt": "2026-11-19T01:01:58.450Z",
   "receipts": [
     {
       "database": "AdventureWorks2025",
@@ -43,7 +43,7 @@
       "objectName": "ufnGetProductDealerPrice",
       "objectClass": "function",
       "tier": "simple",
-      "status": "failed",
+      "status": "pending",
       "path": "AdventureWorks2025/dbo.ufnGetProductDealerPrice.json"
     },
     {
@@ -52,7 +52,7 @@
       "objectName": "ufnGetProductListPrice",
       "objectClass": "function",
       "tier": "simple",
-      "status": "failed",
+      "status": "pending",
       "path": "AdventureWorks2025/dbo.ufnGetProductListPrice.json"
     },
     {
@@ -61,7 +61,7 @@
       "objectName": "ufnGetProductStandardCost",
       "objectClass": "function",
       "tier": "simple",
-      "status": "failed",
+      "status": "pending",
       "path": "AdventureWorks2025/dbo.ufnGetProductStandardCost.json"
     },
     {
@@ -88,7 +88,7 @@
       "objectName": "ufnGetStock",
       "objectClass": "function",
       "tier": "simple",
-      "status": "failed",
+      "status": "pending",
       "path": "AdventureWorks2025/dbo.ufnGetStock.json"
     },
     {
@@ -947,8 +947,8 @@
   "summary": {
     "total": 55,
     "verified": 5,
-    "pending": 35,
-    "failed": 15,
+    "pending": 39,
+    "failed": 11,
     "excluded": 17,
     "notAttempted": 26,
     "inventory": 98

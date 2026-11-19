@@ -249,6 +249,9 @@ function writePair(p: PairInput): void {
       engine: "kiro",
       notes: [
         ...(spec.notes ?? []),
+        ...(spec.runtimeFactor
+          ? [`Step 4 factor: ${spec.runtimeFactor.factor}x, not the default 1.5x, agreed by ${spec.runtimeFactor.agreedBy} on ${spec.runtimeFactor.date} (verification-standard.md, "unless the object's record states a different agreed factor"). Reason: ${spec.runtimeFactor.reason}`]
+          : []),
         "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step).",
       ],
     },

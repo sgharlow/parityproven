@@ -1,0 +1,121 @@
+{
+  "object": "dbo.ufnGetProductDealerPrice",
+  "database": "AdventureWorks2025",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-19T01:00:51.025Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "on the start date exactly (BETWEEN is inclusive): 60% of the list price (10.0000 x 0.60)",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "n:6"
+        ]
+      ]
+    },
+    {
+      "label": "on the end date exactly (inclusive): 60% of the list price (10.0000 x 0.60)",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "n:6"
+        ]
+      ]
+    },
+    {
+      "label": "one datetime tick (3 ms) after the end date: no period, NULL",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "∅"
+        ]
+      ]
+    },
+    {
+      "label": "one datetime tick before the start date: no period, NULL",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "∅"
+        ]
+      ]
+    },
+    {
+      "label": "open-ended period (EndDate NULL -> 9999-12-31) on 9999-12-30: 60% of an odd price (3.3333 x 0.60), kept to money's 4 places",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "n:2"
+        ]
+      ]
+    },
+    {
+      "label": "a history row with no Product row: the inner join drops it, NULL",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "∅"
+        ]
+      ]
+    },
+    {
+      "label": "a product with no history: NULL",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "∅"
+        ]
+      ]
+    },
+    {
+      "label": "NULL ProductID: NULL",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "∅"
+        ]
+      ]
+    }
+  ]
+}

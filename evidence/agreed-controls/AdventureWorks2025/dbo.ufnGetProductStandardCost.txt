@@ -1,0 +1,23 @@
+negative control for dbo.ufnGetProductStandardCost (step 2), 2026-11-19T01:01:48.165Z
+corruption: case 1 expected value row 1, column result: n:10 -> n:11
+SQL Server: test 01 on the start date exactly (BETWEEN is inclusive): the StandardCost: FAIL — Failure: Unexpected/missing resultset rows!
+|_m_|result |
++---+-------+
+|<  |11.0000|
+|>  |10.0000|
+SQL Server: test 02 on the end date exactly (inclusive): the StandardCost: pass
+SQL Server: test 03 one datetime tick (3 ms) after the end date: no period, NULL: pass
+SQL Server: test 04 one datetime tick before the start date: no period, NULL: pass
+SQL Server: test 05 open-ended period (EndDate NULL -> 9999-12-31) on 9999-12-30: the value: pass
+SQL Server: test 06 a history row with no Product row: the inner join drops it, NULL: pass
+SQL Server: test 07 a product with no history: NULL: pass
+SQL Server: test 08 NULL ProductID: NULL: pass
+PostgreSQL: test 01 on the start date exactly (BETWEEN is inclusive): the StandardCost: FAIL — agreed test failed (test 01 on the start date exactly (BETWEEN is inclusive): the StandardCost): 1 expected row(s) missing, 1 unexpected row(s) in the result
+PostgreSQL: test 02 on the end date exactly (inclusive): the StandardCost: pass
+PostgreSQL: test 03 one datetime tick (3 ms) after the end date: no period, NULL: pass
+PostgreSQL: test 04 one datetime tick before the start date: no period, NULL: pass
+PostgreSQL: test 05 open-ended period (EndDate NULL -> 9999-12-31) on 9999-12-30: the value: pass
+PostgreSQL: test 06 a history row with no Product row: the inner join drops it, NULL: pass
+PostgreSQL: test 07 a product with no history: NULL: pass
+PostgreSQL: test 08 NULL ProductID: NULL: pass
+RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed

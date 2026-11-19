@@ -1,0 +1,93 @@
+{
+  "object": "dbo.ufnGetStock",
+  "database": "AdventureWorks2025",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-19T01:01:16.101Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "only location 6 counts: 5 (the 100 at location 1 is ignored)",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "int"
+        }
+      ],
+      "rows": [
+        [
+          "n:5"
+        ]
+      ]
+    },
+    {
+      "label": "stock only at another location: the SUM is NULL, returned as 0",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "int"
+        }
+      ],
+      "rows": [
+        [
+          "n:0"
+        ]
+      ]
+    },
+    {
+      "label": "a row with quantity 0 at location 6: 0",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "int"
+        }
+      ],
+      "rows": [
+        [
+          "n:0"
+        ]
+      ]
+    },
+    {
+      "label": "smallint maximum 32767 at location 6: 32767",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "int"
+        }
+      ],
+      "rows": [
+        [
+          "n:32767"
+        ]
+      ]
+    },
+    {
+      "label": "an unknown product: 0",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "int"
+        }
+      ],
+      "rows": [
+        [
+          "n:0"
+        ]
+      ]
+    },
+    {
+      "label": "NULL ProductID: 0 (no row matches, NULL sum -> 0)",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "int"
+        }
+      ],
+      "rows": [
+        [
+          "n:0"
+        ]
+      ]
+    }
+  ]
+}

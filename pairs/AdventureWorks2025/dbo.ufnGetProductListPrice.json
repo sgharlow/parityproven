@@ -18,6 +18,7 @@
     "notes": [
       "At most one price period per product (precondition): with overlapping periods the T-SQL `SELECT @x = ...` keeps the last row read, which is undefined.",
       "Step 4 finding: SQL Server 2025 inlines this scalar function into the calling query (sys.sql_modules.is_inlineable = 1, Froid). PostgreSQL runs the function once per call, so per-row calls cost about 2x more at 20,000 calls. Equivalence is unaffected; a caller that needs the speed would inline the expression or use a set-based join. A PL/pgSQL version (dbo.ufnGetStock, 2026-11-12) measured slower than the LANGUAGE sql one (160 ms vs 123 ms at 20,000 calls), so the SQL version is kept.",
+      "Step 4 factor: 2.5x, not the default 1.5x, agreed by Steve Harlow (project owner, ruling F1) on 2026-11-18 (verification-standard.md, \"unless the object's record states a different agreed factor\"). Reason: SQL Server 2025 inlines this scalar function into the calling query (Froid); PostgreSQL cannot inline a function that reads a table, and 20,000 calls that read no row at all already take 99-116 ms (measured 2026-11-18), at or above 1.5x before any lookup. An extra or covering index does not help (measured: 110 -> 101 ms, 144 -> 153 ms). Results are the same (step 3); a caller that needs the speed uses a set-based join (7 ms measured). Agreed after the 1.5x measurements, not before.",
       "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
     ]
   },
@@ -44,45 +45,64 @@
   ],
   "evidence": {
     "step1": "pass",
-    "step2": "not-run",
+    "step2": "pass",
     "step3": "pass",
-    "step4": "fail",
+    "step4": "pass",
     "step5": "not-run",
     "step6": "n/a",
-    "runtimeRatio": 2,
+    "runtimeRatio": 1.74,
     "runtime": {
       "volume": 2000,
       "timedRuns": 7,
-      "sqlServerMs": 70,
-      "postgresMs": 139.83,
-      "ratio": 2,
-      "threshold": 1.5,
-      "passed": false,
+      "sqlServerMs": 82,
+      "postgresMs": 142.47,
+      "ratio": 1.74,
+      "threshold": 2.5,
+      "passed": true,
       "belowResolution": false,
       "resultRows": 100,
       "volumeMismatch": null
     },
-    "rowsCompared": 200,
+    "rowsCompared": 208,
     "trapsCovered": [
       "NULL in every nullable column"
     ],
     "pbtSeeds": [
-      1607008544
+      1715929576
     ],
     "samples": 200,
-    "samplesWithRows": 130,
+    "samplesWithRows": 115,
     "subMicrosecondNormalised": 0,
     "mutantsDetected": [
       "auto: join condition uses a different key",
       "auto: first AND becomes OR"
     ],
-    "failureDetail": "Step 4: PostgreSQL 139.83 ms vs SQL Server 70 ms = 2x, above the 1.5x limit. Results are equivalent (step 3 pass); see the notes for the cause.",
-    "harnessVersion": "harness-generic-0.3.0"
+    "harnessVersion": "harness-generic-0.3.0",
+    "testsRun": [
+      "tSQLt V1.0.8083.3529 on SQL Server (tests/AdventureWorks2025/dbo.ufnGetProductListPrice.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/AdventureWorks2025/dbo.ufnGetProductListPrice.pg.sql); expected results tests/AdventureWorks2025/dbo.ufnGetProductListPrice.expected.json",
+      "SQL Server: AgreedTests.[test 01 on the start date exactly (BETWEEN is inclusive): the ListPrice]: pass",
+      "SQL Server: AgreedTests.[test 02 on the end date exactly (inclusive): the ListPrice]: pass",
+      "SQL Server: AgreedTests.[test 03 one datetime tick (3 ms) after the end date: no period, NULL]: pass",
+      "SQL Server: AgreedTests.[test 04 one datetime tick before the start date: no period, NULL]: pass",
+      "SQL Server: AgreedTests.[test 05 open-ended period (EndDate NULL -> 9999-12-31) on 9999-12-30: the value]: pass",
+      "SQL Server: AgreedTests.[test 06 a history row with no Product row: the inner join drops it, NULL]: pass",
+      "SQL Server: AgreedTests.[test 07 a product with no history: NULL]: pass",
+      "SQL Server: AgreedTests.[test 08 NULL ProductID: NULL]: pass",
+      "PostgreSQL: AgreedTests.[test 01 on the start date exactly (BETWEEN is inclusive): the ListPrice]: pass",
+      "PostgreSQL: AgreedTests.[test 02 on the end date exactly (inclusive): the ListPrice]: pass",
+      "PostgreSQL: AgreedTests.[test 03 one datetime tick (3 ms) after the end date: no period, NULL]: pass",
+      "PostgreSQL: AgreedTests.[test 04 one datetime tick before the start date: no period, NULL]: pass",
+      "PostgreSQL: AgreedTests.[test 05 open-ended period (EndDate NULL -> 9999-12-31) on 9999-12-30: the value]: pass",
+      "PostgreSQL: AgreedTests.[test 06 a history row with no Product row: the inner join drops it, NULL]: pass",
+      "PostgreSQL: AgreedTests.[test 07 a product with no history: NULL]: pass",
+      "PostgreSQL: AgreedTests.[test 08 NULL ProductID: NULL]: pass",
+      "planted defects caught by the agreed tests: 2 of 2"
+    ]
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "failed"
+  "status": "pending"
 }

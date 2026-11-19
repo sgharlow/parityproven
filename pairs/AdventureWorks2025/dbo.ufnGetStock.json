@@ -17,6 +17,7 @@
     "engine": "kiro",
     "notes": [
       "Step 4 finding: SQL Server 2025 inlines this scalar function into the calling query (sys.sql_modules.is_inlineable = 1, Froid). PostgreSQL runs the function once per call, so per-row calls cost about 2x more at 20,000 calls. Equivalence is unaffected; a caller that needs the speed would inline the expression or use a set-based join. A PL/pgSQL version (dbo.ufnGetStock, 2026-11-12) measured slower than the LANGUAGE sql one (160 ms vs 123 ms at 20,000 calls), so the SQL version is kept.",
+      "Step 4 factor: 2.5x, not the default 1.5x, agreed by Steve Harlow (project owner, ruling F1) on 2026-11-18 (verification-standard.md, \"unless the object's record states a different agreed factor\"). Reason: SQL Server 2025 inlines this scalar function into the calling query (Froid); PostgreSQL cannot inline a function that reads a table, and 20,000 calls that read no row at all already take 99-116 ms (measured 2026-11-18), at or above 1.5x before any lookup. An extra or covering index does not help (measured: 110 -> 101 ms, 144 -> 153 ms). Results are the same (step 3); a caller that needs the speed uses a set-based join (7 ms measured). Agreed after the 1.5x measurements, not before.",
       "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
     ]
   },
@@ -32,28 +33,28 @@
   ],
   "evidence": {
     "step1": "pass",
-    "step2": "not-run",
+    "step2": "pass",
     "step3": "pass",
-    "step4": "fail",
+    "step4": "pass",
     "step5": "not-run",
     "step6": "n/a",
-    "runtimeRatio": 2.02,
+    "runtimeRatio": 1.96,
     "runtime": {
       "volume": 2000,
       "timedRuns": 7,
-      "sqlServerMs": 59,
-      "postgresMs": 119.12,
-      "ratio": 2.02,
-      "threshold": 1.5,
-      "passed": false,
+      "sqlServerMs": 61,
+      "postgresMs": 119.57,
+      "ratio": 1.96,
+      "threshold": 2.5,
+      "passed": true,
       "belowResolution": false,
       "resultRows": 100,
       "volumeMismatch": null
     },
-    "rowsCompared": 200,
+    "rowsCompared": 206,
     "trapsCovered": [],
     "pbtSeeds": [
-      2145429899
+      1244899714
     ],
     "samples": 200,
     "samplesWithRows": 200,
@@ -61,13 +62,28 @@
     "mutantsDetected": [
       "auto: first AND becomes OR"
     ],
-    "failureDetail": "Step 4: PostgreSQL 119.12 ms vs SQL Server 59 ms = 2.02x, above the 1.5x limit. Results are equivalent (step 3 pass); see the notes for the cause.",
-    "harnessVersion": "harness-generic-0.3.0"
+    "harnessVersion": "harness-generic-0.3.0",
+    "testsRun": [
+      "tSQLt V1.0.8083.3529 on SQL Server (tests/AdventureWorks2025/dbo.ufnGetStock.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/AdventureWorks2025/dbo.ufnGetStock.pg.sql); expected results tests/AdventureWorks2025/dbo.ufnGetStock.expected.json",
+      "SQL Server: AgreedTests.[test 01 only location 6 counts: 5 (the 100 at location 1 is ignored)]: pass",
+      "SQL Server: AgreedTests.[test 02 stock only at another location: the SUM is NULL, returned as 0]: pass",
+      "SQL Server: AgreedTests.[test 03 a row with quantity 0 at location 6: 0]: pass",
+      "SQL Server: AgreedTests.[test 04 smallint maximum 32767 at location 6: 32767]: pass",
+      "SQL Server: AgreedTests.[test 05 an unknown product: 0]: pass",
+      "SQL Server: AgreedTests.[test 06 NULL ProductID: 0 (no row matches, NULL sum -> 0)]: pass",
+      "PostgreSQL: AgreedTests.[test 01 only location 6 counts: 5 (the 100 at location 1 is ignored)]: pass",
+      "PostgreSQL: AgreedTests.[test 02 stock only at another location: the SUM is NULL, returned as 0]: pass",
+      "PostgreSQL: AgreedTests.[test 03 a row with quantity 0 at location 6: 0]: pass",
+      "PostgreSQL: AgreedTests.[test 04 smallint maximum 32767 at location 6: 32767]: pass",
+      "PostgreSQL: AgreedTests.[test 05 an unknown product: 0]: pass",
+      "PostgreSQL: AgreedTests.[test 06 NULL ProductID: 0 (no row matches, NULL sum -> 0)]: pass",
+      "planted defects caught by the agreed tests: 1 of 1"
+    ]
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "failed"
+  "status": "pending"
 }

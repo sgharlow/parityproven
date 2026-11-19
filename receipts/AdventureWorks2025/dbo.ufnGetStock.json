@@ -5,7 +5,7 @@
   "objectClass": "function",
   "tier": "simple",
   "predictionTier": "simple",
-  "status": "failed",
+  "status": "pending",
   "code": {
     "source": "\r\nCREATE FUNCTION [dbo].[ufnGetStock](@ProductID [int])\r\nRETURNS [int]\r\nAS\r\n-- Returns the stock level for the product. This function is used internally only\r\nBEGIN\r\n    DECLARE @ret int;\r\n   \r\n    SELECT @ret = SUM(p.[Quantity])\r\n    FROM [Production].[ProductInventory] p\r\n    WHERE p.[ProductID] = @ProductID\r\n        AND p.[LocationID] = '6'; -- Only look at inventory in the misc storage\r\n   \r\n    IF (@ret IS NULL)\r\n        SET @ret = 0\r\n   \r\n    RETURN @ret\r\nEND;\r\n",
     "engineOutput": "-- PostgreSQL conversion of dbo.ufnGetStock (AdventureWorks2025).\n-- Engine: Kiro first draft (see pair record).\n-- SUM(smallint) is int in T-SQL; the PostgreSQL SUM(smallint) is bigint, so it is cast back to integer.\n-- The source compares LocationID (smallint) with the string '6'; here it is the number 6.\n\nCREATE OR REPLACE FUNCTION dbo.ufn_get_stock(product_id integer)\nRETURNS integer\nLANGUAGE sql\nSTABLE\nAS $$\n    SELECT COALESCE(SUM(p.\"Quantity\"), 0)::integer\n      FROM production.product_inventory AS p\n     WHERE p.\"ProductID\" = product_id\n       AND p.\"LocationID\" = 6          -- only look at inventory in the misc storage\n$$;\n",
@@ -14,6 +14,7 @@
     "engine": "kiro",
     "notes": [
       "Step 4 finding: SQL Server 2025 inlines this scalar function into the calling query (sys.sql_modules.is_inlineable = 1, Froid). PostgreSQL runs the function once per call, so per-row calls cost about 2x more at 20,000 calls. Equivalence is unaffected; a caller that needs the speed would inline the expression or use a set-based join. A PL/pgSQL version (dbo.ufnGetStock, 2026-11-12) measured slower than the LANGUAGE sql one (160 ms vs 123 ms at 20,000 calls), so the SQL version is kept.",
+      "Step 4 factor: 2.5x, not the default 1.5x, agreed by Steve Harlow (project owner, ruling F1) on 2026-11-18 (verification-standard.md, \"unless the object's record states a different agreed factor\"). Reason: SQL Server 2025 inlines this scalar function into the calling query (Froid); PostgreSQL cannot inline a function that reads a table, and 20,000 calls that read no row at all already take 99-116 ms (measured 2026-11-18), at or above 1.5x before any lookup. An extra or covering index does not help (measured: 110 -> 101 ms, 144 -> 153 ms). Results are the same (step 3); a caller that needs the speed uses a set-based join (7 ms measured). Agreed after the 1.5x measurements, not before.",
       "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
     ]
   },
@@ -36,7 +37,7 @@
     {
       "step": 2,
       "label": "Agreed tests pass (tSQLt on SQL Server, plain-SQL assertions on PostgreSQL)",
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "step": 3,
@@ -46,7 +47,7 @@
     {
       "step": 4,
       "label": "Runtime within 1.5× factor",
-      "status": "fail"
+      "status": "pass"
     },
     {
       "step": 5,
@@ -61,30 +62,45 @@
   ],
   "evidence": {
     "pbtSeeds": [
-      2145429899
+      1244899714
     ],
-    "rowsCompared": 200,
+    "rowsCompared": 206,
     "samples": 200,
     "samplesWithRows": 200,
     "trapsCovered": [],
     "mutantsDetected": [
       "auto: first AND becomes OR"
     ],
-    "failureDetail": "Step 4: PostgreSQL 119.12 ms vs SQL Server 59 ms = 2.02x, above the 1.5x limit. Results are equivalent (step 3 pass); see the notes for the cause.",
     "runtime": {
       "volume": 2000,
       "timedRuns": 7,
-      "sqlServerMs": 59,
-      "postgresMs": 119.12,
-      "ratio": 2.02,
-      "threshold": 1.5,
-      "passed": false,
+      "sqlServerMs": 61,
+      "postgresMs": 119.57,
+      "ratio": 1.96,
+      "threshold": 2.5,
+      "passed": true,
       "belowResolution": false,
       "resultRows": 100,
       "volumeMismatch": null
     },
     "subMicrosecondNormalised": 0,
-    "harnessVersion": "harness-generic-0.3.0"
+    "harnessVersion": "harness-generic-0.3.0",
+    "testsRun": [
+      "tSQLt V1.0.8083.3529 on SQL Server (tests/AdventureWorks2025/dbo.ufnGetStock.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/AdventureWorks2025/dbo.ufnGetStock.pg.sql); expected results tests/AdventureWorks2025/dbo.ufnGetStock.expected.json",
+      "SQL Server: AgreedTests.[test 01 only location 6 counts: 5 (the 100 at location 1 is ignored)]: pass",
+      "SQL Server: AgreedTests.[test 02 stock only at another location: the SUM is NULL, returned as 0]: pass",
+      "SQL Server: AgreedTests.[test 03 a row with quantity 0 at location 6: 0]: pass",
+      "SQL Server: AgreedTests.[test 04 smallint maximum 32767 at location 6: 32767]: pass",
+      "SQL Server: AgreedTests.[test 05 an unknown product: 0]: pass",
+      "SQL Server: AgreedTests.[test 06 NULL ProductID: 0 (no row matches, NULL sum -> 0)]: pass",
+      "PostgreSQL: AgreedTests.[test 01 only location 6 counts: 5 (the 100 at location 1 is ignored)]: pass",
+      "PostgreSQL: AgreedTests.[test 02 stock only at another location: the SUM is NULL, returned as 0]: pass",
+      "PostgreSQL: AgreedTests.[test 03 a row with quantity 0 at location 6: 0]: pass",
+      "PostgreSQL: AgreedTests.[test 04 smallint maximum 32767 at location 6: 32767]: pass",
+      "PostgreSQL: AgreedTests.[test 05 an unknown product: 0]: pass",
+      "PostgreSQL: AgreedTests.[test 06 NULL ProductID: 0 (no row matches, NULL sum -> 0)]: pass",
+      "planted defects caught by the agreed tests: 1 of 1"
+    ]
   },
   "effort": {
     "humanMinutes": 0,
@@ -95,5 +111,5 @@
     "p50Hours": 1.5,
     "p90Hours": 4
   },
-  "builtAt": "2026-11-18T21:07:02.680Z"
+  "builtAt": "2026-11-19T01:01:58.391Z"
 }

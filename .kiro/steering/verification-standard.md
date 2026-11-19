@@ -19,6 +19,9 @@ An object counts as **verified** only when steps 1–4 pass and steps 5–6 are 
 - **Step 2 is tSQLt on SQL Server and plain-SQL assertions on PostgreSQL** (pgTAP is not in the pinned PostgreSQL image). The agreed tests are the object's hand-derived fixed cases, with their expected results committed, so they can be read and reviewed.
 - The status rule lives in one place: `src/pairs/status.ts`.
 
+**Ruling (project owner, 2026-11-18, F1)**
+- **Step 4 factor 2.5x for four AdventureWorks scalar functions** (`dbo.ufnGetProductDealerPrice`, `ufnGetProductListPrice`, `ufnGetProductStandardCost`, `ufnGetStock`). SQL Server 2025 inlines them into the calling query; PostgreSQL cannot inline a function that reads a table, and 20,000 calls that read no row already take 99–116 ms (measured 2026-11-18, which is at or above 1.5x before any lookup). An extra or covering index does not help (measured: 110 -> 101 ms; 144 -> 153 ms). Results are the same; a caller that needs the speed uses a set-based join (7 ms). The factor is recorded on each pair record (`spec.runtimeFactor`) and shown on the receipt. It was agreed after the measurements, and the receipts say so.
+
 **Ruling (project owner, 2026-11-18, J1)**
 - **Step 2 for FOR JSON procedures is not tSQLt on SQL Server.** No tSQLt test can observe such a procedure's result (`INSERT ... EXEC` is refused for it, also through `tSQLt.ResultSetFilter`, error 6549). Their SQL Server side loads each fixed case and calls the original procedure through the client, joins the streamed chunks, and compares the document exactly with the committed expected one; PostgreSQL compares it as `jsonb` (step 3 still compares key order). The pair record and receipt say "not tSQLt"; the run is recorded in `tests/<db>/<Object>.sqlserver.sql`.
 

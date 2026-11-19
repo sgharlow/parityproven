@@ -161,6 +161,12 @@ export interface ObjectSpec {
   /** Rows per table for the runtime step when the default is too heavy for the object (e.g. row-by-row scalar functions). */
   benchVolume?: number;
   /**
+   * A step 4 factor other than the default 1.5x, agreed by the project owner for this object (verification-standard.md:
+   * "unless the object's record states a different agreed factor"). The reason, owner and date are recorded on the pair
+   * record and shown on the receipt.
+   */
+  runtimeFactor?: { factor: number; reason: string; agreedBy: string; date: string };
+  /**
    * Output columns that hold a JSON document. Both sides are parsed and compared as values: whitespace and number
    * formatting are ignored; key order, array order, nulls and string values are not.
    */

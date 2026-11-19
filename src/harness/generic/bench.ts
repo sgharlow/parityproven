@@ -162,14 +162,16 @@ export async function runBenchmark(
   const sqlServerMs = Math.max(median(ss), 1);   // SQL Server reports whole ms; 0 would make the ratio meaningless
   const postgresMs = median(pg);
   const ratio = postgresMs / sqlServerMs;
+  // the default, or a factor the owner agreed for this object (spec.runtimeFactor, recorded with its reason)
+  const factor = spec.runtimeFactor?.factor ?? RUNTIME_FACTOR;
   return {
     volume: opts.volume,
     timedRuns: TIMED,
     sqlServerMs: Math.round(sqlServerMs * 100) / 100,
     postgresMs: Math.round(postgresMs * 100) / 100,
     ratio: Math.round(ratio * 100) / 100,
-    threshold: RUNTIME_FACTOR,
-    passed: ratio <= RUNTIME_FACTOR || (sqlServerMs < 5 && postgresMs < 5),   // a result mismatch at volume is a step-3 finding, reported separately
+    threshold: factor,
+    passed: ratio <= factor || (sqlServerMs < 5 && postgresMs < 5),   // a result mismatch at volume is a step-3 finding, reported separately
     belowResolution: sqlServerMs < 5 && postgresMs < 5,
     resultRows,
     volumeMismatch,

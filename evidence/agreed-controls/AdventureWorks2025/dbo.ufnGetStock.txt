@@ -1,0 +1,19 @@
+negative control for dbo.ufnGetStock (step 2), 2026-11-19T01:01:54.831Z
+corruption: case 1 expected value row 1, column result: n:5 -> n:6
+SQL Server: test 01 only location 6 counts: 5 (the 100 at location 1 is ignored): FAIL — Failure: Unexpected/missing resultset rows!
+|_m_|result|
++---+------+
+|<  |6     |
+|>  |5     |
+SQL Server: test 02 stock only at another location: the SUM is NULL, returned as 0: pass
+SQL Server: test 03 a row with quantity 0 at location 6: 0: pass
+SQL Server: test 04 smallint maximum 32767 at location 6: 32767: pass
+SQL Server: test 05 an unknown product: 0: pass
+SQL Server: test 06 NULL ProductID: 0 (no row matches, NULL sum -> 0): pass
+PostgreSQL: test 01 only location 6 counts: 5 (the 100 at location 1 is ignored): FAIL — agreed test failed (test 01 only location 6 counts: 5 (the 100 at location 1 is ignored)): 1 expected row(s) missing, 1 unexpected row(s) in the result
+PostgreSQL: test 02 stock only at another location: the SUM is NULL, returned as 0: pass
+PostgreSQL: test 03 a row with quantity 0 at location 6: 0: pass
+PostgreSQL: test 04 smallint maximum 32767 at location 6: 32767: pass
+PostgreSQL: test 05 an unknown product: 0: pass
+PostgreSQL: test 06 NULL ProductID: 0 (no row matches, NULL sum -> 0): pass
+RESULT: control seen failing — the corrupted case failed as an assertion on both engines and every other case passed

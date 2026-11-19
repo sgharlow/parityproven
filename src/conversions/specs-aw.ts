@@ -44,11 +44,53 @@ const ONE_PERIOD: CatalogOptions = {
   },
 };
 
+/** Ruling F1 (owner, 2026-11-18): step 4 factor 2.5x for the four scalar functions SQL Server inlines (Froid). */
+const FROID_FACTOR = {
+  factor: 2.5,
+  agreedBy: "Steve Harlow (project owner, ruling F1)",
+  date: "2026-11-18",
+  reason: "SQL Server 2025 inlines this scalar function into the calling query (Froid); PostgreSQL cannot inline a function that reads a table, and 20,000 calls that read no row at all already take 99-116 ms (measured 2026-11-18), at or above 1.5x before any lookup. An extra or covering index does not help (measured: 110 -> 101 ms, 144 -> 153 ms). Results are the same (step 3); a caller that needs the speed uses a set-based join (7 ms measured). Agreed after the 1.5x measurements, not before.",
+};
+
+/**
+ * Fixed cases for the price/cost functions (hand-derived from the source: SELECT @x = <value> FROM Product JOIN
+ * <history> ON ... AND @OrderDate BETWEEN StartDate AND COALESCE(EndDate, '99991231')). One period per product.
+ *  - product 1: 2020-01-01 to 2020-12-31 (datetime), value 10.0000
+ *  - product 2: from 2020-01-01, EndDate NULL (open-ended), value 3.3333
+ *  - product 3 has a history row but no Product row; product 4 a Product row but no history
+ */
+function priceCases(history: "Production.ProductListPriceHistory" | "Production.ProductCostHistory", value: "ListPrice" | "StandardCost", dealer = false): FixedCase[] {
+  const tables = {
+    "Production.Product": [{ ProductID: 1 }, { ProductID: 2 }, { ProductID: 4 }],
+    [history]: [
+      { ProductID: 1, StartDate: "2020-01-01T00:00:00.000", EndDate: "2020-12-31T00:00:00.000", [value]: "10.0000" },
+      { ProductID: 2, StartDate: "2020-01-01T00:00:00.000", EndDate: null, [value]: "3.3333" },
+      { ProductID: 3, StartDate: "2020-01-01T00:00:00.000", EndDate: null, [value]: "7.0000" },
+    ],
+  };
+  const what = dealer ? "60% of the list price (10.0000 x 0.60)" : `the ${value}`;
+  const c = (label: string, product: number | null, at: string): FixedCase => ({ label, args: [product, at], tables });
+  return [
+    c(`on the start date exactly (BETWEEN is inclusive): ${what}`, 1, "2020-01-01T00:00:00.000"),
+    c(`on the end date exactly (inclusive): ${what}`, 1, "2020-12-31T00:00:00.000"),
+    c("one datetime tick (3 ms) after the end date: no period, NULL", 1, "2020-12-31T00:00:00.003"),
+    c("one datetime tick before the start date: no period, NULL", 1, "2019-12-31T23:59:59.997"),
+    c(dealer ? "open-ended period (EndDate NULL -> 9999-12-31) on 9999-12-30: 60% of an odd price (3.3333 x 0.60), kept to money's 4 places" : "open-ended period (EndDate NULL -> 9999-12-31) on 9999-12-30: the value", 2, "9999-12-30T00:00:00.000"),
+    c("a history row with no Product row: the inner join drops it, NULL", 3, "2020-06-01T00:00:00.000"),
+    c("a product with no history: NULL", 4, "2020-06-01T00:00:00.000"),
+    c("NULL ProductID: NULL", null, "2020-06-01T00:00:00.000"),
+  ];
+}
+
 const priceFn = (name: string, pgName: string): ObjectSpec =>
   specFromCatalog(
     DB, `dbo.${name}`,
     {
       orderKey: [], mutants: [], pgFunction: `dbo.${pgName}`,
+      runtimeFactor: FROID_FACTOR,
+      fixedCases: name === "ufnGetProductStandardCost"
+        ? priceCases("Production.ProductCostHistory", "StandardCost")
+        : priceCases("Production.ProductListPriceHistory", "ListPrice", name === "ufnGetProductDealerPrice"),
       // argument name only steers generation; "OrderDate" would pick up the fiscal-year dates meant for SalesOrderHeader
       params: [ref("ProductID"), dtm("PricingInstant")],
       ssCall: `SELECT dbo.${name}(?, ?) AS result`,
@@ -222,6 +264,27 @@ export const AW_SPECS: ObjectSpec[] = [
     DB, "dbo.ufnGetStock",
     {
       orderKey: [], mutants: [], pgFunction: "dbo.ufn_get_stock",
+      runtimeFactor: FROID_FACTOR,
+      // hand-derived: SUM(Quantity) at LocationID 6 only, NULL sum -> 0
+      fixedCases: (() => {
+        const tables = {
+          "Production.ProductInventory": [
+            { ProductID: 1, LocationID: 6, Quantity: 5 }, { ProductID: 1, LocationID: 1, Quantity: 100 },
+            { ProductID: 2, LocationID: 1, Quantity: 40 },
+            { ProductID: 3, LocationID: 6, Quantity: 0 },
+            { ProductID: 4, LocationID: 6, Quantity: 32767 },
+          ],
+        };
+        const c = (label: string, product: number | null): FixedCase => ({ label, args: [product], tables });
+        return [
+          c("only location 6 counts: 5 (the 100 at location 1 is ignored)", 1),
+          c("stock only at another location: the SUM is NULL, returned as 0", 2),
+          c("a row with quantity 0 at location 6: 0", 3),
+          c("smallint maximum 32767 at location 6: 32767", 4),
+          c("an unknown product: 0", 99),
+          c("NULL ProductID: 0 (no row matches, NULL sum -> 0)", null),
+        ];
+      })(),
       params: [ref("ProductID")],
       ssCall: "SELECT dbo.ufnGetStock(?) AS result",
       pgCall: "SELECT {fn}($1::integer) AS result",
