@@ -1,0 +1,9 @@
+[
+  { "name": "status ignores the adversarial gate", "from": "e.adversarial?.gate === \"pass\"\n    ? \"verified\"", "to": "true\n    ? \"verified\"" },
+  { "name": "missing list omits the adversarial gate", "from": "if (e.adversarial?.gate !== \"pass\") out.push(\"adversarial gate\");", "to": "" },
+  { "name": "step 5 may be n/a", "from": "ok(e.step5, false)", "to": "ok(e.step5, true)" },
+  { "name": "step 2 may be n/a", "from": "ok(e.step2, false)", "to": "ok(e.step2, true)" },
+  { "name": "step 4 may not be n/a", "from": "ok(e.step4, true)", "to": "ok(e.step4, false)" },
+  { "name": "step 6 may not be n/a", "from": "ok(e.step6, true)", "to": "ok(e.step6, false)" },
+  { "name": "a failed step is only pending", "from": "if (steps.includes(\"fail\")) return \"failed\";", "to": "" }
+]

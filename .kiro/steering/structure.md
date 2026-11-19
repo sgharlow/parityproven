@@ -19,6 +19,8 @@ predictions/      pre-registered predictions; committed before any engine run, n
 pairs/            verified pair records (JSON), one file per object
 receipts/         generated receipt JSON consumed by web/
 evidence/         raw engine output (e.g. the Babelfish Compass report), by run
+adversarial/      agent-written attack cases and auditor objections, per object (<db>/<Schema.Object>.cases.json, .audit.json)
+evidence/adversarial/  adversarial run evidence and batch reports; written only by the CLI
 ```
 
 ## Conventions

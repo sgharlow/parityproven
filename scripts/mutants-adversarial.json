@@ -1,0 +1,22 @@
+[
+  { "name": "gate ignores a case that differed on an engine", "from": "else if (!c.sqlServer.passed || !c.postgres.passed || c.differed)", "to": "else if (false)" },
+  { "name": "gate ignores the differed flag", "from": "|| c.differed)", "to": ")" },
+  { "name": "gate ignores cases that did not run on both engines", "from": "if (!c.sqlServer || !c.postgres)", "to": "if (false)" },
+  { "name": "gate ignores invalid cases", "from": "if (c.status === \"invalid\")", "to": "if (false)" },
+  { "name": "gate passes with no cases", "from": "if (ev.cases.length === 0)", "to": "if (false)" },
+  { "name": "trap check always true", "from": "if (!check?.present)", "to": "if (false)" },
+  { "name": "gate ignores uncovered applicable traps", "from": "if (!cov.applicable) continue;", "to": "continue;" },
+  { "name": "coverage counts a case whose trap check is absent", "from": "byId.get(id)?.trapChecks[t]?.present === true", "to": "true" },
+  { "name": "not-applicable reason counts without the auditor's acceptance", "from": "if (cov.notApplicableReason && cov.accepted === true) continue;", "to": "if (cov.notApplicableReason) continue;" },
+  { "name": "gate ignores open objections", "from": "if (o.status !== \"resolved\")", "to": "if (false)" },
+  { "name": "gate ignores unconfirmed resolutions", "from": "else if (!o.confirmedBy)", "to": "else if (false)" },
+  { "name": "gate ignores audited ids that are extra or missing", "from": "ids.length !== audited.length ||", "to": "false ||" },
+  { "name": "adequacy treats missed as caught", "from": "return unexplained.length > 0 ? \"inadequate\" : \"adequate\";", "to": "return \"adequate\";" },
+  { "name": "adequacy ignores equivalent-mutant records", "from": "m.missed.filter((x) => !m.equivalentRecorded.includes(x));\n  return", "to": "m.missed.filter(() => true);\n  return" },
+  { "name": "adequacy never says no-mutants", "from": "if (m.caught.length + m.missed.length === 0) return \"no-mutants\";", "to": "" },
+  { "name": "gate ignores a verdict that contradicts its lists", "from": "else if (adequacyVerdict(m) !== m.verdict)", "to": "else if (false)" },
+  { "name": "gate ignores a stale conversion hash", "from": "if (ev.conversionSha256 !== finalSha256)", "to": "if (false)" },
+  { "name": "gate ignores a missing attacker model", "from": "if (!ev.attacker?.model?.trim())", "to": "if (false)" },
+  { "name": "gate ignores a missing auditor model", "from": "if (!ev.auditor?.model?.trim())", "to": "if (false)" },
+  { "name": "gate reports only the first reason", "from": "return { passed: reasons.length === 0, reasons };", "to": "return { passed: reasons.length === 0, reasons: reasons.slice(0, 1) };" }
+]

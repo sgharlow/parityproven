@@ -82,6 +82,19 @@ export interface PairRecord {
     harnessVersion: string;
     reviewer?: string;
     reviewDate?: string;
+    /** Adversarial gate (ruling A1). Written only by the adversarial CLI; status.ts requires gate "pass" for verified. */
+    adversarial?: {
+      gate: "pass" | "fail" | "not-run";
+      ran: number;
+      differed: number;
+      evidencePath: string;
+      /** sha256 of code.final when the gate ran. */
+      conversionSha256: string;
+      runAt: string;
+    };
+    /** Set only by the approve CLI. */
+    step5Method?: "adversarial-report";
+    step5Report?: string;
   };
   effort: {
     humanMinutes: number;

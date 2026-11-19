@@ -1,6 +1,6 @@
 /**
  * The status rule, in one place (verification-standard.md, with the project owner's rulings of 2026-11-12):
- *  - verified: steps 1, 2, 3 and 5 pass; step 4 passes, or is "n/a" for an object that changes data (ruling D4a);
+ *  - verified: the adversarial gate passes (ruling A1, 2026-11-18); steps 1, 2, 3 and 5 pass; step 4 passes, or is "n/a" for an object that changes data (ruling D4a);
  *    step 6 passes, or is "n/a" for a public sample database (ruling D6).
  *  - failed: any step failed.
  *  - pending: otherwise.
@@ -15,7 +15,8 @@ export function computeStatus(e: PairRecord["evidence"]): PairRecord["status"] {
   const steps: StepStatus[] = [e.step1, e.step2, e.step3, e.step4, e.step5, e.step6];
   if (steps.includes("fail")) return "failed";
   const ok = (s: StepStatus, naAllowed: boolean) => s === "pass" || (naAllowed && s === "n/a");
-  return ok(e.step1, false) && ok(e.step2, false) && ok(e.step3, false) && ok(e.step4, true) && ok(e.step5, false) && ok(e.step6, true)
+  return ok(e.step1, false) && ok(e.step2, false) && ok(e.step3, false) && ok(e.step4, true) && ok(e.step5, false) && ok(e.step6, true) &&
+    e.adversarial?.gate === "pass"
     ? "verified"
     : "pending";
 }
@@ -27,6 +28,7 @@ export function missingForVerified(e: PairRecord["evidence"]): string[] {
   if (e.step2 !== "pass") out.push("step2");
   if (e.step3 !== "pass") out.push("step3");
   if (e.step4 !== "pass" && e.step4 !== "n/a") out.push("step4");
+  if (e.adversarial?.gate !== "pass") out.push("adversarial gate");
   if (e.step5 !== "pass") out.push("step5");
   if (e.step6 !== "pass" && e.step6 !== "n/a") out.push("step6");
   return out;

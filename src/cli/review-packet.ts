@@ -12,6 +12,7 @@ import { execFileSync } from "child_process";
 import type { PairRecord } from "../pairs/schema.js";
 import { missingForVerified } from "../pairs/status.js";
 import { specByName } from "../conversions/specs.js";
+import { checklistLines } from "../pairs/checklist.js";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const objects = process.argv.flatMap((a, i, all) => (a === "--object" && all[i + 1] ? [all[i + 1]] : []));
@@ -71,16 +72,7 @@ for (const object of objects) {
     "",
     "## Checklist (verification-standard.md)",
     "Tick each line after checking it against the code below, not against the harness result.",
-    "- [ ] The conversion does what the T-SQL does for every input the object accepts, not only for the generated ones.",
-    "- [ ] NULL versus empty string, including concatenation and ISNULL/COALESCE.",
-    "- [ ] Collation and case sensitivity in comparisons, ORDER BY and GROUP BY.",
-    "- [ ] Dates and datetime precision (datetime 3.33 ms rounding, datetime2, time zones, boundary dates).",
-    "- [ ] Numeric rounding and scale (money, decimal(p,s), integer division, ROUND).",
-    "- [ ] Trailing spaces; TOP with and without ties; identity and sequence gaps.",
-    "- [ ] Every 'not claimed' statement in the notes is acceptable, and nothing else is silently assumed.",
-    "- [ ] The column-type mappings are right for this object.",
-    "- [ ] The generated data and fixed cases would catch the mistakes a converter is most likely to make here.",
-    ...(e.testsRun?.length ? ["- [ ] Each agreed test's expected result is what its label says the T-SQL should return (they were captured from the source engine)."] : []),
+    ...checklistLines(Boolean(e.testsRun?.length)),
     "",
     "## Record the result",
     `When reviewed (on or after ${earliest}):`,

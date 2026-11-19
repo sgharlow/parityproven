@@ -141,5 +141,5 @@
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "verified"
+  "status": "pending"
 }
