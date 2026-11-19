@@ -4,7 +4,7 @@
   "database": "WideWorldImporters",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-19T05:20:49.498Z"
+    "at": "2026-11-19T06:00:45.121Z"
   },
   "notApplicable": {
     "null-vs-empty": "Application.People.SearchName is NOT NULL and the only text parameter (SearchText) cannot be both '' and NULL in one case; a NULL SearchText is outside the object's stated precondition. '' is covered by the empty-search case."
@@ -12,15 +12,15 @@
   "cases": [
     {
       "id": "A01",
-      "label": "SearchName values differing only in case both match; the two rows share PreferredName",
+      "label": "SearchName: Cyrillic values differing only in case match a case-insensitive search ('дом' finds 'ДОМ' and 'Дом', not 'дым' or 'ÉCLAIR')",
       "traps": [
         "collation-case",
         "top-ties"
       ],
-      "reasoning": "LIKE under CI_AS is case-insensitive, so 'ab' matches SearchName 'ab' and 'AB' (the conversion uses ~*). Both rows share PreferredName 'Q' (a non-key tie) but have distinct FullName, so order is well-defined and both appear.",
+      "reasoning": "LIKE under CI_AS folds case through Unicode tables, not just ASCII; the hand-derived case-only values are ASCII. PostgreSQL's ~* folds case through the database's ctype; under a C or POSIX ctype it folds ASCII only, so 'ДОМ' and 'Дом' would not match. 'дым' differs by a letter and 'ÉCLAIR' shares no letters, so both must stay out. The rows share PreferredName 'Q', a non-key tie.",
       "fixedCase": {
         "args": [
-          "ab",
+          "дом",
           5
         ],
         "tables": {
@@ -31,7 +31,15 @@
               "PreferredName": "Q",
               "IsSalesperson": false,
               "IsEmployee": true,
-              "SearchName": "ab"
+              "SearchName": "дом"
+            },
+            {
+              "PersonID": 2,
+              "FullName": "Q0002",
+              "PreferredName": "Q",
+              "IsSalesperson": false,
+              "IsEmployee": true,
+              "SearchName": "ДОМ"
             },
             {
               "PersonID": 3,
@@ -39,7 +47,23 @@
               "PreferredName": "Q",
               "IsSalesperson": false,
               "IsEmployee": true,
-              "SearchName": "AB"
+              "SearchName": "Дом"
+            },
+            {
+              "PersonID": 4,
+              "FullName": "Q0004",
+              "PreferredName": "Q",
+              "IsSalesperson": false,
+              "IsEmployee": true,
+              "SearchName": "ÉCLAIR"
+            },
+            {
+              "PersonID": 5,
+              "FullName": "Q0005",
+              "PreferredName": "Q",
+              "IsSalesperson": false,
+              "IsEmployee": true,
+              "SearchName": "дым"
             }
           ],
           "Sales.Customers": [],
@@ -49,14 +73,14 @@
     },
     {
       "id": "A02",
-      "label": "a trailing space in SearchName is matched by LIKE '%amy%'",
+      "label": "SearchName: a search text ending in a space ('amy ') matches only values with a space after 'amy'",
       "traps": [
         "trailing-spaces"
       ],
-      "reasoning": "SearchName 'amy ' ends in a space; LIKE N'%amy%' matches it on SQL Server and the translated regex matches it too. The person is returned on both engines.",
+      "reasoning": "For nvarchar, trailing spaces in a LIKE pattern are significant, so '%amy %' matches 'amy ' and 'amy b' but not 'amy' or 'amyx'. A conversion that rtrimmed the search text, or compared with the trailing-space-insensitive '=' semantics, would also return 'amy' and 'amyx'. The earlier case put the space in the data, where both readings match.",
       "fixedCase": {
         "args": [
-          "amy",
+          "amy ",
           5
         ],
         "tables": {
@@ -67,7 +91,31 @@
               "PreferredName": "Q",
               "IsSalesperson": false,
               "IsEmployee": true,
+              "SearchName": "amy"
+            },
+            {
+              "PersonID": 2,
+              "FullName": "Q0002",
+              "PreferredName": "Q",
+              "IsSalesperson": false,
+              "IsEmployee": true,
               "SearchName": "amy "
+            },
+            {
+              "PersonID": 3,
+              "FullName": "Q0003",
+              "PreferredName": "Q",
+              "IsSalesperson": false,
+              "IsEmployee": true,
+              "SearchName": "amyx"
+            },
+            {
+              "PersonID": 4,
+              "FullName": "Q0004",
+              "PreferredName": "Q",
+              "IsSalesperson": false,
+              "IsEmployee": true,
+              "SearchName": "amy b"
             }
           ],
           "Sales.Customers": [],
@@ -77,12 +125,12 @@
     },
     {
       "id": "A03",
-      "label": "character class [^a] matches any one character that is not 'a'",
+      "label": "SearchName: '_' matches a digit, an accented letter and a space, and '[^a-c]' excludes a, b and c in either case ('x_[^a-c]')",
       "traps": [],
-      "reasoning": "T-SQL LIKE negated class [^a] matches a single non-'a' character; PostgreSQL LIKE has no classes, so the conversion must translate it. 'b' matches, 'a' and 'A' do not (case-insensitive), '' does not.",
+      "reasoning": "T-SQL LIKE '_' matches any single character and '[^a-c]' any single character outside a-c (case-insensitively under CI_AS). 'x1d', 'xé9' and 'x d' match; 'xaB' and 'x1C' do not (B and C are in the class under case-insensitive comparison); 'x1' is too short. A translation that mapped '_' to a letter class, or made the negated range case-sensitive, would differ. The hand-derived '[^a]' case uses a single-character class and no '_'.",
       "fixedCase": {
         "args": [
-          "[^a]",
+          "x_[^a-c]",
           5
         ],
         "tables": {
@@ -93,7 +141,7 @@
               "PreferredName": "Q",
               "IsSalesperson": false,
               "IsEmployee": true,
-              "SearchName": "a"
+              "SearchName": "x1d"
             },
             {
               "PersonID": 2,
@@ -101,7 +149,7 @@
               "PreferredName": "Q",
               "IsSalesperson": false,
               "IsEmployee": true,
-              "SearchName": "A"
+              "SearchName": "xé9"
             },
             {
               "PersonID": 3,
@@ -109,7 +157,7 @@
               "PreferredName": "Q",
               "IsSalesperson": false,
               "IsEmployee": true,
-              "SearchName": "b"
+              "SearchName": "x d"
             },
             {
               "PersonID": 4,
@@ -117,7 +165,23 @@
               "PreferredName": "Q",
               "IsSalesperson": false,
               "IsEmployee": true,
-              "SearchName": ""
+              "SearchName": "xaB"
+            },
+            {
+              "PersonID": 5,
+              "FullName": "Q0005",
+              "PreferredName": "Q",
+              "IsSalesperson": false,
+              "IsEmployee": true,
+              "SearchName": "x1C"
+            },
+            {
+              "PersonID": 6,
+              "FullName": "Q0006",
+              "PreferredName": "Q",
+              "IsSalesperson": false,
+              "IsEmployee": true,
+              "SearchName": "x1"
             }
           ],
           "Sales.Customers": [],
@@ -127,9 +191,9 @@
     },
     {
       "id": "A04",
-      "label": "relationship precedence: a person flagged both salesperson and employee is reported as 'Salesperson'",
+      "label": "relationship and company for people who are neither salesperson nor employee: customer contact, supplier alternate contact, and no relationship ('WWI')",
       "traps": [],
-      "reasoning": "The CASE tests IsSalesperson before IsEmployee; a person with both bits set must be 'Salesperson'. A conversion that reordered the WHEN branches would report 'Employee'.",
+      "reasoning": "After IsSalesperson and IsEmployee the CASE tests, in order, a customer whose primary contact is the person, a supplier's primary contact and a supplier's alternate contact, and Company is COALESCE(customer name, primary supplier name, alternate supplier name, 'WWI'). Person 1 is a customer's primary contact and a supplier's alternate contact: 'Customer', company 'Cust Ten'. Person 2 is only a supplier's alternate contact: 'Supplier', company 'Sup 21'. Person 3 has no relationship: no Relationship key (NULL is omitted by FOR JSON) and company 'WWI'. The hand-derived precedence case covers only the first two WHEN branches.",
       "fixedCase": {
         "args": [
           "ab",
@@ -141,13 +205,64 @@
               "PersonID": 1,
               "FullName": "Q0001",
               "PreferredName": "Q",
-              "IsSalesperson": true,
-              "IsEmployee": true,
+              "IsSalesperson": false,
+              "IsEmployee": false,
               "SearchName": "ab"
+            },
+            {
+              "PersonID": 2,
+              "FullName": "Q0002",
+              "PreferredName": "Q",
+              "IsSalesperson": false,
+              "IsEmployee": false,
+              "SearchName": "abc"
+            },
+            {
+              "PersonID": 3,
+              "FullName": "Q0003",
+              "PreferredName": "Q",
+              "IsSalesperson": false,
+              "IsEmployee": false,
+              "SearchName": "xab"
+            },
+            {
+              "PersonID": 98,
+              "FullName": "Q0098",
+              "PreferredName": "Q",
+              "IsSalesperson": false,
+              "IsEmployee": true,
+              "SearchName": "zz"
+            },
+            {
+              "PersonID": 99,
+              "FullName": "Q0099",
+              "PreferredName": "Q",
+              "IsSalesperson": false,
+              "IsEmployee": true,
+              "SearchName": "zz"
             }
           ],
-          "Sales.Customers": [],
-          "Purchasing.Suppliers": []
+          "Sales.Customers": [
+            {
+              "CustomerID": 10,
+              "CustomerName": "Cust Ten",
+              "PrimaryContactPersonID": 1
+            }
+          ],
+          "Purchasing.Suppliers": [
+            {
+              "SupplierID": 20,
+              "SupplierName": "Sup 20",
+              "PrimaryContactPersonID": 99,
+              "AlternateContactPersonID": 1
+            },
+            {
+              "SupplierID": 21,
+              "SupplierName": "Sup 21",
+              "PrimaryContactPersonID": 98,
+              "AlternateContactPersonID": 2
+            }
+          ]
         }
       }
     },

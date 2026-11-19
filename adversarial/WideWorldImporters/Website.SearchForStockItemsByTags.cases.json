@@ -4,32 +4,47 @@
   "database": "WideWorldImporters",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-19T05:20:49.498Z"
+    "at": "2026-11-19T06:00:45.121Z"
   },
   "cases": [
     {
       "id": "A01",
-      "label": "Tags: values differing only in case both match a case-insensitive search and keep their own case in the result",
+      "label": "Tags: Cyrillic values differing only in case match a case-insensitive search ('дом' finds 'ДОМ' and 'Дом', not 'дым' or 'ÉCLAIR')",
       "traps": [
         "collation-case"
       ],
-      "reasoning": "T-SQL LIKE under the CI_AS collation is case-insensitive, so searching 'ab' matches Tags 'ab' and 'AB'; the conversion uses ~* (case-insensitive regex). Both rows are ordered by distinct names; the JSON must list both.",
+      "reasoning": "LIKE under CI_AS folds case through Unicode tables, not just ASCII; the hand-derived case-only values are ASCII. PostgreSQL's ~* folds case through the database's ctype; under a C or POSIX ctype it folds ASCII only, so 'ДОМ' and 'Дом' would not match. 'дым' differs by a letter and 'ÉCLAIR' shares no letters, so both must stay out.",
       "fixedCase": {
         "args": [
-          "ab",
+          "дом",
           5
         ],
         "tables": {
           "Warehouse.StockItems": [
             {
               "StockItemID": 1,
-              "StockItemName": "Item A",
-              "Tags": "ab"
+              "StockItemName": "Item 01",
+              "Tags": "дом"
+            },
+            {
+              "StockItemID": 2,
+              "StockItemName": "Item 02",
+              "Tags": "ДОМ"
             },
             {
               "StockItemID": 3,
-              "StockItemName": "Item B",
-              "Tags": "AB"
+              "StockItemName": "Item 03",
+              "Tags": "Дом"
+            },
+            {
+              "StockItemID": 4,
+              "StockItemName": "Item 04",
+              "Tags": "ÉCLAIR"
+            },
+            {
+              "StockItemID": 5,
+              "StockItemName": "Item 05",
+              "Tags": "дым"
             }
           ]
         }
@@ -65,22 +80,37 @@
     },
     {
       "id": "A03",
-      "label": "Tags: a trailing space in the data is matched by LIKE '%x%'",
+      "label": "Tags: a search text ending in a space ('amy ') matches only values with a space after 'amy'",
       "traps": [
         "trailing-spaces"
       ],
-      "reasoning": "Tags 'abc ' ends in a space; LIKE N'%abc%' matches it on SQL Server and the translated regex matches it too. A conversion that rtrimmed the column would still match here, but the stored/compared value must keep the space.",
+      "reasoning": "For nvarchar, trailing spaces in a LIKE pattern are significant, so '%amy %' matches 'amy ' and 'amy b' but not 'amy' or 'amyx'. A conversion that rtrimmed the search text, or compared with the trailing-space-insensitive '=' semantics, would also return 'amy' and 'amyx'. The earlier case put the space in the data, where both readings match.",
       "fixedCase": {
         "args": [
-          "abc",
+          "amy ",
           5
         ],
         "tables": {
           "Warehouse.StockItems": [
             {
               "StockItemID": 1,
-              "StockItemName": "Only",
-              "Tags": "abc "
+              "StockItemName": "Item 01",
+              "Tags": "amy"
+            },
+            {
+              "StockItemID": 2,
+              "StockItemName": "Item 02",
+              "Tags": "amy "
+            },
+            {
+              "StockItemID": 3,
+              "StockItemName": "Item 03",
+              "Tags": "amyx"
+            },
+            {
+              "StockItemID": 4,
+              "StockItemName": "Item 04",
+              "Tags": "amy b"
             }
           ]
         }
@@ -88,30 +118,40 @@
     },
     {
       "id": "A04",
-      "label": "Tags: character class [a-c] matches one of a, b, c (T-SQL LIKE, not PostgreSQL LIKE)",
+      "label": "Tags: a reversed range '[c-a]' (T-SQL accepts it; a regular expression rejects it as an invalid range)",
       "traps": [],
-      "reasoning": "T-SQL LIKE treats [a-c] as a character class; PostgreSQL LIKE does not, so the conversion must translate it to a regex class. 'b' matches, 'd' does not, 'x[a-c]' does not (literal class only when escaped).",
+      "reasoning": "The hand-derived class case uses the ordered range [a-c]. T-SQL LIKE accepts the reversed range [c-a] without error and SQL Server decides which values it matches; a conversion that copied the class into a PostgreSQL regular expression unchanged would raise 'invalid character range'. Values a, b, c, '-' and 'd' show what the range covers.",
       "fixedCase": {
         "args": [
-          "[a-c]",
+          "[c-a]",
           5
         ],
         "tables": {
           "Warehouse.StockItems": [
             {
               "StockItemID": 1,
-              "StockItemName": "I1",
-              "Tags": "b"
+              "StockItemName": "Item 01",
+              "Tags": "a"
             },
             {
               "StockItemID": 2,
-              "StockItemName": "I2",
-              "Tags": "d"
+              "StockItemName": "Item 02",
+              "Tags": "b"
             },
             {
               "StockItemID": 3,
-              "StockItemName": "I3",
-              "Tags": "aaa"
+              "StockItemName": "Item 03",
+              "Tags": "c"
+            },
+            {
+              "StockItemID": 4,
+              "StockItemName": "Item 04",
+              "Tags": "-"
+            },
+            {
+              "StockItemID": 5,
+              "StockItemName": "Item 05",
+              "Tags": "d"
             }
           ]
         }
@@ -119,25 +159,35 @@
     },
     {
       "id": "A05",
-      "label": "Tags: a backslash is an ordinary character in T-SQL LIKE (no escape)",
+      "label": "Tags: a search text ending in a backslash ('a\\') is an ordinary character in T-SQL LIKE",
       "traps": [],
-      "reasoning": "T-SQL LIKE has no escape character, so 'a\\b' matches the literal 'a\\b'; PostgreSQL LIKE would treat backslash specially, so the translation must emit a literal backslash in the regex.",
+      "reasoning": "T-SQL LIKE has no escape character unless ESCAPE is given, so '%a\\%' matches values containing 'a\\'. The hand-derived case has the backslash between two letters; at the end of the pattern a translation that passed it through to a regular expression or to PostgreSQL LIKE would leave a dangling escape, which is an error, or escape the closing '%'.",
       "fixedCase": {
         "args": [
-          "a\\b",
+          "a\\",
           5
         ],
         "tables": {
           "Warehouse.StockItems": [
             {
               "StockItemID": 1,
-              "StockItemName": "I1",
-              "Tags": "a\\b"
+              "StockItemName": "Item 01",
+              "Tags": "a\\"
             },
             {
               "StockItemID": 2,
-              "StockItemName": "I2",
+              "StockItemName": "Item 02",
+              "Tags": "xa\\b"
+            },
+            {
+              "StockItemID": 3,
+              "StockItemName": "Item 03",
               "Tags": "ab"
+            },
+            {
+              "StockItemID": 4,
+              "StockItemName": "Item 04",
+              "Tags": "a"
             }
           ]
         }
@@ -230,6 +280,47 @@
               "StockItemID": 3,
               "StockItemName": "I2",
               "Tags": ""
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A09",
+      "label": "Tags: '_' matches a digit, an accented letter and a space ('x_9')",
+      "traps": [],
+      "reasoning": "T-SQL LIKE '_' matches any single character. 'x19', 'xé9' and 'x 9' match, as does 'xa9'; 'x9' does not (nothing between). A translation that mapped '_' to a letter class (the planted defect ''_' matches a letter only') would return only 'xa9'. The hand-derived '_' case does not show which characters '_' accepts.",
+      "fixedCase": {
+        "args": [
+          "x_9",
+          5
+        ],
+        "tables": {
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "StockItemName": "Item 01",
+              "Tags": "x19"
+            },
+            {
+              "StockItemID": 2,
+              "StockItemName": "Item 02",
+              "Tags": "xé9"
+            },
+            {
+              "StockItemID": 3,
+              "StockItemName": "Item 03",
+              "Tags": "x 9"
+            },
+            {
+              "StockItemID": 4,
+              "StockItemName": "Item 04",
+              "Tags": "xa9"
+            },
+            {
+              "StockItemID": 5,
+              "StockItemName": "Item 05",
+              "Tags": "x9"
             }
           ]
         }

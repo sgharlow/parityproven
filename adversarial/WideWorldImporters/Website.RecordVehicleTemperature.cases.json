@@ -4,7 +4,7 @@
   "database": "WideWorldImporters",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-19T05:20:49.498Z"
+    "at": "2026-11-19T06:00:45.121Z"
   },
   "notApplicable": {
     "null-vs-empty": "The only parameter is one nvarchar(1000) JSON document; NULL vs '' (NULL document inserts nothing without error, '' fails ISJSON) is exercised by named cases on the payload, not by a typed text column the trap checker inspects.",
@@ -32,12 +32,12 @@
     },
     {
       "id": "A02",
-      "label": "duplicate 'rego' key: the first occurrence wins",
+      "label": "duplicate 'temp' key: the first (1.5) wins; the second is in exponent notation (1e2)",
       "traps": [],
-      "reasoning": "OPENJSON ... WITH takes the first of duplicate keys; the conversion's json_member does the same (json, not jsonb, keeps order). VehicleRegistration must be 'first' on both engines.",
+      "reasoning": "OPENJSON ... WITH takes the first of duplicate keys. The hand-derived duplicate-key case repeats 'rego' (text); here the repeated key is the decimal 'temp', and its second value 1e2 is one the procedure rejects. SQL Server stores 1.50; a conversion that took the last value (jsonb, or ORDER BY ... DESC) would read 1e2 and raise.",
       "fixedCase": {
         "args": [
-          "{\"Recordings\":[{\"type\":\"Feature\",\"properties\":{\"rego\":\"first\",\"rego\":\"second\",\"sensor\":1,\"when\":\"2016-01-01T07:00:00\",\"temp\":1}}]}"
+          "{\"Recordings\":[{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-89.76,50.47]},\"properties\":{\"rego\":\"WWI-2\",\"sensor\":1,\"when\":\"2016-01-01T07:00:00\",\"temp\":1.5,\"temp\":1e2}}]}"
         ],
         "tables": {
           "Warehouse.VehicleTemperatures": []
@@ -46,12 +46,12 @@
     },
     {
       "id": "A03",
-      "label": "temperature 3.965 rounds half away from zero to 3.97",
+      "label": "temperature -3.965 rounds half away from zero to -3.97 (half-up gives -3.96)",
       "traps": [],
-      "reasoning": "CAST of 3.965 to decimal(18,2) rounds half away from zero to 3.97; tsql_compat.to_decimal_18_2 uses round(numeric,2) which must match, not banker's rounding.",
+      "reasoning": "CAST of -3.965 to decimal(18,2) rounds the midpoint away from zero, to -3.97. The hand-derived case is the positive 3.965, where half-up and half-away-from-zero agree; for a negative midpoint, rounding half up (floor(x * 100 + 0.5)) gives -3.96 and banker's rounding gives -3.96.",
       "fixedCase": {
         "args": [
-          "{\"Recordings\":[{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-89.76,50.47]},\"properties\":{\"rego\":\"a\",\"sensor\":1,\"when\":\"2016-01-01T07:00:00\",\"temp\":3.965}}]}"
+          "{\"Recordings\":[{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-89.76,50.47]},\"properties\":{\"rego\":\"a\",\"sensor\":1,\"when\":\"2016-01-01T07:00:00\",\"temp\":-3.965}}]}"
         ],
         "tables": {
           "Warehouse.VehicleTemperatures": []
@@ -98,12 +98,54 @@
     },
     {
       "id": "A06",
-      "label": "NULL document: ISJSON(NULL) is NULL, so nothing is inserted and no error is raised",
+      "label": "the document is the JSON literal null (text 'null', not SQL NULL): not an object or array, so ISJSON is 0 and the call raises",
       "traps": [],
-      "reasoning": "ISJSON returns NULL for a NULL argument, which is not = 0, so the THROW is skipped; OPENJSON over NULL yields no rows. The conversion's isjson() returns NULL and inserts nothing. No error on either engine.",
+      "reasoning": "ISJSON(N'null') is 0 because, without a type argument, ISJSON accepts only an object or an array; the procedure then throws. The hand-derived NULL-document case sends SQL NULL, for which ISJSON is NULL and nothing happens, and the hand-derived scalar case uses a different scalar. A conversion that tested 'IS JSON' (which accepts any JSON value) would go on to parse it and insert nothing without an error.",
       "fixedCase": {
         "args": [
-          null
+          "null"
+        ],
+        "tables": {
+          "Warehouse.VehicleTemperatures": []
+        }
+      }
+    },
+    {
+      "id": "A07",
+      "label": "temperature in upper-case exponent notation with a negative exponent (25E-1) is rejected",
+      "traps": [],
+      "reasoning": "The procedure accepts a temperature only as plain decimal text; 25E-1 is valid JSON and equals 2.5, but SQL Server's conversion to decimal(18,2) refuses exponent notation and the call fails. A conversion that cast through numeric or float, or a pattern that allowed an exponent (any case, any sign), would store 2.50.",
+      "fixedCase": {
+        "args": [
+          "{\"Recordings\":[{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-89.76,50.47]},\"properties\":{\"rego\":\"WWI-7\",\"sensor\":1,\"when\":\"2016-01-01T07:00:00\",\"temp\":25E-1}}]}"
+        ],
+        "tables": {
+          "Warehouse.VehicleTemperatures": []
+        }
+      }
+    },
+    {
+      "id": "A08",
+      "label": "two recordings, the first with an empty 'when' (1900-01-01) and the second dated normally: both inserted",
+      "traps": [],
+      "reasoning": "An empty 'when' converts to 1900-01-01 00:00:00 on SQL Server (an empty string is not NULL); the second recording has a normal date. A conversion that mapped '' to NULL would store NULL or fail; the hand-derived case has a single recording, so this also checks that the empty-string branch applies per recording. The null-vs-empty trap is not claimed: the only text input is the document itself.",
+      "fixedCase": {
+        "args": [
+          "{\"Recordings\":[{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-89.76,50.47]},\"properties\":{\"rego\":\"WWI-8\",\"sensor\":1,\"when\":\"\",\"temp\":1.25}},{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-89.76,50.47]},\"properties\":{\"rego\":\"WWI-8b\",\"sensor\":2,\"when\":\"2016-01-01T07:00:00\",\"temp\":2}}]}"
+        ],
+        "tables": {
+          "Warehouse.VehicleTemperatures": []
+        }
+      }
+    },
+    {
+      "id": "A09",
+      "label": "a 1007-character argument whose first 1000 characters are a valid document followed by spaces: truncated to nvarchar(1000), it is valid and inserted",
+      "traps": [],
+      "reasoning": "The parameter is nvarchar(1000), so SQL Server keeps the first 1000 characters: the document and trailing spaces, without the 'garbage' that follows. The truncated text is valid JSON and the recording is inserted. A conversion that did not truncate would see invalid JSON and raise. The hand-derived over-length case has the opposite outcome (truncation makes the JSON invalid).",
+      "fixedCase": {
+        "args": [
+          "{\"Recordings\":[{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-89.76,50.47]},\"properties\":{\"rego\":\"WWI-9\",\"sensor\":1,\"when\":\"2016-01-01T07:00:00\",\"temp\":2.5}}]}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           garbage"
         ],
         "tables": {
           "Warehouse.VehicleTemperatures": []

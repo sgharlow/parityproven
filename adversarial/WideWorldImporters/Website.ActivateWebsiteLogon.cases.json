@@ -4,7 +4,7 @@
   "database": "WideWorldImporters",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-19T04:36:25.160Z"
+    "at": "2026-11-19T06:00:45.121Z"
   },
   "cases": [
     {
@@ -381,7 +381,7 @@
       "id": "A11",
       "label": "person 1 not yet enabled, called directly: refused, and its own row is unchanged",
       "traps": [],
-      "reasoning": "PersonID <> 1 excludes the template even when IsPermittedToLogon is 0, so the call raises and person 1 keeps its NULL logon and hash.",
+      "reasoning": "PersonID <> 1 excludes the template even when IsPermittedToLogon is 0, so the call raises and person 1 keeps its NULL logon and hash. Person 1 holds preferences and the call sends a logon name, so a conversion that let the template through (the planted defect 'person 1 (the template) can be activated') would visibly write LogonName, HashedPassword and IsPermittedToLogon on person 1. The adversarial gate and its planted-defect check run on the adversarial cases alone, without the hand-derived ones, so this input is kept among them even where a hand-derived case uses a similar one.",
       "fixedCase": {
         "args": [
           1,
@@ -414,7 +414,7 @@
       "id": "A12",
       "label": "an already-enabled person with an existing hash is refused and keeps the hash",
       "traps": [],
-      "reasoning": "IsPermittedToLogon = 0 is required. Person 2 is enabled with HashedPassword 0x00FF10; the call raises and the hash, logon name and preferences stay as they were.",
+      "reasoning": "IsPermittedToLogon = 0 is required. Person 2 is enabled with HashedPassword 0x00FF10; the call raises and the hash, logon name and preferences stay as they were. Paired with A13: here the flag and the stored credentials both say 'enabled'; in A13 the flag says 'not enabled' while old credentials are present. A conversion that decided 'already activated' from LogonName or HashedPassword instead of IsPermittedToLogon gets one of the two wrong. The adversarial gate and its planted-defect check run on the adversarial cases alone, without the hand-derived ones, so this input is kept among them even where a hand-derived case uses a similar one.",
       "fixedCase": {
         "args": [
           2,
@@ -436,6 +436,41 @@
               "FullName": "Person 2",
               "IsPermittedToLogon": true,
               "LogonName": "amy",
+              "HashedPassword": {
+                "$hex": "00ff10"
+              },
+              "UserPreferences": "mine"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A13",
+      "label": "a disabled person who still holds an old logon name and hash is activated: both are replaced",
+      "traps": [],
+      "reasoning": "The WHERE tests IsPermittedToLogon = 0 only; person 2 is disabled but keeps LogonName 'old' and HashedPassword 0x00FF10 from an earlier activation. SQL Server activates the person, overwriting both and copying person 1's preferences. A conversion that treated a present logon name or hash as 'already activated' would refuse.",
+      "fixedCase": {
+        "args": [
+          2,
+          "new@example.com",
+          "pw"
+        ],
+        "tables": {
+          "Application.People": [
+            {
+              "PersonID": 1,
+              "FullName": "Person 1",
+              "IsPermittedToLogon": true,
+              "LogonName": null,
+              "HashedPassword": null,
+              "UserPreferences": "{\"theme\":\"green\"}"
+            },
+            {
+              "PersonID": 2,
+              "FullName": "Person 2",
+              "IsPermittedToLogon": false,
+              "LogonName": "old",
               "HashedPassword": {
                 "$hex": "00ff10"
               },

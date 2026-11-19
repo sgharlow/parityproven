@@ -4,7 +4,7 @@
   "database": "WideWorldImporters",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-19T04:36:25.160Z"
+    "at": "2026-11-19T06:00:45.121Z"
   },
   "cases": [
     {
@@ -477,7 +477,7 @@
       "traps": [
         "dates-datetime"
       ],
-      "reasoning": "@LastCutoff 0001-01-01 00:00:00 and @NewCutoff 9999-12-31 23:59:59.999999: a row at each instant tests both bounds at the ends of the range. TransactionDate is passed through CAST(... AS date).",
+      "reasoning": "@LastCutoff 0001-01-01 00:00:00 and @NewCutoff 9999-12-31 23:59:59.999999: on each UNION ALL half a row sits at the new cutoff (included, <=) and one just after or at the last cutoff (> excludes the row at exactly 0001-01-01 00:00:00), so both bounds are tested at the ends of the range. Each half sends TransactionDate 1753-01-01 and 9999-12-31, passed through CAST(... AS date).",
       "fixedCase": {
         "cutoffs": {
           "last": "0001-01-01T00:00:00.000000",
@@ -492,7 +492,7 @@
               "TransactionTypeID": 1,
               "InvoiceID": null,
               "PaymentMethodID": null,
-              "TransactionDate": "2020-06-15",
+              "TransactionDate": "1753-01-01",
               "AmountExcludingTax": "100.00",
               "TaxAmount": "15.00",
               "TransactionAmount": "115.00",
@@ -513,6 +513,20 @@
               "OutstandingBalance": "0.00",
               "IsFinalized": 1,
               "LastEditedWhen": "9999-12-31T23:59:59.999999"
+            },
+            {
+              "CustomerTransactionID": 3,
+              "CustomerID": 5,
+              "TransactionTypeID": 1,
+              "InvoiceID": null,
+              "PaymentMethodID": null,
+              "TransactionDate": "1753-01-01",
+              "AmountExcludingTax": "100.00",
+              "TaxAmount": "15.00",
+              "TransactionAmount": "115.00",
+              "OutstandingBalance": "0.00",
+              "IsFinalized": 1,
+              "LastEditedWhen": "0001-01-01T00:00:00.000001"
             }
           ],
           "Purchasing.SupplierTransactions": [
@@ -545,6 +559,21 @@
               "OutstandingBalance": "0.00",
               "IsFinalized": 0,
               "LastEditedWhen": "0001-01-01T00:00:00.000000"
+            },
+            {
+              "SupplierTransactionID": 3,
+              "SupplierID": 4,
+              "TransactionTypeID": 5,
+              "PurchaseOrderID": null,
+              "PaymentMethodID": 2,
+              "SupplierInvoiceNumber": "INV-3",
+              "TransactionDate": "9999-12-31",
+              "AmountExcludingTax": "-50.00",
+              "TaxAmount": "-7.50",
+              "TransactionAmount": "-57.50",
+              "OutstandingBalance": "0.00",
+              "IsFinalized": 0,
+              "LastEditedWhen": "9999-12-31T23:59:59.999999"
             }
           ]
         }

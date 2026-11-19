@@ -2,7 +2,10 @@
   "schemaVersion": 1,
   "object": "dbo.ufnGetAccountingStartDate",
   "database": "AdventureWorks2025",
-  "attacker": { "model": "claude (Kiro subagent; exact model version not exposed to the agent)", "at": "2026-11-18T19:13:01-07:00" },
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-19T05:46:45.561Z"
+  },
   "notApplicable": {
     "null-vs-empty": "The function takes no parameter and reads no table, so no text input exists.",
     "collation-case": "No text input and no text comparison.",
@@ -17,8 +20,11 @@
       "id": "A01",
       "label": "the result keeps datetime's 3-digit precision and midnight exactly (no time-zone shift, no date-only value)",
       "traps": [],
-      "reasoning": "T-SQL CONVERT(datetime, '20030701', 112) gives a datetime at 00:00:00.000. The conversion returns TIMESTAMP '2003-07-01 00:00:00' as timestamp(3). A timestamptz return type, a session time zone, or a date return type would change the value or its type; the result-set comparison checks the value and the column type.",
-      "fixedCase": { "args": [], "tables": {} }
+      "reasoning": "T-SQL CONVERT(datetime, '20030701', 112) gives a datetime at 00:00:00.000. The conversion returns TIMESTAMP '2003-07-01 00:00:00' as timestamp(3). A timestamptz return type, a session time zone, or a date return type would change the value or its type; the result-set comparison checks the value and the column type. This function has no parameter and reads no table, so the empty call is the only input that exists; the case necessarily repeats the hand-derived case. It is kept because the adversarial gate and its planted-defect check run on the adversarial cases alone, without the hand-derived ones. The planted defect 'start date one day late' is caught only through this call.",
+      "fixedCase": {
+        "args": [],
+        "tables": {}
+      }
     }
   ]
 }

@@ -4,12 +4,12 @@
   "database": "AdventureWorks2025",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-18T20:21:05-07:00"
+    "at": "2026-11-19T05:51:37.445Z"
   },
   "cases": [
     {
       "id": "A01",
-      "label": "date boundaries: start dates 0001-01-01, 1752-12-31, 1753-01-01, 2000-02-29 and 9999-12-31; end dates 0001-01-01 and 9999-12-31",
+      "label": "date boundaries: start dates 0001-01-01, 1752-12-31, 1753-01-01, 2000-02-29 and 9999-12-31; end dates 0001-01-01, 1900-01-01 and 9999-12-31",
       "traps": [
         "dates-datetime"
       ],
@@ -104,6 +104,12 @@
               "DepartmentID": 2,
               "StartDate": "1900-01-01",
               "EndDate": "1900-01-01"
+            },
+            {
+              "BusinessEntityID": 3,
+              "DepartmentID": 1,
+              "StartDate": "0001-01-01",
+              "EndDate": "0001-01-01"
             }
           ]
         }
@@ -111,11 +117,11 @@
     },
     {
       "id": "A02",
-      "label": "an end date before the start date, and an end date equal to it: the view does not compare the two",
+      "label": "an end date equal to the start date, and one a day after it: the view does not compare the two",
       "traps": [
         "dates-datetime"
       ],
-      "reasoning": "Neither view compares EndDate with StartDate; a conversion that added a validity check would drop rows. only histories with EndDate NULL are listed. 9999-12-31 is the end date of one row.",
+      "reasoning": "Neither view compares EndDate with StartDate; a conversion that added a validity check written as EndDate > StartDate, or that treated the end date as exclusive, would drop the history that starts and ends on 2010-06-15. Both rows respect the source check EndDate >= StartDate. Only histories with EndDate NULL are listed. 9999-12-31 is the end date of one row.",
       "fixedCase": {
         "tables": {
           "HumanResources.Employee": [
@@ -157,8 +163,8 @@
             {
               "BusinessEntityID": 1,
               "DepartmentID": 1,
-              "StartDate": "2010-06-15",
-              "EndDate": "2010-06-14"
+              "StartDate": "2010-06-14",
+              "EndDate": "2010-06-15"
             },
             {
               "BusinessEntityID": 2,
@@ -250,12 +256,12 @@
     },
     {
       "id": "A04",
-      "label": "text returned as stored: department names differing only in case, trailing spaces, non-ASCII and an emoji",
+      "label": "text returned as stored: a department name and group names differing only in case, trailing spaces, non-ASCII and an emoji",
       "traps": [
         "collation-case",
         "trailing-spaces"
       ],
-      "reasoning": "No text is compared in the view, so 'Sales', 'SALES' and 'sales ' are three departments with their own spelling; a conversion that case-folded, trimmed or grouped them would differ. An emoji and combining characters check the nvarchar -> varchar load on both engines.",
+      "reasoning": "No text is compared in the view. Department names are distinct (the source keeps Department.Name unique under its case-insensitive collation); the case-only pairs are department 'Sales' against groups 'SALES' and 'sales', and the first names 'Ann ', 'ANN' and 'ann'. A conversion that case-folded, trimmed or grouped text would differ. 'Marketing ' and 'Sales and Marketing ' end in a space; an emoji and an accent check the nvarchar -> varchar load on both engines.",
       "fixedCase": {
         "tables": {
           "HumanResources.Employee": [
@@ -302,17 +308,17 @@
             {
               "DepartmentID": 1,
               "Name": "Sales",
-              "GroupName": "Sales and Marketing"
+              "GroupName": "SALES"
             },
             {
               "DepartmentID": 2,
-              "Name": "SALES",
+              "Name": "Marketing ",
               "GroupName": "Sales and Marketing "
             },
             {
               "DepartmentID": 3,
-              "Name": "sales ",
-              "GroupName": "Ventes 😀 é"
+              "Name": "Ventes 😀 é",
+              "GroupName": "sales"
             }
           ],
           "HumanResources.EmployeeDepartmentHistory": [

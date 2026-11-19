@@ -4,7 +4,7 @@
   "database": "AdventureWorks2025",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-18T20:21:05-07:00"
+    "at": "2026-11-19T05:51:37.445Z"
   },
   "cases": [
     {
@@ -164,11 +164,11 @@
     },
     {
       "id": "A03",
-      "label": "fan-out: a contact with two identical phone rows and an unknown phone type; the same person as contact twice under two types",
+      "label": "fan-out: a contact with the same number under two phone types of one name and an unknown phone type; the same person as contact twice under two types",
       "traps": [
         "top-ties"
       ],
-      "reasoning": "PersonPhone and BusinessEntityContact have no key constraint in the scratch tables, so duplicate rows give duplicate output rows (no DISTINCT). Person 10 is an Owner and a Buyer of vendor 1, with two identical phones and one of type 9 (no PhoneNumberType row: NULL): 2 x 3 = 6 rows.",
+      "reasoning": "PersonPhone keys on (BusinessEntityID, PhoneNumber, PhoneNumberTypeID) and PhoneNumberType keys on PhoneNumberTypeID only, so the same number under types 1 and 2, both named 'Cell', is two valid rows that give two identical output rows; the view has no DISTINCT. Person 10 is an Owner and a Buyer of vendor 1, with two identical phones and one of type 9 (no PhoneNumberType row: NULL): 2 x 3 = 6 rows.",
       "fixedCase": {
         "tables": {
           "Purchasing.Vendor": [
@@ -219,7 +219,7 @@
             {
               "BusinessEntityID": 10,
               "PhoneNumber": "555-0100",
-              "PhoneNumberTypeID": 1
+              "PhoneNumberTypeID": 2
             },
             {
               "BusinessEntityID": 10,
@@ -230,6 +230,10 @@
           "Person.PhoneNumberType": [
             {
               "PhoneNumberTypeID": 1,
+              "Name": "Cell"
+            },
+            {
+              "PhoneNumberTypeID": 2,
               "Name": "Cell"
             }
           ]

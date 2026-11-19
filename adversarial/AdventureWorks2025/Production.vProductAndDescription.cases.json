@@ -4,7 +4,7 @@
   "database": "AdventureWorks2025",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-18T20:21:05-07:00"
+    "at": "2026-11-19T05:51:37.445Z"
   },
   "notApplicable": {
     "null-vs-empty": "Every text column the view reads (Product.Name, ProductModel.Name, ProductDescription.Description, CultureID) is NOT NULL, so no NULL text value can be sent; '' is attacked in its own case."
@@ -17,7 +17,7 @@
         "collation-case",
         "trailing-spaces"
       ],
-      "reasoning": "CultureID is nchar(6) and not compared in the view. 'en' and 'EN' are two rows with their own spelling; 'en ' pads to the same value as 'en' (six characters) on both engines; '' pads to six spaces. The scratch table has no key on the culture rows, so case-insensitive duplicates load on both engines.",
+      "reasoning": "CultureID is nchar(6) and not compared in the view. 'en' and 'EN' are two rows with their own spelling, on different descriptions because the source key (ProductModelID, ProductDescriptionID, CultureID) is case-insensitive; 'en ' pads to the same value as 'en' (six characters) on both engines; '' pads to six spaces.",
       "fixedCase": {
         "tables": {
           "Production.Product": [
@@ -41,6 +41,10 @@
             {
               "ProductDescriptionID": 2,
               "Description": "two"
+            },
+            {
+              "ProductDescriptionID": 3,
+              "Description": "three"
             }
           ],
           "Production.ProductModelProductDescriptionCulture": [
@@ -51,7 +55,7 @@
             },
             {
               "ProductModelID": 1,
-              "ProductDescriptionID": 1,
+              "ProductDescriptionID": 3,
               "CultureID": "EN"
             },
             {
@@ -158,11 +162,11 @@
     },
     {
       "id": "A03",
-      "label": "an empty description and names that differ only in case: '' kept, not NULL; 'Chain' and 'CHAIN' are two products",
+      "label": "an empty description, and product and model names that differ only in case from each other: '' kept, not NULL",
       "traps": [
         "collation-case"
       ],
-      "reasoning": "Every text column is NOT NULL, so '' is the only empty value; it must not become NULL. Product names 'Chain' and 'CHAIN' and model names 'Road' and 'ROAD' are passed through unchanged.",
+      "reasoning": "Every text column is NOT NULL, so '' is the only empty value; it must not become NULL. Product names and model names are each unique in the source, so the case-only pairs are across the two tables: product 'Chain' on model 'CHAIN', product 'road' on model 'Road'. The view compares no text; both spellings are passed through unchanged.",
       "fixedCase": {
         "tables": {
           "Production.Product": [
@@ -173,18 +177,18 @@
             },
             {
               "ProductID": 2,
-              "Name": "CHAIN",
+              "Name": "road",
               "ProductModelID": 2
             }
           ],
           "Production.ProductModel": [
             {
               "ProductModelID": 1,
-              "Name": "Road"
+              "Name": "CHAIN"
             },
             {
               "ProductModelID": 2,
-              "Name": "ROAD"
+              "Name": "Road"
             }
           ],
           "Production.ProductDescription": [
@@ -210,11 +214,11 @@
     },
     {
       "id": "A04",
-      "label": "duplicate culture rows and two products on one model: rows multiply (2 products x 3 culture rows), duplicates kept",
+      "label": "two descriptions with the same text in one culture and two products on one model: rows multiply (2 products x 3 culture rows), identical rows kept",
       "traps": [
         "top-ties"
       ],
-      "reasoning": "The same culture row twice gives two identical rows per product (no DISTINCT, no key in the scratch table); two products of one model fan out over all its culture rows. Compared as a multiset.",
+      "reasoning": "The view does not return ProductDescriptionID, so descriptions 1 and 3, both 'same' and both in culture 'en', give two identical rows per product from distinct source keys; there is no DISTINCT. Two products (distinct names, as the source requires) of one model fan out over all its culture rows. Compared as a multiset.",
       "fixedCase": {
         "tables": {
           "Production.Product": [
@@ -225,7 +229,7 @@
             },
             {
               "ProductID": 2,
-              "Name": "Bike",
+              "Name": "Trike",
               "ProductModelID": 1
             }
           ],
@@ -243,6 +247,10 @@
             {
               "ProductDescriptionID": 2,
               "Description": "other"
+            },
+            {
+              "ProductDescriptionID": 3,
+              "Description": "same"
             }
           ],
           "Production.ProductModelProductDescriptionCulture": [
@@ -253,7 +261,7 @@
             },
             {
               "ProductModelID": 1,
-              "ProductDescriptionID": 1,
+              "ProductDescriptionID": 3,
               "CultureID": "en"
             },
             {

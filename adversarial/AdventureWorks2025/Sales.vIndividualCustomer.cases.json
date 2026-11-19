@@ -4,17 +4,17 @@
   "database": "AdventureWorks2025",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-18T20:21:05-07:00"
+    "at": "2026-11-19T05:51:37.445Z"
   },
   "cases": [
     {
       "id": "A01",
-      "label": "case-only variants 'Us', 'uS' and 'us ' of a country code join 'US'",
+      "label": "case pairs outside ASCII ('üs' to 'ÜS', 'σa' to 'ΣA') and case plus a trailing space on the country side ('CA' to 'ca ')",
       "traps": [
         "collation-case",
         "trailing-spaces"
       ],
-      "reasoning": "CI_AS ignores case and SQL Server equality ignores trailing spaces, so all three province codes join country 'US'. The conversion uses rtrim under an ICU level-2 collation; this checks mixed case and case plus trailing space together.",
+      "reasoning": "The hand-derived cases join an ASCII lowercase province code to an uppercase country and a province code with a trailing space; both differences sit on the province side. Here the case pairs are Latin-1 (ü/Ü) and Greek (σ/Σ), which CI_AS folds through its Unicode case tables, and the country row itself is lowercase with a trailing space ('ca '), so the rtrim and the case-insensitive comparison must apply to the country side too. A conversion that lower()ed only ASCII, folded with a byte-wise or C-collation upper(), or trimmed only the province side would drop rows that SQL Server keeps. These are valid source rows: CountryRegion keys 'ÜS', 'ΣA' and 'ca ' are distinct under the case-insensitive key, and each province code references its country under that collation.",
       "fixedCase": {
         "tables": {
           "Person.Person": [
@@ -101,24 +101,32 @@
           "Person.StateProvince": [
             {
               "StateProvinceID": 1,
-              "CountryRegionCode": "Us",
+              "CountryRegionCode": "üs",
               "Name": "Province 1"
             },
             {
               "StateProvinceID": 2,
-              "CountryRegionCode": "uS",
+              "CountryRegionCode": "σa",
               "Name": "Province 2"
             },
             {
               "StateProvinceID": 3,
-              "CountryRegionCode": "us ",
+              "CountryRegionCode": "CA",
               "Name": "Province 3"
             }
           ],
           "Person.CountryRegion": [
             {
-              "CountryRegionCode": "US",
-              "Name": "United States"
+              "CountryRegionCode": "ÜS",
+              "Name": "Country Ü"
+            },
+            {
+              "CountryRegionCode": "ΣA",
+              "Name": "Country Σ"
+            },
+            {
+              "CountryRegionCode": "ca ",
+              "Name": "Country ca"
             }
           ],
           "Sales.Customer": [
@@ -1009,11 +1017,11 @@
     },
     {
       "id": "A08",
-      "label": "a person with two individual customer rows and two identical phones: rows multiply (2 x 2), duplicates kept",
+      "label": "a person with two individual customer rows and the same number under two phone types of one name: rows multiply (2 x 2), identical rows kept",
       "traps": [
         "top-ties"
       ],
-      "reasoning": "Customer and PersonPhone have no key on PersonID in the scratch tables, so two customer rows (both StoreID NULL) and two identical phone rows give four identical rows; there is no DISTINCT. A third customer row with a store adds nothing.",
+      "reasoning": "Sales.Customer keys on CustomerID, so one person may have two individual customer rows (both StoreID NULL). PersonPhone keys on (BusinessEntityID, PhoneNumber, PhoneNumberTypeID) and PhoneNumberType keys on PhoneNumberTypeID only, so the same number under types 1 and 2, both named 'Cell', is two valid rows that give two identical output rows; the view has no DISTINCT. Two customer rows times two such phones give four identical rows. A third customer row with a store adds nothing.",
       "fixedCase": {
         "tables": {
           "Person.Person": [
@@ -1087,12 +1095,16 @@
             {
               "BusinessEntityID": 1,
               "PhoneNumber": "555-0100",
-              "PhoneNumberTypeID": 1
+              "PhoneNumberTypeID": 2
             }
           ],
           "Person.PhoneNumberType": [
             {
               "PhoneNumberTypeID": 1,
+              "Name": "Cell"
+            },
+            {
+              "PhoneNumberTypeID": 2,
               "Name": "Cell"
             }
           ]

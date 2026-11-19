@@ -4,7 +4,7 @@
   "database": "WideWorldImporters",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-19T04:36:25.160Z"
+    "at": "2026-11-19T06:00:45.121Z"
   },
   "notApplicable": {
     "null-vs-empty": "Every text column this procedure reads (Sales.InvoiceLines.Description, Warehouse.PackageTypes.PackageTypeName) is NOT NULL, so no NULL text value can be sent. '' is sent as a Description in the text case."
@@ -284,11 +284,11 @@
     },
     {
       "id": "A03",
-      "label": "decimal arithmetic: Total Excluding Tax = ExtendedPrice - TaxAmount for 0.05 - 0.15, 10.05 - 1.55, 999999999999.99 - (-999999999999.99); a 3-place tax rate ending in 5; negative profit; NULL unit price",
+      "label": "decimal arithmetic: Total Excluding Tax = ExtendedPrice - TaxAmount for 0.05 - 0.15, 10.05 - 1.55, and 5000000000000.05 - (-4999999999999.95), which carries into a 14th integer digit; a 3-place tax rate ending in 5; negative profit; NULL unit price",
       "traps": [
         "numeric-rounding"
       ],
-      "reasoning": "ExtendedPrice - TaxAmount is decimal(18,2) - decimal(18,2) = decimal(19,2) on SQL Server; the large pair needs the extra digit. TaxRate 15.005 and LineProfit -0.05 are passed through; UnitPrice NULL stays NULL.",
+      "reasoning": "ExtendedPrice - TaxAmount is decimal(18,2) - decimal(18,2), typed decimal(19,2) on SQL Server. The large pair has 13 integer digits on each side and its difference, 10000000000000.00, has 14: the .05 + .95 carry ripples through every digit, so a conversion that computed in double precision, or declared the result with fewer than 16 digits of precision, would differ. The decimal(18,2) overflow boundary itself (results of 1e16 and above) is not sent: the harness reads decimals from the SQL Server driver as JS numbers, which hold about 15 significant digits exactly, so such a result could not be captured faithfully. TaxRate 15.005 and LineProfit -0.05 are passed through; UnitPrice NULL stays NULL.",
       "fixedCase": {
         "cutoffs": {
           "last": "2020-06-15T11:00:00.000000",
@@ -366,9 +366,9 @@
               "Quantity": 4,
               "UnitPrice": null,
               "TaxRate": "15.000",
-              "TaxAmount": "-999999999999.99",
+              "TaxAmount": "-4999999999999.95",
               "LineProfit": "3.00",
-              "ExtendedPrice": "999999999999.99",
+              "ExtendedPrice": "5000000000000.05",
               "LastEditedWhen": "2020-06-15T12:00:00.000000"
             }
           ]

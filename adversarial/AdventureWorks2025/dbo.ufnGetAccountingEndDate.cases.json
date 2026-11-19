@@ -2,7 +2,10 @@
   "schemaVersion": 1,
   "object": "dbo.ufnGetAccountingEndDate",
   "database": "AdventureWorks2025",
-  "attacker": { "model": "claude (Kiro subagent; exact model version not exposed to the agent)", "at": "2026-11-18T19:13:01-07:00" },
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-19T05:46:45.561Z"
+  },
   "notApplicable": {
     "null-vs-empty": "The function takes no parameter and reads no table, so no text input exists.",
     "collation-case": "No text input and no text comparison.",
@@ -17,8 +20,11 @@
       "id": "A01",
       "label": "midnight minus 2 ms on datetime: the result is the .997 tick, kept at 3 digits (not .998, not rounded to the second)",
       "traps": [],
-      "reasoning": "T-SQL DATEADD(millisecond, -2, datetime '2004-07-01') lands on the datetime tick .997 (3.33 ms resolution). PostgreSQL interval arithmetic would give .998; the conversion hard-codes .997 and returns timestamp(3). A timestamp(0) or a date return type, or the exact -2 ms, would differ from the value SQL Server returns.",
-      "fixedCase": { "args": [], "tables": {} }
+      "reasoning": "T-SQL DATEADD(millisecond, -2, datetime '2004-07-01') lands on the datetime tick .997 (3.33 ms resolution). PostgreSQL interval arithmetic would give .998; the conversion hard-codes .997 and returns timestamp(3). A timestamp(0) or a date return type, or the exact -2 ms, would differ from the value SQL Server returns. This function has no parameter and reads no table, so the empty call is the only input that exists; the case necessarily repeats the hand-derived case. It is kept because the adversarial gate and its planted-defect check run on the adversarial cases alone, without the hand-derived ones. The planted defect 'end date is exactly 2 ms before midnight' is caught only through this call.",
+      "fixedCase": {
+        "args": [],
+        "tables": {}
+      }
     }
   ]
 }

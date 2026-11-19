@@ -4,22 +4,38 @@
   "database": "WideWorldImporters",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-19T05:20:49.498Z"
+    "at": "2026-11-19T06:00:45.121Z"
   },
   "cases": [
     {
       "id": "A01",
-      "label": "'' versus NULL in DeliveryRun and RunPosition are kept distinct across the LEFT JOINs",
+      "label": "'' from a joined row versus NULL from a NULL foreign key in the same output column; DeliveryRun and RunPosition '' and NULL the other way round",
       "traps": [
         "null-vs-empty"
       ],
-      "reasoning": "Customer 1 has DeliveryRun '' and RunPosition NULL; the view selects both columns unchanged, so '' must stay '' and NULL stay NULL. A conversion coalescing '' to NULL (or back) would differ.",
+      "reasoning": "Customer 1's buying group and alternate contact exist and are named '' (both name columns are NOT NULL, so '' is their only empty value); customer 2's BuyingGroupID and AlternateContactPersonID are NULL, so the LEFT JOINs give NULL in the same two output columns. DeliveryRun and RunPosition are NULL and '' on customer 1 and the reverse on customer 2 (the hand-derived case has '' and NULL in one order only). A conversion that coalesced joined names to '' or turned '' into NULL would make the two rows agree where SQL Server keeps them apart. Every foreign key points at an existing row or is NULL.",
       "fixedCase": {
         "tables": {
           "Sales.Customers": [
             {
               "CustomerID": 1,
               "CustomerName": "Customer 1",
+              "CustomerCategoryID": 1,
+              "PrimaryContactPersonID": 1,
+              "AlternateContactPersonID": 2,
+              "BuyingGroupID": 1,
+              "DeliveryMethodID": 1,
+              "DeliveryCityID": 1,
+              "PhoneNumber": "(206) 555-0100",
+              "FaxNumber": "(206) 555-0101",
+              "WebsiteURL": "http://x",
+              "DeliveryLocation": null,
+              "DeliveryRun": null,
+              "RunPosition": ""
+            },
+            {
+              "CustomerID": 2,
+              "CustomerName": "Customer 2",
               "CustomerCategoryID": 1,
               "PrimaryContactPersonID": 1,
               "AlternateContactPersonID": null,
@@ -43,7 +59,7 @@
           "Sales.BuyingGroups": [
             {
               "BuyingGroupID": 1,
-              "BuyingGroupName": "Tailspin Toys"
+              "BuyingGroupName": ""
             }
           ],
           "Application.People": [
@@ -53,7 +69,7 @@
             },
             {
               "PersonID": 2,
-              "FullName": "Bo Ng"
+              "FullName": ""
             }
           ],
           "Application.DeliveryMethods": [
@@ -73,11 +89,11 @@
     },
     {
       "id": "A02",
-      "label": "two customers share a phone number; a missing category/contact/city still yields the row with NULLs",
+      "label": "three customers share phone, fax and website; NULL buying groups and alternate contacts (valid NULL keys) keep their rows; primary and alternate contacts are crossed",
       "traps": [
         "top-ties"
       ],
-      "reasoning": "Customers 1 and 2 share PhoneNumber (a non-key value). Customer 2 points at category/contact/city ids with no matching row, so the LEFT OUTER JOINs must keep it with NULLs. An INNER JOIN conversion would drop customer 2.",
+      "reasoning": "Customers 1, 2 and 3 share PhoneNumber, FaxNumber and WebsiteURL (non-key ties; CustomerName stays unique as in the source). Customers 2 and 3 have no buying group, and customer 3 no alternate contact; these are nullable foreign keys, so the LEFT OUTER JOINs keep the rows with NULL names, and an inner join would drop them. Customer 1's alternate contact is person 2 and customer 2's is person 1, so a conversion that joined the alternate contact on the primary contact id would show the wrong names.",
       "fixedCase": {
         "tables": {
           "Sales.Customers": [
@@ -86,13 +102,13 @@
               "CustomerName": "Customer 1",
               "CustomerCategoryID": 1,
               "PrimaryContactPersonID": 1,
-              "AlternateContactPersonID": null,
-              "BuyingGroupID": null,
+              "AlternateContactPersonID": 2,
+              "BuyingGroupID": 1,
               "DeliveryMethodID": 1,
               "DeliveryCityID": 1,
               "PhoneNumber": "(206) 555-9999",
-              "FaxNumber": "(206) 555-0101",
-              "WebsiteURL": "http://x",
+              "FaxNumber": "(206) 555-9998",
+              "WebsiteURL": "http://same",
               "DeliveryLocation": null,
               "DeliveryRun": null,
               "RunPosition": null
@@ -100,15 +116,31 @@
             {
               "CustomerID": 2,
               "CustomerName": "Customer 2",
-              "CustomerCategoryID": 99,
-              "PrimaryContactPersonID": 99,
+              "CustomerCategoryID": 1,
+              "PrimaryContactPersonID": 2,
+              "AlternateContactPersonID": 1,
+              "BuyingGroupID": null,
+              "DeliveryMethodID": 1,
+              "DeliveryCityID": 1,
+              "PhoneNumber": "(206) 555-9999",
+              "FaxNumber": "(206) 555-9998",
+              "WebsiteURL": "http://same",
+              "DeliveryLocation": null,
+              "DeliveryRun": null,
+              "RunPosition": null
+            },
+            {
+              "CustomerID": 3,
+              "CustomerName": "Customer 3",
+              "CustomerCategoryID": 1,
+              "PrimaryContactPersonID": 1,
               "AlternateContactPersonID": null,
               "BuyingGroupID": null,
-              "DeliveryMethodID": 99,
-              "DeliveryCityID": 99,
+              "DeliveryMethodID": 1,
+              "DeliveryCityID": 1,
               "PhoneNumber": "(206) 555-9999",
-              "FaxNumber": "(206) 555-0101",
-              "WebsiteURL": "http://x",
+              "FaxNumber": "(206) 555-9998",
+              "WebsiteURL": "http://same",
               "DeliveryLocation": null,
               "DeliveryRun": null,
               "RunPosition": null

@@ -4,7 +4,7 @@
   "database": "WideWorldImporters",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-19T05:20:49.498Z"
+    "at": "2026-11-19T06:00:45.121Z"
   },
   "notApplicable": {
     "identity-gaps": "The only key column is Website.SensorDataList.SensorDataListID, an IDENTITY the harness renumbers 1..n for each call (tvpJson), so a planted gap in it cannot reach either engine; Warehouse.ColdRoomTemperatures has no key the procedure uses."
@@ -73,11 +73,11 @@
     },
     {
       "id": "A03",
-      "label": "three existing rows for one sensor share a temperature; one reading updates all of them",
+      "label": "three rows for sensor 3 (two equal in every column) are all updated by one reading; rows for sensors 30, 0 and -3 with the same values are left alone",
       "traps": [
         "top-ties"
       ],
-      "reasoning": "Two existing sensor-3 rows share Temperature 1.00 (a non-key tie; the table has no key the procedure uses). The single reading's UPDATE ... WHERE ColdRoomSensorNumber = 3 must rewrite every matching row on both engines.",
+      "reasoning": "The UPDATE ... WHERE ColdRoomSensorNumber = 3 must rewrite every sensor-3 row, including two that are identical in every column (a conversion that updated through a key or ctid it picked once, or LIMIT 1, would change one), and must not touch sensors whose numbers share digits or sign with 3 (30, -3) or are 0. Those rows hold the same RecordedWhen and Temperature as the sensor-3 rows, so only the sensor number tells them apart.",
       "fixedCase": {
         "args": [],
         "tables": {
@@ -104,6 +104,21 @@
               "ColdRoomSensorNumber": 3,
               "RecordedWhen": "2020-01-01T00:00:00.000000",
               "Temperature": "2.00"
+            },
+            {
+              "ColdRoomSensorNumber": 30,
+              "RecordedWhen": "2020-01-01T00:00:00.000000",
+              "Temperature": "1.00"
+            },
+            {
+              "ColdRoomSensorNumber": 0,
+              "RecordedWhen": "2020-01-01T00:00:00.000000",
+              "Temperature": "1.00"
+            },
+            {
+              "ColdRoomSensorNumber": -3,
+              "RecordedWhen": "2020-01-01T00:00:00.000000",
+              "Temperature": "1.00"
             }
           ]
         }
@@ -111,11 +126,10 @@
     },
     {
       "id": "A04",
-      "label": "two readings for the same new sensor: the first inserts, the second updates it (loop order preserved)",
+      "label": "readings for a new sensor interleaved with an existing one: the first inserts, the third updates the row the first inserted, the existing sensor is updated",
       "traps": [],
-      "reasoning": "Readings are applied in SensorDataListID order; for a brand-new sensor the first inserts and the second updates. A conversion that swapped the loop bounds, or inserted even when the update matched, would differ.",
+      "reasoning": "Readings are applied one at a time in SensorDataListID order. Reading 1 (sensor 4, new) inserts; reading 2 updates sensor 5's existing row; reading 3 (sensor 4 again) must find the row reading 1 inserted and update it. A set-based conversion that decided insert-or-update for all readings against the table as it was before the call would insert sensor 4 twice. The hand-derived case sends two consecutive readings for one sensor with no other sensor in between.",
       "fixedCase": {
-        "args": [],
         "tables": {
           "Website.SensorDataList": [
             {
@@ -126,12 +140,24 @@
             },
             {
               "SensorDataListID": 2,
+              "ColdRoomSensorNumber": 5,
+              "RecordedWhen": "2020-01-01T00:00:01.000000",
+              "Temperature": "5.50"
+            },
+            {
+              "SensorDataListID": 3,
               "ColdRoomSensorNumber": 4,
               "RecordedWhen": "2020-01-01T00:00:05.123456",
               "Temperature": "4.50"
             }
           ],
-          "Warehouse.ColdRoomTemperatures": []
+          "Warehouse.ColdRoomTemperatures": [
+            {
+              "ColdRoomSensorNumber": 5,
+              "RecordedWhen": "2019-12-31T00:00:00.000000",
+              "Temperature": "5.00"
+            }
+          ]
         }
       }
     }

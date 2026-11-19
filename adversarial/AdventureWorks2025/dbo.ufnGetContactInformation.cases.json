@@ -2,7 +2,10 @@
   "schemaVersion": 1,
   "object": "dbo.ufnGetContactInformation",
   "database": "AdventureWorks2025",
-  "attacker": { "model": "claude (Kiro subagent; exact model version not exposed to the agent)", "at": "2026-11-18T19:13:01-07:00" },
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-19T05:46:45.561Z"
+  },
   "notApplicable": {
     "null-vs-empty": "No text input column can hold NULL: Person.FirstName, Person.LastName, Employee.JobTitle and ContactType.Name are NOT NULL in the spec (as in AdventureWorks), so a NULL text value cannot be loaded. The NULL-versus-'' contrast exists only in the output and is attacked there by A01: the same person gets an Employee row with JobTitle '' and a Consumer row whose JobTitle is the NULL the function writes.",
     "dates-datetime": "No date input.",
@@ -16,44 +19,123 @@
       "traps": [],
       "reasoning": "T-SQL writes NULL as the Consumer JobTitle and copies '' from Employee. A PostgreSQL conversion that used COALESCE/NULLIF on JobTitle, or a client that maps '' to NULL, would make the two rows equal in that column. LastName '' must stay '' on both rows.",
       "fixedCase": {
-        "args": [1],
+        "args": [
+          1
+        ],
         "tables": {
-          "Person.Person": [{ "BusinessEntityID": 1, "FirstName": "Ann", "LastName": "" }],
-          "HumanResources.Employee": [{ "BusinessEntityID": 1, "JobTitle": "" }],
-          "Sales.Customer": [{ "PersonID": 1, "StoreID": null }]
+          "Person.Person": [
+            {
+              "BusinessEntityID": 1,
+              "FirstName": "Ann",
+              "LastName": ""
+            }
+          ],
+          "HumanResources.Employee": [
+            {
+              "BusinessEntityID": 1,
+              "JobTitle": ""
+            }
+          ],
+          "Sales.Customer": [
+            {
+              "PersonID": 1,
+              "StoreID": null
+            }
+          ]
         }
       }
     },
     {
       "id": "A02",
       "label": "trailing spaces in FirstName, JobTitle and the contact type name, and a LastName of one space, are returned as stored",
-      "traps": ["trailing-spaces"],
+      "traps": [
+        "trailing-spaces"
+      ],
       "reasoning": "SQL Server keeps trailing spaces in nvarchar values it returns (it ignores them only in comparisons). The conversion returns varchar(50) columns and casts literals; a char(n) mapping or an rtrim in the conversion would drop them, and a single space must not become ''.",
       "fixedCase": {
-        "args": [1],
+        "args": [
+          1
+        ],
         "tables": {
-          "Person.Person": [{ "BusinessEntityID": 1, "FirstName": "Ann ", "LastName": " " }],
-          "HumanResources.Employee": [{ "BusinessEntityID": 1, "JobTitle": "Buyer  " }],
-          "Purchasing.Vendor": [{ "BusinessEntityID": 100 }],
-          "Person.ContactType": [{ "ContactTypeID": 1, "Name": "Owner " }],
-          "Person.BusinessEntityContact": [{ "BusinessEntityID": 100, "PersonID": 1, "ContactTypeID": 1 }]
+          "Person.Person": [
+            {
+              "BusinessEntityID": 1,
+              "FirstName": "Ann ",
+              "LastName": " "
+            }
+          ],
+          "HumanResources.Employee": [
+            {
+              "BusinessEntityID": 1,
+              "JobTitle": "Buyer  "
+            }
+          ],
+          "Purchasing.Vendor": [
+            {
+              "BusinessEntityID": 100
+            }
+          ],
+          "Person.ContactType": [
+            {
+              "ContactTypeID": 1,
+              "Name": "Owner "
+            }
+          ],
+          "Person.BusinessEntityContact": [
+            {
+              "BusinessEntityID": 100,
+              "PersonID": 1,
+              "ContactTypeID": 1
+            }
+          ]
         }
       }
     },
     {
       "id": "A03",
       "label": "contact types 'Owner' and 'OWNER' for the same vendor contact give two rows that differ only in case; names keep their case",
-      "traps": ["collation-case"],
+      "traps": [
+        "collation-case"
+      ],
       "reasoning": "Under CI_AS, 'Owner' and 'OWNER' compare equal, but the function never compares text, so SQL Server returns both rows with their own case. A conversion that grouped, de-duplicated (UNION instead of UNION ALL) or lower-cased would differ; the multiset comparison counts both rows.",
       "fixedCase": {
-        "args": [1],
+        "args": [
+          1
+        ],
         "tables": {
-          "Person.Person": [{ "BusinessEntityID": 1, "FirstName": "ann", "LastName": "ANN" }],
-          "Purchasing.Vendor": [{ "BusinessEntityID": 100 }],
-          "Person.ContactType": [{ "ContactTypeID": 1, "Name": "Owner" }, { "ContactTypeID": 2, "Name": "OWNER" }],
+          "Person.Person": [
+            {
+              "BusinessEntityID": 1,
+              "FirstName": "ann",
+              "LastName": "ANN"
+            }
+          ],
+          "Purchasing.Vendor": [
+            {
+              "BusinessEntityID": 100
+            }
+          ],
+          "Person.ContactType": [
+            {
+              "ContactTypeID": 1,
+              "Name": "Owner"
+            },
+            {
+              "ContactTypeID": 2,
+              "Name": "OWNER"
+            }
+          ],
           "Person.BusinessEntityContact": [
-            { "BusinessEntityID": 100, "PersonID": 1, "ContactTypeID": 1 },
-            { "BusinessEntityID": 100, "PersonID": 1, "ContactTypeID": 2 }
+            {
+              "BusinessEntityID": 100,
+              "PersonID": 1,
+              "ContactTypeID": 1
+            },
+            {
+              "BusinessEntityID": 100,
+              "PersonID": 1,
+              "ContactTypeID": 2
+            }
           ]
         }
       }
@@ -65,38 +147,105 @@
       "traps": [],
       "reasoning": "nvarchar holds UTF-16; PostgreSQL varchar holds the database encoding. Inserted as N'...' on SQL Server and as UTF-8 text on PostgreSQL, the values must round-trip identically; a varchar (non-N) path on SQL Server or a Latin-1 client encoding would turn them into '?'.",
       "fixedCase": {
-        "args": [7],
+        "args": [
+          7
+        ],
         "tables": {
-          "Person.Person": [{ "BusinessEntityID": 7, "FirstName": "Zoë", "LastName": "李" }],
-          "HumanResources.Employee": [{ "BusinessEntityID": 7, "JobTitle": "Ingénieur" }],
-          "Sales.Store": [{ "BusinessEntityID": 200 }],
-          "Person.ContactType": [{ "ContactTypeID": 3, "Name": "Владелец" }],
-          "Person.BusinessEntityContact": [{ "BusinessEntityID": 200, "PersonID": 7, "ContactTypeID": 3 }]
+          "Person.Person": [
+            {
+              "BusinessEntityID": 7,
+              "FirstName": "Zoë",
+              "LastName": "李"
+            }
+          ],
+          "HumanResources.Employee": [
+            {
+              "BusinessEntityID": 7,
+              "JobTitle": "Ingénieur"
+            }
+          ],
+          "Sales.Store": [
+            {
+              "BusinessEntityID": 200
+            }
+          ],
+          "Person.ContactType": [
+            {
+              "ContactTypeID": 3,
+              "Name": "Владелец"
+            }
+          ],
+          "Person.BusinessEntityContact": [
+            {
+              "BusinessEntityID": 200,
+              "PersonID": 7,
+              "ContactTypeID": 3
+            }
+          ]
         }
       }
     },
     {
       "id": "A05",
       "label": "person keys with gaps (1, 500, 2147483647): the int-maximum person is a store contact and an employee",
-      "traps": ["identity-gaps"],
+      "traps": [
+        "identity-gaps"
+      ],
       "reasoning": "BusinessEntityID values far apart and at the int maximum. A conversion that narrowed the parameter (smallint) or looked up by position would fail or return another person's row.",
       "fixedCase": {
-        "args": [2147483647],
+        "args": [
+          2147483647
+        ],
         "tables": {
           "Person.Person": [
-            { "BusinessEntityID": 1, "FirstName": "Al", "LastName": "One" },
-            { "BusinessEntityID": 500, "FirstName": "Bea", "LastName": "Five" },
-            { "BusinessEntityID": 2147483647, "FirstName": "Max", "LastName": "Int" }
+            {
+              "BusinessEntityID": 1,
+              "FirstName": "Al",
+              "LastName": "One"
+            },
+            {
+              "BusinessEntityID": 500,
+              "FirstName": "Bea",
+              "LastName": "Five"
+            },
+            {
+              "BusinessEntityID": 2147483647,
+              "FirstName": "Max",
+              "LastName": "Int"
+            }
           ],
           "HumanResources.Employee": [
-            { "BusinessEntityID": 1, "JobTitle": "Clerk" },
-            { "BusinessEntityID": 2147483647, "JobTitle": "Manager" }
+            {
+              "BusinessEntityID": 1,
+              "JobTitle": "Clerk"
+            },
+            {
+              "BusinessEntityID": 2147483647,
+              "JobTitle": "Manager"
+            }
           ],
-          "Sales.Store": [{ "BusinessEntityID": 300 }],
-          "Person.ContactType": [{ "ContactTypeID": 1, "Name": "Owner" }],
+          "Sales.Store": [
+            {
+              "BusinessEntityID": 300
+            }
+          ],
+          "Person.ContactType": [
+            {
+              "ContactTypeID": 1,
+              "Name": "Owner"
+            }
+          ],
           "Person.BusinessEntityContact": [
-            { "BusinessEntityID": 300, "PersonID": 2147483647, "ContactTypeID": 1 },
-            { "BusinessEntityID": 300, "PersonID": 500, "ContactTypeID": 1 }
+            {
+              "BusinessEntityID": 300,
+              "PersonID": 2147483647,
+              "ContactTypeID": 1
+            },
+            {
+              "BusinessEntityID": 300,
+              "PersonID": 500,
+              "ContactTypeID": 1
+            }
           ]
         }
       }
@@ -105,32 +254,87 @@
       "id": "A06",
       "label": "an entity that is both a vendor and a store: one contact row gives a Vendor Contact and a Store Contact row",
       "traps": [],
-      "reasoning": "The vendor and store branches are independent IF EXISTS blocks; both fire for business entity 100. A conversion using ELSIF, or returning after the first branch, would give one row.",
+      "reasoning": "The vendor and store branches are independent IF EXISTS blocks, and here ONE BusinessEntityContact row feeds both, because entity 100 is in Purchasing.Vendor and in Sales.Store (both key on BusinessEntityID, so this is valid source data). The hand-derived person-1 case uses two different entities (vendor 100, store 200) through two contact rows, so a set-based rewrite that classifies each contact row once (LEFT JOIN vendor, LEFT JOIN store, CASE WHEN vendor THEN 'Vendor Contact' WHEN store THEN 'Store Contact') passes that case but returns one row here; so would ELSIF. SQL Server returns two rows.",
       "fixedCase": {
-        "args": [1],
+        "args": [
+          1
+        ],
         "tables": {
-          "Person.Person": [{ "BusinessEntityID": 1, "FirstName": "Ann", "LastName": "Lee" }],
-          "Purchasing.Vendor": [{ "BusinessEntityID": 100 }],
-          "Sales.Store": [{ "BusinessEntityID": 100 }],
-          "Person.ContactType": [{ "ContactTypeID": 1, "Name": "Owner" }],
-          "Person.BusinessEntityContact": [{ "BusinessEntityID": 100, "PersonID": 1, "ContactTypeID": 1 }]
+          "Person.Person": [
+            {
+              "BusinessEntityID": 1,
+              "FirstName": "Ann",
+              "LastName": "Lee"
+            }
+          ],
+          "Purchasing.Vendor": [
+            {
+              "BusinessEntityID": 100
+            }
+          ],
+          "Sales.Store": [
+            {
+              "BusinessEntityID": 100
+            }
+          ],
+          "Person.ContactType": [
+            {
+              "ContactTypeID": 1,
+              "Name": "Owner"
+            }
+          ],
+          "Person.BusinessEntityContact": [
+            {
+              "BusinessEntityID": 100,
+              "PersonID": 1,
+              "ContactTypeID": 1
+            }
+          ]
         }
       }
     },
     {
       "id": "A07",
-      "label": "the same vendor-contact row twice (no key on BusinessEntityContact): two identical Vendor Contact rows",
+      "label": "one person is a contact of two vendors with the same contact type: two identical Vendor Contact rows",
       "traps": [],
-      "reasoning": "INSERT ... SELECT into the table variable keeps duplicates. A conversion with SELECT DISTINCT or UNION would return one row; the multiset comparison counts both.",
+      "reasoning": "The returned columns do not include the vendor, so contact rows (100, 3, 1) and (101, 3, 1), distinct under the source key (BusinessEntityID, PersonID, ContactTypeID), give two identical output rows. INSERT ... SELECT into the table variable keeps both; a conversion with SELECT DISTINCT or UNION would return one. The hand-derived two-vendor case uses two different contact types, so its rows differ and DISTINCT would not change it.",
       "fixedCase": {
-        "args": [3],
+        "args": [
+          3
+        ],
         "tables": {
-          "Person.Person": [{ "BusinessEntityID": 3, "FirstName": "Cy", "LastName": "Oh" }],
-          "Purchasing.Vendor": [{ "BusinessEntityID": 100 }],
-          "Person.ContactType": [{ "ContactTypeID": 1, "Name": "Owner" }],
+          "Person.Person": [
+            {
+              "BusinessEntityID": 3,
+              "FirstName": "Cy",
+              "LastName": "Oh"
+            }
+          ],
+          "Purchasing.Vendor": [
+            {
+              "BusinessEntityID": 100
+            },
+            {
+              "BusinessEntityID": 101
+            }
+          ],
+          "Person.ContactType": [
+            {
+              "ContactTypeID": 1,
+              "Name": "Owner"
+            }
+          ],
           "Person.BusinessEntityContact": [
-            { "BusinessEntityID": 100, "PersonID": 3, "ContactTypeID": 1 },
-            { "BusinessEntityID": 100, "PersonID": 3, "ContactTypeID": 1 }
+            {
+              "BusinessEntityID": 100,
+              "PersonID": 3,
+              "ContactTypeID": 1
+            },
+            {
+              "BusinessEntityID": 101,
+              "PersonID": 3,
+              "ContactTypeID": 1
+            }
           ]
         }
       }
@@ -141,10 +345,23 @@
       "traps": [],
       "reasoning": "The guard is IF @PersonID IS NOT NULL; 0 passes it. A conversion that tested truthiness (IF person_id THEN, NULLIF(person_id, 0)) would return no rows.",
       "fixedCase": {
-        "args": [0],
+        "args": [
+          0
+        ],
         "tables": {
-          "Person.Person": [{ "BusinessEntityID": 0, "FirstName": "Zed", "LastName": "Zero" }],
-          "Sales.Customer": [{ "PersonID": 0, "StoreID": null }]
+          "Person.Person": [
+            {
+              "BusinessEntityID": 0,
+              "FirstName": "Zed",
+              "LastName": "Zero"
+            }
+          ],
+          "Sales.Customer": [
+            {
+              "PersonID": 0,
+              "StoreID": null
+            }
+          ]
         }
       }
     },
@@ -154,10 +371,23 @@
       "traps": [],
       "reasoning": "Negative keys are valid int values in both engines; a conversion that validated person_id > 0 would drop the row.",
       "fixedCase": {
-        "args": [-1],
+        "args": [
+          -1
+        ],
         "tables": {
-          "Person.Person": [{ "BusinessEntityID": -1, "FirstName": "Neg", "LastName": "One" }],
-          "HumanResources.Employee": [{ "BusinessEntityID": -1, "JobTitle": "Temp" }]
+          "Person.Person": [
+            {
+              "BusinessEntityID": -1,
+              "FirstName": "Neg",
+              "LastName": "One"
+            }
+          ],
+          "HumanResources.Employee": [
+            {
+              "BusinessEntityID": -1,
+              "JobTitle": "Temp"
+            }
+          ]
         }
       }
     },
@@ -167,10 +397,27 @@
       "traps": [],
       "reasoning": "c.PersonID = p.BusinessEntityID is unknown for a NULL PersonID on both engines. A conversion that joined with IS NOT DISTINCT FROM, or a NULL-safe COALESCE(c.PersonID, ...), would match.",
       "fixedCase": {
-        "args": [1],
+        "args": [
+          1
+        ],
         "tables": {
-          "Person.Person": [{ "BusinessEntityID": 1, "FirstName": "Ann", "LastName": "Lee" }],
-          "Sales.Customer": [{ "PersonID": null, "StoreID": null }, { "PersonID": 2, "StoreID": null }]
+          "Person.Person": [
+            {
+              "BusinessEntityID": 1,
+              "FirstName": "Ann",
+              "LastName": "Lee"
+            }
+          ],
+          "Sales.Customer": [
+            {
+              "PersonID": null,
+              "StoreID": null
+            },
+            {
+              "PersonID": 2,
+              "StoreID": null
+            }
+          ]
         }
       }
     },
@@ -180,10 +427,23 @@
       "traps": [],
       "reasoning": "The returned table declares nvarchar(50); the conversion declares varchar(50) and casts the literals. A narrower declared length (or a char(50) padding) would cut or pad values that SQL Server returns whole.",
       "fixedCase": {
-        "args": [4],
+        "args": [
+          4
+        ],
         "tables": {
-          "Person.Person": [{ "BusinessEntityID": 4, "FirstName": "Abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwx", "LastName": "ZYXWVUTSRQPONMLKJIHGFEDCBAzyxwvutsrqponmlkjihgfedc" }],
-          "HumanResources.Employee": [{ "BusinessEntityID": 4, "JobTitle": "Senior Principal Engineer of Database Conversion 1" }]
+          "Person.Person": [
+            {
+              "BusinessEntityID": 4,
+              "FirstName": "Abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwx",
+              "LastName": "ZYXWVUTSRQPONMLKJIHGFEDCBAzyxwvutsrqponmlkjihgfedc"
+            }
+          ],
+          "HumanResources.Employee": [
+            {
+              "BusinessEntityID": 4,
+              "JobTitle": "Senior Principal Engineer of Database Conversion 1"
+            }
+          ]
         }
       }
     },
@@ -193,16 +453,92 @@
       "traps": [],
       "reasoning": "Two BusinessEntityContact rows to the same store with different contact types give two Store Contact rows; a customer row with a StoreID adds no Consumer row. A conversion that took one row per branch (LIMIT 1, SELECT INTO) would return one.",
       "fixedCase": {
-        "args": [9],
+        "args": [
+          9
+        ],
         "tables": {
-          "Person.Person": [{ "BusinessEntityID": 9, "FirstName": "Ida", "LastName": "Vo" }],
-          "Sales.Store": [{ "BusinessEntityID": 200 }],
-          "Person.ContactType": [{ "ContactTypeID": 1, "Name": "Owner" }, { "ContactTypeID": 2, "Name": "Purchasing Manager" }],
-          "Person.BusinessEntityContact": [
-            { "BusinessEntityID": 200, "PersonID": 9, "ContactTypeID": 1 },
-            { "BusinessEntityID": 200, "PersonID": 9, "ContactTypeID": 2 }
+          "Person.Person": [
+            {
+              "BusinessEntityID": 9,
+              "FirstName": "Ida",
+              "LastName": "Vo"
+            }
           ],
-          "Sales.Customer": [{ "PersonID": 9, "StoreID": 200 }]
+          "Sales.Store": [
+            {
+              "BusinessEntityID": 200
+            }
+          ],
+          "Person.ContactType": [
+            {
+              "ContactTypeID": 1,
+              "Name": "Owner"
+            },
+            {
+              "ContactTypeID": 2,
+              "Name": "Purchasing Manager"
+            }
+          ],
+          "Person.BusinessEntityContact": [
+            {
+              "BusinessEntityID": 200,
+              "PersonID": 9,
+              "ContactTypeID": 1
+            },
+            {
+              "BusinessEntityID": 200,
+              "PersonID": 9,
+              "ContactTypeID": 2
+            }
+          ],
+          "Sales.Customer": [
+            {
+              "PersonID": 9,
+              "StoreID": 200
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A13",
+      "label": "a person with one consumer account and two store customer accounts: exactly one Consumer row",
+      "traps": [],
+      "reasoning": "The Consumer branch filters c.StoreID IS NULL both in its EXISTS test and in the INSERT ... SELECT. A conversion that kept the filter only in the existence test would add a Consumer row for each store customer account (three rows here). Sales.Customer keys on CustomerID, so one person may hold several customer rows.",
+      "fixedCase": {
+        "args": [
+          10
+        ],
+        "tables": {
+          "Person.Person": [
+            {
+              "BusinessEntityID": 10,
+              "FirstName": "Jo",
+              "LastName": "Wu"
+            }
+          ],
+          "Sales.Store": [
+            {
+              "BusinessEntityID": 200
+            },
+            {
+              "BusinessEntityID": 201
+            }
+          ],
+          "Sales.Customer": [
+            {
+              "PersonID": 10,
+              "StoreID": 200
+            },
+            {
+              "PersonID": 10,
+              "StoreID": null
+            },
+            {
+              "PersonID": 10,
+              "StoreID": 201
+            }
+          ]
         }
       }
     }

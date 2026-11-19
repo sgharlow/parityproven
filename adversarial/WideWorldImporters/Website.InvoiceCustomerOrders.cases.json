@@ -4,16 +4,16 @@
   "database": "WideWorldImporters",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-19T05:20:49.498Z"
+    "at": "2026-11-19T06:00:45.121Z"
   },
   "cases": [
     {
       "id": "A01",
-      "label": "tax and line amounts round half away from zero: 3 x 0.95 x 0.505 % = 0.01438875 -> 0.01",
+      "label": "tax amount at an exact half cent: 1 x 0.25 x 50 % = 0.125 -> 0.13 (half away from zero; banker's rounding and truncation give 0.12)",
       "traps": [
         "numeric-rounding"
       ],
-      "reasoning": "TaxAmount = ROUND(PickedQuantity * UnitPrice * TaxRate / 100.0, 2); UnitPrice 0.95 and TaxRate 0.505 both end in 5. Both engines must round half away from zero into decimal(18,2), and ExtendedPrice must be the sum of the two rounded parts.",
+      "reasoning": "TaxAmount = ROUND(PickedQuantity * UnitPrice * TaxRate / 100.0, 2). 1 * 0.25 * 50.000 / 100.0 is exactly 0.125 and the digit before the 5 is even, so half-away-from-zero gives 0.13 while round-half-to-even and truncation both give 0.12. UnitPrice 0.25 ends in 5. ExtendedPrice must be the sum of the two rounded parts.",
       "fixedCase": {
         "tables": {
           "Website.OrderIDList": [
@@ -46,9 +46,9 @@
               "StockItemID": 1,
               "Description": "dry",
               "PackageTypeID": 7,
-              "PickedQuantity": 3,
-              "UnitPrice": "0.95",
-              "TaxRate": "0.505"
+              "PickedQuantity": 1,
+              "UnitPrice": "0.25",
+              "TaxRate": "50.000"
             },
             {
               "OrderLineID": 2,
@@ -291,11 +291,11 @@
     },
     {
       "id": "A03",
-      "label": "empty DeliveryAddressLine1 with NULL DeliveryAddressLine2 makes DeliveryInstructions NULL (+ semantics)",
+      "label": "an empty DeliveryAddressLine1 with a line 2 gives ', Back door'; a NULL line 2 on the other customer makes its instructions NULL",
       "traps": [
         "null-vs-empty"
       ],
-      "reasoning": "DeliveryInstructions = c.DeliveryAddressLine1 + N', ' + c.DeliveryAddressLine2; with line2 NULL the whole concatenation is NULL on SQL Server, and the conversion uses || which also yields NULL (concat() would not). Line1 is '' to keep '' distinct from NULL.",
+      "reasoning": "DeliveryInstructions = c.DeliveryAddressLine1 + N', ' + c.DeliveryAddressLine2. Customer 1 has line 1 '' and line 2 'Back door', so SQL Server stores ', Back door'; a conversion that turned the empty line 1 into NULL (NULLIF, or a client mapping '' to NULL) would store NULL. Customer 2 has line 2 NULL, so its whole concatenation is NULL with + (and with ||), where concat() would give 'Unit 5, '.",
       "fixedCase": {
         "tables": {
           "Website.OrderIDList": [
@@ -386,7 +386,7 @@
               "DeliveryMethodID": 3,
               "PrimaryContactPersonID": 11,
               "DeliveryAddressLine1": "",
-              "DeliveryAddressLine2": null,
+              "DeliveryAddressLine2": "Back door",
               "DeliveryRun": "A",
               "RunPosition": "1"
             },
@@ -715,14 +715,17 @@
     },
     {
       "id": "A06",
-      "label": "an order with no lines: its customer-transaction sums are NULL, hitting a NOT NULL violation that rolls everything back",
+      "label": "two orders requested, the second without lines: the NOT NULL violation on its customer transaction rolls back the first order's invoice too",
       "traps": [],
-      "reasoning": "SUM over no invoice lines is NULL; Sales.CustomerTransactions.AmountExcludingTax is NOT NULL, so both engines raise and undo every write (the whole batch). The outcome compares the error class, not the message.",
+      "reasoning": "Order 1 has a line and would be invoiced on its own; order 2 has none, so the SUM for its customer transaction is NULL and Sales.CustomerTransactions.AmountExcludingTax (NOT NULL) rejects it. The procedure runs in one transaction, so SQL Server undoes order 1's invoice, invoice line and stock transaction as well. A conversion that committed per order, or caught the error per order, would leave order 1 invoiced. The hand-derived case requests only the order without lines.",
       "fixedCase": {
         "tables": {
           "Website.OrderIDList": [
             {
               "OrderID": 1
+            },
+            {
+              "OrderID": 2
             }
           ],
           "Sales.Orders": [
@@ -743,7 +746,18 @@
               "PickingCompletedWhen": "2020-01-01T10:00:00.000000"
             }
           ],
-          "Sales.OrderLines": [],
+          "Sales.OrderLines": [
+            {
+              "OrderLineID": 1,
+              "OrderID": 1,
+              "StockItemID": 1,
+              "Description": "dry",
+              "PackageTypeID": 7,
+              "PickedQuantity": 3,
+              "UnitPrice": "0.99",
+              "TaxRate": "15.000"
+            }
+          ],
           "Warehouse.StockItems": [
             {
               "StockItemID": 1,
@@ -963,6 +977,138 @@
           5,
           9
         ]
+      }
+    },
+    {
+      "id": "A08",
+      "label": "two orders requested, the second not yet picked: THROW 51000 and nothing is written for either",
+      "traps": [],
+      "reasoning": "The procedure first checks that every requested order exists, is not already invoiced and has PickingCompletedWhen set; order 2 is unpicked, so it raises 51000 before writing anything, also for the picked order 1. A conversion that dropped the picking test (the planted defect 'unpicked orders are invoiced') would invoice both.",
+      "fixedCase": {
+        "args": [
+          5,
+          9
+        ],
+        "tables": {
+          "Website.OrderIDList": [
+            {
+              "OrderID": 1
+            },
+            {
+              "OrderID": 2
+            }
+          ],
+          "Sales.Orders": [
+            {
+              "OrderID": 1,
+              "CustomerID": 1,
+              "ContactPersonID": 3,
+              "SalespersonPersonID": 7,
+              "CustomerPurchaseOrderNumber": "PO-1",
+              "PickingCompletedWhen": "2020-01-01T10:00:00.000000"
+            },
+            {
+              "OrderID": 2,
+              "CustomerID": 2,
+              "ContactPersonID": 4,
+              "SalespersonPersonID": 8,
+              "CustomerPurchaseOrderNumber": null,
+              "PickingCompletedWhen": null
+            }
+          ],
+          "Sales.OrderLines": [
+            {
+              "OrderLineID": 1,
+              "OrderID": 1,
+              "StockItemID": 1,
+              "Description": "dry",
+              "PackageTypeID": 7,
+              "PickedQuantity": 3,
+              "UnitPrice": "0.99",
+              "TaxRate": "15.000"
+            },
+            {
+              "OrderLineID": 2,
+              "OrderID": 2,
+              "StockItemID": 2,
+              "Description": "chilled",
+              "PackageTypeID": 9,
+              "PickedQuantity": 1,
+              "UnitPrice": "10.00",
+              "TaxRate": "15.000"
+            }
+          ],
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "IsChillerStock": false
+            },
+            {
+              "StockItemID": 2,
+              "IsChillerStock": true
+            }
+          ],
+          "Warehouse.StockItemHoldings": [
+            {
+              "StockItemID": 1,
+              "QuantityOnHand": 100,
+              "LastCostPrice": "0.50",
+              "LastEditedBy": 1,
+              "LastEditedWhen": "2020-01-01T00:00:00.000000"
+            },
+            {
+              "StockItemID": 2,
+              "QuantityOnHand": 10,
+              "LastCostPrice": "6.00",
+              "LastEditedBy": 1,
+              "LastEditedWhen": "2020-01-01T00:00:00.000000"
+            }
+          ],
+          "Sales.Customers": [
+            {
+              "CustomerID": 1,
+              "BillToCustomerID": 2,
+              "DeliveryMethodID": 3,
+              "PrimaryContactPersonID": 11,
+              "DeliveryAddressLine1": "Shop 12",
+              "DeliveryAddressLine2": "1 Main St",
+              "DeliveryRun": "A",
+              "RunPosition": "1"
+            },
+            {
+              "CustomerID": 2,
+              "BillToCustomerID": 2,
+              "DeliveryMethodID": 3,
+              "PrimaryContactPersonID": 12,
+              "DeliveryAddressLine1": "Unit 5",
+              "DeliveryAddressLine2": null,
+              "DeliveryRun": null,
+              "RunPosition": null
+            }
+          ],
+          "Sales.Invoices": [],
+          "Sales.InvoiceLines": [],
+          "Warehouse.StockItemTransactions": [],
+          "Sales.CustomerTransactions": [],
+          "Application.TransactionTypes": [
+            {
+              "TransactionTypeID": 1,
+              "TransactionTypeName": "Customer Invoice"
+            },
+            {
+              "TransactionTypeID": 3,
+              "TransactionTypeName": "Customer Payment Received"
+            },
+            {
+              "TransactionTypeID": 10,
+              "TransactionTypeName": "Stock Issue"
+            },
+            {
+              "TransactionTypeID": 11,
+              "TransactionTypeName": "Stock Receipt"
+            }
+          ]
+        }
       }
     }
   ]

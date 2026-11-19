@@ -4,7 +4,7 @@
   "database": "WideWorldImporters",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-19T04:36:25.160Z"
+    "at": "2026-11-19T06:00:45.121Z"
   },
   "cases": [
     {
@@ -305,9 +305,9 @@
     },
     {
       "id": "A08",
-      "label": "table maximum equal to the start value of an unused sequence at 7, while the other sequence was used 3 times: restart at 8",
+      "label": "table maximum equal to the current value of a used sequence (start 5, used 3 times, current 7): restart at 8; an unused sequence starting at 7 is left alone",
       "traps": [],
-      "reasoning": "Before first use current_value is the start value 7. The comparison is >=, so a maximum of exactly 7 restarts OrderID at 8 (> would leave it to issue 7, and restarting at the maximum would issue 7). StockItemID (start 5, used 3, current 7) is not named and must keep issuing 8.",
+      "reasoning": "The hand-derived boundary case uses an unused sequence, whose current value is its start value (pg_sequences.last_value is NULL before first use). Here OrderID has issued 5, 6 and 7, so its current value 7 comes from last_value, and the table maximum is exactly 7: the comparison is >=, so it restarts at 8 (> would leave it to issue 8 anyway, but a conversion that read the start value instead of the current value would compare 7 with 5). StockItemID (start 7, unused) is not named and must keep issuing 7.",
       "fixedCase": {
         "args": [
           "OrderID",
@@ -331,15 +331,15 @@
             {
               "Id": 1,
               "SequenceName": "OrderID",
-              "StartValue": 7,
-              "Used": 0,
+              "StartValue": 5,
+              "Used": 3,
               "Pick": 0
             },
             {
               "Id": 2,
               "SequenceName": "StockItemID",
-              "StartValue": 5,
-              "Used": 3,
+              "StartValue": 7,
+              "Used": 0,
               "Pick": 0
             }
           ]

@@ -4,16 +4,16 @@
   "database": "WideWorldImporters",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-19T05:20:49.498Z"
+    "at": "2026-11-19T06:00:45.121Z"
   },
   "cases": [
     {
       "id": "A01",
-      "label": "percentage discount rounds half away from zero: 1.05 * 0.5 % = 0.00525 -> 0.01, not banker's 0.00",
+      "label": "percentage price at an exact half cent: 0.25 * 50 % = 0.125 rounds half away from zero to 0.13 (banker's rounding and truncation give 0.12)",
       "traps": [
         "numeric-rounding"
       ],
-      "reasoning": "T-SQL ROUND(@UnitPrice * @HighestDiscountPercentage / 100.0, 2) rounds half away from zero; PostgreSQL round(numeric,2) must do the same, not round-half-to-even. UnitPrice 1.05 ends in 5 and the product 0.00525 is the half-way-ish case a banker's-rounding conversion would mishandle.",
+      "reasoning": "T-SQL ROUND(@UnitPrice * @HighestDiscountPercentage / 100.0, 2) rounds an exact midpoint away from zero. 0.25 * 50.000 / 100.0 is exactly 0.125, and the digit before the 5 is even, so round-half-to-even gives 0.12, truncation gives 0.12, and only half-away-from-zero gives 0.13. The hand-derived case (2.49875) is not a midpoint, so it separates rounding from truncation but not from banker's rounding.",
       "fixedCase": {
         "args": [
           1,
@@ -31,7 +31,7 @@
           "Warehouse.StockItems": [
             {
               "StockItemID": 1,
-              "UnitPrice": "1.05"
+              "UnitPrice": "0.25"
             }
           ],
           "Sales.SpecialDeals": [
@@ -45,7 +45,7 @@
               "StartDate": "2020-01-01",
               "EndDate": "2020-01-03",
               "DiscountAmount": null,
-              "DiscountPercentage": "0.500",
+              "DiscountPercentage": "50.000",
               "UnitPrice": null
             }
           ],
@@ -320,6 +320,78 @@
               "DiscountAmount": null,
               "DiscountPercentage": null,
               "UnitPrice": "1.00"
+            }
+          ],
+          "Warehouse.StockItemStockGroups": []
+        }
+      }
+    },
+    {
+      "id": "A07",
+      "label": "three discount amounts through different deal legs (-1.00, 0.05, 3.15): the highest, 3.15, wins and gives 6.85",
+      "traps": [
+        "numeric-rounding"
+      ],
+      "reasoning": "The price uses MAX(DiscountAmount) over every matching deal. Here the amounts come through the stock item, the buying group and the customer category legs; the lowest (-1.00) would raise the price and be rejected by the < guard, the middle one (0.05) would give 9.95. A conversion that took MIN, or the first matching deal, would differ from 10.00 - 3.15 = 6.85.",
+      "fixedCase": {
+        "args": [
+          1,
+          1,
+          "2020-01-02"
+        ],
+        "tables": {
+          "Sales.Customers": [
+            {
+              "CustomerID": 1,
+              "BuyingGroupID": 2,
+              "CustomerCategoryID": 3
+            }
+          ],
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "UnitPrice": "10.00"
+            }
+          ],
+          "Sales.SpecialDeals": [
+            {
+              "SpecialDealID": 2,
+              "StockItemID": 1,
+              "CustomerID": null,
+              "BuyingGroupID": null,
+              "CustomerCategoryID": null,
+              "StockGroupID": null,
+              "StartDate": "2020-01-01",
+              "EndDate": "2020-01-03",
+              "DiscountAmount": "0.05",
+              "DiscountPercentage": null,
+              "UnitPrice": null
+            },
+            {
+              "SpecialDealID": 4,
+              "StockItemID": null,
+              "CustomerID": null,
+              "BuyingGroupID": 2,
+              "CustomerCategoryID": null,
+              "StockGroupID": null,
+              "StartDate": "2020-01-01",
+              "EndDate": "2020-01-03",
+              "DiscountAmount": "3.15",
+              "DiscountPercentage": null,
+              "UnitPrice": null
+            },
+            {
+              "SpecialDealID": 6,
+              "StockItemID": null,
+              "CustomerID": null,
+              "BuyingGroupID": null,
+              "CustomerCategoryID": 3,
+              "StockGroupID": null,
+              "StartDate": "2020-01-01",
+              "EndDate": "2020-01-03",
+              "DiscountAmount": "-1.00",
+              "DiscountPercentage": null,
+              "UnitPrice": null
             }
           ],
           "Warehouse.StockItemStockGroups": []

@@ -2,7 +2,10 @@
   "schemaVersion": 1,
   "object": "dbo.ufnLeadingZeros",
   "database": "AdventureWorks2025",
-  "attacker": { "model": "claude (Kiro subagent; exact model version not exposed to the agent)", "at": "2026-11-18T19:13:01-07:00" },
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-19T05:46:45.561Z"
+  },
   "notApplicable": {
     "null-vs-empty": "The only input is an int; no text input exists. A NULL value is already a fixed case (REPLICATE with a NULL length is NULL).",
     "collation-case": "No text input; the result is never compared as text.",
@@ -15,59 +18,99 @@
   "cases": [
     {
       "id": "A01",
-      "label": "-1 keeps its sign inside the padding: '000000-1'",
+      "label": "-1000 (5 characters with the sign) gets three zeros before the sign: '000-1000'",
       "traps": [],
-      "reasoning": "T-SQL pads the string '-1' with REPLICATE('0', 8 - DATALENGTH) on the left, so the zeros go before the sign. A to_char or lpad of abs() with a leading sign would give '-0000001'.",
-      "fixedCase": { "args": [-1] , "tables": {} }
+      "reasoning": "T-SQL pads the string '-1000' with REPLICATE('0', 8 - DATALENGTH) on the left, so the zeros go before the sign. A to_char or lpad of abs() with a leading sign would give '-0001000'. The hand-derived cases use negative values of 2, 8, 9 and 11 characters only; 5 characters is a length class none of them uses.",
+      "fixedCase": {
+        "args": [
+          -1000
+        ],
+        "tables": {}
+      }
     },
     {
       "id": "A02",
-      "label": "-1000000 (exactly 8 characters with the sign) is unchanged",
+      "label": "-100000 (7 characters with the sign) gets one zero before the sign: '0-100000'",
       "traps": [],
-      "reasoning": "8 characters including the sign fits varchar(8) exactly: REPLICATE('0', 0) is ''. A length test that counts digits only (not the sign) would treat it as 7 and pad, or as too long.",
-      "fixedCase": { "args": [-1000000], "tables": {} }
+      "reasoning": "One character short of the exact fit for a negative value: REPLICATE('0', 1) goes before the sign. A length test that counted digits only (6) would pad two zeros; one that tested abs(value) against 8 digits would keep it unpadded. No hand-derived case uses a 7-character negative value.",
+      "fixedCase": {
+        "args": [
+          -100000
+        ],
+        "tables": {}
+      }
     },
     {
       "id": "A03",
-      "label": "-99999999 (9 characters with the sign) does not fit varchar(8): '0000000*'",
+      "label": "-999999999 (10 characters with the sign) does not fit varchar(8): '0000000*'",
       "traps": [],
-      "reasoning": "8 digits but 9 characters with the sign. A check on the number of digits (or on abs(value) > 99999999) would keep it and lpad would truncate; SQL Server's CONVERT gives '*'.",
-      "fixedCase": { "args": [-99999999], "tables": {} }
+      "reasoning": "9 digits and 10 characters with the sign. A check on the number of digits against 9 (the positive overflow boundary) or a substring of the text would keep part of it; SQL Server's CONVERT(varchar(8)) gives '*'. The hand-derived negative overflow cases are 9 and 11 characters; 10 characters is a class none of them uses.",
+      "fixedCase": {
+        "args": [
+          -999999999
+        ],
+        "tables": {}
+      }
     },
     {
       "id": "A04",
-      "label": "10000000 (8 digits, smallest 8-digit value) is unchanged",
+      "label": "1000 (4 digits) gets four leading zeros: '00001000'",
       "traps": [],
-      "reasoning": "Lower boundary of the 8-character range from below; an off-by-one in the length test (>= 8 instead of > 8) would turn it into '*'.",
-      "fixedCase": { "args": [10000000], "tables": {} }
+      "reasoning": "A mid-range length: REPLICATE('0', 4). A conversion computing the pad width from log10(value) or from integer division would be off by one on an exact power of ten. The hand-derived positive cases use 1, 8, 9 and 10 characters; 4 characters is a class none of them uses.",
+      "fixedCase": {
+        "args": [
+          1000
+        ],
+        "tables": {}
+      }
     },
     {
       "id": "A05",
       "label": "9999999 (7 digits) gets one leading zero: '09999999'",
       "traps": [],
       "reasoning": "One below the 8-digit boundary; REPLICATE('0', 1). An integer-division or log10-based length would be off by one here.",
-      "fixedCase": { "args": [9999999], "tables": {} }
+      "fixedCase": {
+        "args": [
+          9999999
+        ],
+        "tables": {}
+      }
     },
     {
       "id": "A06",
       "label": "-10 keeps its sign inside the padding: '00000-10'",
       "traps": [],
       "reasoning": "Two-digit negative value; checks that the sign counts as one character of the 8 (DATALENGTH of varchar counts bytes, one per ASCII character).",
-      "fixedCase": { "args": [-10], "tables": {} }
+      "fixedCase": {
+        "args": [
+          -10
+        ],
+        "tables": {}
+      }
     },
     {
       "id": "A07",
-      "label": "2147483646 (one below int maximum) gives '0000000*'",
+      "label": "100000 (6 digits, an exact power of ten) gets two leading zeros: '00100000'",
       "traps": [],
-      "reasoning": "Large positive value next to the int maximum; an implementation that adds 1 or works in a narrower type would overflow or truncate instead of returning '*'.",
-      "fixedCase": { "args": [2147483646], "tables": {} }
+      "reasoning": "Exact power of ten with 6 digits: floor(log10(100000)) + 1 = 6, but a ceil(log10()) length gives 5 and pads three zeros. No hand-derived case uses a 6-character value.",
+      "fixedCase": {
+        "args": [
+          100000
+        ],
+        "tables": {}
+      }
     },
     {
       "id": "A08",
-      "label": "-2147483647 (one above int minimum) gives '0000000*'",
+      "label": "-10000 (6 characters with the sign) gets two zeros before the sign: '00-10000'",
       "traps": [],
-      "reasoning": "Large negative value next to the int minimum, where abs() is still representable; a digit-count test via abs() would give a different branch than at the minimum itself.",
-      "fixedCase": { "args": [-2147483647], "tables": {} }
+      "reasoning": "A 6-character negative value; the sign is one of the 8 characters (DATALENGTH of varchar counts one byte per ASCII character), so two zeros are added before the sign. No hand-derived case uses a 6-character negative value.",
+      "fixedCase": {
+        "args": [
+          -10000
+        ],
+        "tables": {}
+      }
     }
   ]
 }

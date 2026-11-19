@@ -4,7 +4,7 @@
   "database": "AdventureWorks2025",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-19T04:36:25.160Z"
+    "at": "2026-11-19T05:51:37.445Z"
   },
   "cases": [
     {
@@ -669,7 +669,7 @@
     },
     {
       "id": "A07",
-      "label": "NULL versus '' in AddressLine2, an empty vendor name, address type name and city, and a single-space AddressLine2",
+      "label": "NULL versus '' in AddressLine2, an empty store name, address type name and city, and a single-space AddressLine2",
       "traps": [
         "null-vs-empty",
         "trailing-spaces"
@@ -758,7 +758,7 @@
     },
     {
       "id": "A08",
-      "label": "keys with gaps and at the int limits: vendor 2147483647, address -2147483648, address type 0; text with an emoji and full length",
+      "label": "keys with gaps and at the int limits: store 2147483647, address -2147483648, address type 0; text with an emoji and full length",
       "traps": [
         "identity-gaps"
       ],

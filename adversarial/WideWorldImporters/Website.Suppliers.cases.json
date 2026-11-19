@@ -4,16 +4,16 @@
   "database": "WideWorldImporters",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-19T05:20:49.498Z"
+    "at": "2026-11-19T06:00:45.121Z"
   },
   "cases": [
     {
       "id": "A01",
-      "label": "SupplierReference '' versus NULL kept distinct; NULL DeliveryMethodID yields a NULL method via LEFT JOIN",
+      "label": "'' from a joined delivery method versus NULL from a NULL DeliveryMethodID in the same output column; SupplierReference NULL and '' the other way round",
       "traps": [
         "null-vs-empty"
       ],
-      "reasoning": "Supplier 1 has SupplierReference '' and supplier 3 has SupplierReference NULL; the view returns '' as '' and NULL as NULL, and supplier 1's NULL DeliveryMethodID becomes a NULL method via the LEFT JOIN. A conversion that folded '' to NULL, or made the delivery-method join inner, would differ.",
+      "reasoning": "Supplier 3's delivery method exists and is named '' (DeliveryMethodName is NOT NULL, so '' is its only empty value); supplier 1's DeliveryMethodID is NULL, so the LEFT JOIN gives NULL in the same output column. SupplierReference is NULL on supplier 1 and '' on supplier 3, the reverse of the hand-derived case. A conversion that coalesced joined names to '', folded '' to NULL, or made the delivery-method join inner would differ. Every foreign key points at an existing row or is NULL.",
       "fixedCase": {
         "tables": {
           "Purchasing.Suppliers": [
@@ -25,7 +25,7 @@
               "AlternateContactPersonID": 2,
               "DeliveryMethodID": null,
               "DeliveryCityID": 1,
-              "SupplierReference": "",
+              "SupplierReference": null,
               "PhoneNumber": "(415) 555-0100",
               "FaxNumber": "(415) 555-0101",
               "WebsiteURL": "http://x",
@@ -39,7 +39,7 @@
               "AlternateContactPersonID": 2,
               "DeliveryMethodID": 1,
               "DeliveryCityID": 1,
-              "SupplierReference": null,
+              "SupplierReference": "",
               "PhoneNumber": "(415) 555-0100",
               "FaxNumber": "(415) 555-0101",
               "WebsiteURL": "http://x",
@@ -65,7 +65,7 @@
           "Application.DeliveryMethods": [
             {
               "DeliveryMethodID": 1,
-              "DeliveryMethodName": "Air Freight"
+              "DeliveryMethodName": ""
             }
           ],
           "Application.Cities": [
@@ -79,11 +79,11 @@
     },
     {
       "id": "A02",
-      "label": "two suppliers share a fax number; a supplier with unmatched category/contacts/city keeps NULLs",
+      "label": "two suppliers share phone, fax and website; a NULL delivery method keeps its row; primary and alternate contacts are crossed",
       "traps": [
         "top-ties"
       ],
-      "reasoning": "Suppliers 1 and 2 share FaxNumber (non-key). Supplier 2's category, contacts and city ids have no matching rows, so the LEFT OUTER JOINs keep it with NULLs; an inner join would drop it.",
+      "reasoning": "Suppliers 1 and 2 share PhoneNumber, FaxNumber and WebsiteURL (non-key ties; SupplierName stays unique as in the source). Supplier 2's DeliveryMethodID is NULL (a nullable foreign key), so the LEFT OUTER JOIN keeps it with a NULL method; an inner join would drop it. Supplier 1's contacts are persons 1 (primary) and 2 (alternate), supplier 2's the reverse, so a conversion that joined the alternate contact on the primary contact id would show the wrong names. All other foreign keys point at existing rows.",
       "fixedCase": {
         "tables": {
           "Purchasing.Suppliers": [
@@ -93,26 +93,26 @@
               "SupplierCategoryID": 1,
               "PrimaryContactPersonID": 1,
               "AlternateContactPersonID": 2,
-              "DeliveryMethodID": null,
+              "DeliveryMethodID": 1,
               "DeliveryCityID": 1,
-              "SupplierReference": null,
+              "SupplierReference": "R1",
               "PhoneNumber": "(415) 555-0100",
               "FaxNumber": "(415) 555-7777",
-              "WebsiteURL": "http://x",
+              "WebsiteURL": "http://same",
               "DeliveryLocation": null
             },
             {
               "SupplierID": 2,
               "SupplierName": "Supplier 2",
-              "SupplierCategoryID": 99,
-              "PrimaryContactPersonID": 98,
-              "AlternateContactPersonID": 99,
+              "SupplierCategoryID": 1,
+              "PrimaryContactPersonID": 2,
+              "AlternateContactPersonID": 1,
               "DeliveryMethodID": null,
-              "DeliveryCityID": 99,
-              "SupplierReference": null,
+              "DeliveryCityID": 1,
+              "SupplierReference": "R2",
               "PhoneNumber": "(415) 555-0100",
               "FaxNumber": "(415) 555-7777",
-              "WebsiteURL": "http://x",
+              "WebsiteURL": "http://same",
               "DeliveryLocation": null
             }
           ],
