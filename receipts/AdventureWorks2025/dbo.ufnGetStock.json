@@ -100,7 +100,83 @@
       "PostgreSQL: AgreedTests.[test 05 an unknown product: 0]: pass",
       "PostgreSQL: AgreedTests.[test 06 NULL ProductID: 0 (no row matches, NULL sum -> 0)]: pass",
       "planted defects caught by the agreed tests: 1 of 1"
-    ]
+    ],
+    "adversarial": {
+      "gate": "fail",
+      "ran": 7,
+      "differed": 0,
+      "evidencePath": "evidence/adversarial/AdventureWorks2025/dbo.ufnGetStock.json",
+      "runAt": "2026-11-19T02:26:39.618Z",
+      "agentWritten": true,
+      "wording": "7 adversarial cases ran, 0 differed",
+      "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
+      "auditorModel": "gpt-5.6-sol",
+      "sameModel": false,
+      "mutantAdequacy": "adequate",
+      "gateReasons": [
+        "objection O01 is open",
+        "objection O02 is open",
+        "objection O03 is open"
+      ],
+      "cases": [
+        {
+          "id": "A01",
+          "label": "two rows of 32767 at location 6 sum to 65534, beyond smallint: int result, no overflow",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A02",
+          "label": "two rows of -32768 at location 6 sum to -65536: a negative int result",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A03",
+          "label": "+7 and -7 at location 6 sum to 0 (a real zero sum, not the NULL replacement)",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A04",
+          "label": "locations -6, 0, 16, 60 and 32767 are not location 6: only the 4 at location 6 counts",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A05",
+          "label": "int maximum ProductID 2147483647 with stock at location 6: 9 (other products' rows ignored)",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A06",
+          "label": "ProductID 0 is a real product, not 'no product': its stock 50 is returned",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A07",
+          "label": "an empty inventory table: 0",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        }
+      ]
+    }
   },
   "effort": {
     "humanMinutes": 0,
@@ -111,5 +187,5 @@
     "p50Hours": 1.5,
     "p90Hours": 4
   },
-  "builtAt": "2026-11-19T02:08:37.942Z"
+  "builtAt": "2026-11-19T03:12:12.012Z"
 }

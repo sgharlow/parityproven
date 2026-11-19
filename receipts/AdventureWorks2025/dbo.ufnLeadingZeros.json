@@ -105,7 +105,94 @@
       "PostgreSQL: AgreedTests.[test 10 -2147483648 (int minimum) gives 0000000*]: pass",
       "PostgreSQL: AgreedTests.[test 11 NULL stays NULL (REPLICATE with a NULL length is NULL)]: pass",
       "planted defects caught by the agreed tests: 1 of 1"
-    ]
+    ],
+    "adversarial": {
+      "gate": "fail",
+      "ran": 8,
+      "differed": 0,
+      "evidencePath": "evidence/adversarial/AdventureWorks2025/dbo.ufnLeadingZeros.json",
+      "runAt": "2026-11-19T02:26:47.021Z",
+      "agentWritten": true,
+      "wording": "8 adversarial cases ran, 0 differed",
+      "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
+      "auditorModel": "gpt-5.6-sol",
+      "sameModel": false,
+      "mutantAdequacy": "adequate",
+      "gateReasons": [
+        "objection O01 is open",
+        "objection O02 is open",
+        "objection O03 is open",
+        "objection O04 is open",
+        "objection O05 is open",
+        "objection O06 is open"
+      ],
+      "cases": [
+        {
+          "id": "A01",
+          "label": "-1 keeps its sign inside the padding: '000000-1'",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A02",
+          "label": "-1000000 (exactly 8 characters with the sign) is unchanged",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A03",
+          "label": "-99999999 (9 characters with the sign) does not fit varchar(8): '0000000*'",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A04",
+          "label": "10000000 (8 digits, smallest 8-digit value) is unchanged",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A05",
+          "label": "9999999 (7 digits) gets one leading zero: '09999999'",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A06",
+          "label": "-10 keeps its sign inside the padding: '00000-10'",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A07",
+          "label": "2147483646 (one below int maximum) gives '0000000*'",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A08",
+          "label": "-2147483647 (one above int minimum) gives '0000000*'",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        }
+      ]
+    }
   },
   "effort": {
     "humanMinutes": 0,
@@ -116,5 +203,5 @@
     "p50Hours": 1.5,
     "p90Hours": 4
   },
-  "builtAt": "2026-11-19T02:08:37.942Z"
+  "builtAt": "2026-11-19T03:12:12.013Z"
 }

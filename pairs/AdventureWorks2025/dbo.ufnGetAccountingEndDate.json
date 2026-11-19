@@ -63,7 +63,15 @@
       "SQL Server: AgreedTests.[test 01 2 ms before 2004-07-01 is 2004-06-30 23:59:59.997 (datetime rounds to its 3.33 ms ticks, not .998)]: pass",
       "PostgreSQL: AgreedTests.[test 01 2 ms before 2004-07-01 is 2004-06-30 23:59:59.997 (datetime rounds to its 3.33 ms ticks, not .998)]: pass",
       "planted defects caught by the agreed tests: 1 of 1"
-    ]
+    ],
+    "adversarial": {
+      "gate": "fail",
+      "ran": 1,
+      "differed": 0,
+      "evidencePath": "evidence/adversarial/AdventureWorks2025/dbo.ufnGetAccountingEndDate.json",
+      "conversionSha256": "3d090c0149df680b1a9e8fc5bb52e850aaf90a219e347a6eda61f1f03a914196",
+      "runAt": "2026-11-19T02:25:17.547Z"
+    }
   },
   "effort": {
     "humanMinutes": 0,

@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "object": "dbo.ufnGetAccountingStartDate",
+  "database": "AdventureWorks2025",
+  "runAt": "2026-11-19T02:25:24.894Z",
+  "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
+  "conversionSha256": "3f690fe513c2e8fccd64e57d1f5340011dd5d54f66010520572541bcfc4d6184",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-18T19:13:01-07:00",
+    "file": "adversarial/AdventureWorks2025/dbo.ufnGetAccountingStartDate.cases.json",
+    "sha256": "663377d65f1179a5f61745ec455f3ef745f5040076af21ad99f3b667d15d7d34"
+  },
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T19:19:51.7066204-07:00",
+    "file": "adversarial/AdventureWorks2025/dbo.ufnGetAccountingStartDate.audit.json",
+    "sha256": "b3396d96232199aadd56b38c1039592eb0500bb757c8ecb7808e6be540757a4e"
+  },
+  "sameModel": false,
+  "casesAudited": [
+    "A01"
+  ],
+  "traps": {
+    "null-vs-empty": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "The function takes no parameter and reads no table, so no text input exists.",
+      "accepted": true
+    },
+    "collation-case": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "No text input and no text comparison.",
+      "accepted": true
+    },
+    "trailing-spaces": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "No text input.",
+      "accepted": true
+    },
+    "dates-datetime": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "No date input: the only date is the constant '20030701' inside the function. Its precision is attacked through the result type (A01).",
+      "accepted": true
+    },
+    "numeric-rounding": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "No decimal or money input or result.",
+      "accepted": true
+    },
+    "top-ties": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "Scalar function: returns one value, no rows from tables.",
+      "accepted": true
+    },
+    "identity-gaps": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "Reads no table, no key or sequence.",
+      "accepted": true
+    }
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "the result keeps datetime's 3-digit precision and midnight exactly (no time-zone shift, no date-only value)",
+      "traps": [],
+      "reasoning": "T-SQL CONVERT(datetime, '20030701', 112) gives a datetime at 00:00:00.000. The conversion returns TIMESTAMP '2003-07-01 00:00:00' as timestamp(3). A timestamptz return type, a session time zone, or a date return type would change the value or its type; the result-set comparison checks the value and the column type.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    }
+  ],
+  "summary": {
+    "ran": 1,
+    "differed": 0,
+    "invalid": 0
+  },
+  "objections": [
+    {
+      "id": "O01",
+      "caseId": "A01",
+      "kind": "duplicate",
+      "text": "A01 sends the same complete payload as the sole hand-derived fixed case: no arguments and no tables. Both cases assert the same midnight timestamp value and type, so A01 adds no distinct attack input.",
+      "status": "open"
+    }
+  ],
+  "mutantAdequacy": {
+    "verdict": "adequate",
+    "caught": [
+      "start date one day late"
+    ],
+    "missed": [],
+    "skipped": [],
+    "equivalentRecorded": []
+  },
+  "gate": {
+    "passed": false,
+    "reasons": [
+      "objection O01 is open"
+    ]
+  },
+  "wording": "1 adversarial case ran, 0 differed"
+}

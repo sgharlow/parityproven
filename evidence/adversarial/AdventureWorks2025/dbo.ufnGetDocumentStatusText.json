@@ -1,0 +1,195 @@
+{
+  "schemaVersion": 1,
+  "object": "dbo.ufnGetDocumentStatusText",
+  "database": "AdventureWorks2025",
+  "runAt": "2026-11-19T02:25:45.810Z",
+  "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
+  "conversionSha256": "5fd1792d7e2063853f86abb27285c424e6143777f67429290c3bf5e801490431",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-18T19:13:01-07:00",
+    "file": "adversarial/AdventureWorks2025/dbo.ufnGetDocumentStatusText.cases.json",
+    "sha256": "3ca70c0f1731fda2d983905ff87ba0cb7d04d90b127ad2b86ee698c8fad754f6"
+  },
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T19:19:51.7066204-07:00",
+    "file": "adversarial/AdventureWorks2025/dbo.ufnGetDocumentStatusText.audit.json",
+    "sha256": "31994ffc939997af00f4ba39168a7a7d23d81b69c60a7abe3548d814ad6a6f48"
+  },
+  "sameModel": false,
+  "casesAudited": [
+    "A01",
+    "A02",
+    "A03",
+    "A04",
+    "A05",
+    "A06"
+  ],
+  "traps": {
+    "null-vs-empty": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "The only input is a tinyint; no text input exists. A NULL status is already a fixed case (CASE NULL takes the ELSE branch).",
+      "accepted": true
+    },
+    "collation-case": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "No text input; the result is a constant chosen by CASE, never compared.",
+      "accepted": true
+    },
+    "trailing-spaces": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "No text input.",
+      "accepted": true
+    },
+    "dates-datetime": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "No date input.",
+      "accepted": true
+    },
+    "numeric-rounding": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "No decimal or money input.",
+      "accepted": true
+    },
+    "top-ties": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "Scalar function: returns one value, no rows from tables.",
+      "accepted": true
+    },
+    "identity-gaps": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "Reads no table, no key or sequence.",
+      "accepted": true
+    }
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "status 5 (second unmapped value above the last WHEN) is the ELSE text",
+      "traps": [],
+      "reasoning": "A conversion that mapped by range (status > 3) or by array index would agree on 4 but could differ on later values; T-SQL CASE @Status matches only the listed WHEN values.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A02",
+      "label": "status 127 (signed 1-byte maximum) is the ELSE text",
+      "traps": [],
+      "reasoning": "tinyint is mapped to smallint on PostgreSQL; a conversion through a signed byte (or a char cast) would wrap at 127/128. SQL Server tinyint is unsigned 0..255.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A03",
+      "label": "status 128 (one above the signed 1-byte maximum) is the ELSE text, not an error",
+      "traps": [],
+      "reasoning": "128 overflows a signed byte; SQL Server tinyint accepts it. The PostgreSQL smallint parameter must accept it and fall to ELSE.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A04",
+      "label": "status 254 (one below the tinyint maximum) is the ELSE text",
+      "traps": [],
+      "reasoning": "Upper boundary next to 255; a modulo or bit-mask mapping (status & 3, status % 4) would map 254 to a WHEN text.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A05",
+      "label": "status 131 (3 + 128, same low bits as a mapped value) is the ELSE text",
+      "traps": [],
+      "reasoning": "131 has the same low 7 bits as 3 ('Obsolete'); a conversion that truncated to a signed or 7-bit value would return 'Obsolete'. SQL Server returns the ELSE text.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A06",
+      "label": "status 1 gives the 16-character text exactly at the nvarchar(16) limit, untruncated",
+      "traps": [],
+      "reasoning": "'Pending approval' is exactly 16 characters, the declared length of @ret and the return type. A varchar(15) or a padded char(16) return on PostgreSQL would cut or pad it; SQL Server returns it whole.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    }
+  ],
+  "summary": {
+    "ran": 6,
+    "differed": 0,
+    "invalid": 0
+  },
+  "objections": [
+    {
+      "id": "O01",
+      "caseId": "A06",
+      "kind": "duplicate",
+      "text": "A06 sends status 1 with no tables, exactly the same payload as the hand-derived fixed case for the Pending approval mapping. That fixed case already checks the full 16-character return value and its declared result type.",
+      "status": "open"
+    }
+  ],
+  "mutantAdequacy": {
+    "verdict": "adequate",
+    "caught": [
+      "auto: first CASE result text altered"
+    ],
+    "missed": [],
+    "skipped": [],
+    "equivalentRecorded": []
+  },
+  "gate": {
+    "passed": false,
+    "reasons": [
+      "objection O01 is open"
+    ]
+  },
+  "wording": "6 adversarial cases ran, 0 differed"
+}

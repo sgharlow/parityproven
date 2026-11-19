@@ -1,0 +1,107 @@
+{
+  "object": "dbo.ufnGetStock",
+  "database": "AdventureWorks2025",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-19T02:26:34.426Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "[A01] two rows of 32767 at location 6 sum to 65534, beyond smallint: int result, no overflow",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "int"
+        }
+      ],
+      "rows": [
+        [
+          "n:65534"
+        ]
+      ]
+    },
+    {
+      "label": "[A02] two rows of -32768 at location 6 sum to -65536: a negative int result",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "int"
+        }
+      ],
+      "rows": [
+        [
+          "n:-65536"
+        ]
+      ]
+    },
+    {
+      "label": "[A03] +7 and -7 at location 6 sum to 0 (a real zero sum, not the NULL replacement)",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "int"
+        }
+      ],
+      "rows": [
+        [
+          "n:0"
+        ]
+      ]
+    },
+    {
+      "label": "[A04] locations -6, 0, 16, 60 and 32767 are not location 6: only the 4 at location 6 counts",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "int"
+        }
+      ],
+      "rows": [
+        [
+          "n:4"
+        ]
+      ]
+    },
+    {
+      "label": "[A05] int maximum ProductID 2147483647 with stock at location 6: 9 (other products' rows ignored)",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "int"
+        }
+      ],
+      "rows": [
+        [
+          "n:9"
+        ]
+      ]
+    },
+    {
+      "label": "[A06] ProductID 0 is a real product, not 'no product': its stock 50 is returned",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "int"
+        }
+      ],
+      "rows": [
+        [
+          "n:50"
+        ]
+      ]
+    },
+    {
+      "label": "[A07] an empty inventory table: 0",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "int"
+        }
+      ],
+      "rows": [
+        [
+          "n:0"
+        ]
+      ]
+    }
+  ]
+}

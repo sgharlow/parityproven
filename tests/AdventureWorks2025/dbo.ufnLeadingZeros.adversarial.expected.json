@@ -1,0 +1,121 @@
+{
+  "object": "dbo.ufnLeadingZeros",
+  "database": "AdventureWorks2025",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-19T02:26:42.407Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "[A01] -1 keeps its sign inside the padding: '000000-1'",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "varchar(8)"
+        }
+      ],
+      "rows": [
+        [
+          "s:000000-1"
+        ]
+      ]
+    },
+    {
+      "label": "[A02] -1000000 (exactly 8 characters with the sign) is unchanged",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "varchar(8)"
+        }
+      ],
+      "rows": [
+        [
+          "s:-1000000"
+        ]
+      ]
+    },
+    {
+      "label": "[A03] -99999999 (9 characters with the sign) does not fit varchar(8): '0000000*'",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "varchar(8)"
+        }
+      ],
+      "rows": [
+        [
+          "s:0000000*"
+        ]
+      ]
+    },
+    {
+      "label": "[A04] 10000000 (8 digits, smallest 8-digit value) is unchanged",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "varchar(8)"
+        }
+      ],
+      "rows": [
+        [
+          "s:10000000"
+        ]
+      ]
+    },
+    {
+      "label": "[A05] 9999999 (7 digits) gets one leading zero: '09999999'",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "varchar(8)"
+        }
+      ],
+      "rows": [
+        [
+          "s:09999999"
+        ]
+      ]
+    },
+    {
+      "label": "[A06] -10 keeps its sign inside the padding: '00000-10'",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "varchar(8)"
+        }
+      ],
+      "rows": [
+        [
+          "s:00000-10"
+        ]
+      ]
+    },
+    {
+      "label": "[A07] 2147483646 (one below int maximum) gives '0000000*'",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "varchar(8)"
+        }
+      ],
+      "rows": [
+        [
+          "s:0000000*"
+        ]
+      ]
+    },
+    {
+      "label": "[A08] -2147483647 (one above int minimum) gives '0000000*'",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "varchar(8)"
+        }
+      ],
+      "rows": [
+        [
+          "s:0000000*"
+        ]
+      ]
+    }
+  ]
+}

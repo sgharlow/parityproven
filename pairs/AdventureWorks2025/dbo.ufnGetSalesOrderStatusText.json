@@ -75,7 +75,15 @@
       "PostgreSQL: AgreedTests.[test 09 status 255 (tinyint maximum) is ** Invalid **]: pass",
       "PostgreSQL: AgreedTests.[test 10 NULL status takes the ELSE branch: ** Invalid **, not NULL]: pass",
       "planted defects caught by the agreed tests: 1 of 1"
-    ]
+    ],
+    "adversarial": {
+      "gate": "fail",
+      "ran": 6,
+      "differed": 0,
+      "evidencePath": "evidence/adversarial/AdventureWorks2025/dbo.ufnGetSalesOrderStatusText.json",
+      "conversionSha256": "dafc7ff2c18222b5a4c6a2bc8be0e6675c6db348255ebdc204332d6e6db165dd",
+      "runAt": "2026-11-19T02:26:31.712Z"
+    }
   },
   "effort": {
     "humanMinutes": 0,

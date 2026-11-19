@@ -9,8 +9,8 @@
   "code": {
     "source": "\r\nCREATE FUNCTION [dbo].[ufnGetProductListPrice](@ProductID [int], @OrderDate [datetime])\r\nRETURNS [money]\r\nAS\r\nBEGIN\r\n    DECLARE @ListPrice money;\r\n\r\n    SELECT @ListPrice = plph.[ListPrice]\r\n    FROM [Production].[Product] p\r\n        INNER JOIN [Production].[ProductListPriceHistory] plph\r\n        ON p.[ProductID] = plph.[ProductID]\r\n            AND p.[ProductID] = @ProductID\r\n            AND @OrderDate BETWEEN plph.[StartDate] AND COALESCE(plph.[EndDate], CONVERT(datetime, '99991231', 112)); -- Make sure we get all the prices!\r\n\r\n    RETURN @ListPrice;\r\nEND;\r\n",
     "engineOutput": "-- PostgreSQL conversion of dbo.ufnGetProductListPrice (AdventureWorks2025).\n-- Engine: Kiro first draft (see pair record).\n-- money -> numeric(19,4); datetime -> timestamp.\n-- Precondition: at most one price period per product (T-SQL `SELECT @x = ...` keeps the last row read).\n\nCREATE OR REPLACE FUNCTION dbo.ufn_get_product_list_price(product_id integer, order_date timestamp)\nRETURNS numeric(19,4)\nLANGUAGE sql\nSTABLE\nAS $$\n    SELECT plph.\"ListPrice\"\n      FROM production.product AS p\n     INNER JOIN production.product_list_price_history AS plph\n        ON p.\"ProductID\" = plph.\"ProductID\"\n       AND p.\"ProductID\" = product_id\n       AND order_date BETWEEN plph.\"StartDate\" AND COALESCE(plph.\"EndDate\", TIMESTAMP '9999-12-31 00:00:00')\n     LIMIT 1\n$$;\n",
-    "final": "-- PostgreSQL conversion of dbo.ufnGetProductListPrice (AdventureWorks2025).\n-- Engine: Kiro first draft (see pair record).\n-- money -> numeric(19,4); datetime -> timestamp.\n-- Precondition: at most one price period per product (T-SQL `SELECT @x = ...` keeps the last row read).\n\nCREATE OR REPLACE FUNCTION dbo.ufn_get_product_list_price(product_id integer, order_date timestamp)\nRETURNS numeric(19,4)\nLANGUAGE sql\nSTABLE\nAS $$\n    SELECT plph.\"ListPrice\"\n      FROM production.product AS p\n     INNER JOIN production.product_list_price_history AS plph\n        ON p.\"ProductID\" = plph.\"ProductID\"\n       AND p.\"ProductID\" = product_id\n       AND order_date BETWEEN plph.\"StartDate\" AND COALESCE(plph.\"EndDate\", TIMESTAMP '9999-12-31 00:00:00')\n     LIMIT 1\n$$;\n",
-    "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
+    "final": "-- PostgreSQL conversion of dbo.ufnGetProductListPrice (AdventureWorks2025).\n-- Engine: Kiro first draft (see pair record), corrected after the adversarial run of 2026-11-19 (cases A01-A06).\n-- money -> numeric(19,4); datetime -> timestamp.\n-- Precondition: at most one price period per product (T-SQL `SELECT @x = ...` keeps the last row read).\n--\n-- @OrderDate, StartDate and EndDate are datetime in T-SQL, so SQL Server rounds each of them to its 1/300 s ticks\n-- (.001 -> .000, .002 -> .003, 23:59:59.999 -> the next midnight; halves round up) before BETWEEN compares them.\n-- timestamp keeps the value as given. Rounding is monotonic, so with d = the argument rounded to tick k of its second:\n--   round(StartDate) <= d  exactly when  StartDate <  second + (k + 0.5)/300 s\n--   round(EndDate)   >= d  exactly when  EndDate   >= second + (k - 0.5)/300 s\n-- Both bounds are computed once per call from the argument in integer microseconds: us = microseconds within the\n-- second, k = (us*3 + 5000) / 10000, bound offsets ceil((2k +/- 1) * 5000/3) = ((2k +/- 1) * 5000 + 2) / 3 (integer\n-- division truncates toward zero, which is the ceiling here, also for k = 0). The columns are compared as stored.\n--\n-- PL/pgSQL, not LANGUAGE sql: inside a SQL-language function the bound expressions cost about 5 us per call\n-- (20,000 calls: 280 ms against 170 ms without them, measured 2026-11-19); as PL/pgSQL variables they cost about 1.5 us.\nCREATE OR REPLACE FUNCTION dbo.ufn_get_product_list_price(product_id integer, order_date timestamp)\nRETURNS numeric(19,4)\nLANGUAGE plpgsql\nSTABLE\nAS $$\nDECLARE\n    us    integer   := date_part('microseconds', order_date)::integer % 1000000;\n    k     integer   := (us * 3 + 5000) / 10000;\n    below timestamp := order_date + interval '1 microsecond' * (((2 * k + 1) * 5000 + 2) / 3 - us);\n    from_ timestamp := order_date + interval '1 microsecond' * (((2 * k - 1) * 5000 + 2) / 3 - us);\nBEGIN\n    RETURN (\n        SELECT plph.\"ListPrice\"\n          FROM production.product AS p\n         INNER JOIN production.product_list_price_history AS plph\n            ON p.\"ProductID\" = plph.\"ProductID\"\n           AND p.\"ProductID\" = product_id\n           AND plph.\"StartDate\" < below\n           AND COALESCE(plph.\"EndDate\", TIMESTAMP '9999-12-31 00:00:00') >= from_\n         LIMIT 1);\nEND\n$$;\n",
+    "diff": "--- engineOutput\n+++ final\n@@ engineOutput line 2 / final line 2 @@\n+-- Engine: Kiro first draft (see pair record), corrected after the adversarial run of 2026-11-19 (cases A01-A06).\n--- Engine: Kiro first draft (see pair record).\n@@ engineOutput line 5 / final line 5 @@\n+--\n+-- @OrderDate, StartDate and EndDate are datetime in T-SQL, so SQL Server rounds each of them to its 1/300 s ticks\n+-- (.001 -> .000, .002 -> .003, 23:59:59.999 -> the next midnight; halves round up) before BETWEEN compares them.\n+-- timestamp keeps the value as given. Rounding is monotonic, so with d = the argument rounded to tick k of its second:\n+--   round(StartDate) <= d  exactly when  StartDate <  second + (k + 0.5)/300 s\n+--   round(EndDate)   >= d  exactly when  EndDate   >= second + (k - 0.5)/300 s\n+-- Both bounds are computed once per call from the argument in integer microseconds: us = microseconds within the\n+-- second, k = (us*3 + 5000) / 10000, bound offsets ceil((2k +/- 1) * 5000/3) = ((2k +/- 1) * 5000 + 2) / 3 (integer\n+-- division truncates toward zero, which is the ceiling here, also for k = 0). The columns are compared as stored.\n+--\n+-- PL/pgSQL, not LANGUAGE sql: inside a SQL-language function the bound expressions cost about 5 us per call\n+-- (20,000 calls: 280 ms against 170 ms without them, measured 2026-11-19); as PL/pgSQL variables they cost about 1.5 us.\n-\n@@ engineOutput line 8 / final line 19 @@\n+LANGUAGE plpgsql\n-LANGUAGE sql\n@@ engineOutput line 11 / final line 22 @@\n+DECLARE\n+    us    integer   := date_part('microseconds', order_date)::integer % 1000000;\n+    k     integer   := (us * 3 + 5000) / 10000;\n+    below timestamp := order_date + interval '1 microsecond' * (((2 * k + 1) * 5000 + 2) / 3 - us);\n+    from_ timestamp := order_date + interval '1 microsecond' * (((2 * k - 1) * 5000 + 2) / 3 - us);\n+BEGIN\n+    RETURN (\n+        SELECT plph.\"ListPrice\"\n+          FROM production.product AS p\n+         INNER JOIN production.product_list_price_history AS plph\n+            ON p.\"ProductID\" = plph.\"ProductID\"\n+           AND p.\"ProductID\" = product_id\n+           AND plph.\"StartDate\" < below\n+           AND COALESCE(plph.\"EndDate\", TIMESTAMP '9999-12-31 00:00:00') >= from_\n+         LIMIT 1);\n+END\n-    SELECT plph.\"ListPrice\"\n-      FROM production.product AS p\n-     INNER JOIN production.product_list_price_history AS plph\n-        ON p.\"ProductID\" = plph.\"ProductID\"\n-       AND p.\"ProductID\" = product_id\n-       AND order_date BETWEEN plph.\"StartDate\" AND COALESCE(plph.\"EndDate\", TIMESTAMP '9999-12-31 00:00:00')\n-     LIMIT 1",
     "engine": "kiro",
     "notes": [
       "At most one price period per product (precondition): with overlapping periods the T-SQL `SELECT @x = ...` keeps the last row read, which is undefined.",
@@ -74,11 +74,11 @@
   ],
   "evidence": {
     "pbtSeeds": [
-      1715929576
+      123175731
     ],
     "rowsCompared": 208,
     "samples": 200,
-    "samplesWithRows": 115,
+    "samplesWithRows": 117,
     "trapsCovered": [
       "NULL in every nullable column"
     ],
@@ -89,14 +89,18 @@
     "runtime": {
       "volume": 2000,
       "timedRuns": 7,
-      "sqlServerMs": 82,
-      "postgresMs": 142.47,
-      "ratio": 1.74,
+      "sqlServerMs": 87,
+      "postgresMs": 203.62,
+      "ratio": 2.34,
       "threshold": 2.5,
       "passed": true,
       "belowResolution": false,
       "resultRows": 100,
       "volumeMismatch": null
+    },
+    "engineOutputCheck": {
+      "step3": "pass",
+      "seed": 123175731
     },
     "subMicrosecondNormalised": 0,
     "harnessVersion": "harness-generic-0.3.0",
@@ -119,7 +123,204 @@
       "PostgreSQL: AgreedTests.[test 07 a product with no history: NULL]: pass",
       "PostgreSQL: AgreedTests.[test 08 NULL ProductID: NULL]: pass",
       "planted defects caught by the agreed tests: 2 of 2"
-    ]
+    ],
+    "adversarial": {
+      "gate": "pass",
+      "ran": 19,
+      "differed": 0,
+      "evidencePath": "evidence/adversarial/AdventureWorks2025/dbo.ufnGetProductListPrice.json",
+      "runAt": "2026-11-19T03:06:16.798Z",
+      "agentWritten": true,
+      "wording": "19 adversarial cases ran, 0 differed",
+      "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
+      "auditorModel": "gpt-5.6-sol",
+      "sameModel": false,
+      "mutantAdequacy": "adequate",
+      "gateReasons": [],
+      "cases": [
+        {
+          "id": "A01",
+          "label": "order instant 1 ms after the end date (.001): SQL Server rounds the datetime argument to .000, inside the period",
+          "traps": [
+            "dates-datetime"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A02",
+          "label": "order instant 1 ms before the start date (.999): SQL Server rounds it up to the start, inside the period",
+          "traps": [
+            "dates-datetime"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A03",
+          "label": "StartDate stored as .001 (datetime keeps .000) and an order instant at .000: inside the period on SQL Server",
+          "traps": [
+            "dates-datetime"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A04",
+          "label": "EndDate stored as 23:59:59.999 (datetime rounds to the next midnight) and an order instant at that midnight",
+          "traps": [
+            "dates-datetime"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A05",
+          "label": "EndDate stored as .002 (datetime keeps .003) and an order instant at .003",
+          "traps": [
+            "dates-datetime"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A06",
+          "label": "StartDate stored as half a millisecond (.0005) and an order instant at .000",
+          "traps": [
+            "dates-datetime"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A07",
+          "label": "a period starting on 1753-01-01 (datetime minimum), order instant at that minimum, value 0.0005: the ListPrice",
+          "traps": [
+            "dates-datetime",
+            "numeric-rounding"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A08",
+          "label": "open-ended period on 9999-12-31 00:00 exactly (the COALESCE end, inclusive): the ListPrice",
+          "traps": [
+            "dates-datetime"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A09",
+          "label": "open-ended period on 9999-12-31 23:59:59.997 (after the COALESCE end at midnight): NULL",
+          "traps": [
+            "dates-datetime"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A10",
+          "label": "an explicit EndDate at the datetime maximum (9999-12-31 23:59:59.997), order instant equal to it: the ListPrice",
+          "traps": [
+            "dates-datetime"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A11",
+          "label": "a value with 5 decimals (10.00005) rounds to money's 4 places on load: the ListPrice",
+          "traps": [
+            "numeric-rounding"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A12",
+          "label": "a negative value at the last place (-0.0005): the ListPrice",
+          "traps": [
+            "numeric-rounding"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A13",
+          "label": "a negative value -1.0001: the ListPrice",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A14",
+          "label": "the money maximum 922337203685477.5807 passes through unchanged",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A15",
+          "label": "product keys with gaps (10, 20, 2147483647): the int-maximum product's ListPrice",
+          "traps": [
+            "identity-gaps"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A16",
+          "label": "a one-instant period (StartDate = EndDate = 12:34:56.789) and an order instant equal to it",
+          "traps": [
+            "dates-datetime"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A17",
+          "label": "an inverted period (EndDate before StartDate) and an order instant between them: NULL",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A18",
+          "label": "a period starting at 08:00 on 2020-01-01 and an order instant at midnight that day: NULL",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A19",
+          "label": "a product whose only period ended, with the queried instant in a later year and a different product's period covering it: NULL",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        }
+      ]
+    }
   },
   "effort": {
     "humanMinutes": 0,
@@ -130,5 +331,5 @@
     "p50Hours": 1.5,
     "p90Hours": 4
   },
-  "builtAt": "2026-11-19T02:08:37.941Z"
+  "builtAt": "2026-11-19T03:12:12.010Z"
 }

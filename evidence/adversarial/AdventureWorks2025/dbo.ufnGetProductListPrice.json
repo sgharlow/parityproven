@@ -1,0 +1,509 @@
+{
+  "schemaVersion": 1,
+  "object": "dbo.ufnGetProductListPrice",
+  "database": "AdventureWorks2025",
+  "runAt": "2026-11-19T03:06:16.798Z",
+  "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
+  "conversionSha256": "98c3d65c907d2be1e22cd93372407123f8e36c0063b35bf87409a774ce03fbe8",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-18T19:13:01-07:00",
+    "file": "adversarial/AdventureWorks2025/dbo.ufnGetProductListPrice.cases.json",
+    "sha256": "5d3ef0a2023fd322d6cdd4e37b9cb5699ae6fb3f53679ee898a7f0d986242d6d"
+  },
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T19:19:51.7066204-07:00",
+    "file": "adversarial/AdventureWorks2025/dbo.ufnGetProductListPrice.audit.json",
+    "sha256": "14e63be30bf51ad929b9dc846446eeae02f5227f2b4a2113a635276b83fa2643"
+  },
+  "sameModel": false,
+  "casesAudited": [
+    "A01",
+    "A02",
+    "A03",
+    "A04",
+    "A05",
+    "A06",
+    "A07",
+    "A08",
+    "A09",
+    "A10",
+    "A11",
+    "A12",
+    "A13",
+    "A14",
+    "A15",
+    "A16",
+    "A17",
+    "A18",
+    "A19"
+  ],
+  "traps": {
+    "null-vs-empty": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "No text column or parameter (ProductID int, dates datetime, value money).",
+      "accepted": true
+    },
+    "collation-case": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "No text input.",
+      "accepted": true
+    },
+    "trailing-spaces": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "No text input.",
+      "accepted": true
+    },
+    "dates-datetime": {
+      "applicable": true,
+      "coveredBy": [
+        "A01",
+        "A02",
+        "A03",
+        "A04",
+        "A05",
+        "A06",
+        "A07",
+        "A08",
+        "A09",
+        "A10",
+        "A16"
+      ]
+    },
+    "numeric-rounding": {
+      "applicable": true,
+      "coveredBy": [
+        "A07",
+        "A11",
+        "A12"
+      ]
+    },
+    "top-ties": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "Scalar function: returns one value. Two candidate history rows for one product are excluded by the precondition (one period per product; ProductID is the key of the history table in the spec).",
+      "accepted": true
+    },
+    "identity-gaps": {
+      "applicable": true,
+      "coveredBy": [
+        "A15"
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "order instant 1 ms after the end date (.001): SQL Server rounds the datetime argument to .000, inside the period",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "The T-SQL parameter is datetime, so '2020-12-31T00:00:00.001' becomes .000 (3.33 ms ticks) and BETWEEN includes the end date. The PostgreSQL parameter is timestamp and keeps .001, which is after EndDate, so it may return NULL.",
+      "trapChecks": {
+        "dates-datetime": {
+          "present": true,
+          "detail": "datetime value \"2020-12-31T00:00:00.001\" is off the .000/.003/.007 grid"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A02",
+      "label": "order instant 1 ms before the start date (.999): SQL Server rounds it up to the start, inside the period",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "datetime rounds 23:59:59.999 up to 00:00:00.000 of the next day, which equals StartDate. PostgreSQL timestamp keeps .999, before StartDate.",
+      "trapChecks": {
+        "dates-datetime": {
+          "present": true,
+          "detail": "datetime value \"2019-12-31T23:59:59.999\" is off the .000/.003/.007 grid"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A03",
+      "label": "StartDate stored as .001 (datetime keeps .000) and an order instant at .000: inside the period on SQL Server",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "Loading '00:00:00.001' into a datetime column rounds it to .000; the PostgreSQL timestamp(3) column keeps .001. The argument .000 is then on the start on SQL Server and 1 ms before it on PostgreSQL.",
+      "trapChecks": {
+        "dates-datetime": {
+          "present": true,
+          "detail": "datetime value \"2020-01-01T00:00:00.001\" is off the .000/.003/.007 grid"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A04",
+      "label": "EndDate stored as 23:59:59.999 (datetime rounds to the next midnight) and an order instant at that midnight",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "datetime stores 2020-12-31 23:59:59.999 as 2021-01-01 00:00:00.000, so BETWEEN includes 2021-01-01 00:00. PostgreSQL timestamp(3) keeps .999, so the midnight argument is after the end.",
+      "trapChecks": {
+        "dates-datetime": {
+          "present": true,
+          "detail": "datetime value \"2020-12-31T23:59:59.999\" is off the .000/.003/.007 grid"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A05",
+      "label": "EndDate stored as .002 (datetime keeps .003) and an order instant at .003",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "datetime rounds .002 to .003, so an argument of .003 equals EndDate on SQL Server. PostgreSQL keeps .002, so .003 is after the end.",
+      "trapChecks": {
+        "dates-datetime": {
+          "present": true,
+          "detail": "datetime value \"2020-12-31T00:00:00.002\" is off the .000/.003/.007 grid"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A06",
+      "label": "StartDate stored as half a millisecond (.0005) and an order instant at .000",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "The loader casts '00:00:00.000500' through datetime2(7) to datetime, which rounds to the .000 tick. PostgreSQL timestamp(3) rounds .0005 half up to .001. The argument .000 is on the start on SQL Server and before it on PostgreSQL.",
+      "trapChecks": {
+        "dates-datetime": {
+          "present": true,
+          "detail": "datetime value \"2020-01-01T00:00:00.000500\" is off the .000/.003/.007 grid"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A07",
+      "label": "a period starting on 1753-01-01 (datetime minimum), order instant at that minimum, value 0.0005: the ListPrice",
+      "traps": [
+        "dates-datetime",
+        "numeric-rounding"
+      ],
+      "reasoning": "1753-01-01 is the smallest datetime; PostgreSQL timestamp has no such floor. The value 0.0005 is at money's last place.",
+      "trapChecks": {
+        "dates-datetime": {
+          "present": true,
+          "detail": "boundary date \"1753-01-01T00:00:00.000\" in StartDate"
+        },
+        "numeric-rounding": {
+          "present": true,
+          "detail": "0.0005 in ListPrice ends in a 5"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A08",
+      "label": "open-ended period on 9999-12-31 00:00 exactly (the COALESCE end, inclusive): the ListPrice",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "COALESCE(EndDate, CONVERT(datetime, '99991231', 112)) is 9999-12-31 00:00:00.000 and BETWEEN is inclusive; the conversion writes TIMESTAMP '9999-12-31 00:00:00'. A different end-of-time constant (infinity, 23:59:59) would change this case or the next.",
+      "trapChecks": {
+        "dates-datetime": {
+          "present": true,
+          "detail": "boundary date \"9999-12-31T00:00:00.000\" in PricingInstant"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A09",
+      "label": "open-ended period on 9999-12-31 23:59:59.997 (after the COALESCE end at midnight): NULL",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "The open end is midnight of 9999-12-31, not the end of that day; the latest datetime instant is after it. A conversion that used 'infinity' or 23:59:59.999 for a NULL EndDate would return the value.",
+      "trapChecks": {
+        "dates-datetime": {
+          "present": true,
+          "detail": "boundary date \"9999-12-31T23:59:59.997\" in PricingInstant"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A10",
+      "label": "an explicit EndDate at the datetime maximum (9999-12-31 23:59:59.997), order instant equal to it: the ListPrice",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "The largest datetime value, stored and passed on both engines; the inclusive BETWEEN must match it.",
+      "trapChecks": {
+        "dates-datetime": {
+          "present": true,
+          "detail": "boundary date \"9999-12-31T23:59:59.997\" in EndDate"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A11",
+      "label": "a value with 5 decimals (10.00005) rounds to money's 4 places on load: the ListPrice",
+      "traps": [
+        "numeric-rounding"
+      ],
+      "reasoning": "money has 4 decimal places, so 10.00005 is stored as 10.0001 (round half away from zero); PostgreSQL numeric(19,4) also rounds on load, but a numeric without scale, or banker's rounding, would keep or round it differently.",
+      "trapChecks": {
+        "numeric-rounding": {
+          "present": true,
+          "detail": "10.00005 in ListPrice ends in a 5"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A12",
+      "label": "a negative value at the last place (-0.0005): the ListPrice",
+      "traps": [
+        "numeric-rounding"
+      ],
+      "reasoning": "Negative money at the 4th decimal place. Sign handling of the rounding (half away from zero on both) is what differs when an engine rounds negatives toward zero.",
+      "trapChecks": {
+        "numeric-rounding": {
+          "present": true,
+          "detail": "-0.0005 in ListPrice ends in a 5"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A13",
+      "label": "a negative value -1.0001: the ListPrice",
+      "traps": [],
+      "reasoning": "A negative money value with a non-zero last place passes through unchanged; a float or money cast on PostgreSQL could alter it.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A14",
+      "label": "the money maximum 922337203685477.5807 passes through unchanged",
+      "traps": [],
+      "reasoning": "The largest money value has 15 integer digits; PostgreSQL numeric(19,4) holds exactly that. A float or a narrower numeric would round or overflow.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A15",
+      "label": "product keys with gaps (10, 20, 2147483647): the int-maximum product's ListPrice",
+      "traps": [
+        "identity-gaps"
+      ],
+      "reasoning": "ProductID is the key of both tables here; the queried key is the int maximum, and its neighbours are far apart. A conversion that looked up by position or narrowed the key type would pick the wrong row or overflow.",
+      "trapChecks": {
+        "identity-gaps": {
+          "present": true,
+          "detail": "Production.Product.ProductID jumps from 10 to 20"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A16",
+      "label": "a one-instant period (StartDate = EndDate = 12:34:56.789) and an order instant equal to it",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "12:34:56.789 is off datetime's tick grid: SQL Server stores and passes .790 for both, PostgreSQL keeps .789 for both. Both should still match each other; a mapping that rounded only one side (column or parameter) would not.",
+      "trapChecks": {
+        "dates-datetime": {
+          "present": true,
+          "detail": "datetime value \"2020-06-15T12:34:56.789\" is off the .000/.003/.007 grid"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A17",
+      "label": "an inverted period (EndDate before StartDate) and an order instant between them: NULL",
+      "traps": [],
+      "reasoning": "BETWEEN with low > high is false on both engines (no symmetric BETWEEN). A conversion using BETWEEN SYMMETRIC or a range type that normalises bounds would return the value.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A18",
+      "label": "a period starting at 08:00 on 2020-01-01 and an order instant at midnight that day: NULL",
+      "traps": [],
+      "reasoning": "The comparison is on the full datetime, not the date. A conversion that cast the instant or the columns to date would match.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A19",
+      "label": "a product whose only period ended, with the queried instant in a later year and a different product's period covering it: NULL",
+      "traps": [],
+      "reasoning": "The join condition ties the history row to the queried ProductID; a conversion that moved p.ProductID = @ProductID out of the ON clause incorrectly, or dropped it, would pick product 5's value.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    }
+  ],
+  "summary": {
+    "ran": 19,
+    "differed": 0,
+    "invalid": 0
+  },
+  "objections": [],
+  "mutantAdequacy": {
+    "verdict": "adequate",
+    "caught": [
+      "auto: join condition uses a different key",
+      "auto: first AND becomes OR"
+    ],
+    "missed": [],
+    "skipped": [],
+    "equivalentRecorded": []
+  },
+  "gate": {
+    "passed": true,
+    "reasons": []
+  },
+  "wording": "19 adversarial cases ran, 0 differed"
+}

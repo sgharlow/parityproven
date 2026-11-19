@@ -93,7 +93,73 @@
       "PostgreSQL: AgreedTests.[test 07 status 255 (tinyint maximum) is ** Invalid **]: pass",
       "PostgreSQL: AgreedTests.[test 08 NULL status takes the ELSE branch: ** Invalid **, not NULL]: pass",
       "planted defects caught by the agreed tests: 1 of 1"
-    ]
+    ],
+    "adversarial": {
+      "gate": "fail",
+      "ran": 6,
+      "differed": 0,
+      "evidencePath": "evidence/adversarial/AdventureWorks2025/dbo.ufnGetPurchaseOrderStatusText.json",
+      "runAt": "2026-11-19T02:26:24.897Z",
+      "agentWritten": true,
+      "wording": "6 adversarial cases ran, 0 differed",
+      "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
+      "auditorModel": "gpt-5.6-sol",
+      "sameModel": false,
+      "mutantAdequacy": "adequate",
+      "gateReasons": [
+        "objection O01 is open"
+      ],
+      "cases": [
+        {
+          "id": "A01",
+          "label": "status 6 (second unmapped value above the last WHEN) is the ELSE text",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A02",
+          "label": "status 127 (signed 1-byte maximum) is the ELSE text",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A03",
+          "label": "status 128 (one above the signed 1-byte maximum) is the ELSE text, not an error",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A04",
+          "label": "status 254 (one below the tinyint maximum) is the ELSE text",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A05",
+          "label": "status 132 (4 + 128, same low bits as 'Complete') is the ELSE text",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A06",
+          "label": "status 1 gives 'Pending' from a varchar literal in an nvarchar(15) result, with no padding",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        }
+      ]
+    }
   },
   "effort": {
     "humanMinutes": 0,
@@ -104,5 +170,5 @@
     "p50Hours": 1.5,
     "p90Hours": 4
   },
-  "builtAt": "2026-11-19T02:08:37.941Z"
+  "builtAt": "2026-11-19T03:12:12.011Z"
 }

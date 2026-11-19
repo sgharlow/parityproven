@@ -1,0 +1,63 @@
+{
+  "batch": "1",
+  "startedAt": "2026-11-19T02:25:00.657Z",
+  "total": 11,
+  "done": [
+    {
+      "object": "dbo.ufnGetAccountingEndDate",
+      "gate": "fail",
+      "wording": "1 adversarial case ran, 0 differed"
+    },
+    {
+      "object": "dbo.ufnGetAccountingStartDate",
+      "gate": "fail",
+      "wording": "1 adversarial case ran, 0 differed"
+    },
+    {
+      "object": "dbo.ufnGetContactInformation",
+      "gate": "fail",
+      "wording": "12 adversarial cases ran, 1 differed"
+    },
+    {
+      "object": "dbo.ufnGetDocumentStatusText",
+      "gate": "fail",
+      "wording": "6 adversarial cases ran, 0 differed"
+    },
+    {
+      "object": "dbo.ufnGetProductDealerPrice",
+      "gate": "fail",
+      "wording": "19 adversarial cases ran, 6 differed"
+    },
+    {
+      "object": "dbo.ufnGetProductListPrice",
+      "gate": "fail",
+      "wording": "19 adversarial cases ran, 7 differed"
+    },
+    {
+      "object": "dbo.ufnGetProductStandardCost",
+      "gate": "fail",
+      "wording": "19 adversarial cases ran, 7 differed"
+    },
+    {
+      "object": "dbo.ufnGetPurchaseOrderStatusText",
+      "gate": "fail",
+      "wording": "6 adversarial cases ran, 0 differed"
+    },
+    {
+      "object": "dbo.ufnGetSalesOrderStatusText",
+      "gate": "fail",
+      "wording": "6 adversarial cases ran, 0 differed"
+    },
+    {
+      "object": "dbo.ufnGetStock",
+      "gate": "fail",
+      "wording": "7 adversarial cases ran, 0 differed"
+    },
+    {
+      "object": "dbo.ufnLeadingZeros",
+      "gate": "fail",
+      "wording": "8 adversarial cases ran, 0 differed"
+    }
+  ],
+  "finished": true
+}

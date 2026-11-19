@@ -1,5 +1,5 @@
 {
-  "builtAt": "2026-11-19T02:08:38.016Z",
+  "builtAt": "2026-11-19T03:12:12.064Z",
   "receipts": [
     {
       "database": "AdventureWorks2025",
@@ -43,7 +43,7 @@
       "objectName": "ufnGetProductDealerPrice",
       "objectClass": "function",
       "tier": "simple",
-      "status": "pending",
+      "status": "failed",
       "path": "AdventureWorks2025/dbo.ufnGetProductDealerPrice.json"
     },
     {
@@ -947,8 +947,8 @@
   "summary": {
     "total": 55,
     "verified": 0,
-    "pending": 44,
-    "failed": 11,
+    "pending": 43,
+    "failed": 12,
     "excluded": 17,
     "notAttempted": 26,
     "inventory": 98

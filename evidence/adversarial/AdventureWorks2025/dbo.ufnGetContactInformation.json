@@ -1,0 +1,324 @@
+{
+  "schemaVersion": 1,
+  "object": "dbo.ufnGetContactInformation",
+  "database": "AdventureWorks2025",
+  "runAt": "2026-11-19T03:11:02.691Z",
+  "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
+  "conversionSha256": "6ce4235c9a7b3aee479ec5695986f6d12f4ae9d19a3e5684e39ed7e8f3762cbb",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-18T19:13:01-07:00",
+    "file": "adversarial/AdventureWorks2025/dbo.ufnGetContactInformation.cases.json",
+    "sha256": "ef5ff8f02cfe679bf0b879a413e5edf7d4fd89dd608d6e28989dc5b32d6183a3"
+  },
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T19:19:51.7066204-07:00",
+    "file": "adversarial/AdventureWorks2025/dbo.ufnGetContactInformation.audit.json",
+    "sha256": "b5ad81f68958559579b23e3bd0413021f9da52e16708efb7a7e27a5458f49022"
+  },
+  "sameModel": false,
+  "casesAudited": [
+    "A01",
+    "A02",
+    "A03",
+    "A04",
+    "A05",
+    "A06",
+    "A07",
+    "A08",
+    "A09",
+    "A10",
+    "A11",
+    "A12"
+  ],
+  "traps": {
+    "null-vs-empty": {
+      "applicable": true,
+      "coveredBy": [],
+      "notApplicableReason": "No text input column can hold NULL: Person.FirstName, Person.LastName, Employee.JobTitle and ContactType.Name are NOT NULL in the spec (as in AdventureWorks), so a NULL text value cannot be loaded. The NULL-versus-'' contrast exists only in the output and is attacked there by A01: the same person gets an Employee row with JobTitle '' and a Consumer row whose JobTitle is the NULL the function writes.",
+      "accepted": true
+    },
+    "collation-case": {
+      "applicable": true,
+      "coveredBy": [
+        "A03"
+      ]
+    },
+    "trailing-spaces": {
+      "applicable": true,
+      "coveredBy": [
+        "A02"
+      ]
+    },
+    "dates-datetime": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "No date input.",
+      "accepted": true
+    },
+    "numeric-rounding": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "No decimal or money input.",
+      "accepted": true
+    },
+    "top-ties": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "A function: its rows are compared as a multiset with no order and no TOP.",
+      "accepted": true
+    },
+    "identity-gaps": {
+      "applicable": true,
+      "coveredBy": [
+        "A05"
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "one person is an employee with JobTitle '' and a consumer (JobTitle NULL): two rows, '' and NULL kept apart; empty LastName kept",
+      "traps": [],
+      "reasoning": "T-SQL writes NULL as the Consumer JobTitle and copies '' from Employee. A PostgreSQL conversion that used COALESCE/NULLIF on JobTitle, or a client that maps '' to NULL, would make the two rows equal in that column. LastName '' must stay '' on both rows.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A02",
+      "label": "trailing spaces in FirstName, JobTitle and the contact type name, and a LastName of one space, are returned as stored",
+      "traps": [
+        "trailing-spaces"
+      ],
+      "reasoning": "SQL Server keeps trailing spaces in nvarchar values it returns (it ignores them only in comparisons). The conversion returns varchar(50) columns and casts literals; a char(n) mapping or an rtrim in the conversion would drop them, and a single space must not become ''.",
+      "trapChecks": {
+        "trailing-spaces": {
+          "present": true,
+          "detail": "\"Ann \" ends in a space"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A03",
+      "label": "contact types 'Owner' and 'OWNER' for the same vendor contact give two rows that differ only in case; names keep their case",
+      "traps": [
+        "collation-case"
+      ],
+      "reasoning": "Under CI_AS, 'Owner' and 'OWNER' compare equal, but the function never compares text, so SQL Server returns both rows with their own case. A conversion that grouped, de-duplicated (UNION instead of UNION ALL) or lower-cased would differ; the multiset comparison counts both rows.",
+      "trapChecks": {
+        "collation-case": {
+          "present": true,
+          "detail": "\"ann\" and \"ANN\" differ only in case"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A04",
+      "label": "non-ASCII names and job title (Zoë, 李, Ingénieur, Владелец) come back unchanged",
+      "traps": [],
+      "reasoning": "nvarchar holds UTF-16; PostgreSQL varchar holds the database encoding. Inserted as N'...' on SQL Server and as UTF-8 text on PostgreSQL, the values must round-trip identically; a varchar (non-N) path on SQL Server or a Latin-1 client encoding would turn them into '?'.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A05",
+      "label": "person keys with gaps (1, 500, 2147483647): the int-maximum person is a store contact and an employee",
+      "traps": [
+        "identity-gaps"
+      ],
+      "reasoning": "BusinessEntityID values far apart and at the int maximum. A conversion that narrowed the parameter (smallint) or looked up by position would fail or return another person's row.",
+      "trapChecks": {
+        "identity-gaps": {
+          "present": true,
+          "detail": "Person.Person.BusinessEntityID jumps from 1 to 500"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A06",
+      "label": "an entity that is both a vendor and a store: one contact row gives a Vendor Contact and a Store Contact row",
+      "traps": [],
+      "reasoning": "The vendor and store branches are independent IF EXISTS blocks; both fire for business entity 100. A conversion using ELSIF, or returning after the first branch, would give one row.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A07",
+      "label": "the same vendor-contact row twice (no key on BusinessEntityContact): two identical Vendor Contact rows",
+      "traps": [],
+      "reasoning": "INSERT ... SELECT into the table variable keeps duplicates. A conversion with SELECT DISTINCT or UNION would return one row; the multiset comparison counts both.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A08",
+      "label": "PersonID 0 is an ordinary person (a consumer), not 'no person': one Consumer row",
+      "traps": [],
+      "reasoning": "The guard is IF @PersonID IS NOT NULL; 0 passes it. A conversion that tested truthiness (IF person_id THEN, NULLIF(person_id, 0)) would return no rows.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A09",
+      "label": "a negative PersonID (-1) who is an employee: one Employee row",
+      "traps": [],
+      "reasoning": "Negative keys are valid int values in both engines; a conversion that validated person_id > 0 would drop the row.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A10",
+      "label": "a customer row with NULL PersonID and NULL StoreID does not make anyone a consumer: no rows for person 1",
+      "traps": [],
+      "reasoning": "c.PersonID = p.BusinessEntityID is unknown for a NULL PersonID on both engines. A conversion that joined with IS NOT DISTINCT FROM, or a NULL-safe COALESCE(c.PersonID, ...), would match.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A11",
+      "label": "names and job title at the 50-character limit come back whole",
+      "traps": [],
+      "reasoning": "The returned table declares nvarchar(50); the conversion declares varchar(50) and casts the literals. A narrower declared length (or a char(50) padding) would cut or pad values that SQL Server returns whole.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A12",
+      "label": "a store contact through two contact types plus a store customer row: two Store Contact rows, no Consumer row",
+      "traps": [],
+      "reasoning": "Two BusinessEntityContact rows to the same store with different contact types give two Store Contact rows; a customer row with a StoreID adds no Consumer row. A conversion that took one row per branch (LIMIT 1, SELECT INTO) would return one.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    }
+  ],
+  "summary": {
+    "ran": 12,
+    "differed": 0,
+    "invalid": 0
+  },
+  "objections": [
+    {
+      "id": "O01",
+      "caseId": "A06",
+      "kind": "duplicate",
+      "text": "The hand-derived person-1 case already makes the vendor and store predicates true in the same call and requires rows from both independent branches. It already catches the ELSIF or early-return defect named for A06; using one entity in both tables does not create a distinct attack on that mechanism.",
+      "status": "open"
+    },
+    {
+      "id": "O02",
+      "caseId": "A07",
+      "kind": "not-an-attack",
+      "text": "A07 duplicates the same (BusinessEntityID, PersonID, ContactTypeID) row, but those three columns form the source table's composite primary key. The claim that BusinessEntityContact has no key is false, and this input cannot occur under the source schema preconditions.",
+      "status": "open"
+    }
+  ],
+  "mutantAdequacy": {
+    "verdict": "inadequate",
+    "caught": [
+      "vendor contacts labelled as store contacts",
+      "employee rows without the person join (JobTitle from the wrong row)"
+    ],
+    "missed": [
+      "consumer rows include store customers"
+    ],
+    "skipped": [],
+    "equivalentRecorded": []
+  },
+  "gate": {
+    "passed": false,
+    "reasons": [
+      "objection O01 is open",
+      "objection O02 is open",
+      "mutant adequacy is inadequate (unexplained misses: consumer rows include store customers)"
+    ]
+  },
+  "wording": "12 adversarial cases ran, 0 differed"
+}

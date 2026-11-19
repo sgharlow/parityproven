@@ -94,7 +94,15 @@
       "PostgreSQL: AgreedTests.[test 09 NULL PersonID returns no rows (IF @PersonID IS NOT NULL)]: pass",
       "PostgreSQL: AgreedTests.[test 10 an unknown PersonID (999) returns no rows]: pass",
       "planted defects caught by the agreed tests: 3 of 3"
-    ]
+    ],
+    "adversarial": {
+      "gate": "fail",
+      "ran": 12,
+      "differed": 0,
+      "evidencePath": "evidence/adversarial/AdventureWorks2025/dbo.ufnGetContactInformation.json",
+      "conversionSha256": "6ce4235c9a7b3aee479ec5695986f6d12f4ae9d19a3e5684e39ed7e8f3762cbb",
+      "runAt": "2026-11-19T03:11:02.691Z"
+    }
   },
   "effort": {
     "humanMinutes": 0,

@@ -78,7 +78,15 @@
       "PostgreSQL: AgreedTests.[test 05 an unknown product: 0]: pass",
       "PostgreSQL: AgreedTests.[test 06 NULL ProductID: 0 (no row matches, NULL sum -> 0)]: pass",
       "planted defects caught by the agreed tests: 1 of 1"
-    ]
+    ],
+    "adversarial": {
+      "gate": "fail",
+      "ran": 7,
+      "differed": 0,
+      "evidencePath": "evidence/adversarial/AdventureWorks2025/dbo.ufnGetStock.json",
+      "conversionSha256": "137959416026468b762e5070fc3a2d52999e54e5be5e965f8e0c57e709c337ce",
+      "runAt": "2026-11-19T02:26:39.618Z"
+    }
   },
   "effort": {
     "humanMinutes": 0,

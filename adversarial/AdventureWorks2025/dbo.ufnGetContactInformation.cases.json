@@ -60,6 +60,7 @@
     },
     {
       "id": "A04",
+      "regression": true,
       "label": "non-ASCII names and job title (Zoë, 李, Ingénieur, Владелец) come back unchanged",
       "traps": [],
       "reasoning": "nvarchar holds UTF-16; PostgreSQL varchar holds the database encoding. Inserted as N'...' on SQL Server and as UTF-8 text on PostgreSQL, the values must round-trip identically; a varchar (non-N) path on SQL Server or a Latin-1 client encoding would turn them into '?'.",

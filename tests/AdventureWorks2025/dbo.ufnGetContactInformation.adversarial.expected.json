@@ -1,0 +1,465 @@
+{
+  "object": "dbo.ufnGetContactInformation",
+  "database": "AdventureWorks2025",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-19T03:10:52.332Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "[A01] one person is an employee with JobTitle '' and a consumer (JobTitle NULL): two rows, '' and NULL kept apart; empty LastName kept",
+      "columns": [
+        {
+          "name": "PersonID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "BusinessEntityType",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:Ann",
+          "s:",
+          "s:",
+          "s:Employee"
+        ],
+        [
+          "n:1",
+          "s:Ann",
+          "s:",
+          "∅",
+          "s:Consumer"
+        ]
+      ]
+    },
+    {
+      "label": "[A02] trailing spaces in FirstName, JobTitle and the contact type name, and a LastName of one space, are returned as stored",
+      "columns": [
+        {
+          "name": "PersonID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "BusinessEntityType",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:Ann ",
+          "s: ",
+          "s:Buyer  ",
+          "s:Employee"
+        ],
+        [
+          "n:1",
+          "s:Ann ",
+          "s: ",
+          "s:Owner ",
+          "s:Vendor Contact"
+        ]
+      ]
+    },
+    {
+      "label": "[A03] contact types 'Owner' and 'OWNER' for the same vendor contact give two rows that differ only in case; names keep their case",
+      "columns": [
+        {
+          "name": "PersonID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "BusinessEntityType",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:ann",
+          "s:ANN",
+          "s:Owner",
+          "s:Vendor Contact"
+        ],
+        [
+          "n:1",
+          "s:ann",
+          "s:ANN",
+          "s:OWNER",
+          "s:Vendor Contact"
+        ]
+      ]
+    },
+    {
+      "label": "[A04] non-ASCII names and job title (Zoë, 李, Ingénieur, Владелец) come back unchanged",
+      "columns": [
+        {
+          "name": "PersonID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "BusinessEntityType",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:7",
+          "s:Zoë",
+          "s:李",
+          "s:Ingénieur",
+          "s:Employee"
+        ],
+        [
+          "n:7",
+          "s:Zoë",
+          "s:李",
+          "s:Владелец",
+          "s:Store Contact"
+        ]
+      ]
+    },
+    {
+      "label": "[A05] person keys with gaps (1, 500, 2147483647): the int-maximum person is a store contact and an employee",
+      "columns": [
+        {
+          "name": "PersonID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "BusinessEntityType",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:2147483647",
+          "s:Max",
+          "s:Int",
+          "s:Manager",
+          "s:Employee"
+        ],
+        [
+          "n:2147483647",
+          "s:Max",
+          "s:Int",
+          "s:Owner",
+          "s:Store Contact"
+        ]
+      ]
+    },
+    {
+      "label": "[A06] an entity that is both a vendor and a store: one contact row gives a Vendor Contact and a Store Contact row",
+      "columns": [
+        {
+          "name": "PersonID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "BusinessEntityType",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:Ann",
+          "s:Lee",
+          "s:Owner",
+          "s:Vendor Contact"
+        ],
+        [
+          "n:1",
+          "s:Ann",
+          "s:Lee",
+          "s:Owner",
+          "s:Store Contact"
+        ]
+      ]
+    },
+    {
+      "label": "[A07] the same vendor-contact row twice (no key on BusinessEntityContact): two identical Vendor Contact rows",
+      "columns": [
+        {
+          "name": "PersonID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "BusinessEntityType",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:3",
+          "s:Cy",
+          "s:Oh",
+          "s:Owner",
+          "s:Vendor Contact"
+        ],
+        [
+          "n:3",
+          "s:Cy",
+          "s:Oh",
+          "s:Owner",
+          "s:Vendor Contact"
+        ]
+      ]
+    },
+    {
+      "label": "[A08] PersonID 0 is an ordinary person (a consumer), not 'no person': one Consumer row",
+      "columns": [
+        {
+          "name": "PersonID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "BusinessEntityType",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:0",
+          "s:Zed",
+          "s:Zero",
+          "∅",
+          "s:Consumer"
+        ]
+      ]
+    },
+    {
+      "label": "[A09] a negative PersonID (-1) who is an employee: one Employee row",
+      "columns": [
+        {
+          "name": "PersonID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "BusinessEntityType",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:-1",
+          "s:Neg",
+          "s:One",
+          "s:Temp",
+          "s:Employee"
+        ]
+      ]
+    },
+    {
+      "label": "[A10] a customer row with NULL PersonID and NULL StoreID does not make anyone a consumer: no rows for person 1",
+      "columns": [
+        {
+          "name": "PersonID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "BusinessEntityType",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": []
+    },
+    {
+      "label": "[A11] names and job title at the 50-character limit come back whole",
+      "columns": [
+        {
+          "name": "PersonID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "BusinessEntityType",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:4",
+          "s:Abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwx",
+          "s:ZYXWVUTSRQPONMLKJIHGFEDCBAzyxwvutsrqponmlkjihgfedc",
+          "s:Senior Principal Engineer of Database Conversion 1",
+          "s:Employee"
+        ]
+      ]
+    },
+    {
+      "label": "[A12] a store contact through two contact types plus a store customer row: two Store Contact rows, no Consumer row",
+      "columns": [
+        {
+          "name": "PersonID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "BusinessEntityType",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:9",
+          "s:Ida",
+          "s:Vo",
+          "s:Owner",
+          "s:Store Contact"
+        ],
+        [
+          "n:9",
+          "s:Ida",
+          "s:Vo",
+          "s:Purchasing Manager",
+          "s:Store Contact"
+        ]
+      ]
+    }
+  ]
+}

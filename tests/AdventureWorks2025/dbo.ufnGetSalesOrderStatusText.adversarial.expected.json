@@ -1,0 +1,93 @@
+{
+  "object": "dbo.ufnGetSalesOrderStatusText",
+  "database": "AdventureWorks2025",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-19T02:26:27.418Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "[A01] status 8 (second unmapped value above the last WHEN) is the ELSE text",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(15)"
+        }
+      ],
+      "rows": [
+        [
+          "s:** Invalid **"
+        ]
+      ]
+    },
+    {
+      "label": "[A02] status 127 (signed 1-byte maximum) is the ELSE text",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(15)"
+        }
+      ],
+      "rows": [
+        [
+          "s:** Invalid **"
+        ]
+      ]
+    },
+    {
+      "label": "[A03] status 128 (one above the signed 1-byte maximum) is the ELSE text, not an error",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(15)"
+        }
+      ],
+      "rows": [
+        [
+          "s:** Invalid **"
+        ]
+      ]
+    },
+    {
+      "label": "[A04] status 254 (one below the tinyint maximum) is the ELSE text",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(15)"
+        }
+      ],
+      "rows": [
+        [
+          "s:** Invalid **"
+        ]
+      ]
+    },
+    {
+      "label": "[A05] status 134 (6 + 128, same low bits as 'Cancelled') is the ELSE text",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(15)"
+        }
+      ],
+      "rows": [
+        [
+          "s:** Invalid **"
+        ]
+      ]
+    },
+    {
+      "label": "[A06] status 3 gives 'Backordered', the longest mapped text (11 characters), from a varchar literal into nvarchar(15)",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(15)"
+        }
+      ],
+      "rows": [
+        [
+          "s:Backordered"
+        ]
+      ]
+    }
+  ]
+}

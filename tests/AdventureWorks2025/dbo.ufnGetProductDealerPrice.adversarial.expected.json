@@ -1,0 +1,275 @@
+{
+  "object": "dbo.ufnGetProductDealerPrice",
+  "database": "AdventureWorks2025",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-19T02:25:49.399Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "[A01] order instant 1 ms after the end date (.001): SQL Server rounds the datetime argument to .000, inside the period",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "n:6"
+        ]
+      ]
+    },
+    {
+      "label": "[A02] order instant 1 ms before the start date (.999): SQL Server rounds it up to the start, inside the period",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "n:6"
+        ]
+      ]
+    },
+    {
+      "label": "[A03] StartDate stored as .001 (datetime keeps .000) and an order instant at .000: inside the period on SQL Server",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "n:6"
+        ]
+      ]
+    },
+    {
+      "label": "[A04] EndDate stored as 23:59:59.999 (datetime rounds to the next midnight) and an order instant at that midnight",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "n:6"
+        ]
+      ]
+    },
+    {
+      "label": "[A05] EndDate stored as .002 (datetime keeps .003) and an order instant at .003",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "n:6"
+        ]
+      ]
+    },
+    {
+      "label": "[A06] StartDate stored as half a millisecond (.0005) and an order instant at .000",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "n:6"
+        ]
+      ]
+    },
+    {
+      "label": "[A07] a period starting on 1753-01-01 (datetime minimum), order instant at that minimum, value 0.0005: 60% of the list price",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "n:0.0003"
+        ]
+      ]
+    },
+    {
+      "label": "[A08] open-ended period on 9999-12-31 00:00 exactly (the COALESCE end, inclusive): 60% of the list price",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "n:2"
+        ]
+      ]
+    },
+    {
+      "label": "[A09] open-ended period on 9999-12-31 23:59:59.997 (after the COALESCE end at midnight): NULL",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "∅"
+        ]
+      ]
+    },
+    {
+      "label": "[A10] an explicit EndDate at the datetime maximum (9999-12-31 23:59:59.997), order instant equal to it: 60% of the list price",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "n:2"
+        ]
+      ]
+    },
+    {
+      "label": "[A11] a value with 5 decimals (10.00005) rounds to money's 4 places on load: 60% of the list price",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "n:6.0001"
+        ]
+      ]
+    },
+    {
+      "label": "[A12] a negative value at the last place (-0.0005): 60% of the list price",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "n:-0.0003"
+        ]
+      ]
+    },
+    {
+      "label": "[A13] a negative value -1.0001: 60% of the list price (-0.60006 rounds away from zero to -0.6001)",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "n:-0.6001"
+        ]
+      ]
+    },
+    {
+      "label": "[A14] a large list price 9999999.9999: 60% is 5999999.99994, rounded to 5999999.9999",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "n:5999999.9999"
+        ]
+      ]
+    },
+    {
+      "label": "[A15] product keys with gaps (10, 20, 2147483647): the int-maximum product's dealer price",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "n:4.2"
+        ]
+      ]
+    },
+    {
+      "label": "[A16] a one-instant period (StartDate = EndDate = 12:34:56.789) and an order instant equal to it",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "n:6"
+        ]
+      ]
+    },
+    {
+      "label": "[A17] an inverted period (EndDate before StartDate) and an order instant between them: NULL",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "∅"
+        ]
+      ]
+    },
+    {
+      "label": "[A18] a period starting at 08:00 on 2020-01-01 and an order instant at midnight that day: NULL",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "∅"
+        ]
+      ]
+    },
+    {
+      "label": "[A19] a product whose only period ended, with the queried instant in a later year and a different product's period covering it: NULL",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "∅"
+        ]
+      ]
+    }
+  ]
+}

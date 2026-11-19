@@ -1,0 +1,227 @@
+{
+  "schemaVersion": 1,
+  "object": "dbo.ufnGetStock",
+  "database": "AdventureWorks2025",
+  "runAt": "2026-11-19T02:26:39.618Z",
+  "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
+  "conversionSha256": "137959416026468b762e5070fc3a2d52999e54e5be5e965f8e0c57e709c337ce",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-18T19:13:01-07:00",
+    "file": "adversarial/AdventureWorks2025/dbo.ufnGetStock.cases.json",
+    "sha256": "8080eada39ea78b40cb4ae82dbfd927532b96a01da5504d4dc3542a5d3e96b54"
+  },
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T19:19:51.7066204-07:00",
+    "file": "adversarial/AdventureWorks2025/dbo.ufnGetStock.audit.json",
+    "sha256": "e0320fd0650fd5dc7540417ce97f4acd1989f37e0d3299824863f19eac4506d5"
+  },
+  "sameModel": false,
+  "casesAudited": [
+    "A01",
+    "A02",
+    "A03",
+    "A04",
+    "A05",
+    "A06",
+    "A07"
+  ],
+  "traps": {
+    "null-vs-empty": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "No text column or parameter (ProductID int; LocationID and Quantity smallint). The source's '6' is a constant compared with a smallint, attacked in A04.",
+      "accepted": true
+    },
+    "collation-case": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "No text input.",
+      "accepted": true
+    },
+    "trailing-spaces": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "No text input.",
+      "accepted": true
+    },
+    "dates-datetime": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "No date input.",
+      "accepted": true
+    },
+    "numeric-rounding": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "Integer inputs only (smallint, int); the SUM is an integer sum, attacked for type width in A01 and A02.",
+      "accepted": true
+    },
+    "top-ties": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "Scalar function: returns one value, not rows.",
+      "accepted": true
+    },
+    "identity-gaps": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "The spec gives ProductInventory no key column (ProductID is a reference, LocationID a value), so no key run exists to leave gaps in.",
+      "accepted": true
+    }
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "two rows of 32767 at location 6 sum to 65534, beyond smallint: int result, no overflow",
+      "traps": [],
+      "reasoning": "T-SQL SUM(smallint) returns int, so 32767 + 32767 = 65534. PostgreSQL SUM(smallint) is bigint, cast to integer. A conversion that cast the sum (or each value) to smallint would overflow or wrap.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A02",
+      "label": "two rows of -32768 at location 6 sum to -65536: a negative int result",
+      "traps": [],
+      "reasoning": "Negative smallint minimum twice; checks the sign and width of the sum on both engines, and that a negative total is returned as is (the source only replaces NULL with 0, not values below 0).",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A03",
+      "label": "+7 and -7 at location 6 sum to 0 (a real zero sum, not the NULL replacement)",
+      "traps": [],
+      "reasoning": "The T-SQL replaces only a NULL sum with 0. A conversion that used NULLIF or treated 0 as missing would differ; here SUM is 0 from two rows.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A04",
+      "label": "locations -6, 0, 16, 60 and 32767 are not location 6: only the 4 at location 6 counts",
+      "traps": [],
+      "reasoning": "The source compares LocationID with the string '6' (implicit conversion to smallint). A conversion that compared as text (LIKE '6%', '%6', or a text cast) would also match 60 or 16 or -6.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A05",
+      "label": "int maximum ProductID 2147483647 with stock at location 6: 9 (other products' rows ignored)",
+      "traps": [],
+      "reasoning": "ProductID at the int maximum, next to rows for ProductID -2147483648 and 0. A parameter mapped to smallint or a signed overflow in the comparison would match the wrong product or fail.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A06",
+      "label": "ProductID 0 is a real product, not 'no product': its stock 50 is returned",
+      "traps": [],
+      "reasoning": "0 is falsy in many client and PL/pgSQL idioms (COALESCE/NULLIF(product_id, 0)); T-SQL treats it as an ordinary value.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A07",
+      "label": "an empty inventory table: 0",
+      "traps": [],
+      "reasoning": "SUM over no rows is NULL on both engines and is replaced by 0. A conversion that returned the SUM without COALESCE, or no row at all from a set-returning SQL function, would give NULL.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    }
+  ],
+  "summary": {
+    "ran": 7,
+    "differed": 0,
+    "invalid": 0
+  },
+  "objections": [
+    {
+      "id": "O01",
+      "caseId": "A01",
+      "kind": "not-an-attack",
+      "text": "A01 inserts two ProductInventory rows with the same (ProductID, LocationID) pair (1, 6), but that pair is the source table's composite primary key. The overflow input cannot occur under the source schema preconditions.",
+      "status": "open"
+    },
+    {
+      "id": "O02",
+      "caseId": "A02",
+      "kind": "not-an-attack",
+      "text": "A02 inserts two ProductInventory rows with the same (ProductID, LocationID) pair (2, 6), but that pair is the source table's composite primary key. The negative overflow input cannot occur under the source schema preconditions.",
+      "status": "open"
+    },
+    {
+      "id": "O03",
+      "caseId": "A03",
+      "kind": "not-an-attack",
+      "text": "A03 inserts two ProductInventory rows with the same (ProductID, LocationID) pair (3, 6), but that pair is the source table's composite primary key. The cancelling-sum input cannot occur under the source schema preconditions.",
+      "status": "open"
+    }
+  ],
+  "mutantAdequacy": {
+    "verdict": "adequate",
+    "caught": [
+      "auto: first AND becomes OR"
+    ],
+    "missed": [],
+    "skipped": [],
+    "equivalentRecorded": []
+  },
+  "gate": {
+    "passed": false,
+    "reasons": [
+      "objection O01 is open",
+      "objection O02 is open",
+      "objection O03 is open"
+    ]
+  },
+  "wording": "7 adversarial cases ran, 0 differed"
+}

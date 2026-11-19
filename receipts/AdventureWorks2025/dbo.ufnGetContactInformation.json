@@ -116,7 +116,129 @@
       "PostgreSQL: AgreedTests.[test 09 NULL PersonID returns no rows (IF @PersonID IS NOT NULL)]: pass",
       "PostgreSQL: AgreedTests.[test 10 an unknown PersonID (999) returns no rows]: pass",
       "planted defects caught by the agreed tests: 3 of 3"
-    ]
+    ],
+    "adversarial": {
+      "gate": "fail",
+      "ran": 12,
+      "differed": 0,
+      "evidencePath": "evidence/adversarial/AdventureWorks2025/dbo.ufnGetContactInformation.json",
+      "runAt": "2026-11-19T03:11:02.691Z",
+      "agentWritten": true,
+      "wording": "12 adversarial cases ran, 0 differed",
+      "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
+      "auditorModel": "gpt-5.6-sol",
+      "sameModel": false,
+      "mutantAdequacy": "inadequate",
+      "gateReasons": [
+        "objection O01 is open",
+        "objection O02 is open",
+        "mutant adequacy is inadequate (unexplained misses: consumer rows include store customers)"
+      ],
+      "cases": [
+        {
+          "id": "A01",
+          "label": "one person is an employee with JobTitle '' and a consumer (JobTitle NULL): two rows, '' and NULL kept apart; empty LastName kept",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A02",
+          "label": "trailing spaces in FirstName, JobTitle and the contact type name, and a LastName of one space, are returned as stored",
+          "traps": [
+            "trailing-spaces"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A03",
+          "label": "contact types 'Owner' and 'OWNER' for the same vendor contact give two rows that differ only in case; names keep their case",
+          "traps": [
+            "collation-case"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A04",
+          "label": "non-ASCII names and job title (Zoë, 李, Ingénieur, Владелец) come back unchanged",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A05",
+          "label": "person keys with gaps (1, 500, 2147483647): the int-maximum person is a store contact and an employee",
+          "traps": [
+            "identity-gaps"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A06",
+          "label": "an entity that is both a vendor and a store: one contact row gives a Vendor Contact and a Store Contact row",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A07",
+          "label": "the same vendor-contact row twice (no key on BusinessEntityContact): two identical Vendor Contact rows",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A08",
+          "label": "PersonID 0 is an ordinary person (a consumer), not 'no person': one Consumer row",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A09",
+          "label": "a negative PersonID (-1) who is an employee: one Employee row",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A10",
+          "label": "a customer row with NULL PersonID and NULL StoreID does not make anyone a consumer: no rows for person 1",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A11",
+          "label": "names and job title at the 50-character limit come back whole",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A12",
+          "label": "a store contact through two contact types plus a store customer row: two Store Contact rows, no Consumer row",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        }
+      ]
+    }
   },
   "effort": {
     "humanMinutes": 0,
@@ -127,5 +249,5 @@
     "p50Hours": 1.5,
     "p90Hours": 4
   },
-  "builtAt": "2026-11-19T02:08:37.940Z"
+  "builtAt": "2026-11-19T03:12:12.009Z"
 }

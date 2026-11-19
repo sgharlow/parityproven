@@ -1,0 +1,267 @@
+{
+  "schemaVersion": 1,
+  "object": "dbo.ufnLeadingZeros",
+  "database": "AdventureWorks2025",
+  "runAt": "2026-11-19T02:26:47.021Z",
+  "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
+  "conversionSha256": "71fbec7f435258e2d71571bdf1980b124670f38daa9b4d97753eba7d5fb418e2",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-18T19:13:01-07:00",
+    "file": "adversarial/AdventureWorks2025/dbo.ufnLeadingZeros.cases.json",
+    "sha256": "0a70d52de1169a27dbfa397b89b1c6f2aa02c242a35f224603e73038f7c8a00f"
+  },
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T19:19:51.7066204-07:00",
+    "file": "adversarial/AdventureWorks2025/dbo.ufnLeadingZeros.audit.json",
+    "sha256": "2b12687fd81a12ae9d40e656d2d10d015769069957c70853da3816c7f3fdf35e"
+  },
+  "sameModel": false,
+  "casesAudited": [
+    "A01",
+    "A02",
+    "A03",
+    "A04",
+    "A05",
+    "A06",
+    "A07",
+    "A08"
+  ],
+  "traps": {
+    "null-vs-empty": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "The only input is an int; no text input exists. A NULL value is already a fixed case (REPLICATE with a NULL length is NULL).",
+      "accepted": true
+    },
+    "collation-case": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "No text input; the result is never compared as text.",
+      "accepted": true
+    },
+    "trailing-spaces": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "No text input; CONVERT(varchar(8), int) never adds spaces.",
+      "accepted": true
+    },
+    "dates-datetime": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "No date input.",
+      "accepted": true
+    },
+    "numeric-rounding": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "The input is an int; no decimal or money value.",
+      "accepted": true
+    },
+    "top-ties": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "Scalar function: returns one value, no rows from tables.",
+      "accepted": true
+    },
+    "identity-gaps": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "Reads no table, no key or sequence.",
+      "accepted": true
+    }
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "-1 keeps its sign inside the padding: '000000-1'",
+      "traps": [],
+      "reasoning": "T-SQL pads the string '-1' with REPLICATE('0', 8 - DATALENGTH) on the left, so the zeros go before the sign. A to_char or lpad of abs() with a leading sign would give '-0000001'.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A02",
+      "label": "-1000000 (exactly 8 characters with the sign) is unchanged",
+      "traps": [],
+      "reasoning": "8 characters including the sign fits varchar(8) exactly: REPLICATE('0', 0) is ''. A length test that counts digits only (not the sign) would treat it as 7 and pad, or as too long.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A03",
+      "label": "-99999999 (9 characters with the sign) does not fit varchar(8): '0000000*'",
+      "traps": [],
+      "reasoning": "8 digits but 9 characters with the sign. A check on the number of digits (or on abs(value) > 99999999) would keep it and lpad would truncate; SQL Server's CONVERT gives '*'.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A04",
+      "label": "10000000 (8 digits, smallest 8-digit value) is unchanged",
+      "traps": [],
+      "reasoning": "Lower boundary of the 8-character range from below; an off-by-one in the length test (>= 8 instead of > 8) would turn it into '*'.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A05",
+      "label": "9999999 (7 digits) gets one leading zero: '09999999'",
+      "traps": [],
+      "reasoning": "One below the 8-digit boundary; REPLICATE('0', 1). An integer-division or log10-based length would be off by one here.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A06",
+      "label": "-10 keeps its sign inside the padding: '00000-10'",
+      "traps": [],
+      "reasoning": "Two-digit negative value; checks that the sign counts as one character of the 8 (DATALENGTH of varchar counts bytes, one per ASCII character).",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A07",
+      "label": "2147483646 (one below int maximum) gives '0000000*'",
+      "traps": [],
+      "reasoning": "Large positive value next to the int maximum; an implementation that adds 1 or works in a narrower type would overflow or truncate instead of returning '*'.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A08",
+      "label": "-2147483647 (one above int minimum) gives '0000000*'",
+      "traps": [],
+      "reasoning": "Large negative value next to the int minimum, where abs() is still representable; a digit-count test via abs() would give a different branch than at the minimum itself.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    }
+  ],
+  "summary": {
+    "ran": 8,
+    "differed": 0,
+    "invalid": 0
+  },
+  "objections": [
+    {
+      "id": "O01",
+      "caseId": "A01",
+      "kind": "duplicate",
+      "text": "The hand-derived -5 case already supplies a two-character negative integer and requires the sign after six padding zeros. A01 changes only the digit from 5 to 1 and attacks the same input class and mechanism.",
+      "status": "open"
+    },
+    {
+      "id": "O02",
+      "caseId": "A02",
+      "kind": "duplicate",
+      "text": "The hand-derived -9999999 case already supplies an eight-character negative integer, including the sign, and requires it unchanged. A02 is the same length class and attacks the same boundary behavior.",
+      "status": "open"
+    },
+    {
+      "id": "O03",
+      "caseId": "A03",
+      "kind": "duplicate",
+      "text": "The hand-derived -10000000 case already supplies a nine-character negative integer and requires CONVERT(varchar(8), int) to produce '*' before padding. A03 attacks the same length and conversion path.",
+      "status": "open"
+    },
+    {
+      "id": "O04",
+      "caseId": "A04",
+      "kind": "duplicate",
+      "text": "The hand-derived 12345678 and 99999999 cases already supply eight-character positive integers and require them unchanged. A04 is the same length boundary and does not add a distinct attack mechanism.",
+      "status": "open"
+    },
+    {
+      "id": "O05",
+      "caseId": "A07",
+      "kind": "duplicate",
+      "text": "The hand-derived int-maximum case already exercises a positive value above eight characters and requires '0000000*'. Moving one below the maximum uses the same conversion and padding path.",
+      "status": "open"
+    },
+    {
+      "id": "O06",
+      "caseId": "A08",
+      "kind": "duplicate",
+      "text": "The hand-derived int-minimum case already exercises a negative value above eight characters and requires '0000000*'. Moving one above the minimum uses the same conversion and padding path.",
+      "status": "open"
+    }
+  ],
+  "mutantAdequacy": {
+    "verdict": "adequate",
+    "caught": [
+      "auto: strict comparison made inclusive"
+    ],
+    "missed": [],
+    "skipped": [],
+    "equivalentRecorded": []
+  },
+  "gate": {
+    "passed": false,
+    "reasons": [
+      "objection O01 is open",
+      "objection O02 is open",
+      "objection O03 is open",
+      "objection O04 is open",
+      "objection O05 is open",
+      "objection O06 is open"
+    ]
+  },
+  "wording": "8 adversarial cases ran, 0 differed"
+}
