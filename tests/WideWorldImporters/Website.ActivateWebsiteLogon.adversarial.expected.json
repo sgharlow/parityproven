@@ -1,0 +1,441 @@
+{
+  "object": "Website.ActivateWebsiteLogon",
+  "database": "WideWorldImporters",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-19T05:05:59.049Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "[A01] initial password of 41 characters ending in a space: SQL Server truncates the nvarchar(40) parameter, PostgreSQL's text parameter keeps the space",
+      "outcome": "completed",
+      "tables": {
+        "Application.People": {
+          "columns": [
+            "PersonID",
+            "FullName",
+            "IsPermittedToLogon",
+            "LogonName",
+            "HashedPassword",
+            "UserPreferences"
+          ],
+          "rows": [
+            [
+              "n:1",
+              "s:Person 1",
+              "b:1",
+              "∅",
+              "∅",
+              "s:{\"theme\":\"blue\"}"
+            ],
+            [
+              "n:2",
+              "s:Amy Trefl",
+              "b:1",
+              "s:amy@example.com",
+              "x:fae4595dba76bce6f86839ce6100c6f2d0fd88af19d993d1fdc48b944176e644",
+              "s:{\"theme\":\"blue\"}"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "label": "[A02] initial password of 21 emoji (42 UTF-16 code units): SQL Server keeps 20 of them, PostgreSQL hashes all 21",
+      "outcome": "completed",
+      "tables": {
+        "Application.People": {
+          "columns": [
+            "PersonID",
+            "FullName",
+            "IsPermittedToLogon",
+            "LogonName",
+            "HashedPassword",
+            "UserPreferences"
+          ],
+          "rows": [
+            [
+              "n:1",
+              "s:Person 1",
+              "b:1",
+              "∅",
+              "∅",
+              "s:{\"theme\":\"blue\"}"
+            ],
+            [
+              "n:2",
+              "s:Person 2",
+              "b:1",
+              "s:e@example.com",
+              "x:1ad4deb6d8688ec8bb3edf68f4fece7e39061213d4a5a93b86eead1cfc9b9303",
+              "s:{\"theme\":\"blue\"}"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "label": "[A03] password of 20 emoji (exactly 40 UTF-16 code units) and a full name with an emoji and a combining accent: surrogate pairs hashed as UTF-16LE",
+      "outcome": "completed",
+      "tables": {
+        "Application.People": {
+          "columns": [
+            "PersonID",
+            "FullName",
+            "IsPermittedToLogon",
+            "LogonName",
+            "HashedPassword",
+            "UserPreferences"
+          ],
+          "rows": [
+            [
+              "n:1",
+              "s:Person 1",
+              "b:1",
+              "∅",
+              "∅",
+              "s:{\"theme\":\"blue\"}"
+            ],
+            [
+              "n:2",
+              "s:Zoë é 🎉",
+              "b:1",
+              "s:e@example.com",
+              "x:ede75578da4f4403fb9368d80b670855df441efb83c731c84ccfbc5671c23676",
+              "s:{\"theme\":\"blue\"}"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "label": "[A04] logon name of 51 characters: SQL Server truncates the nvarchar(50) parameter and completes; PostgreSQL's varchar(50) column rejects the value",
+      "outcome": "completed",
+      "tables": {
+        "Application.People": {
+          "columns": [
+            "PersonID",
+            "FullName",
+            "IsPermittedToLogon",
+            "LogonName",
+            "HashedPassword",
+            "UserPreferences"
+          ],
+          "rows": [
+            [
+              "n:1",
+              "s:Person 1",
+              "b:1",
+              "∅",
+              "∅",
+              "s:{\"theme\":\"blue\"}"
+            ],
+            [
+              "n:2",
+              "s:Person 2",
+              "b:1",
+              "s:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+              "x:d1beeae20716eea18a0cce3a0e032e63028a3a68b1bec3ccb5855b2faa412c69",
+              "s:{\"theme\":\"blue\"}"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "label": "[A05] logon name of 50 characters followed by three spaces: both engines store the 50 characters",
+      "outcome": "completed",
+      "tables": {
+        "Application.People": {
+          "columns": [
+            "PersonID",
+            "FullName",
+            "IsPermittedToLogon",
+            "LogonName",
+            "HashedPassword",
+            "UserPreferences"
+          ],
+          "rows": [
+            [
+              "n:1",
+              "s:Person 1",
+              "b:1",
+              "∅",
+              "∅",
+              "s:{\"theme\":\"blue\"}"
+            ],
+            [
+              "n:2",
+              "s:Person 2",
+              "b:1",
+              "s:yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+              "x:0d260130d9762ee6058d7cf8f72a1b0c67e303d9d3c75280b0ea325838cd8536",
+              "s:{\"theme\":\"blue\"}"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "label": "[A06] NULL password and '' logon name; person 1's preferences are ''; the target's own preferences are replaced",
+      "outcome": "completed",
+      "tables": {
+        "Application.People": {
+          "columns": [
+            "PersonID",
+            "FullName",
+            "IsPermittedToLogon",
+            "LogonName",
+            "HashedPassword",
+            "UserPreferences"
+          ],
+          "rows": [
+            [
+              "n:1",
+              "s:Person 1",
+              "b:0",
+              "∅",
+              "∅",
+              "s:"
+            ],
+            [
+              "n:2",
+              "s:Person 2",
+              "b:1",
+              "s:",
+              "∅",
+              "s:"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "label": "[A07] '' password and '' full name: SHA2_256 of zero bytes; LogonName NULL before",
+      "outcome": "completed",
+      "tables": {
+        "Application.People": {
+          "columns": [
+            "PersonID",
+            "FullName",
+            "IsPermittedToLogon",
+            "LogonName",
+            "HashedPassword",
+            "UserPreferences"
+          ],
+          "rows": [
+            [
+              "n:1",
+              "s:Person 1",
+              "b:1",
+              "∅",
+              "∅",
+              "s:{\"theme\":\"blue\"}"
+            ],
+            [
+              "n:2",
+              "s:",
+              "b:1",
+              "s:z",
+              "x:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "s:{\"theme\":\"blue\"}"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "label": "[A08] full name and password differ only in case; the logon name keeps its case; two people share a full name",
+      "outcome": "completed",
+      "tables": {
+        "Application.People": {
+          "columns": [
+            "PersonID",
+            "FullName",
+            "IsPermittedToLogon",
+            "LogonName",
+            "HashedPassword",
+            "UserPreferences"
+          ],
+          "rows": [
+            [
+              "n:1",
+              "s:Person 1",
+              "b:1",
+              "∅",
+              "∅",
+              "s:{\"theme\":\"blue\"}"
+            ],
+            [
+              "n:2",
+              "s:amy trefl",
+              "b:1",
+              "s:Amy@Example.COM",
+              "x:5e89e0315d87499d0d49d9492c49060f0c08fbb477bf9905ccceeafb4cddc568",
+              "s:{\"theme\":\"blue\"}"
+            ],
+            [
+              "n:3",
+              "s:amy trefl",
+              "b:0",
+              "∅",
+              "∅",
+              "∅"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "label": "[A09] person ids at the int limits and with gaps: activate 2147483647 while -2147483648 and 0 exist",
+      "outcome": "completed",
+      "tables": {
+        "Application.People": {
+          "columns": [
+            "PersonID",
+            "FullName",
+            "IsPermittedToLogon",
+            "LogonName",
+            "HashedPassword",
+            "UserPreferences"
+          ],
+          "rows": [
+            [
+              "n:-2147483648",
+              "s:Person -2147483648",
+              "b:0",
+              "∅",
+              "∅",
+              "∅"
+            ],
+            [
+              "n:0",
+              "s:Person 0",
+              "b:0",
+              "∅",
+              "∅",
+              "∅"
+            ],
+            [
+              "n:1",
+              "s:Person 1",
+              "b:1",
+              "∅",
+              "∅",
+              "s:{\"theme\":\"blue\"}"
+            ],
+            [
+              "n:2147483647",
+              "s:Max",
+              "b:1",
+              "s:max@example.com",
+              "x:ca96072e309908a5cd899ce06cb4e036a4f8f7e35cfccc52eb59a5d55a94cf3f",
+              "s:{\"theme\":\"blue\"}"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "label": "[A10] NULL person id: nothing is updated and both engines raise",
+      "outcome": "raised",
+      "tables": {
+        "Application.People": {
+          "columns": [
+            "PersonID",
+            "FullName",
+            "IsPermittedToLogon",
+            "LogonName",
+            "HashedPassword",
+            "UserPreferences"
+          ],
+          "rows": [
+            [
+              "n:1",
+              "s:Person 1",
+              "b:1",
+              "∅",
+              "∅",
+              "s:{\"theme\":\"blue\"}"
+            ],
+            [
+              "n:2",
+              "s:Person 2",
+              "b:0",
+              "∅",
+              "∅",
+              "∅"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "label": "[A11] person 1 not yet enabled, called directly: refused, and its own row is unchanged",
+      "outcome": "raised",
+      "tables": {
+        "Application.People": {
+          "columns": [
+            "PersonID",
+            "FullName",
+            "IsPermittedToLogon",
+            "LogonName",
+            "HashedPassword",
+            "UserPreferences"
+          ],
+          "rows": [
+            [
+              "n:1",
+              "s:Person 1",
+              "b:0",
+              "∅",
+              "∅",
+              "s:{\"theme\":\"red\"}"
+            ],
+            [
+              "n:2",
+              "s:Person 2",
+              "b:0",
+              "∅",
+              "∅",
+              "∅"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "label": "[A12] an already-enabled person with an existing hash is refused and keeps the hash",
+      "outcome": "raised",
+      "tables": {
+        "Application.People": {
+          "columns": [
+            "PersonID",
+            "FullName",
+            "IsPermittedToLogon",
+            "LogonName",
+            "HashedPassword",
+            "UserPreferences"
+          ],
+          "rows": [
+            [
+              "n:1",
+              "s:Person 1",
+              "b:1",
+              "∅",
+              "∅",
+              "s:{\"theme\":\"blue\"}"
+            ],
+            [
+              "n:2",
+              "s:Person 2",
+              "b:1",
+              "s:amy",
+              "x:00ff10",
+              "s:mine"
+            ]
+          ]
+        }
+      }
+    }
+  ]
+}

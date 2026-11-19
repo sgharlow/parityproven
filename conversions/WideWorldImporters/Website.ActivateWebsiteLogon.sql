@@ -36,6 +36,26 @@ AS $fn$
     ) AS s
 $fn$;
 
+-- Adversarial run 2026-11-19 (cases A01, A02, A04): the T-SQL parameters are nvarchar(50) and nvarchar(40), and SQL Server
+-- cuts a longer argument to that many UTF-16 code units without an error. PostgreSQL text parameters keep everything, so the
+-- procedure cuts them the same way. A character that would straddle the limit is dropped whole (SQL Server would keep half a
+-- surrogate pair; not checked). Checked for the inputs the cases use.
+CREATE OR REPLACE FUNCTION tsql_compat.truncate_utf16(value text, max_units integer)
+RETURNS text
+LANGUAGE sql
+IMMUTABLE
+STRICT
+AS $fn$
+    SELECT COALESCE(string_agg(s.ch, '' ORDER BY s.ord), '')
+    FROM (
+        SELECT t.ch, t.ord,
+               sum(CASE WHEN ascii(t.ch) > 65535 THEN 2 ELSE 1 END) OVER (ORDER BY t.ord) AS units
+        FROM regexp_split_to_table(value, '') WITH ORDINALITY AS t(ch, ord)
+        WHERE t.ch <> ''
+    ) AS s
+    WHERE s.units <= max_units
+$fn$;
+
 CREATE OR REPLACE PROCEDURE website.activate_website_logon(
     person_id integer,
     logon_name text,
@@ -44,6 +64,9 @@ CREATE OR REPLACE PROCEDURE website.activate_website_logon(
 LANGUAGE plpgsql
 AS $fn$
 BEGIN
+    logon_name := tsql_compat.truncate_utf16(logon_name, 50);
+    initial_password := tsql_compat.truncate_utf16(initial_password, 40);
+
     UPDATE application.people AS p
     SET "IsPermittedToLogon" = true,
         "LogonName" = logon_name,

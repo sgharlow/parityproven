@@ -85,7 +85,15 @@
       "SQL Server: AgreedTests.[test 01 window edges to the microsecond (at @LastCutoff excluded, +1 µs included, at @NewCutoff included, +1…]: pass",
       "PostgreSQL: AgreedTests.[test 01 window edges to the microsecond (at @LastCutoff excluded, +1 µs included, at @NewCutoff included, +1…]: pass",
       "planted defects caught by the agreed tests: 2 of 2"
-    ]
+    ],
+    "adversarial": {
+      "gate": "pass",
+      "ran": 4,
+      "differed": 0,
+      "evidencePath": "evidence/adversarial/WideWorldImporters/Integration.GetPurchaseUpdates.json",
+      "conversionSha256": "3ac5445d3e717e555d4608795a57f2171a090a61e9e1acd1fd6fbbb59b8e93ce",
+      "runAt": "2026-11-19T05:05:16.166Z"
+    }
   },
   "effort": {
     "humanMinutes": 0,

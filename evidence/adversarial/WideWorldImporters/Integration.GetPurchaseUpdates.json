@@ -1,0 +1,188 @@
+{
+  "schemaVersion": 1,
+  "object": "Integration.GetPurchaseUpdates",
+  "database": "WideWorldImporters",
+  "runAt": "2026-11-19T05:05:16.166Z",
+  "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
+  "conversionSha256": "3ac5445d3e717e555d4608795a57f2171a090a61e9e1acd1fd6fbbb59b8e93ce",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-19T04:36:25.160Z",
+    "file": "adversarial/WideWorldImporters/Integration.GetPurchaseUpdates.cases.json",
+    "sha256": "d1d16b68822ed10467e2a312608ea0151ac113ceb51a02473edaa0838bb92309"
+  },
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T21:39:58.1908526-07:00",
+    "file": "adversarial/WideWorldImporters/Integration.GetPurchaseUpdates.audit.json",
+    "sha256": "0e63371cc1b1068922268235b346cc509e2b66dab791f0ca4936bccf098a1646"
+  },
+  "sameModel": false,
+  "casesAudited": [
+    "A01",
+    "A02",
+    "A03",
+    "A04"
+  ],
+  "traps": {
+    "null-vs-empty": {
+      "applicable": true,
+      "coveredBy": [],
+      "notApplicableReason": "The only text column, Warehouse.PackageTypes.PackageTypeName, is NOT NULL, so no NULL text value can be sent; the procedure compares no text.",
+      "accepted": true
+    },
+    "collation-case": {
+      "applicable": true,
+      "coveredBy": [],
+      "notApplicableReason": "The only text column, PackageTypeName, has a unique constraint under the database's case-insensitive collation (UQ_Warehouse_PackageTypes_PackageTypeName), so two names differing only in case are not valid source data, and no text is compared or grouped.",
+      "accepted": true
+    },
+    "trailing-spaces": {
+      "applicable": true,
+      "coveredBy": [
+        "A04"
+      ]
+    },
+    "dates-datetime": {
+      "applicable": true,
+      "coveredBy": [
+        "A01",
+        "A03"
+      ]
+    },
+    "numeric-rounding": {
+      "applicable": false,
+      "coveredBy": [],
+      "notApplicableReason": "No decimal or money column or expression: every number is int (outers, quantity per outer) or a key.",
+      "accepted": true
+    },
+    "top-ties": {
+      "applicable": true,
+      "coveredBy": [
+        "A02"
+      ]
+    },
+    "identity-gaps": {
+      "applicable": true,
+      "coveredBy": [
+        "A04"
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "the later of order and line time decides: order inside with line after @NewCutoff (excluded); order after @NewCutoff with line inside (excluded); both at @NewCutoff (included); later time exactly @LastCutoff (excluded)",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "Last Modified When is the later of the order's and the line's LastEditedWhen and both bounds apply to it. A conversion that filtered order and line separately, or took the earlier time, would list orders 1 and 2 or drop order 3.",
+      "trapChecks": {
+        "dates-datetime": {
+          "present": true,
+          "detail": "a cutoff equals \"2020-06-15T13:00:00.000000\" in LastEditedWhen"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A02",
+      "label": "Ordered Quantity near the int limit: 46340 x 46340 = 2147395600, -46340 x 46341, zero outers, and QuantityPerOuter 0 and 1",
+      "traps": [
+        "top-ties"
+      ],
+      "reasoning": "OrderedOuters * QuantityPerOuter is int x int on both engines. The products stay inside int; a conversion that widened one side to numeric or narrowed to smallint would show. Lines share OrderedOuters and ReceivedOuters values.",
+      "trapChecks": {
+        "top-ties": {
+          "present": true,
+          "detail": "two rows of Purchasing.PurchaseOrderLines share PurchaseOrderID = 1"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A03",
+      "label": "window at the extremes of datetime2 and dates at the limits: @NewCutoff 9999-12-31 23:59:59.999999; OrderDate 1753-01-01 and 9999-12-31",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "@LastCutoff 0001-01-01 00:00:00 excludes a row edited at that instant and includes one 1 µs later; a row edited at 9999-12-31 23:59:59.999999 equals @NewCutoff and is included. OrderDate is passed through CAST(... AS date) at both ends of the range.",
+      "trapChecks": {
+        "dates-datetime": {
+          "present": true,
+          "detail": "boundary date \"1753-01-01\" in OrderDate"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A04",
+      "label": "inner joins and keys: a missing stock item and a missing package type drop their lines; a package name with a trailing space; ids with gaps and at the int limits",
+      "traps": [
+        "identity-gaps",
+        "trailing-spaces"
+      ],
+      "reasoning": "Line 7 points at stock item 99 and line 8 at package type 99 (both dropped). Order ids 2147483647, 40 and -2147483648; line and stock item ids jump. Package 'Carton ' keeps its trailing space on output.",
+      "trapChecks": {
+        "identity-gaps": {
+          "present": true,
+          "detail": "Warehouse.PackageTypes.PackageTypeID jumps from 1 to 5"
+        },
+        "trailing-spaces": {
+          "present": true,
+          "detail": "\"Carton \" ends in a space"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    }
+  ],
+  "summary": {
+    "ran": 4,
+    "differed": 0,
+    "invalid": 0
+  },
+  "objections": [],
+  "mutantAdequacy": {
+    "verdict": "adequate",
+    "caught": [
+      "ordered quantity uses outers only",
+      "upper cutoff exclusive"
+    ],
+    "missed": [],
+    "skipped": [],
+    "equivalentRecorded": []
+  },
+  "gate": {
+    "passed": true,
+    "reasons": []
+  },
+  "wording": "4 adversarial cases ran, 0 differed"
+}

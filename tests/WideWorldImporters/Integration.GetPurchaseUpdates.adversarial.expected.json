@@ -1,0 +1,317 @@
+{
+  "object": "Integration.GetPurchaseUpdates",
+  "database": "WideWorldImporters",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-19T05:05:11.142Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "[A01] the later of order and line time decides: order inside with line after @NewCutoff (excluded); order after @NewCutoff with line inside (excluded); both at @NewCutoff (included); later time exactly @LastCutoff (excluded)",
+      "columns": [
+        {
+          "name": "Date Key",
+          "sqlServerType": "date"
+        },
+        {
+          "name": "WWI Purchase Order ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Ordered Outers",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Ordered Quantity",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Received Outers",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Package",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Is Order Finalized",
+          "sqlServerType": "bit"
+        },
+        {
+          "name": "WWI Supplier ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Stock Item ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Last Modified When",
+          "sqlServerType": "datetime2(7)"
+        }
+      ],
+      "rows": [
+        [
+          "d:2020-06-01",
+          "n:3",
+          "n:2",
+          "n:24",
+          "n:1",
+          "s:Carton",
+          "b:0",
+          "n:7",
+          "n:1",
+          "t:2020-06-15T13:00:00.000000"
+        ]
+      ]
+    },
+    {
+      "label": "[A02] Ordered Quantity near the int limit: 46340 x 46340 = 2147395600, -46340 x 46341, zero outers, and QuantityPerOuter 0 and 1",
+      "columns": [
+        {
+          "name": "Date Key",
+          "sqlServerType": "date"
+        },
+        {
+          "name": "WWI Purchase Order ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Ordered Outers",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Ordered Quantity",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Received Outers",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Package",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Is Order Finalized",
+          "sqlServerType": "bit"
+        },
+        {
+          "name": "WWI Supplier ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Stock Item ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Last Modified When",
+          "sqlServerType": "datetime2(7)"
+        }
+      ],
+      "rows": [
+        [
+          "d:2020-06-01",
+          "n:1",
+          "n:46340",
+          "n:2147395600",
+          "n:1",
+          "s:Carton",
+          "b:0",
+          "n:7",
+          "n:1",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-01",
+          "n:1",
+          "n:-46340",
+          "n:-2147441940",
+          "n:1",
+          "s:Carton",
+          "b:0",
+          "n:7",
+          "n:2",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-01",
+          "n:1",
+          "n:0",
+          "n:0",
+          "n:0",
+          "s:Carton",
+          "b:0",
+          "n:7",
+          "n:1",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-01",
+          "n:1",
+          "n:5",
+          "n:0",
+          "n:1",
+          "s:Carton",
+          "b:0",
+          "n:7",
+          "n:3",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-01",
+          "n:1",
+          "n:5",
+          "n:5",
+          "n:1",
+          "s:Carton",
+          "b:1",
+          "n:7",
+          "n:4",
+          "t:2020-06-15T12:00:00.000000"
+        ]
+      ]
+    },
+    {
+      "label": "[A03] window at the extremes of datetime2 and dates at the limits: @NewCutoff 9999-12-31 23:59:59.999999; OrderDate 1753-01-01 and 9999-12-31",
+      "columns": [
+        {
+          "name": "Date Key",
+          "sqlServerType": "date"
+        },
+        {
+          "name": "WWI Purchase Order ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Ordered Outers",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Ordered Quantity",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Received Outers",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Package",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Is Order Finalized",
+          "sqlServerType": "bit"
+        },
+        {
+          "name": "WWI Supplier ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Stock Item ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Last Modified When",
+          "sqlServerType": "datetime2(7)"
+        }
+      ],
+      "rows": [
+        [
+          "d:1753-01-01",
+          "n:2",
+          "n:2",
+          "n:24",
+          "n:1",
+          "s:Carton",
+          "b:0",
+          "n:7",
+          "n:1",
+          "t:0001-01-01T00:00:00.000001"
+        ],
+        [
+          "d:9999-12-31",
+          "n:3",
+          "n:2",
+          "n:24",
+          "n:1",
+          "s:Carton",
+          "b:0",
+          "n:7",
+          "n:1",
+          "t:9999-12-31T23:59:59.999999"
+        ]
+      ]
+    },
+    {
+      "label": "[A04] inner joins and keys: a missing stock item and a missing package type drop their lines; a package name with a trailing space; ids with gaps and at the int limits",
+      "columns": [
+        {
+          "name": "Date Key",
+          "sqlServerType": "date"
+        },
+        {
+          "name": "WWI Purchase Order ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Ordered Outers",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Ordered Quantity",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Received Outers",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Package",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Is Order Finalized",
+          "sqlServerType": "bit"
+        },
+        {
+          "name": "WWI Supplier ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Stock Item ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Last Modified When",
+          "sqlServerType": "datetime2(7)"
+        }
+      ],
+      "rows": [
+        [
+          "d:2020-06-01",
+          "n:-2147483648",
+          "n:2",
+          "n:6",
+          "n:1",
+          "s:Pallet",
+          "b:1",
+          "n:2147483647",
+          "n:1000",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-01",
+          "n:2147483647",
+          "n:2",
+          "n:24",
+          "n:1",
+          "s:Carton ",
+          "b:0",
+          "n:7",
+          "n:1",
+          "t:2020-06-15T12:00:00.000000"
+        ]
+      ]
+    }
+  ]
+}

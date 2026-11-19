@@ -5,7 +5,7 @@
   "objectClass": "procedure",
   "tier": "simple",
   "predictionTier": "simple",
-  "status": "pending",
+  "status": "verified",
   "code": {
     "source": "\r\nCREATE PROCEDURE Integration.GetOrderUpdates\r\n@LastCutoff datetime2(7),\r\n@NewCutoff datetime2(7)\r\nWITH EXECUTE AS OWNER\r\nAS\r\nBEGIN\r\n    SET NOCOUNT ON;\r\n    SET XACT_ABORT ON;\r\n\r\n\r\n    SELECT CAST(o.OrderDate AS date) AS [Order Date Key],\r\n           CAST(ol.PickingCompletedWhen AS date) AS [Picked Date Key],\r\n           o.OrderID AS [WWI Order ID],\r\n           o.BackorderOrderID AS [WWI Backorder ID],\r\n           ol.[Description],\r\n           pt.PackageTypeName AS Package,\r\n           ol.Quantity AS Quantity,\r\n           ol.UnitPrice AS [Unit Price],\r\n           ol.TaxRate AS [Tax Rate],\r\n           ROUND(ol.Quantity * ol.UnitPrice, 2) AS [Total Excluding Tax],\r\n           ROUND(ol.Quantity * ol.UnitPrice * ol.TaxRate / 100.0, 2) AS [Tax Amount],\r\n           ROUND(ol.Quantity * ol.UnitPrice, 2) + ROUND(ol.Quantity * ol.UnitPrice * ol.TaxRate / 100.0, 2) AS [Total Including Tax],\r\n           c.DeliveryCityID AS [WWI City ID],\r\n           c.CustomerID AS [WWI Customer ID],\r\n           ol.StockItemID AS [WWI Stock Item ID],\r\n           o.SalespersonPersonID AS [WWI Salesperson ID],\r\n           o.PickedByPersonID AS [WWI Picker ID],\r\n           CASE WHEN ol.LastEditedWhen > o.LastEditedWhen THEN ol.LastEditedWhen ELSE o.LastEditedWhen END AS [Last Modified When]\r\n    FROM Sales.Orders AS o\r\n    INNER JOIN Sales.OrderLines AS ol\r\n    ON o.OrderID = ol.OrderID\r\n    INNER JOIN Warehouse.PackageTypes AS pt\r\n    ON ol.PackageTypeID = pt.PackageTypeID\r\n    INNER JOIN Sales.Customers AS c\r\n    ON c.CustomerID = o.CustomerID\r\n    WHERE CASE WHEN ol.LastEditedWhen > o.LastEditedWhen THEN ol.LastEditedWhen ELSE o.LastEditedWhen END > @LastCutoff\r\n    AND CASE WHEN ol.LastEditedWhen > o.LastEditedWhen THEN ol.LastEditedWhen ELSE o.LastEditedWhen END <= @NewCutoff\r\n    ORDER BY o.OrderID;\r\n\r\n    RETURN 0;\r\nEND;\r\n",
     "engineOutput": "-- PL/pgSQL conversion of Integration.GetOrderUpdates (WideWorldImporters).\n-- Engine: Kiro first draft (see pair record).\n-- WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted.\n\nCREATE OR REPLACE FUNCTION integration.get_order_updates(\n    last_cutoff timestamp,\n    new_cutoff  timestamp\n)\nRETURNS TABLE (\n    \"Order Date Key\"       date,\n    \"Picked Date Key\"      date,\n    \"WWI Order ID\"         integer,\n    \"WWI Backorder ID\"     integer,\n    \"Description\"          varchar(100),\n    \"Package\"              varchar(50),\n    \"Quantity\"             integer,\n    \"Unit Price\"           numeric,\n    \"Tax Rate\"             numeric,\n    \"Total Excluding Tax\"  numeric,\n    \"Tax Amount\"           numeric,\n    \"Total Including Tax\"  numeric,\n    \"WWI City ID\"          integer,\n    \"WWI Customer ID\"      integer,\n    \"WWI Stock Item ID\"    integer,\n    \"WWI Salesperson ID\"   integer,\n    \"WWI Picker ID\"        integer,\n    \"Last Modified When\"   timestamp\n)\nLANGUAGE sql\nSTABLE\nAS $$\n    SELECT\n        o.\"OrderDate\"::date,\n        ol.\"PickingCompletedWhen\"::date,\n        o.\"OrderID\",\n        o.\"BackorderOrderID\",\n        ol.\"Description\",\n        pt.\"PackageTypeName\",\n        ol.\"Quantity\",\n        ol.\"UnitPrice\",\n        ol.\"TaxRate\",\n        round(ol.\"Quantity\" * ol.\"UnitPrice\", 2),\n        round(ol.\"Quantity\" * ol.\"UnitPrice\" * ol.\"TaxRate\" / 100.0, 2),\n        round(ol.\"Quantity\" * ol.\"UnitPrice\", 2) + round(ol.\"Quantity\" * ol.\"UnitPrice\" * ol.\"TaxRate\" / 100.0, 2),\n        c.\"DeliveryCityID\",\n        c.\"CustomerID\",\n        ol.\"StockItemID\",\n        o.\"SalespersonPersonID\",\n        o.\"PickedByPersonID\",\n        CASE WHEN ol.\"LastEditedWhen\" > o.\"LastEditedWhen\" THEN ol.\"LastEditedWhen\" ELSE o.\"LastEditedWhen\" END\n    FROM sales.orders AS o\n    INNER JOIN sales.order_lines AS ol ON o.\"OrderID\" = ol.\"OrderID\"\n    INNER JOIN warehouse.package_types AS pt ON ol.\"PackageTypeID\" = pt.\"PackageTypeID\"\n    INNER JOIN sales.customers AS c ON c.\"CustomerID\" = o.\"CustomerID\"\n    WHERE CASE WHEN ol.\"LastEditedWhen\" > o.\"LastEditedWhen\" THEN ol.\"LastEditedWhen\" ELSE o.\"LastEditedWhen\" END > last_cutoff\n      AND CASE WHEN ol.\"LastEditedWhen\" > o.\"LastEditedWhen\" THEN ol.\"LastEditedWhen\" ELSE o.\"LastEditedWhen\" END <= new_cutoff\n    ORDER BY o.\"OrderID\"\n$$;\n",
@@ -130,7 +130,95 @@
       "planted defects caught by the agreed tests: 2 of 2"
     ],
     "reviewer": "Steve Harlow",
-    "reviewDate": "2026-11-18"
+    "reviewDate": "2026-11-18",
+    "adversarial": {
+      "gate": "pass",
+      "ran": 7,
+      "differed": 0,
+      "evidencePath": "evidence/adversarial/WideWorldImporters/Integration.GetOrderUpdates.json",
+      "runAt": "2026-11-19T05:05:07.621Z",
+      "agentWritten": true,
+      "wording": "7 adversarial cases ran, 0 differed",
+      "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
+      "auditorModel": "gpt-5.6-sol",
+      "sameModel": false,
+      "mutantAdequacy": "adequate",
+      "gateReasons": [],
+      "cases": [
+        {
+          "id": "A01",
+          "label": "the later of order and line time decides: order inside with line after @NewCutoff (excluded); order after @NewCutoff with line inside (excluded); both at @NewCutoff (included); later time exactly @LastCutoff (excluded)",
+          "traps": [
+            "dates-datetime"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A02",
+          "label": "one order, lines edited at different times: only the lines whose later time is inside the window are listed",
+          "traps": [
+            "dates-datetime",
+            "top-ties"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A03",
+          "label": "tax rounds half away from zero at 2 places, also for negative quantities: 0.005 -> 0.01, -0.105 -> -0.11, 1.2075 -> 1.21, 0.087535 -> 0.09, 14994998.5005 -> 14994998.50",
+          "traps": [
+            "numeric-rounding"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A04",
+          "label": "SQL Server's decimal scale: Quantity x UnitPrice x TaxRate / 100.0 is decimal(38,6), so 0.0049999 becomes 0.004999 before ROUND; NULL UnitPrice and a zero rate",
+          "traps": [
+            "numeric-rounding"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A05",
+          "label": "text as stored: descriptions differing only in case or by a trailing space, an empty description, an emoji; a package name with a trailing space",
+          "traps": [
+            "collation-case",
+            "trailing-spaces"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A06",
+          "label": "dates at the limits: OrderDate 1753-01-01 and 9999-12-31; PickingCompletedWhen 9999-12-31 23:59:59.999999, 1753-01-01 00:00:00 and NULL",
+          "traps": [
+            "dates-datetime"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A07",
+          "label": "inner joins and keys: an unknown package type and an unknown customer drop their rows; an order without lines; ids with gaps and at the int limits",
+          "traps": [
+            "identity-gaps"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        }
+      ]
+    }
   },
   "effort": {
     "humanMinutes": 2,
@@ -141,5 +229,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-19T04:20:26.202Z"
+  "builtAt": "2026-11-19T05:06:27.363Z"
 }

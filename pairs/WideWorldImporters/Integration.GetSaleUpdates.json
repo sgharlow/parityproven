@@ -109,7 +109,15 @@
       "SQL Server: AgreedTests.[test 01 dry and chiller lines split Quantity; Total Excluding Tax = ExtendedPrice - TaxAmount; UnitPrice and…]: pass",
       "PostgreSQL: AgreedTests.[test 01 dry and chiller lines split Quantity; Total Excluding Tax = ExtendedPrice - TaxAmount; UnitPrice and…]: pass",
       "planted defects caught by the agreed tests: 2 of 2"
-    ]
+    ],
+    "adversarial": {
+      "gate": "fail",
+      "ran": 5,
+      "differed": 0,
+      "evidencePath": "evidence/adversarial/WideWorldImporters/Integration.GetSaleUpdates.json",
+      "conversionSha256": "29eb61ad54858e00ce1b74298d6d938072fc0132dcb5f527cdacf5792a301822",
+      "runAt": "2026-11-19T05:05:25.164Z"
+    }
   },
   "effort": {
     "humanMinutes": 0,

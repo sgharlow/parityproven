@@ -86,7 +86,15 @@
       "SQL Server: AgreedTests.[test 01 two phones give two rows (unknown phone type is NULL); no email or a NULL email is NULL; Title kept;…]: pass",
       "PostgreSQL: AgreedTests.[test 01 two phones give two rows (unknown phone type is NULL); no email or a NULL email is NULL; Title kept;…]: pass",
       "planted defects caught by the agreed tests: 2 of 2"
-    ]
+    ],
+    "adversarial": {
+      "gate": "pass",
+      "ran": 6,
+      "differed": 0,
+      "evidencePath": "evidence/adversarial/AdventureWorks2025/Sales.vStoreWithContacts.json",
+      "conversionSha256": "ba5f1885379987521a442c07f27cad08988f3e1e537cff8953632ae31326f900",
+      "runAt": "2026-11-19T05:04:49.670Z"
+    }
   },
   "effort": {
     "humanMinutes": 0,

@@ -1,0 +1,204 @@
+{
+  "schemaVersion": 1,
+  "object": "Integration.GetStockHoldingUpdates",
+  "database": "WideWorldImporters",
+  "runAt": "2026-11-19T05:05:32.898Z",
+  "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
+  "conversionSha256": "eb2a3aed3e96b8909687d5b94bc43bdc3a1fea2531165a8ca18e6857f748b854",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-19T04:36:25.160Z",
+    "file": "adversarial/WideWorldImporters/Integration.GetStockHoldingUpdates.cases.json",
+    "sha256": "964f1bbd68a7eee1f9b3aa0143a25b75662fce2ebef0f963eb48fd4a6638156f"
+  },
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T21:39:58.1908526-07:00",
+    "file": "adversarial/WideWorldImporters/Integration.GetStockHoldingUpdates.audit.json",
+    "sha256": "7fe7020534eda425239cf62cfc9bfa63147d5b51c2a7772928a7c9a7afe59081"
+  },
+  "sameModel": false,
+  "casesAudited": [
+    "A01",
+    "A02",
+    "A03",
+    "A04",
+    "A05"
+  ],
+  "traps": {
+    "null-vs-empty": {
+      "applicable": true,
+      "coveredBy": [],
+      "notApplicableReason": "Every column of Warehouse.StockItemHoldings that the procedure reads is NOT NULL, including BinLocation, so no NULL text value can be sent. '' and ' ' are sent as bin locations in the text case.",
+      "accepted": true
+    },
+    "collation-case": {
+      "applicable": true,
+      "coveredBy": [
+        "A03"
+      ]
+    },
+    "trailing-spaces": {
+      "applicable": true,
+      "coveredBy": [
+        "A03"
+      ]
+    },
+    "dates-datetime": {
+      "applicable": false,
+      "coveredBy": []
+    },
+    "numeric-rounding": {
+      "applicable": true,
+      "coveredBy": [
+        "A02"
+      ]
+    },
+    "top-ties": {
+      "applicable": true,
+      "coveredBy": [
+        "A04"
+      ]
+    },
+    "identity-gaps": {
+      "applicable": true,
+      "coveredBy": [
+        "A01"
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "rows inserted in descending key order, keys at the int limits and with gaps: listed by StockItemID ascending; reorder and target levels differ on every row",
+      "traps": [
+        "identity-gaps"
+      ],
+      "reasoning": "Ids 2147483647, 1000, 0, -1, -2147483648 are inserted in that order. ORDER BY sih.StockItemID must sort negatives first; a result in insertion order or descending would differ. ReorderLevel and TargetStockLevel differ on every row so a swapped pair shows.",
+      "trapChecks": {
+        "identity-gaps": {
+          "present": true,
+          "detail": "Warehouse.StockItemHoldings.StockItemID jumps from -2147483648 to -1"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A02",
+      "label": "LastCostPrice ending in 5 and at 15 significant digits: 0.05, -0.15, 9999999999999.95, -9999999999999.95, 0.00",
+      "traps": [
+        "numeric-rounding"
+      ],
+      "reasoning": "decimal(18,2) is passed through. A conversion through float or money, or a column mapped to numeric with a smaller scale, would change 0.05 / -0.15 (not exact in binary) or the 15-digit values.",
+      "trapChecks": {
+        "numeric-rounding": {
+          "present": true,
+          "detail": "0.05 in LastCostPrice ends in a 5"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A03",
+      "label": "bin locations as stored: case-only variants, trailing spaces, '' and a single space, ten emoji (20 UTF-16 code units)",
+      "traps": [
+        "collation-case",
+        "trailing-spaces"
+      ],
+      "reasoning": "BinLocation is passed through. 'a-1', 'A-1' and 'A-1 ' are three rows under CI_AS and must keep their spelling; '' and ' ' are different values on output (nvarchar keeps the space). Ten emoji fill nvarchar(20) exactly in UTF-16 code units (10 characters in varchar(20)).",
+      "trapChecks": {
+        "collation-case": {
+          "present": true,
+          "detail": "\"a-1\" and \"A-1\" differ only in case"
+        },
+        "trailing-spaces": {
+          "present": true,
+          "detail": "\"A-1 \" ends in a space"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A04",
+      "label": "quantities at the int limits; equal QuantityOnHand and LastStocktakeQuantity on several rows; ReorderLevel greater than TargetStockLevel",
+      "traps": [
+        "top-ties"
+      ],
+      "reasoning": "QuantityOnHand 2147483647 and -2147483648; three rows share QuantityOnHand 0 and LastStocktakeQuantity 0, ordered only by StockItemID. ReorderLevel 100 > TargetStockLevel 10 on one row.",
+      "trapChecks": {
+        "top-ties": {
+          "present": true,
+          "detail": "two rows of Warehouse.StockItemHoldings share QuantityOnHand = 0"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A05",
+      "label": "empty table: no rows",
+      "traps": [],
+      "reasoning": "With no holdings the procedure returns an empty result set with its seven columns. A conversion that aggregated or LEFT JOINed to a driving row would return one row of NULLs.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    }
+  ],
+  "summary": {
+    "ran": 5,
+    "differed": 0,
+    "invalid": 0
+  },
+  "objections": [],
+  "mutantAdequacy": {
+    "verdict": "inadequate",
+    "caught": [
+      "swapped reorder / target"
+    ],
+    "missed": [
+      "descending order"
+    ],
+    "skipped": [],
+    "equivalentRecorded": []
+  },
+  "gate": {
+    "passed": false,
+    "reasons": [
+      "mutant adequacy is inadequate (unexplained misses: descending order)"
+    ]
+  },
+  "wording": "5 adversarial cases ran, 0 differed"
+}

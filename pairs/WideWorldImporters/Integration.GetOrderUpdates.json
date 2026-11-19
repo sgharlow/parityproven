@@ -108,12 +108,20 @@
       "planted defects caught by the agreed tests: 2 of 2"
     ],
     "reviewer": "Steve Harlow",
-    "reviewDate": "2026-11-18"
+    "reviewDate": "2026-11-18",
+    "adversarial": {
+      "gate": "pass",
+      "ran": 7,
+      "differed": 0,
+      "evidencePath": "evidence/adversarial/WideWorldImporters/Integration.GetOrderUpdates.json",
+      "conversionSha256": "4551269d5bc6a43b58b9880321a762b7b832510eeef77013d9a7db0b4ed4a923",
+      "runAt": "2026-11-19T05:05:07.621Z"
+    }
   },
   "effort": {
     "humanMinutes": 2,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

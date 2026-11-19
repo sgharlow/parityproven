@@ -1,0 +1,223 @@
+{
+  "schemaVersion": 1,
+  "object": "Sales.vStoreWithContacts",
+  "database": "AdventureWorks2025",
+  "runAt": "2026-11-19T05:04:49.670Z",
+  "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
+  "conversionSha256": "ba5f1885379987521a442c07f27cad08988f3e1e537cff8953632ae31326f900",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-19T04:36:25.160Z",
+    "file": "adversarial/AdventureWorks2025/Sales.vStoreWithContacts.cases.json",
+    "sha256": "d6755d6e0ee86cb6ab34052062be62d7dd144b58151c72fcd4478f6e2ef1b5af"
+  },
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T21:39:58.1908526-07:00",
+    "file": "adversarial/AdventureWorks2025/Sales.vStoreWithContacts.audit.json",
+    "sha256": "3f1cc0d7fc08f4e9b8450cc17c7652ddafa1bac602b9102b388f47d18c787081"
+  },
+  "sameModel": false,
+  "casesAudited": [
+    "A01",
+    "A02",
+    "A03",
+    "A04",
+    "A05",
+    "A06"
+  ],
+  "traps": {
+    "null-vs-empty": {
+      "applicable": true,
+      "coveredBy": [
+        "A01"
+      ]
+    },
+    "collation-case": {
+      "applicable": true,
+      "coveredBy": [
+        "A02"
+      ]
+    },
+    "trailing-spaces": {
+      "applicable": true,
+      "coveredBy": [
+        "A02"
+      ]
+    },
+    "dates-datetime": {
+      "applicable": false,
+      "coveredBy": []
+    },
+    "numeric-rounding": {
+      "applicable": false,
+      "coveredBy": []
+    },
+    "top-ties": {
+      "applicable": true,
+      "coveredBy": [
+        "A03"
+      ]
+    },
+    "identity-gaps": {
+      "applicable": true,
+      "coveredBy": [
+        "A04",
+        "A05"
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "NULL versus '': Title, MiddleName and Suffix as NULL and as ''; an email row whose address is NULL, one with '', and no email row",
+      "traps": [
+        "null-vs-empty"
+      ],
+      "reasoning": "Person 10 has an EmailAddress row whose address is NULL, person 11 one whose address is '', person 12 none (LEFT JOIN: NULL). Title, MiddleName and Suffix are NULL on one person and '' on another. '' must stay '' on output and the NULLs stay NULL.",
+      "trapChecks": {
+        "null-vs-empty": {
+          "present": true,
+          "detail": "empty string: yes; NULL in a text input: yes"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A02",
+      "label": "text returned as stored: first names differing only in case or by a trailing space, a store name with a trailing space, an emoji and combining accents",
+      "traps": [
+        "collation-case",
+        "trailing-spaces"
+      ],
+      "reasoning": "Nothing is compared on text in this view; every value must come back with its own spelling and length. 'Ann', 'ANN' and 'ann ' are three contacts; 'e' + U+0301 (combining acute) is not normalised to 'é' by either engine; the emoji is a surrogate pair in nvarchar.",
+      "trapChecks": {
+        "collation-case": {
+          "present": true,
+          "detail": "\"Ann\" and \"ANN\" differ only in case"
+        },
+        "trailing-spaces": {
+          "present": true,
+          "detail": "\"Store 1 \" ends in a space"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A03",
+      "label": "fan-out without duplicate keys: a contact under two contact types, with one email and three phones (one of an unknown phone type)",
+      "traps": [
+        "top-ties"
+      ],
+      "reasoning": "Person 10 is an Owner and a Store Contact of store 1, has one email and three PersonPhone rows with distinct keys (two of type 1, one of type 9 with no PhoneNumberType row: NULL). 2 x 1 x 3 = 6 rows, with repeated values in every column but PhoneNumber and ContactType.",
+      "trapChecks": {
+        "top-ties": {
+          "present": true,
+          "detail": "two rows of Person.BusinessEntityContact share BusinessEntityID = 1"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A04",
+      "label": "join keys: the store's own BusinessEntityID is also a person with an email and a phone, which must not be attached to the contact",
+      "traps": [
+        "identity-gaps"
+      ],
+      "reasoning": "AdventureWorks business entities share one id space. Store 20 and person 20 both exist; person 20 has an email and a phone. The email and phone joins use the contact person's id (p.BusinessEntityID = 30), not the store's. A conversion joining on s.BusinessEntityID or bec.BusinessEntityID would attach person 20's email and phone to contact 30.",
+      "trapChecks": {
+        "identity-gaps": {
+          "present": true,
+          "detail": "Person.Person.BusinessEntityID jumps from 20 to 30"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A05",
+      "label": "keys with gaps and at the int limits: store 0, person 2147483647, contact type -2147483648; EmailPromotion at the int limits; a contact without email or phone",
+      "traps": [
+        "identity-gaps"
+      ],
+      "reasoning": "BusinessEntityID, PersonID and ContactTypeID jump and sit at the int limits; EmailPromotion (int, passed through) is 2147483647 and -2147483648. Person 3 has no email and no phone, so the two LEFT JOINs give NULLs; an inner join would drop the row.",
+      "trapChecks": {
+        "identity-gaps": {
+          "present": true,
+          "detail": "Sales.Store.BusinessEntityID jumps from 0 to 5"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A06",
+      "label": "rows dropped by the inner joins: a contact of a missing contact type, a missing person, and a business entity that is not a store",
+      "traps": [],
+      "reasoning": "ContactType and Person are inner joins: contact type 99 and person 98 do not exist. Entity 300 has a contact but no Store row. Only person 10's row remains, with no email and no phone.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    }
+  ],
+  "summary": {
+    "ran": 6,
+    "differed": 0,
+    "invalid": 0
+  },
+  "objections": [],
+  "mutantAdequacy": {
+    "verdict": "adequate",
+    "caught": [
+      "auto: LEFT JOIN becomes INNER JOIN",
+      "auto: two output columns swap values"
+    ],
+    "missed": [],
+    "skipped": [],
+    "equivalentRecorded": []
+  },
+  "gate": {
+    "passed": true,
+    "reasons": []
+  },
+  "wording": "6 adversarial cases ran, 0 differed"
+}

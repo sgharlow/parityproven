@@ -1,0 +1,372 @@
+{
+  "object": "Integration.GetStockHoldingUpdates",
+  "database": "WideWorldImporters",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-19T05:05:28.164Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "[A01] rows inserted in descending key order, keys at the int limits and with gaps: listed by StockItemID ascending; reorder and target levels differ on every row",
+      "columns": [
+        {
+          "name": "Quantity On Hand",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Bin Location",
+          "sqlServerType": "nvarchar(20)"
+        },
+        {
+          "name": "Last Stocktake Quantity",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Last Cost Price",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Reorder Level",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Target Stock Level",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Stock Item ID",
+          "sqlServerType": "int"
+        }
+      ],
+      "rows": [
+        [
+          "n:10",
+          "s:A-1",
+          "n:10",
+          "n:1",
+          "n:2147483647",
+          "n:-2147483648",
+          "n:-2147483648"
+        ],
+        [
+          "n:10",
+          "s:A-1",
+          "n:10",
+          "n:1",
+          "n:7",
+          "n:70",
+          "n:-1"
+        ],
+        [
+          "n:10",
+          "s:A-1",
+          "n:10",
+          "n:1",
+          "n:0",
+          "n:-1",
+          "n:0"
+        ],
+        [
+          "n:10",
+          "s:A-1",
+          "n:10",
+          "n:1",
+          "n:3",
+          "n:4",
+          "n:1000"
+        ],
+        [
+          "n:10",
+          "s:A-1",
+          "n:10",
+          "n:1",
+          "n:1",
+          "n:2",
+          "n:2147483647"
+        ]
+      ]
+    },
+    {
+      "label": "[A02] LastCostPrice ending in 5 and at 15 significant digits: 0.05, -0.15, 9999999999999.95, -9999999999999.95, 0.00",
+      "columns": [
+        {
+          "name": "Quantity On Hand",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Bin Location",
+          "sqlServerType": "nvarchar(20)"
+        },
+        {
+          "name": "Last Stocktake Quantity",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Last Cost Price",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Reorder Level",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Target Stock Level",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Stock Item ID",
+          "sqlServerType": "int"
+        }
+      ],
+      "rows": [
+        [
+          "n:10",
+          "s:A-1",
+          "n:10",
+          "n:0.05",
+          "n:5",
+          "n:50",
+          "n:1"
+        ],
+        [
+          "n:10",
+          "s:A-1",
+          "n:10",
+          "n:-0.15",
+          "n:5",
+          "n:50",
+          "n:2"
+        ],
+        [
+          "n:10",
+          "s:A-1",
+          "n:10",
+          "n:9999999999999.95",
+          "n:5",
+          "n:50",
+          "n:3"
+        ],
+        [
+          "n:10",
+          "s:A-1",
+          "n:10",
+          "n:-9999999999999.95",
+          "n:5",
+          "n:50",
+          "n:4"
+        ],
+        [
+          "n:10",
+          "s:A-1",
+          "n:10",
+          "n:0",
+          "n:5",
+          "n:50",
+          "n:5"
+        ]
+      ]
+    },
+    {
+      "label": "[A03] bin locations as stored: case-only variants, trailing spaces, '' and a single space, ten emoji (20 UTF-16 code units)",
+      "columns": [
+        {
+          "name": "Quantity On Hand",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Bin Location",
+          "sqlServerType": "nvarchar(20)"
+        },
+        {
+          "name": "Last Stocktake Quantity",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Last Cost Price",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Reorder Level",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Target Stock Level",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Stock Item ID",
+          "sqlServerType": "int"
+        }
+      ],
+      "rows": [
+        [
+          "n:10",
+          "s:a-1",
+          "n:10",
+          "n:1",
+          "n:5",
+          "n:50",
+          "n:1"
+        ],
+        [
+          "n:10",
+          "s:A-1",
+          "n:10",
+          "n:1",
+          "n:5",
+          "n:50",
+          "n:2"
+        ],
+        [
+          "n:10",
+          "s:A-1 ",
+          "n:10",
+          "n:1",
+          "n:5",
+          "n:50",
+          "n:3"
+        ],
+        [
+          "n:10",
+          "s:",
+          "n:10",
+          "n:1",
+          "n:5",
+          "n:50",
+          "n:4"
+        ],
+        [
+          "n:10",
+          "s: ",
+          "n:10",
+          "n:1",
+          "n:5",
+          "n:50",
+          "n:5"
+        ],
+        [
+          "n:10",
+          "s:😀😀😀😀😀😀😀😀😀😀",
+          "n:10",
+          "n:1",
+          "n:5",
+          "n:50",
+          "n:6"
+        ]
+      ]
+    },
+    {
+      "label": "[A04] quantities at the int limits; equal QuantityOnHand and LastStocktakeQuantity on several rows; ReorderLevel greater than TargetStockLevel",
+      "columns": [
+        {
+          "name": "Quantity On Hand",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Bin Location",
+          "sqlServerType": "nvarchar(20)"
+        },
+        {
+          "name": "Last Stocktake Quantity",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Last Cost Price",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Reorder Level",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Target Stock Level",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Stock Item ID",
+          "sqlServerType": "int"
+        }
+      ],
+      "rows": [
+        [
+          "n:0",
+          "s:A-1",
+          "n:0",
+          "n:1",
+          "n:5",
+          "n:50",
+          "n:1"
+        ],
+        [
+          "n:0",
+          "s:A-1",
+          "n:0",
+          "n:1",
+          "n:5",
+          "n:50",
+          "n:2"
+        ],
+        [
+          "n:0",
+          "s:A-1",
+          "n:0",
+          "n:1",
+          "n:5",
+          "n:50",
+          "n:3"
+        ],
+        [
+          "n:2147483647",
+          "s:A-1",
+          "n:-2147483648",
+          "n:1",
+          "n:100",
+          "n:10",
+          "n:4"
+        ],
+        [
+          "n:-2147483648",
+          "s:A-1",
+          "n:2147483647",
+          "n:1",
+          "n:5",
+          "n:50",
+          "n:5"
+        ]
+      ]
+    },
+    {
+      "label": "[A05] empty table: no rows",
+      "columns": [
+        {
+          "name": "Quantity On Hand",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Bin Location",
+          "sqlServerType": "nvarchar(20)"
+        },
+        {
+          "name": "Last Stocktake Quantity",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Last Cost Price",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Reorder Level",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Target Stock Level",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Stock Item ID",
+          "sqlServerType": "int"
+        }
+      ],
+      "rows": []
+    }
+  ]
+}

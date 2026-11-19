@@ -12,8 +12,8 @@
   "code": {
     "source": "\r\nCREATE VIEW [Sales].[vSalesPersonSalesByFiscalYears]\r\nAS\r\nSELECT\r\n    pvt.[SalesPersonID]\r\n    ,pvt.[FullName]\r\n    ,pvt.[JobTitle]\r\n    ,pvt.[SalesTerritory]\r\n    ,pvt.[2002]\r\n    ,pvt.[2003]\r\n    ,pvt.[2004]\r\nFROM (SELECT\r\n        soh.[SalesPersonID]\r\n        ,p.[FirstName] + ' ' + COALESCE(p.[MiddleName], '') + ' ' + p.[LastName] AS [FullName]\r\n        ,e.[JobTitle]\r\n        ,st.[Name] AS [SalesTerritory]\r\n        ,soh.[SubTotal]\r\n        ,YEAR(DATEADD(m, 6, soh.[OrderDate])) AS [FiscalYear]\r\n    FROM [Sales].[SalesPerson] sp\r\n        INNER JOIN [Sales].[SalesOrderHeader] soh\r\n        ON sp.[BusinessEntityID] = soh.[SalesPersonID]\r\n        INNER JOIN [Sales].[SalesTerritory] st\r\n        ON sp.[TerritoryID] = st.[TerritoryID]\r\n        INNER JOIN [HumanResources].[Employee] e\r\n        ON soh.[SalesPersonID] = e.[BusinessEntityID]\r\n\t\tINNER JOIN [Person].[Person] p\r\n\t\tON p.[BusinessEntityID] = sp.[BusinessEntityID]\r\n\t ) AS soh\r\nPIVOT\r\n(\r\n    SUM([SubTotal])\r\n    FOR [FiscalYear]\r\n    IN ([2002], [2003], [2004])\r\n) AS pvt;\r\n",
     "engineOutput": "-- PostgreSQL conversion of the view Sales.vSalesPersonSalesByFiscalYears (AdventureWorks2025).\n-- Engine: Kiro first draft (see pair record). Written by hand: PIVOT has no PostgreSQL equivalent.\n--\n-- PIVOT (SUM(SubTotal) FOR FiscalYear IN (2002, 2003, 2004)) becomes conditional aggregation.\n-- PIVOT groups by every non-pivoted column of the source derived table (SalesPersonID, FullName,\n-- JobTitle, SalesTerritory), so the same columns are the GROUP BY here.\n-- YEAR(DATEADD(m, 6, OrderDate)) -> extract(year from OrderDate + interval '6 months').\n-- T-SQL string + yields NULL if any operand is NULL; || does too, so FirstName/LastName NULLs agree.\n\nCREATE OR REPLACE VIEW sales.v_sales_person_sales_by_fiscal_years AS\nSELECT\n    soh.\"SalesPersonID\"                                              AS \"SalesPersonID\",\n    soh.\"FullName\"                                                   AS \"FullName\",\n    soh.\"JobTitle\"                                                   AS \"JobTitle\",\n    soh.\"SalesTerritory\"                                             AS \"SalesTerritory\",\n    sum(soh.\"SubTotal\") FILTER (WHERE soh.\"FiscalYear\" = 2002)       AS \"2002\",\n    sum(soh.\"SubTotal\") FILTER (WHERE soh.\"FiscalYear\" = 2003)       AS \"2003\",\n    sum(soh.\"SubTotal\") FILTER (WHERE soh.\"FiscalYear\" = 2004)       AS \"2004\"\nFROM (SELECT\n        soh.\"SalesPersonID\",\n        p.\"FirstName\" || ' ' || COALESCE(p.\"MiddleName\", '') || ' ' || p.\"LastName\" AS \"FullName\",\n        e.\"JobTitle\",\n        st.\"Name\" AS \"SalesTerritory\",\n        soh.\"SubTotal\",\n        extract(year FROM soh.\"OrderDate\" + interval '6 months')::integer AS \"FiscalYear\"\n    FROM sales.sales_person sp\n        INNER JOIN sales.sales_order_header soh ON sp.\"BusinessEntityID\" = soh.\"SalesPersonID\"\n        INNER JOIN sales.sales_territory st ON sp.\"TerritoryID\" = st.\"TerritoryID\"\n        INNER JOIN humanresources.employee e ON soh.\"SalesPersonID\" = e.\"BusinessEntityID\"\n        INNER JOIN person.person p ON p.\"BusinessEntityID\" = sp.\"BusinessEntityID\"\n     ) AS soh\nGROUP BY soh.\"SalesPersonID\", soh.\"FullName\", soh.\"JobTitle\", soh.\"SalesTerritory\";\n",
-    "final": "-- PostgreSQL conversion of the view Sales.vSalesPersonSalesByFiscalYears (AdventureWorks2025).\n-- Engine: Kiro first draft (see pair record). Written by hand: PIVOT has no PostgreSQL equivalent.\n--\n-- PIVOT (SUM(SubTotal) FOR FiscalYear IN (2002, 2003, 2004)) becomes conditional aggregation.\n-- PIVOT groups by every non-pivoted column of the source derived table (SalesPersonID, FullName,\n-- JobTitle, SalesTerritory), so the same columns are the GROUP BY here.\n-- YEAR(DATEADD(m, 6, OrderDate)) -> extract(year from OrderDate + interval '6 months').\n-- T-SQL string + yields NULL if any operand is NULL; || does too, so FirstName/LastName NULLs agree.\n\nCREATE OR REPLACE VIEW sales.v_sales_person_sales_by_fiscal_years AS\nSELECT\n    soh.\"SalesPersonID\"                                              AS \"SalesPersonID\",\n    soh.\"FullName\"                                                   AS \"FullName\",\n    soh.\"JobTitle\"                                                   AS \"JobTitle\",\n    soh.\"SalesTerritory\"                                             AS \"SalesTerritory\",\n    sum(soh.\"SubTotal\") FILTER (WHERE soh.\"FiscalYear\" = 2002)       AS \"2002\",\n    sum(soh.\"SubTotal\") FILTER (WHERE soh.\"FiscalYear\" = 2003)       AS \"2003\",\n    sum(soh.\"SubTotal\") FILTER (WHERE soh.\"FiscalYear\" = 2004)       AS \"2004\"\nFROM (SELECT\n        soh.\"SalesPersonID\",\n        p.\"FirstName\" || ' ' || COALESCE(p.\"MiddleName\", '') || ' ' || p.\"LastName\" AS \"FullName\",\n        e.\"JobTitle\",\n        st.\"Name\" AS \"SalesTerritory\",\n        soh.\"SubTotal\",\n        extract(year FROM soh.\"OrderDate\" + interval '6 months')::integer AS \"FiscalYear\"\n    FROM sales.sales_person sp\n        INNER JOIN sales.sales_order_header soh ON sp.\"BusinessEntityID\" = soh.\"SalesPersonID\"\n        INNER JOIN sales.sales_territory st ON sp.\"TerritoryID\" = st.\"TerritoryID\"\n        INNER JOIN humanresources.employee e ON soh.\"SalesPersonID\" = e.\"BusinessEntityID\"\n        INNER JOIN person.person p ON p.\"BusinessEntityID\" = sp.\"BusinessEntityID\"\n     ) AS soh\nGROUP BY soh.\"SalesPersonID\", soh.\"FullName\", soh.\"JobTitle\", soh.\"SalesTerritory\";\n",
-    "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
+    "final": "-- PostgreSQL conversion of the view Sales.vSalesPersonSalesByFiscalYears (AdventureWorks2025).\n-- Engine: Kiro first draft (see pair record). Written by hand: PIVOT has no PostgreSQL equivalent.\n--\n-- PIVOT (SUM(SubTotal) FOR FiscalYear IN (2002, 2003, 2004)) becomes conditional aggregation.\n-- PIVOT groups by every non-pivoted column of the source derived table (SalesPersonID, FullName,\n-- JobTitle, SalesTerritory), so the same columns are the GROUP BY here.\n-- YEAR(DATEADD(m, 6, OrderDate)) -> extract(year from OrderDate + interval '6 months').\n-- T-SQL string + yields NULL if any operand is NULL; || does too, so FirstName/LastName NULLs agree.\n\n-- datetime semantics (adversarial run 2026-11-19, cases A01-A02): T-SQL datetime keeps 1/300 s ticks, so SQL Server rounds a stored\n-- OrderDate such as 23:59:59.999 on June 30 to the next midnight before DATEADD, which moves it into the next fiscal year.\n-- timestamp keeps the value as given, so the fiscal year is taken from the value rounded to a tick the same way.\nCREATE SCHEMA IF NOT EXISTS dbo;\nCREATE OR REPLACE FUNCTION dbo.round_datetime(ts timestamp)\nRETURNS timestamp\nLANGUAGE sql\nIMMUTABLE\nAS $fn$\n    SELECT date_trunc('second', ts)\n         + interval '1 millisecond' * ((((date_part('microseconds', ts)::integer % 1000000) * 3 + 5000) / 10000 * 10 + 1) / 3)\n$fn$;\n\nCREATE OR REPLACE VIEW sales.v_sales_person_sales_by_fiscal_years AS\nSELECT\n    soh.\"SalesPersonID\"                                              AS \"SalesPersonID\",\n    soh.\"FullName\"                                                   AS \"FullName\",\n    soh.\"JobTitle\"                                                   AS \"JobTitle\",\n    soh.\"SalesTerritory\"                                             AS \"SalesTerritory\",\n    sum(soh.\"SubTotal\") FILTER (WHERE soh.\"FiscalYear\" = 2002)       AS \"2002\",\n    sum(soh.\"SubTotal\") FILTER (WHERE soh.\"FiscalYear\" = 2003)       AS \"2003\",\n    sum(soh.\"SubTotal\") FILTER (WHERE soh.\"FiscalYear\" = 2004)       AS \"2004\"\nFROM (SELECT\n        soh.\"SalesPersonID\",\n        p.\"FirstName\" || ' ' || COALESCE(p.\"MiddleName\", '') || ' ' || p.\"LastName\" AS \"FullName\",\n        e.\"JobTitle\",\n        st.\"Name\" AS \"SalesTerritory\",\n        soh.\"SubTotal\",\n        extract(year FROM dbo.round_datetime(soh.\"OrderDate\") + interval '6 months')::integer AS \"FiscalYear\"\n    FROM sales.sales_person sp\n        INNER JOIN sales.sales_order_header soh ON sp.\"BusinessEntityID\" = soh.\"SalesPersonID\"\n        INNER JOIN sales.sales_territory st ON sp.\"TerritoryID\" = st.\"TerritoryID\"\n        INNER JOIN humanresources.employee e ON soh.\"SalesPersonID\" = e.\"BusinessEntityID\"\n        INNER JOIN person.person p ON p.\"BusinessEntityID\" = sp.\"BusinessEntityID\"\n     ) AS soh\nGROUP BY soh.\"SalesPersonID\", soh.\"FullName\", soh.\"JobTitle\", soh.\"SalesTerritory\";\n",
+    "diff": "--- engineOutput\n+++ final\n@@ engineOutput line 10 / final line 10 @@\n+-- datetime semantics (adversarial run 2026-11-19, cases A01-A02): T-SQL datetime keeps 1/300 s ticks, so SQL Server rounds a stored\n+-- OrderDate such as 23:59:59.999 on June 30 to the next midnight before DATEADD, which moves it into the next fiscal year.\n+-- timestamp keeps the value as given, so the fiscal year is taken from the value rounded to a tick the same way.\n+CREATE SCHEMA IF NOT EXISTS dbo;\n+CREATE OR REPLACE FUNCTION dbo.round_datetime(ts timestamp)\n+RETURNS timestamp\n+LANGUAGE sql\n+IMMUTABLE\n+AS $fn$\n+    SELECT date_trunc('second', ts)\n+         + interval '1 millisecond' * ((((date_part('microseconds', ts)::integer % 1000000) * 3 + 5000) / 10000 * 10 + 1) / 3)\n+$fn$;\n+\n@@ engineOutput line 25 / final line 38 @@\n+        extract(year FROM dbo.round_datetime(soh.\"OrderDate\") + interval '6 months')::integer AS \"FiscalYear\"\n-        extract(year FROM soh.\"OrderDate\" + interval '6 months')::integer AS \"FiscalYear\"",
     "engine": "kiro",
     "notes": [
       "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
@@ -54,41 +54,53 @@
     "step4": "pass",
     "step5": "not-run",
     "step6": "n/a",
-    "runtimeRatio": 0.44,
+    "testsRun": [
+      "tSQLt V1.0.8083.3529 on SQL Server (tests/AdventureWorks2025/Sales.vSalesPersonSalesByFiscalYears.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/AdventureWorks2025/Sales.vSalesPersonSalesByFiscalYears.pg.sql); expected results tests/AdventureWorks2025/Sales.vSalesPersonSalesByFiscalYears.expected.json",
+      "SQL Server: AgreedTests.[test 01 fiscal year = order year + 6 months: 07-01 starts the next year, 06-30 23:59:59.997 does not, 08-31 c…]: pass",
+      "PostgreSQL: AgreedTests.[test 01 fiscal year = order year + 6 months: 07-01 starts the next year, 06-30 23:59:59.997 does not, 08-31 c…]: pass",
+      "planted defects caught by the agreed tests: 2 of 2"
+    ],
+    "runtimeRatio": 0.53,
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
-      "sqlServerMs": 26,
-      "postgresMs": 11.43,
-      "ratio": 0.44,
+      "sqlServerMs": 27,
+      "postgresMs": 14.18,
+      "ratio": 0.53,
       "threshold": 1.5,
       "passed": true,
       "belowResolution": false,
-      "resultRows": 2214,
+      "resultRows": 2228,
       "volumeMismatch": null
     },
-    "rowsCompared": 134,
+    "rowsCompared": 140,
     "trapsCovered": [
       "NULL in every nullable column",
       "empty string and trailing spaces"
     ],
     "pbtSeeds": [
-      43503063
+      914705057
     ],
+    "engineOutputCheck": {
+      "step3": "pass",
+      "seed": 914705057
+    },
     "samples": 200,
-    "samplesWithRows": 110,
+    "samplesWithRows": 113,
     "subMicrosecondNormalised": 0,
     "mutantsDetected": [
       "auto: two output columns swap values",
       "auto: join condition uses a different key"
     ],
     "harnessVersion": "harness-generic-0.3.0",
-    "testsRun": [
-      "tSQLt V1.0.8083.3529 on SQL Server (tests/AdventureWorks2025/Sales.vSalesPersonSalesByFiscalYears.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/AdventureWorks2025/Sales.vSalesPersonSalesByFiscalYears.pg.sql); expected results tests/AdventureWorks2025/Sales.vSalesPersonSalesByFiscalYears.expected.json",
-      "SQL Server: AgreedTests.[test 01 fiscal year = order year + 6 months: 07-01 starts the next year, 06-30 23:59:59.997 does not, 08-31 c…]: pass",
-      "PostgreSQL: AgreedTests.[test 01 fiscal year = order year + 6 months: 07-01 starts the next year, 06-30 23:59:59.997 does not, 08-31 c…]: pass",
-      "planted defects caught by the agreed tests: 2 of 2"
-    ]
+    "adversarial": {
+      "gate": "pass",
+      "ran": 6,
+      "differed": 0,
+      "evidencePath": "evidence/adversarial/AdventureWorks2025/Sales.vSalesPersonSalesByFiscalYears.json",
+      "conversionSha256": "9319b80c7593a4e09bcaeeda86ba52f8fd24ef42d9ac1a7b9bd664226d139ec8",
+      "runAt": "2026-11-19T05:04:29.125Z"
+    }
   },
   "effort": {
     "humanMinutes": 0,

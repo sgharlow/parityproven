@@ -1,0 +1,774 @@
+{
+  "object": "Integration.GetSaleUpdates",
+  "database": "WideWorldImporters",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-19T05:05:19.674Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "[A01] customer and bill-to joins: a missing bill-to with an existing customer, a missing customer with an existing bill-to, and a bill-to that is another customer in another city",
+      "columns": [
+        {
+          "name": "Invoice Date Key",
+          "sqlServerType": "date"
+        },
+        {
+          "name": "Delivery Date Key",
+          "sqlServerType": "date"
+        },
+        {
+          "name": "WWI Invoice ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Description",
+          "sqlServerType": "nvarchar(100)"
+        },
+        {
+          "name": "Package",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Quantity",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Unit Price",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Tax Rate",
+          "sqlServerType": "decimal(18,3)"
+        },
+        {
+          "name": "Total Excluding Tax",
+          "sqlServerType": "decimal(19,2)"
+        },
+        {
+          "name": "Tax Amount",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Profit",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Total Including Tax",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Total Dry Items",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Total Chiller Items",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI City ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Customer ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Bill To Customer ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Stock Item ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Saleperson ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Last Modified When",
+          "sqlServerType": "datetime2(7)"
+        }
+      ],
+      "rows": [
+        [
+          "d:2020-06-14",
+          "∅",
+          "n:3",
+          "s:item 3",
+          "s:Each",
+          "n:4",
+          "n:2.5",
+          "n:15",
+          "n:8.5",
+          "n:1.5",
+          "n:3",
+          "n:10",
+          "n:4",
+          "n:0",
+          "n:10",
+          "n:1",
+          "n:2147483647",
+          "n:1",
+          "n:3",
+          "t:2020-06-15T12:00:00.000000"
+        ]
+      ]
+    },
+    {
+      "label": "[A02] the later of invoice and line time decides, and delivery dates at the limits: ConfirmedDeliveryTime 9999-12-31 23:59:59.999999 and 1753-01-01",
+      "columns": [
+        {
+          "name": "Invoice Date Key",
+          "sqlServerType": "date"
+        },
+        {
+          "name": "Delivery Date Key",
+          "sqlServerType": "date"
+        },
+        {
+          "name": "WWI Invoice ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Description",
+          "sqlServerType": "nvarchar(100)"
+        },
+        {
+          "name": "Package",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Quantity",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Unit Price",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Tax Rate",
+          "sqlServerType": "decimal(18,3)"
+        },
+        {
+          "name": "Total Excluding Tax",
+          "sqlServerType": "decimal(19,2)"
+        },
+        {
+          "name": "Tax Amount",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Profit",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Total Including Tax",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Total Dry Items",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Total Chiller Items",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI City ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Customer ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Bill To Customer ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Stock Item ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Saleperson ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Last Modified When",
+          "sqlServerType": "datetime2(7)"
+        }
+      ],
+      "rows": [
+        [
+          "d:9999-12-31",
+          "d:9999-12-31",
+          "n:3",
+          "s:item 3",
+          "s:Each",
+          "n:4",
+          "n:2.5",
+          "n:15",
+          "n:8.5",
+          "n:1.5",
+          "n:3",
+          "n:10",
+          "n:4",
+          "n:0",
+          "n:10",
+          "n:1",
+          "n:1",
+          "n:1",
+          "n:3",
+          "t:2020-06-15T13:00:00.000000"
+        ],
+        [
+          "d:1753-01-01",
+          "d:1753-01-01",
+          "n:5",
+          "s:item 5",
+          "s:Each",
+          "n:4",
+          "n:2.5",
+          "n:15",
+          "n:8.5",
+          "n:1.5",
+          "n:3",
+          "n:10",
+          "n:4",
+          "n:0",
+          "n:10",
+          "n:1",
+          "n:1",
+          "n:1",
+          "n:3",
+          "t:2020-06-15T12:00:00.000000"
+        ]
+      ]
+    },
+    {
+      "label": "[A03] decimal arithmetic: Total Excluding Tax = ExtendedPrice - TaxAmount for 0.05 - 0.15, 10.05 - 1.55, 999999999999.99 - (-999999999999.99); a 3-place tax rate ending in 5; negative profit; NULL unit price",
+      "columns": [
+        {
+          "name": "Invoice Date Key",
+          "sqlServerType": "date"
+        },
+        {
+          "name": "Delivery Date Key",
+          "sqlServerType": "date"
+        },
+        {
+          "name": "WWI Invoice ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Description",
+          "sqlServerType": "nvarchar(100)"
+        },
+        {
+          "name": "Package",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Quantity",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Unit Price",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Tax Rate",
+          "sqlServerType": "decimal(18,3)"
+        },
+        {
+          "name": "Total Excluding Tax",
+          "sqlServerType": "decimal(19,2)"
+        },
+        {
+          "name": "Tax Amount",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Profit",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Total Including Tax",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Total Dry Items",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Total Chiller Items",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI City ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Customer ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Bill To Customer ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Stock Item ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Saleperson ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Last Modified When",
+          "sqlServerType": "datetime2(7)"
+        }
+      ],
+      "rows": [
+        [
+          "d:2020-06-14",
+          "∅",
+          "n:1",
+          "s:item 1",
+          "s:Each",
+          "n:4",
+          "n:2.5",
+          "n:15",
+          "n:-0.1",
+          "n:0.15",
+          "n:-0.05",
+          "n:0.05",
+          "n:4",
+          "n:0",
+          "n:10",
+          "n:1",
+          "n:1",
+          "n:1",
+          "n:3",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-14",
+          "∅",
+          "n:1",
+          "s:item 2",
+          "s:Each",
+          "n:4",
+          "n:2.5",
+          "n:15.005",
+          "n:8.5",
+          "n:1.55",
+          "n:3",
+          "n:10.05",
+          "n:4",
+          "n:0",
+          "n:10",
+          "n:1",
+          "n:1",
+          "n:1",
+          "n:3",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-14",
+          "∅",
+          "n:1",
+          "s:item 3",
+          "s:Each",
+          "n:4",
+          "∅",
+          "n:15",
+          "n:1999999999999.98",
+          "n:-999999999999.99",
+          "n:3",
+          "n:999999999999.99",
+          "n:4",
+          "n:0",
+          "n:10",
+          "n:1",
+          "n:1",
+          "n:1",
+          "n:3",
+          "t:2020-06-15T12:00:00.000000"
+        ]
+      ]
+    },
+    {
+      "label": "[A04] dry and chiller split with zero and negative quantities; lines of one invoice inserted in descending line id order",
+      "columns": [
+        {
+          "name": "Invoice Date Key",
+          "sqlServerType": "date"
+        },
+        {
+          "name": "Delivery Date Key",
+          "sqlServerType": "date"
+        },
+        {
+          "name": "WWI Invoice ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Description",
+          "sqlServerType": "nvarchar(100)"
+        },
+        {
+          "name": "Package",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Quantity",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Unit Price",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Tax Rate",
+          "sqlServerType": "decimal(18,3)"
+        },
+        {
+          "name": "Total Excluding Tax",
+          "sqlServerType": "decimal(19,2)"
+        },
+        {
+          "name": "Tax Amount",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Profit",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Total Including Tax",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Total Dry Items",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Total Chiller Items",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI City ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Customer ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Bill To Customer ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Stock Item ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Saleperson ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Last Modified When",
+          "sqlServerType": "datetime2(7)"
+        }
+      ],
+      "rows": [
+        [
+          "d:2020-06-14",
+          "∅",
+          "n:1",
+          "s:item 2",
+          "s:Each",
+          "n:4",
+          "n:2.5",
+          "n:15",
+          "n:8.5",
+          "n:1.5",
+          "n:3",
+          "n:10",
+          "n:0",
+          "n:4",
+          "n:10",
+          "n:1",
+          "n:1",
+          "n:2",
+          "n:3",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-14",
+          "∅",
+          "n:1",
+          "s:item 5",
+          "s:Each",
+          "n:0",
+          "n:2.5",
+          "n:15",
+          "n:8.5",
+          "n:1.5",
+          "n:3",
+          "n:10",
+          "n:0",
+          "n:0",
+          "n:10",
+          "n:1",
+          "n:1",
+          "n:1",
+          "n:3",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-14",
+          "∅",
+          "n:1",
+          "s:item 9",
+          "s:Each",
+          "n:-4",
+          "n:2.5",
+          "n:15",
+          "n:8.5",
+          "n:1.5",
+          "n:3",
+          "n:10",
+          "n:0",
+          "n:-4",
+          "n:10",
+          "n:1",
+          "n:1",
+          "n:2",
+          "n:3",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-14",
+          "∅",
+          "n:2",
+          "s:item 1",
+          "s:Each",
+          "n:-4",
+          "n:2.5",
+          "n:15",
+          "n:8.5",
+          "n:1.5",
+          "n:3",
+          "n:10",
+          "n:-4",
+          "n:0",
+          "n:10",
+          "n:1",
+          "n:1",
+          "n:1",
+          "n:3",
+          "t:2020-06-15T12:00:00.000000"
+        ]
+      ]
+    },
+    {
+      "label": "[A05] text as stored: descriptions differing only in case or by a trailing space, an empty description, an emoji and a combining accent",
+      "columns": [
+        {
+          "name": "Invoice Date Key",
+          "sqlServerType": "date"
+        },
+        {
+          "name": "Delivery Date Key",
+          "sqlServerType": "date"
+        },
+        {
+          "name": "WWI Invoice ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Description",
+          "sqlServerType": "nvarchar(100)"
+        },
+        {
+          "name": "Package",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Quantity",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Unit Price",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Tax Rate",
+          "sqlServerType": "decimal(18,3)"
+        },
+        {
+          "name": "Total Excluding Tax",
+          "sqlServerType": "decimal(19,2)"
+        },
+        {
+          "name": "Tax Amount",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Profit",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Total Including Tax",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Total Dry Items",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Total Chiller Items",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI City ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Customer ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Bill To Customer ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Stock Item ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Saleperson ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Last Modified When",
+          "sqlServerType": "datetime2(7)"
+        }
+      ],
+      "rows": [
+        [
+          "d:2020-06-14",
+          "∅",
+          "n:1",
+          "s:Mug",
+          "s:Each ",
+          "n:4",
+          "n:2.5",
+          "n:15",
+          "n:8.5",
+          "n:1.5",
+          "n:3",
+          "n:10",
+          "n:4",
+          "n:0",
+          "n:10",
+          "n:1",
+          "n:1",
+          "n:1",
+          "n:3",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-14",
+          "∅",
+          "n:1",
+          "s:MUG",
+          "s:Each ",
+          "n:4",
+          "n:2.5",
+          "n:15",
+          "n:8.5",
+          "n:1.5",
+          "n:3",
+          "n:10",
+          "n:4",
+          "n:0",
+          "n:10",
+          "n:1",
+          "n:1",
+          "n:1",
+          "n:3",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-14",
+          "∅",
+          "n:1",
+          "s:mug ",
+          "s:Each ",
+          "n:4",
+          "n:2.5",
+          "n:15",
+          "n:8.5",
+          "n:1.5",
+          "n:3",
+          "n:10",
+          "n:4",
+          "n:0",
+          "n:10",
+          "n:1",
+          "n:1",
+          "n:1",
+          "n:3",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-14",
+          "∅",
+          "n:1",
+          "s:",
+          "s:Each ",
+          "n:4",
+          "n:2.5",
+          "n:15",
+          "n:8.5",
+          "n:1.5",
+          "n:3",
+          "n:10",
+          "n:4",
+          "n:0",
+          "n:10",
+          "n:1",
+          "n:1",
+          "n:1",
+          "n:3",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-14",
+          "∅",
+          "n:1",
+          "s:Café 😀",
+          "s:Each ",
+          "n:4",
+          "n:2.5",
+          "n:15",
+          "n:8.5",
+          "n:1.5",
+          "n:3",
+          "n:10",
+          "n:4",
+          "n:0",
+          "n:10",
+          "n:1",
+          "n:1",
+          "n:1",
+          "n:3",
+          "t:2020-06-15T12:00:00.000000"
+        ]
+      ]
+    }
+  ]
+}

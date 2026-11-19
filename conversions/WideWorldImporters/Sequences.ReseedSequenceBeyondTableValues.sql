@@ -23,22 +23,48 @@ DECLARE
     current_table_maximum_value bigint;
     new_sequence_value bigint;
     current_sequence_maximum_value bigint;
+    actual_sequence_name text;
+    actual_column_name text;
+    target_table text;
 BEGIN
     -- Ensures that the next sequence value is above the maximum value of the supplied table column
-    IF EXISTS (SELECT 1 FROM pg_sequences AS s WHERE s.schemaname = 'sequences' AND s.sequencename = sequence_name) THEN
-        EXECUTE format('SELECT last_value FROM sequences.%I', sequence_name)
+
+    -- Adversarial run 2026-11-19 (cases A01-A05): SQL Server's catalog lookup and identifier resolution ignore case and
+    -- trailing spaces, and a NULL name makes the dynamic statement NULL, which EXECUTE skips. PostgreSQL's %I raises on NULL
+    -- and resolves names exactly, so the names are matched here ignoring case and trailing spaces, and a NULL schema, table
+    -- or column name ends the call without doing anything. Checked for the characters the cases use, not for every collation rule.
+    IF schema_name IS NULL OR table_name IS NULL OR column_name IS NULL THEN
+        RETURN;
+    END IF;
+
+    SELECT s.sequencename::text INTO actual_sequence_name
+    FROM pg_sequences AS s
+    WHERE s.schemaname = 'sequences'
+      AND lower(rtrim(s.sequencename::text, ' ')) = lower(rtrim(sequence_name, ' '))
+    LIMIT 1;
+    IF actual_sequence_name IS NOT NULL THEN
+        EXECUTE format('SELECT last_value FROM sequences.%I', actual_sequence_name)
             INTO current_sequence_maximum_value;
     END IF;
 
-    EXECUTE format('SELECT COALESCE(MAX(%I), 0) FROM %I.%I',
-                   column_name,
-                   lower(schema_name),
-                   lower(regexp_replace(table_name, '([a-z0-9])([A-Z])', '\1_\2', 'g')))
+    target_table := format('%I.%I',
+                           lower(schema_name),
+                           lower(regexp_replace(table_name, '([a-z0-9])([A-Z])', '\1_\2', 'g')));
+
+    SELECT a.attname::text INTO actual_column_name
+    FROM pg_attribute AS a
+    WHERE a.attrelid = target_table::regclass
+      AND a.attnum > 0
+      AND NOT a.attisdropped
+      AND lower(rtrim(a.attname::text, ' ')) = lower(rtrim(column_name, ' '))
+    LIMIT 1;
+
+    EXECUTE format('SELECT COALESCE(MAX(%I), 0) FROM %s', COALESCE(actual_column_name, column_name), target_table)
         INTO current_table_maximum_value;
 
     IF current_table_maximum_value >= current_sequence_maximum_value THEN
         new_sequence_value := current_table_maximum_value + 1;
-        EXECUTE format('ALTER SEQUENCE sequences.%I RESTART WITH %s', sequence_name, new_sequence_value);
+        EXECUTE format('ALTER SEQUENCE sequences.%I RESTART WITH %s', actual_sequence_name, new_sequence_value);
     END IF;
 END;
 $fn$;

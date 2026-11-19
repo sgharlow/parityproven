@@ -1,0 +1,269 @@
+{
+  "object": "Sequences.ReseedSequenceBeyondTableValues",
+  "database": "WideWorldImporters",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-19T05:05:45.735Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "[A01] sequence name in another case ('orderid'): SQL Server's catalog lookup is case-insensitive and reseeds; PostgreSQL's pg_sequences lookup is exact",
+      "outcome": "completed",
+      "tables": {},
+      "queries": [
+        {
+          "label": "next value of each sequence after the call",
+          "columns": [
+            {
+              "name": "OrderID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "StockItemID",
+              "sqlServerType": "int"
+            }
+          ],
+          "rows": [
+            [
+              "n:21",
+              "n:1"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "label": "[A02] sequence name with a trailing space ('OrderID '): SQL Server ignores it in the lookup and in the quoted identifier; PostgreSQL does not",
+      "outcome": "completed",
+      "tables": {},
+      "queries": [
+        {
+          "label": "next value of each sequence after the call",
+          "columns": [
+            {
+              "name": "OrderID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "StockItemID",
+              "sqlServerType": "int"
+            }
+          ],
+          "rows": [
+            [
+              "n:21",
+              "n:1"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "label": "[A03] column name in another case ('orderid'): SQL Server resolves the column case-insensitively; PostgreSQL's %I quotes it as \"orderid\"",
+      "outcome": "completed",
+      "tables": {},
+      "queries": [
+        {
+          "label": "next value of each sequence after the call",
+          "columns": [
+            {
+              "name": "OrderID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "StockItemID",
+              "sqlServerType": "int"
+            }
+          ],
+          "rows": [
+            [
+              "n:21",
+              "n:1"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "label": "[A04] '' sequence name and NULL column name: SQL Server's dynamic SQL becomes NULL and EXECUTE does nothing; PostgreSQL's format(%I, NULL) raises",
+      "outcome": "completed",
+      "tables": {},
+      "queries": [
+        {
+          "label": "next value of each sequence after the call",
+          "columns": [
+            {
+              "name": "OrderID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "StockItemID",
+              "sqlServerType": "int"
+            }
+          ],
+          "rows": [
+            [
+              "n:10",
+              "n:1"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "label": "[A05] NULL schema name with a real sequence: SQL Server reads no table maximum and leaves the sequence alone; PostgreSQL's lower(NULL) reaches format(%I) and raises",
+      "outcome": "completed",
+      "tables": {},
+      "queries": [
+        {
+          "label": "next value of each sequence after the call",
+          "columns": [
+            {
+              "name": "OrderID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "StockItemID",
+              "sqlServerType": "int"
+            }
+          ],
+          "rows": [
+            [
+              "n:10",
+              "n:1"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "label": "[A06] table maximum 2147483646 (twice): restart at 2147483647, the int sequence's largest value; gaps in the row ids",
+      "outcome": "completed",
+      "tables": {},
+      "queries": [
+        {
+          "label": "next value of each sequence after the call",
+          "columns": [
+            {
+              "name": "OrderID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "StockItemID",
+              "sqlServerType": "int"
+            }
+          ],
+          "rows": [
+            [
+              "n:2147483647",
+              "n:1"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "label": "[A07] unused sequence at the int minimum and an empty table: COALESCE gives 0 >= -2147483648, restart at 1",
+      "outcome": "completed",
+      "tables": {},
+      "queries": [
+        {
+          "label": "next value of each sequence after the call",
+          "columns": [
+            {
+              "name": "OrderID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "StockItemID",
+              "sqlServerType": "int"
+            }
+          ],
+          "rows": [
+            [
+              "n:1",
+              "n:1"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "label": "[A08] table maximum equal to the start value of an unused sequence at 7, while the other sequence was used 3 times: restart at 8",
+      "outcome": "completed",
+      "tables": {},
+      "queries": [
+        {
+          "label": "next value of each sequence after the call",
+          "columns": [
+            {
+              "name": "OrderID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "StockItemID",
+              "sqlServerType": "int"
+            }
+          ],
+          "rows": [
+            [
+              "n:8",
+              "n:8"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "label": "[A09] Warehouse.StockItems mapped to stock_items: NULL values only beside negatives; start -10, maximum -7, restart at -6",
+      "outcome": "completed",
+      "tables": {},
+      "queries": [
+        {
+          "label": "next value of each sequence after the call",
+          "columns": [
+            {
+              "name": "OrderID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "StockItemID",
+              "sqlServerType": "int"
+            }
+          ],
+          "rows": [
+            [
+              "n:1",
+              "n:-6"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "label": "[A10] schema name in upper case ('SALES') and table name in lower case ('orders'): both engines resolve them",
+      "outcome": "completed",
+      "tables": {},
+      "queries": [
+        {
+          "label": "next value of each sequence after the call",
+          "columns": [
+            {
+              "name": "OrderID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "StockItemID",
+              "sqlServerType": "int"
+            }
+          ],
+          "rows": [
+            [
+              "n:21",
+              "n:1"
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

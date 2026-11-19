@@ -238,7 +238,7 @@ const AW_VIEWS_RAW: ObjectSpec[] = [
     mutants: ciJoinFix("Sales.vSalesPerson", EMAIL_LEFT_JOIN, true).mutants,
     notes: [...(ciJoinFix("Sales.vSalesPerson", undefined, true).notes ?? []), SALES_PERSON_STEP5_RESET, SALES_PERSON_STEP5_RESET_2],
   },
-  { ...view("Sales.vStoreWithAddresses", "sales.v_store_with_addresses"), fixedCases: addressCases("Sales.Store", "store"), ...ciJoinFix("Sales.vStoreWithAddresses") },
+  { ...view("Sales.vStoreWithAddresses", "sales.v_store_with_addresses"), fixedCases: addressCases("Sales.Store", "store"), ...ciJoinFix("Sales.vStoreWithAddresses", undefined, true) },
   { ...view("Sales.vStoreWithContacts", "sales.v_store_with_contacts"), fixedCases: [contactsCase("Sales.Store", "store")] },
   {
     ...view("Sales.vSalesPersonSalesByFiscalYears", "sales.v_sales_person_sales_by_fiscal_years", {

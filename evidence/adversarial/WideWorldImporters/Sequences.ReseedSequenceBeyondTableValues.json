@@ -1,0 +1,299 @@
+{
+  "schemaVersion": 1,
+  "object": "Sequences.ReseedSequenceBeyondTableValues",
+  "database": "WideWorldImporters",
+  "runAt": "2026-11-19T05:05:55.244Z",
+  "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
+  "conversionSha256": "421daebce24772249a9341c2573b8a8c723045ebaad08421d7045d9f16cce773",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-19T04:36:25.160Z",
+    "file": "adversarial/WideWorldImporters/Sequences.ReseedSequenceBeyondTableValues.cases.json",
+    "sha256": "9c00e039de587442884babb973a992347eacf7222170467d8e8bdffadd38212a"
+  },
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T21:39:58.1908526-07:00",
+    "file": "adversarial/WideWorldImporters/Sequences.ReseedSequenceBeyondTableValues.audit.json",
+    "sha256": "9ee4c1b32d4b8d06570cfb15d846a89435d6ffdf1726594989b881cd54172319"
+  },
+  "sameModel": false,
+  "casesAudited": [
+    "A01",
+    "A02",
+    "A03",
+    "A04",
+    "A05",
+    "A06",
+    "A07",
+    "A08",
+    "A09",
+    "A10"
+  ],
+  "traps": {
+    "null-vs-empty": {
+      "applicable": true,
+      "coveredBy": [
+        "A04"
+      ]
+    },
+    "collation-case": {
+      "applicable": true,
+      "coveredBy": [
+        "A01",
+        "A03"
+      ]
+    },
+    "trailing-spaces": {
+      "applicable": true,
+      "coveredBy": [
+        "A02"
+      ]
+    },
+    "dates-datetime": {
+      "applicable": false,
+      "coveredBy": []
+    },
+    "numeric-rounding": {
+      "applicable": false,
+      "coveredBy": []
+    },
+    "top-ties": {
+      "applicable": true,
+      "coveredBy": [
+        "A06"
+      ]
+    },
+    "identity-gaps": {
+      "applicable": true,
+      "coveredBy": [
+        "A06"
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "sequence name in another case ('orderid'): SQL Server's catalog lookup is case-insensitive and reseeds; PostgreSQL's pg_sequences lookup is exact",
+      "traps": [
+        "collation-case"
+      ],
+      "reasoning": "sys.sequences.name = @SequenceName compares under the database's CI collation, so 'orderid' finds sequence OrderID (current 10), the table maximum 20 is >= 10, and ALTER SEQUENCE Sequences.[orderid] restarts it at 21. The conversion's pg_sequences.sequencename = 'orderid' finds nothing, the current value stays NULL and nothing changes. The pair notes say case-insensitive name resolution is not claimed; this case shows what that means for a caller.",
+      "trapChecks": {
+        "collation-case": {
+          "present": true,
+          "detail": "\"OrderID\" and \"orderid\" differ only in case"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A02",
+      "label": "sequence name with a trailing space ('OrderID '): SQL Server ignores it in the lookup and in the quoted identifier; PostgreSQL does not",
+      "traps": [
+        "trailing-spaces"
+      ],
+      "reasoning": "SQL Server equality pads with spaces, so name = 'OrderID ' finds OrderID; QUOTENAME gives [OrderID ] and SQL Server drops trailing spaces from identifiers, so the ALTER SEQUENCE succeeds and restarts at 21. PostgreSQL's exact lookup finds no sequence named 'OrderID ' and leaves it at 10.",
+      "trapChecks": {
+        "trailing-spaces": {
+          "present": true,
+          "detail": "\"OrderID \" ends in a space"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A03",
+      "label": "column name in another case ('orderid'): SQL Server resolves the column case-insensitively; PostgreSQL's %I quotes it as \"orderid\"",
+      "traps": [
+        "collation-case"
+      ],
+      "reasoning": "QUOTENAME('orderid') = [orderid] resolves to column OrderID under the CI collation, so SQL Server reads MAX = 20 and reseeds to 21. format('%I', 'orderid') produces \"orderid\", which is not the quoted \"OrderID\" column, so PostgreSQL raises undefined_column.",
+      "trapChecks": {
+        "collation-case": {
+          "present": true,
+          "detail": "\"OrderID\" and \"orderid\" differ only in case"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A04",
+      "label": "'' sequence name and NULL column name: SQL Server's dynamic SQL becomes NULL and EXECUTE does nothing; PostgreSQL's format(%I, NULL) raises",
+      "traps": [
+        "null-vs-empty"
+      ],
+      "reasoning": "QUOTENAME(NULL) is NULL, so @SQL is NULL and EXECUTE (NULL) runs nothing without error; #CurrentValue stays empty, the table maximum is NULL and '' names no sequence, so nothing changes. In PL/pgSQL, format('%I', NULL) raises 'null values cannot be formatted as an SQL identifier' before any comparison.",
+      "trapChecks": {
+        "null-vs-empty": {
+          "present": true,
+          "detail": "empty string: yes; NULL in a text input: yes"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A05",
+      "label": "NULL schema name with a real sequence: SQL Server reads no table maximum and leaves the sequence alone; PostgreSQL's lower(NULL) reaches format(%I) and raises",
+      "traps": [],
+      "reasoning": "With @SchemaName NULL, the concatenated @SQL is NULL; EXECUTE does nothing, @CurrentTableMaximumValue is NULL, NULL >= 10 is unknown and the sequence keeps its value. The conversion passes lower(NULL) to %I, which raises.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A06",
+      "label": "table maximum 2147483646 (twice): restart at 2147483647, the int sequence's largest value; gaps in the row ids",
+      "traps": [
+        "top-ties",
+        "identity-gaps"
+      ],
+      "reasoning": "@NewSequenceValue is bigint on both engines, so maximum + 1 does not overflow, and 2147483647 is still inside AS int. The next value issued must be 2147483647 on both. Harness rows use ids 1 and 9; Orders rows share the value 2147483646.",
+      "trapChecks": {
+        "top-ties": {
+          "present": true,
+          "detail": "two rows of Sales.Orders share OrderID = 2147483646"
+        },
+        "identity-gaps": {
+          "present": true,
+          "detail": "Sales.Orders.Id jumps from 1 to 4"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A07",
+      "label": "unused sequence at the int minimum and an empty table: COALESCE gives 0 >= -2147483648, restart at 1",
+      "traps": [],
+      "reasoning": "Before first use SQL Server's current_value is the start value (-2147483648), as the sequence's own last_value is in PostgreSQL; pg_sequences.last_value would be NULL and skip the restart. COALESCE(MAX, 0) = 0 is >= the start, so both restart at 1; without COALESCE the comparison would be NULL.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A08",
+      "label": "table maximum equal to the start value of an unused sequence at 7, while the other sequence was used 3 times: restart at 8",
+      "traps": [],
+      "reasoning": "Before first use current_value is the start value 7. The comparison is >=, so a maximum of exactly 7 restarts OrderID at 8 (> would leave it to issue 7, and restarting at the maximum would issue 7). StockItemID (start 5, used 3, current 7) is not named and must keep issuing 8.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A09",
+      "label": "Warehouse.StockItems mapped to stock_items: NULL values only beside negatives; start -10, maximum -7, restart at -6",
+      "traps": [],
+      "reasoning": "The table name is mapped from StockItems to stock_items; MAX ignores the NULLs and returns -7, which is >= -10, so both engines restart StockItemID at -6 and leave OrderID alone.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A10",
+      "label": "schema name in upper case ('SALES') and table name in lower case ('orders'): both engines resolve them",
+      "traps": [],
+      "reasoning": "SQL Server resolves [SALES].[orders] case-insensitively. The conversion lower-cases the schema and snake-cases the table name, and 'orders' has no capital to split, so it maps to sales.orders as well. Both restart OrderID at 21.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    }
+  ],
+  "summary": {
+    "ran": 10,
+    "differed": 0,
+    "invalid": 0
+  },
+  "objections": [
+    {
+      "id": "O01",
+      "caseId": "A08",
+      "kind": "duplicate",
+      "text": "The hand-derived fixed case 'table maximum equals the unused sequence's start value' already calls OrderID with an unused sequence whose start equals the table maximum and requires a restart at maximum + 1. A08 repeats that same input relationship and branch with start and maximum 7; using the unrelated StockItemID sequence first does not change the OrderID attack.",
+      "status": "open"
+    }
+  ],
+  "mutantAdequacy": {
+    "verdict": "adequate",
+    "caught": [
+      "reads pg_sequences.last_value (NULL after a restart or before first use)",
+      "strictly greater instead of >=",
+      "restarts at the maximum instead of maximum + 1",
+      "empty table maximum NULL instead of 0"
+    ],
+    "missed": [],
+    "skipped": [],
+    "equivalentRecorded": []
+  },
+  "gate": {
+    "passed": false,
+    "reasons": [
+      "objection O01 is open"
+    ]
+  },
+  "wording": "10 adversarial cases ran, 0 differed"
+}

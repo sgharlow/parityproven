@@ -1,0 +1,249 @@
+{
+  "schemaVersion": 1,
+  "object": "Integration.GetTransactionUpdates",
+  "database": "WideWorldImporters",
+  "runAt": "2026-11-19T05:05:41.734Z",
+  "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
+  "conversionSha256": "22e158bec18b504431ad015b32a6c413dfe8a5ee8e7080e5443803e850b872cb",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-19T04:36:25.160Z",
+    "file": "adversarial/WideWorldImporters/Integration.GetTransactionUpdates.cases.json",
+    "sha256": "efb217ada682f764ee0eb20f7cd68cc5883bd1921a1024dc3a46d17eca4f6e41"
+  },
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T21:39:58.1908526-07:00",
+    "file": "adversarial/WideWorldImporters/Integration.GetTransactionUpdates.audit.json",
+    "sha256": "e7a158bee7e7a9b06c14931298e94db85245530390f0aa28b476e1966184599c"
+  },
+  "sameModel": false,
+  "casesAudited": [
+    "A01",
+    "A02",
+    "A03",
+    "A04",
+    "A05",
+    "A06"
+  ],
+  "traps": {
+    "null-vs-empty": {
+      "applicable": true,
+      "coveredBy": [
+        "A03"
+      ]
+    },
+    "collation-case": {
+      "applicable": true,
+      "coveredBy": [
+        "A03"
+      ]
+    },
+    "trailing-spaces": {
+      "applicable": true,
+      "coveredBy": [
+        "A03"
+      ]
+    },
+    "dates-datetime": {
+      "applicable": true,
+      "coveredBy": [
+        "A01",
+        "A06"
+      ]
+    },
+    "numeric-rounding": {
+      "applicable": true,
+      "coveredBy": [
+        "A04"
+      ]
+    },
+    "top-ties": {
+      "applicable": true,
+      "coveredBy": [
+        "A05"
+      ]
+    },
+    "identity-gaps": {
+      "applicable": true,
+      "coveredBy": [
+        "A02"
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "window edges on each half independently: customer rows at @NewCutoff and @LastCutoff, supplier rows at @LastCutoff + 1 µs and @NewCutoff + 1 µs",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "Each half of the UNION ALL has its own WHERE. Customer 1 at @NewCutoff (in), customer 2 at @LastCutoff (out), supplier 1 1 µs after @LastCutoff (in), supplier 2 1 µs after @NewCutoff (out), supplier 3 at @NewCutoff (in). A conversion that filtered only one half, or applied the window after the union with a different bound, would differ.",
+      "trapChecks": {
+        "dates-datetime": {
+          "present": true,
+          "detail": "a cutoff equals \"2020-06-15T13:00:00.000000\" in LastEditedWhen"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A02",
+      "label": "WWI Customer ID from the invoice when there is one: an invoice for another customer, an InvoiceID with no invoice row, InvoiceID NULL; ids at the int limits",
+      "traps": [
+        "identity-gaps"
+      ],
+      "reasoning": "COALESCE(i.CustomerID, ct.CustomerID): transaction 1's invoice 7 belongs to customer 2147483647 while the transaction is customer 5; transaction 2 points at invoice 99 (no row: LEFT JOIN keeps it, falls back to 5); transaction 3 has no invoice. WWI Bill To Customer ID is always the transaction's customer.",
+      "trapChecks": {
+        "identity-gaps": {
+          "present": true,
+          "detail": "Sales.Invoices.InvoiceID jumps from -2147483648 to 7"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A03",
+      "label": "supplier invoice numbers NULL, '', ' ', 'inv-1', 'INV-1' and 'INV-2 '; customer rows give a typed NULL in that column",
+      "traps": [
+        "null-vs-empty",
+        "collation-case",
+        "trailing-spaces"
+      ],
+      "reasoning": "The customer half projects CAST(NULL AS nvarchar(20)); the supplier half passes SupplierInvoiceNumber through. NULL, '' and ' ' are three different values on output; case-only and trailing-space variants keep their spelling (UNION ALL does not compare them).",
+      "trapChecks": {
+        "null-vs-empty": {
+          "present": true,
+          "detail": "empty string: yes; NULL in a text input: yes"
+        },
+        "collation-case": {
+          "present": true,
+          "detail": "\"inv-1\" and \"INV-1\" differ only in case"
+        },
+        "trailing-spaces": {
+          "present": true,
+          "detail": "\" \" ends in a space"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A04",
+      "label": "amounts ending in 5 and at 15 significant digits, negative balances; IsFinalized NULL, 0 and 1 in both halves",
+      "traps": [
+        "numeric-rounding"
+      ],
+      "reasoning": "decimal(18,2) amounts are passed through on both halves: 0.05, -0.15, 9999999999999.95 and -9999999999999.95. IsFinalized is a nullable bit: NULL must stay NULL (not false) in both halves.",
+      "trapChecks": {
+        "numeric-rounding": {
+          "present": true,
+          "detail": "0.05 in AmountExcludingTax ends in a 5"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A05",
+      "label": "rows sharing every value but their key, in both halves: UNION ALL keeps them all",
+      "traps": [
+        "top-ties"
+      ],
+      "reasoning": "Customer transactions 1 and 2 and supplier transactions 1 and 2 are identical except for their ids. UNION ALL keeps every row; there is no ORDER BY, so the result is compared as a multiset.",
+      "trapChecks": {
+        "top-ties": {
+          "present": true,
+          "detail": "two rows of Sales.CustomerTransactions share CustomerID = 5"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A06",
+      "label": "window at the extremes of datetime2 and transaction dates 1753-01-01 and 9999-12-31 on both halves",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "@LastCutoff 0001-01-01 00:00:00 and @NewCutoff 9999-12-31 23:59:59.999999: a row at each instant tests both bounds at the ends of the range. TransactionDate is passed through CAST(... AS date).",
+      "trapChecks": {
+        "dates-datetime": {
+          "present": true,
+          "detail": "boundary date \"9999-12-31\" in TransactionDate"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    }
+  ],
+  "summary": {
+    "ran": 6,
+    "differed": 0,
+    "invalid": 0
+  },
+  "objections": [
+    {
+      "id": "O01",
+      "caseId": "A06",
+      "kind": "label-mismatch",
+      "text": "A06's label says transaction dates 1753-01-01 and 9999-12-31 are sent on both UNION ALL halves. The customer half sends 2020-06-15 and 9999-12-31, while the supplier half sends 1753-01-01 and 2020-06-15; neither half receives both boundary dates.",
+      "status": "open"
+    }
+  ],
+  "mutantAdequacy": {
+    "verdict": "adequate",
+    "caught": [
+      "customer id taken from transaction only",
+      "LEFT OUTER JOIN to invoices becomes INNER JOIN"
+    ],
+    "missed": [],
+    "skipped": [],
+    "equivalentRecorded": []
+  },
+  "gate": {
+    "passed": false,
+    "reasons": [
+      "objection O01 is open"
+    ]
+  },
+  "wording": "6 adversarial cases ran, 0 differed"
+}

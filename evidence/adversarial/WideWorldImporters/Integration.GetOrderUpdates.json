@@ -1,0 +1,264 @@
+{
+  "schemaVersion": 1,
+  "object": "Integration.GetOrderUpdates",
+  "database": "WideWorldImporters",
+  "runAt": "2026-11-19T05:05:07.621Z",
+  "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
+  "conversionSha256": "4551269d5bc6a43b58b9880321a762b7b832510eeef77013d9a7db0b4ed4a923",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-19T04:36:25.160Z",
+    "file": "adversarial/WideWorldImporters/Integration.GetOrderUpdates.cases.json",
+    "sha256": "097d1a4f3e7e12475aad577e128ea76944c4fdefc1d861d6bdd73ecab0c3565d"
+  },
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T21:39:58.1908526-07:00",
+    "file": "adversarial/WideWorldImporters/Integration.GetOrderUpdates.audit.json",
+    "sha256": "3d8e81d9eed24490ddea3cc3e86673b8dbe0310ad11cce54d40183abc937573d"
+  },
+  "sameModel": false,
+  "casesAudited": [
+    "A01",
+    "A02",
+    "A03",
+    "A04",
+    "A05",
+    "A06",
+    "A07"
+  ],
+  "traps": {
+    "null-vs-empty": {
+      "applicable": true,
+      "coveredBy": [],
+      "notApplicableReason": "Every text column this procedure reads (Sales.OrderLines.Description, Warehouse.PackageTypes.PackageTypeName) is NOT NULL, so no NULL text value can be sent. '' is sent as a Description in the text case.",
+      "accepted": true
+    },
+    "collation-case": {
+      "applicable": true,
+      "coveredBy": [
+        "A05"
+      ]
+    },
+    "trailing-spaces": {
+      "applicable": true,
+      "coveredBy": [
+        "A05"
+      ]
+    },
+    "dates-datetime": {
+      "applicable": true,
+      "coveredBy": [
+        "A01",
+        "A02",
+        "A06"
+      ]
+    },
+    "numeric-rounding": {
+      "applicable": true,
+      "coveredBy": [
+        "A03",
+        "A04"
+      ]
+    },
+    "top-ties": {
+      "applicable": true,
+      "coveredBy": [
+        "A02"
+      ]
+    },
+    "identity-gaps": {
+      "applicable": true,
+      "coveredBy": [
+        "A07"
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "the later of order and line time decides: order inside with line after @NewCutoff (excluded); order after @NewCutoff with line inside (excluded); both at @NewCutoff (included); later time exactly @LastCutoff (excluded)",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "Last Modified When is the later of the two LastEditedWhen values and both bounds apply to it. Order 1 is in the window but its line is 1 µs after @NewCutoff; order 2 is 1 µs after @NewCutoff with its line inside; order 3 and its line are both exactly @NewCutoff; order 4's later time is exactly @LastCutoff. A conversion that filtered the order and the line separately, or used the earlier time, would differ.",
+      "trapChecks": {
+        "dates-datetime": {
+          "present": true,
+          "detail": "a cutoff equals \"2020-06-15T13:00:00.000000\" in LastEditedWhen"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A02",
+      "label": "one order, lines edited at different times: only the lines whose later time is inside the window are listed",
+      "traps": [
+        "dates-datetime",
+        "top-ties"
+      ],
+      "reasoning": "Order 1 was edited before the window. Line 1 is 1 µs after @LastCutoff (in), line 2 1 µs after @NewCutoff (out), line 3 exactly @NewCutoff (in), line 4 exactly @LastCutoff (out). The listed rows share WWI Order ID and every order column; ORDER BY o.OrderID does not order them further.",
+      "trapChecks": {
+        "dates-datetime": {
+          "present": true,
+          "detail": "a cutoff equals \"2020-06-15T13:00:00.000000\" in LastEditedWhen"
+        },
+        "top-ties": {
+          "present": true,
+          "detail": "two rows of Sales.OrderLines share OrderID = 1"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A03",
+      "label": "tax rounds half away from zero at 2 places, also for negative quantities: 0.005 -> 0.01, -0.105 -> -0.11, 1.2075 -> 1.21, 0.087535 -> 0.09, 14994998.5005 -> 14994998.50",
+      "traps": [
+        "numeric-rounding"
+      ],
+      "reasoning": "ROUND(Quantity * UnitPrice * TaxRate / 100.0, 2) on decimal rounds half away from zero; PostgreSQL round(numeric) does too, but trunc() or a float round-half-even would not. Quantity -3 makes the tax and both totals negative; 1000 x 99999.99 x 14.995 checks a large product.",
+      "trapChecks": {
+        "numeric-rounding": {
+          "present": true,
+          "detail": "0.35 in UnitPrice ends in a 5"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A04",
+      "label": "SQL Server's decimal scale: Quantity x UnitPrice x TaxRate / 100.0 is decimal(38,6), so 0.0049999 becomes 0.004999 before ROUND; NULL UnitPrice and a zero rate",
+      "traps": [
+        "numeric-rounding"
+      ],
+      "reasoning": "The product int x decimal(18,2) x decimal(18,3) exceeds precision 38, and the division by 100.0 is cut to scale 6 on SQL Server; PostgreSQL keeps all digits. 0.0049999 and 0.0050001 sit on either side of the 2-place midpoint. UnitPrice NULL gives NULL for every total; TaxRate 0.000 gives a tax of 0.00.",
+      "trapChecks": {
+        "numeric-rounding": {
+          "present": true,
+          "detail": "1.025 in TaxRate ends in a 5"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A05",
+      "label": "text as stored: descriptions differing only in case or by a trailing space, an empty description, an emoji; a package name with a trailing space",
+      "traps": [
+        "collation-case",
+        "trailing-spaces"
+      ],
+      "reasoning": "Nothing is compared on text; Description and Package must keep their spelling. 'Widget', 'WIDGET' and 'widget ' are three lines; '' is not NULL; the emoji is a surrogate pair in nvarchar(100). Package 'Bag ' keeps its space (package names stay distinct under the unique name).",
+      "trapChecks": {
+        "collation-case": {
+          "present": true,
+          "detail": "\"Widget\" and \"WIDGET\" differ only in case"
+        },
+        "trailing-spaces": {
+          "present": true,
+          "detail": "\"Bag \" ends in a space"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A06",
+      "label": "dates at the limits: OrderDate 1753-01-01 and 9999-12-31; PickingCompletedWhen 9999-12-31 23:59:59.999999, 1753-01-01 00:00:00 and NULL",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "CAST(... AS date) of 9999-12-31 23:59:59.999999 must keep 9999-12-31 (a rounding conversion would overflow); 1753-01-01 is the datetime minimum many converters assume; NULL picking time gives a NULL Picked Date Key.",
+      "trapChecks": {
+        "dates-datetime": {
+          "present": true,
+          "detail": "boundary date \"1753-01-01\" in OrderDate"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A07",
+      "label": "inner joins and keys: an unknown package type and an unknown customer drop their rows; an order without lines; ids with gaps and at the int limits",
+      "traps": [
+        "identity-gaps"
+      ],
+      "reasoning": "Order 2147483647's line uses package type 9 (missing): dropped. Order 1000's customer 77 is missing: dropped. Order 5 has no lines. Order -2147483648 has a backorder id and a picker. WWI City ID comes from the customer row (city 2147483647).",
+      "trapChecks": {
+        "identity-gaps": {
+          "present": true,
+          "detail": "Sales.Orders.OrderID jumps from -2147483648 to 5"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    }
+  ],
+  "summary": {
+    "ran": 7,
+    "differed": 0,
+    "invalid": 0
+  },
+  "objections": [],
+  "mutantAdequacy": {
+    "verdict": "adequate",
+    "caught": [
+      "tax amount truncates instead of rounding at 2dp",
+      "lower cutoff inclusive"
+    ],
+    "missed": [],
+    "skipped": [],
+    "equivalentRecorded": []
+  },
+  "gate": {
+    "passed": true,
+    "reasons": []
+  },
+  "wording": "7 adversarial cases ran, 0 differed"
+}

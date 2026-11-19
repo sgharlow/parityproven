@@ -1,0 +1,563 @@
+{
+  "object": "Sales.vStoreWithContacts",
+  "database": "AdventureWorks2025",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-19T05:04:43.209Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "[A01] NULL versus '': Title, MiddleName and Suffix as NULL and as ''; an email row whose address is NULL, one with '', and no email row",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Name",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "ContactType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Title",
+          "sqlServerType": "nvarchar(8)"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "MiddleName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Suffix",
+          "sqlServerType": "nvarchar(10)"
+        },
+        {
+          "name": "PhoneNumber",
+          "sqlServerType": "nvarchar(25)"
+        },
+        {
+          "name": "PhoneNumberType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailAddress",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailPromotion",
+          "sqlServerType": "int"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:Store 1",
+          "s:Owner",
+          "∅",
+          "s:First10",
+          "∅",
+          "s:Last10",
+          "∅",
+          "∅",
+          "∅",
+          "∅",
+          "n:0"
+        ],
+        [
+          "n:1",
+          "s:Store 1",
+          "s:Owner",
+          "s:",
+          "s:First11",
+          "s:",
+          "s:Last11",
+          "s:",
+          "∅",
+          "∅",
+          "s:",
+          "n:0"
+        ],
+        [
+          "n:1",
+          "s:Store 1",
+          "s:Owner",
+          "s:Dr.",
+          "s:First12",
+          "∅",
+          "s:Last12",
+          "∅",
+          "∅",
+          "∅",
+          "∅",
+          "n:0"
+        ]
+      ]
+    },
+    {
+      "label": "[A02] text returned as stored: first names differing only in case or by a trailing space, a store name with a trailing space, an emoji and combining accents",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Name",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "ContactType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Title",
+          "sqlServerType": "nvarchar(8)"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "MiddleName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Suffix",
+          "sqlServerType": "nvarchar(10)"
+        },
+        {
+          "name": "PhoneNumber",
+          "sqlServerType": "nvarchar(25)"
+        },
+        {
+          "name": "PhoneNumberType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailAddress",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailPromotion",
+          "sqlServerType": "int"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:Store 1 ",
+          "s:Owner",
+          "∅",
+          "s:Ann",
+          "∅",
+          "s:Last10",
+          "∅",
+          "∅",
+          "∅",
+          "∅",
+          "n:0"
+        ],
+        [
+          "n:1",
+          "s:Store 1 ",
+          "s:Store Contact",
+          "∅",
+          "s:ANN",
+          "∅",
+          "s:Zoë 😀",
+          "∅",
+          "∅",
+          "∅",
+          "∅",
+          "n:0"
+        ],
+        [
+          "n:1",
+          "s:Store 1 ",
+          "s:Owner",
+          "∅",
+          "s:ann ",
+          "∅",
+          "s:été ",
+          "∅",
+          "∅",
+          "∅",
+          "∅",
+          "n:0"
+        ]
+      ]
+    },
+    {
+      "label": "[A03] fan-out without duplicate keys: a contact under two contact types, with one email and three phones (one of an unknown phone type)",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Name",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "ContactType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Title",
+          "sqlServerType": "nvarchar(8)"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "MiddleName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Suffix",
+          "sqlServerType": "nvarchar(10)"
+        },
+        {
+          "name": "PhoneNumber",
+          "sqlServerType": "nvarchar(25)"
+        },
+        {
+          "name": "PhoneNumberType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailAddress",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailPromotion",
+          "sqlServerType": "int"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:Store 1",
+          "s:Owner",
+          "∅",
+          "s:First10",
+          "∅",
+          "s:Last10",
+          "∅",
+          "s:555-0100",
+          "s:Cell",
+          "s:p10@example.com",
+          "n:0"
+        ],
+        [
+          "n:1",
+          "s:Store 1",
+          "s:Owner",
+          "∅",
+          "s:First10",
+          "∅",
+          "s:Last10",
+          "∅",
+          "s:555-0101",
+          "s:Cell",
+          "s:p10@example.com",
+          "n:0"
+        ],
+        [
+          "n:1",
+          "s:Store 1",
+          "s:Owner",
+          "∅",
+          "s:First10",
+          "∅",
+          "s:Last10",
+          "∅",
+          "s:555-0199",
+          "∅",
+          "s:p10@example.com",
+          "n:0"
+        ],
+        [
+          "n:1",
+          "s:Store 1",
+          "s:Store Contact",
+          "∅",
+          "s:First10",
+          "∅",
+          "s:Last10",
+          "∅",
+          "s:555-0100",
+          "s:Cell",
+          "s:p10@example.com",
+          "n:0"
+        ],
+        [
+          "n:1",
+          "s:Store 1",
+          "s:Store Contact",
+          "∅",
+          "s:First10",
+          "∅",
+          "s:Last10",
+          "∅",
+          "s:555-0101",
+          "s:Cell",
+          "s:p10@example.com",
+          "n:0"
+        ],
+        [
+          "n:1",
+          "s:Store 1",
+          "s:Store Contact",
+          "∅",
+          "s:First10",
+          "∅",
+          "s:Last10",
+          "∅",
+          "s:555-0199",
+          "∅",
+          "s:p10@example.com",
+          "n:0"
+        ]
+      ]
+    },
+    {
+      "label": "[A04] join keys: the store's own BusinessEntityID is also a person with an email and a phone, which must not be attached to the contact",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Name",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "ContactType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Title",
+          "sqlServerType": "nvarchar(8)"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "MiddleName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Suffix",
+          "sqlServerType": "nvarchar(10)"
+        },
+        {
+          "name": "PhoneNumber",
+          "sqlServerType": "nvarchar(25)"
+        },
+        {
+          "name": "PhoneNumberType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailAddress",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailPromotion",
+          "sqlServerType": "int"
+        }
+      ],
+      "rows": [
+        [
+          "n:20",
+          "s:Store 20",
+          "s:Owner",
+          "∅",
+          "s:First30",
+          "∅",
+          "s:Last30",
+          "∅",
+          "∅",
+          "∅",
+          "∅",
+          "n:0"
+        ]
+      ]
+    },
+    {
+      "label": "[A05] keys with gaps and at the int limits: store 0, person 2147483647, contact type -2147483648; EmailPromotion at the int limits; a contact without email or phone",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Name",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "ContactType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Title",
+          "sqlServerType": "nvarchar(8)"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "MiddleName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Suffix",
+          "sqlServerType": "nvarchar(10)"
+        },
+        {
+          "name": "PhoneNumber",
+          "sqlServerType": "nvarchar(25)"
+        },
+        {
+          "name": "PhoneNumberType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailAddress",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailPromotion",
+          "sqlServerType": "int"
+        }
+      ],
+      "rows": [
+        [
+          "n:0",
+          "s:Zero",
+          "s:Min",
+          "∅",
+          "s:First2147483647",
+          "∅",
+          "s:Last2147483647",
+          "∅",
+          "∅",
+          "∅",
+          "s:max@example.com",
+          "n:2147483647"
+        ],
+        [
+          "n:5",
+          "s:Five",
+          "s:Min",
+          "∅",
+          "s:First3",
+          "∅",
+          "s:Last3",
+          "∅",
+          "∅",
+          "∅",
+          "∅",
+          "n:-2147483648"
+        ]
+      ]
+    },
+    {
+      "label": "[A06] rows dropped by the inner joins: a contact of a missing contact type, a missing person, and a business entity that is not a store",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Name",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "ContactType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Title",
+          "sqlServerType": "nvarchar(8)"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "MiddleName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Suffix",
+          "sqlServerType": "nvarchar(10)"
+        },
+        {
+          "name": "PhoneNumber",
+          "sqlServerType": "nvarchar(25)"
+        },
+        {
+          "name": "PhoneNumberType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailAddress",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailPromotion",
+          "sqlServerType": "int"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:Store 1",
+          "s:Owner",
+          "∅",
+          "s:First10",
+          "∅",
+          "s:Last10",
+          "∅",
+          "∅",
+          "∅",
+          "∅",
+          "n:0"
+        ]
+      ]
+    }
+  ]
+}

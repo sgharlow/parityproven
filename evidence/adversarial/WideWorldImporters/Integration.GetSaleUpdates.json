@@ -1,0 +1,220 @@
+{
+  "schemaVersion": 1,
+  "object": "Integration.GetSaleUpdates",
+  "database": "WideWorldImporters",
+  "runAt": "2026-11-19T05:05:25.164Z",
+  "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
+  "conversionSha256": "29eb61ad54858e00ce1b74298d6d938072fc0132dcb5f527cdacf5792a301822",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-19T04:36:25.160Z",
+    "file": "adversarial/WideWorldImporters/Integration.GetSaleUpdates.cases.json",
+    "sha256": "846834bff807816f04e7d1822b769f4a7d6f17c776c1b562aa06abbdb30fde7e"
+  },
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T21:39:58.1908526-07:00",
+    "file": "adversarial/WideWorldImporters/Integration.GetSaleUpdates.audit.json",
+    "sha256": "c58cf5a717db3747240ca51d0e430c0d527ef7fc734028813ced349eceaf6618"
+  },
+  "sameModel": false,
+  "casesAudited": [
+    "A01",
+    "A02",
+    "A03",
+    "A04",
+    "A05"
+  ],
+  "traps": {
+    "null-vs-empty": {
+      "applicable": true,
+      "coveredBy": [],
+      "notApplicableReason": "Every text column this procedure reads (Sales.InvoiceLines.Description, Warehouse.PackageTypes.PackageTypeName) is NOT NULL, so no NULL text value can be sent. '' is sent as a Description in the text case.",
+      "accepted": true
+    },
+    "collation-case": {
+      "applicable": true,
+      "coveredBy": [
+        "A05"
+      ]
+    },
+    "trailing-spaces": {
+      "applicable": true,
+      "coveredBy": [
+        "A05"
+      ]
+    },
+    "dates-datetime": {
+      "applicable": true,
+      "coveredBy": [
+        "A02"
+      ]
+    },
+    "numeric-rounding": {
+      "applicable": true,
+      "coveredBy": [
+        "A03"
+      ]
+    },
+    "top-ties": {
+      "applicable": true,
+      "coveredBy": [
+        "A04"
+      ]
+    },
+    "identity-gaps": {
+      "applicable": true,
+      "coveredBy": [
+        "A01"
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "customer and bill-to joins: a missing bill-to with an existing customer, a missing customer with an existing bill-to, and a bill-to that is another customer in another city",
+      "traps": [
+        "identity-gaps"
+      ],
+      "reasoning": "Both Customers joins are inner. Invoice 1's bill-to 50 does not exist (dropped); invoice 2's customer 60 does not exist (dropped); invoice 3 is for customer 1 (city 10) billed to customer 2147483647 (city 20): WWI City ID must be 10. A conversion that joined bt on i.CustomerID would keep invoice 1.",
+      "trapChecks": {
+        "identity-gaps": {
+          "present": true,
+          "detail": "Sales.Customers.CustomerID jumps from 1 to 2147483647"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A02",
+      "label": "the later of invoice and line time decides, and delivery dates at the limits: ConfirmedDeliveryTime 9999-12-31 23:59:59.999999 and 1753-01-01",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "Invoice 1 is inside but its line is 1 µs after @NewCutoff (excluded); invoice 2 is after the window with its line inside (excluded); invoice 3 and its line are exactly @NewCutoff (included); invoice 4's later time is exactly @LastCutoff (excluded). Delivery Date Key is CAST(datetime2 AS date): 9999-12-31 23:59:59.999999 keeps its day.",
+      "trapChecks": {
+        "dates-datetime": {
+          "present": true,
+          "detail": "boundary date \"9999-12-31\" in InvoiceDate"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A03",
+      "label": "decimal arithmetic: Total Excluding Tax = ExtendedPrice - TaxAmount for 0.05 - 0.15, 10.05 - 1.55, 999999999999.99 - (-999999999999.99); a 3-place tax rate ending in 5; negative profit; NULL unit price",
+      "traps": [
+        "numeric-rounding"
+      ],
+      "reasoning": "ExtendedPrice - TaxAmount is decimal(18,2) - decimal(18,2) = decimal(19,2) on SQL Server; the large pair needs the extra digit. TaxRate 15.005 and LineProfit -0.05 are passed through; UnitPrice NULL stays NULL.",
+      "trapChecks": {
+        "numeric-rounding": {
+          "present": true,
+          "detail": "0.15 in TaxAmount ends in a 5"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A04",
+      "label": "dry and chiller split with zero and negative quantities; lines of one invoice inserted in descending line id order",
+      "traps": [
+        "top-ties"
+      ],
+      "reasoning": "Total Dry Items is Quantity when IsChillerStock = 0, else 0; Total Chiller Items the reverse. Quantities 0 and -4 make a swapped CASE visible only through the sign and the zero. Lines 9, 5, 2 of invoice 1 are inserted in that order; ORDER BY InvoiceID, InvoiceLineID orders them, but InvoiceLineID is not an output column, so the rows are compared as a multiset within the invoice.",
+      "trapChecks": {
+        "top-ties": {
+          "present": true,
+          "detail": "two rows of Sales.Invoices share CustomerID = 1"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A05",
+      "label": "text as stored: descriptions differing only in case or by a trailing space, an empty description, an emoji and a combining accent",
+      "traps": [
+        "collation-case",
+        "trailing-spaces"
+      ],
+      "reasoning": "Nothing is compared on text; Description must keep its spelling. 'Mug', 'MUG' and 'mug ' are three lines; '' is not NULL; 'e' + U+0301 is not normalised; the emoji is a surrogate pair in nvarchar(100). Package 'Each ' keeps its space.",
+      "trapChecks": {
+        "collation-case": {
+          "present": true,
+          "detail": "\"Mug\" and \"MUG\" differ only in case"
+        },
+        "trailing-spaces": {
+          "present": true,
+          "detail": "\"Each \" ends in a space"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    }
+  ],
+  "summary": {
+    "ran": 5,
+    "differed": 0,
+    "invalid": 0
+  },
+  "objections": [
+    {
+      "id": "O01",
+      "caseId": "A03",
+      "kind": "weak",
+      "text": "A03 says the subtraction 999999999999.99 - (-999999999999.99) needs the extra precision digit of SQL Server's decimal(19,2) result. The actual result, 1999999999999.98, still fits decimal(18,2), so these values do not attack the stated precision-widening boundary.",
+      "status": "open"
+    }
+  ],
+  "mutantAdequacy": {
+    "verdict": "adequate",
+    "caught": [
+      "chiller test inverted",
+      "bill-to join dropped to customer"
+    ],
+    "missed": [],
+    "skipped": [],
+    "equivalentRecorded": []
+  },
+  "gate": {
+    "passed": false,
+    "reasons": [
+      "objection O01 is open"
+    ]
+  },
+  "wording": "5 adversarial cases ran, 0 differed"
+}

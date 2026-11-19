@@ -1,0 +1,374 @@
+{
+  "object": "Integration.GetMovementUpdates",
+  "database": "WideWorldImporters",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-19T05:04:53.206Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "[A01] Quantity truncates toward zero at the int limits and on halves: 2147483647.999, -2147483648.999, 0.500, -0.500, 1.500, -1.505, 0.005; rows inserted in descending id order with gaps",
+      "columns": [
+        {
+          "name": "Date Key",
+          "sqlServerType": "date"
+        },
+        {
+          "name": "WWI Stock Item Transaction ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Invoice ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Purchase Order ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Quantity",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Stock Item ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Customer ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Supplier ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Transaction Type ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Transaction Occurred When",
+          "sqlServerType": "datetime2(7)"
+        }
+      ],
+      "rows": [
+        [
+          "d:2020-06-15",
+          "n:1",
+          "∅",
+          "∅",
+          "n:0",
+          "n:1",
+          "∅",
+          "∅",
+          "n:10",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-15",
+          "n:2",
+          "∅",
+          "∅",
+          "n:-1",
+          "n:1",
+          "∅",
+          "∅",
+          "n:10",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-15",
+          "n:3",
+          "∅",
+          "∅",
+          "n:1",
+          "n:1",
+          "∅",
+          "∅",
+          "n:10",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-15",
+          "n:5",
+          "∅",
+          "∅",
+          "n:0",
+          "n:1",
+          "∅",
+          "∅",
+          "n:10",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-15",
+          "n:8",
+          "∅",
+          "∅",
+          "n:0",
+          "n:1",
+          "∅",
+          "∅",
+          "n:10",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-15",
+          "n:13",
+          "∅",
+          "∅",
+          "n:-2147483648",
+          "n:1",
+          "∅",
+          "∅",
+          "n:10",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-15",
+          "n:21",
+          "∅",
+          "∅",
+          "n:2147483647",
+          "n:1",
+          "∅",
+          "∅",
+          "n:10",
+          "t:2020-06-15T12:00:00.000000"
+        ]
+      ]
+    },
+    {
+      "label": "[A02] window at the extremes of datetime2: @LastCutoff 0001-01-01 00:00:00, @NewCutoff 9999-12-31 23:59:59.999999; rows at both instants and 1 µs inside",
+      "columns": [
+        {
+          "name": "Date Key",
+          "sqlServerType": "date"
+        },
+        {
+          "name": "WWI Stock Item Transaction ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Invoice ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Purchase Order ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Quantity",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Stock Item ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Customer ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Supplier ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Transaction Type ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Transaction Occurred When",
+          "sqlServerType": "datetime2(7)"
+        }
+      ],
+      "rows": [
+        [
+          "d:1753-01-01",
+          "n:2",
+          "∅",
+          "∅",
+          "n:1",
+          "n:1",
+          "∅",
+          "∅",
+          "n:10",
+          "t:1753-01-01T00:00:00.000000"
+        ],
+        [
+          "d:9999-12-31",
+          "n:3",
+          "∅",
+          "∅",
+          "n:1",
+          "n:1",
+          "∅",
+          "∅",
+          "n:10",
+          "t:9999-12-31T23:59:59.999999"
+        ]
+      ]
+    },
+    {
+      "label": "[A03] empty window: @LastCutoff equal to @NewCutoff; rows at that instant and 1 µs either side are all excluded",
+      "columns": [
+        {
+          "name": "Date Key",
+          "sqlServerType": "date"
+        },
+        {
+          "name": "WWI Stock Item Transaction ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Invoice ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Purchase Order ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Quantity",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Stock Item ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Customer ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Supplier ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Transaction Type ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Transaction Occurred When",
+          "sqlServerType": "datetime2(7)"
+        }
+      ],
+      "rows": []
+    },
+    {
+      "label": "[A04] inverted window: @LastCutoff after @NewCutoff returns nothing, even for rows between them",
+      "columns": [
+        {
+          "name": "Date Key",
+          "sqlServerType": "date"
+        },
+        {
+          "name": "WWI Stock Item Transaction ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Invoice ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Purchase Order ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Quantity",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Stock Item ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Customer ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Supplier ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Transaction Type ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Transaction Occurred When",
+          "sqlServerType": "datetime2(7)"
+        }
+      ],
+      "rows": []
+    },
+    {
+      "label": "[A05] day rollover in the microsecond digits: cutoffs at 23:59:59.999999; Date Key of 23:59:59.999999 stays on that day; Quantity 0.999 and -0.995 truncate to 0",
+      "columns": [
+        {
+          "name": "Date Key",
+          "sqlServerType": "date"
+        },
+        {
+          "name": "WWI Stock Item Transaction ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Invoice ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Purchase Order ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Quantity",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Stock Item ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Customer ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Supplier ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Transaction Type ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Transaction Occurred When",
+          "sqlServerType": "datetime2(7)"
+        }
+      ],
+      "rows": [
+        [
+          "d:2020-06-14",
+          "n:2",
+          "∅",
+          "∅",
+          "n:0",
+          "n:1",
+          "∅",
+          "∅",
+          "n:10",
+          "t:2020-06-14T23:59:59.999999"
+        ],
+        [
+          "d:2020-06-15",
+          "n:3",
+          "∅",
+          "∅",
+          "n:0",
+          "n:1",
+          "∅",
+          "∅",
+          "n:10",
+          "t:2020-06-15T23:59:59.999999"
+        ]
+      ]
+    }
+  ]
+}

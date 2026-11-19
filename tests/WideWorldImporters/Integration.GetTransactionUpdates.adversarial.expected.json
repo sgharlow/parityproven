@@ -1,0 +1,915 @@
+{
+  "object": "Integration.GetTransactionUpdates",
+  "database": "WideWorldImporters",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-19T05:05:36.136Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "[A01] window edges on each half independently: customer rows at @NewCutoff and @LastCutoff, supplier rows at @LastCutoff + 1 µs and @NewCutoff + 1 µs",
+      "columns": [
+        {
+          "name": "Date Key",
+          "sqlServerType": "date"
+        },
+        {
+          "name": "WWI Customer Transaction ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Supplier Transaction ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Invoice ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Purchase Order ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Supplier Invoice Number",
+          "sqlServerType": "nvarchar(20)"
+        },
+        {
+          "name": "Total Excluding Tax",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Tax Amount",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Total Including Tax",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Outstanding Balance",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Is Finalized",
+          "sqlServerType": "bit"
+        },
+        {
+          "name": "WWI Customer ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Bill To Customer ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Supplier ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Transaction Type ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Payment Method ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Last Modified When",
+          "sqlServerType": "datetime2(7)"
+        }
+      ],
+      "rows": [
+        [
+          "d:2020-06-15",
+          "n:1",
+          "∅",
+          "∅",
+          "∅",
+          "∅",
+          "n:100",
+          "n:15",
+          "n:115",
+          "n:0",
+          "b:1",
+          "n:5",
+          "n:5",
+          "∅",
+          "n:1",
+          "∅",
+          "t:2020-06-15T13:00:00.000000"
+        ],
+        [
+          "d:2020-06-15",
+          "∅",
+          "n:1",
+          "∅",
+          "∅",
+          "s:INV-1",
+          "n:-50",
+          "n:-7.5",
+          "n:-57.5",
+          "n:0",
+          "b:0",
+          "∅",
+          "∅",
+          "n:4",
+          "n:5",
+          "n:2",
+          "t:2020-06-15T11:00:00.000001"
+        ],
+        [
+          "d:2020-06-15",
+          "∅",
+          "n:3",
+          "∅",
+          "∅",
+          "s:INV-3",
+          "n:-50",
+          "n:-7.5",
+          "n:-57.5",
+          "n:0",
+          "b:0",
+          "∅",
+          "∅",
+          "n:4",
+          "n:5",
+          "n:2",
+          "t:2020-06-15T13:00:00.000000"
+        ]
+      ]
+    },
+    {
+      "label": "[A02] WWI Customer ID from the invoice when there is one: an invoice for another customer, an InvoiceID with no invoice row, InvoiceID NULL; ids at the int limits",
+      "columns": [
+        {
+          "name": "Date Key",
+          "sqlServerType": "date"
+        },
+        {
+          "name": "WWI Customer Transaction ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Supplier Transaction ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Invoice ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Purchase Order ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Supplier Invoice Number",
+          "sqlServerType": "nvarchar(20)"
+        },
+        {
+          "name": "Total Excluding Tax",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Tax Amount",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Total Including Tax",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Outstanding Balance",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Is Finalized",
+          "sqlServerType": "bit"
+        },
+        {
+          "name": "WWI Customer ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Bill To Customer ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Supplier ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Transaction Type ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Payment Method ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Last Modified When",
+          "sqlServerType": "datetime2(7)"
+        }
+      ],
+      "rows": [
+        [
+          "d:2020-06-15",
+          "n:1",
+          "∅",
+          "n:7",
+          "∅",
+          "∅",
+          "n:100",
+          "n:15",
+          "n:115",
+          "n:0",
+          "b:1",
+          "n:2147483647",
+          "n:5",
+          "∅",
+          "n:1",
+          "∅",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-15",
+          "n:2",
+          "∅",
+          "n:99",
+          "∅",
+          "∅",
+          "n:100",
+          "n:15",
+          "n:115",
+          "n:0",
+          "b:1",
+          "n:5",
+          "n:5",
+          "∅",
+          "n:1",
+          "∅",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-15",
+          "n:3",
+          "∅",
+          "∅",
+          "∅",
+          "∅",
+          "n:100",
+          "n:15",
+          "n:115",
+          "n:0",
+          "b:1",
+          "n:5",
+          "n:5",
+          "∅",
+          "n:1",
+          "∅",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-15",
+          "n:2147483647",
+          "∅",
+          "n:-2147483648",
+          "∅",
+          "∅",
+          "n:100",
+          "n:15",
+          "n:115",
+          "n:0",
+          "b:1",
+          "n:1",
+          "n:-2147483648",
+          "∅",
+          "n:1",
+          "∅",
+          "t:2020-06-15T12:00:00.000000"
+        ]
+      ]
+    },
+    {
+      "label": "[A03] supplier invoice numbers NULL, '', ' ', 'inv-1', 'INV-1' and 'INV-2 '; customer rows give a typed NULL in that column",
+      "columns": [
+        {
+          "name": "Date Key",
+          "sqlServerType": "date"
+        },
+        {
+          "name": "WWI Customer Transaction ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Supplier Transaction ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Invoice ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Purchase Order ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Supplier Invoice Number",
+          "sqlServerType": "nvarchar(20)"
+        },
+        {
+          "name": "Total Excluding Tax",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Tax Amount",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Total Including Tax",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Outstanding Balance",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Is Finalized",
+          "sqlServerType": "bit"
+        },
+        {
+          "name": "WWI Customer ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Bill To Customer ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Supplier ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Transaction Type ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Payment Method ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Last Modified When",
+          "sqlServerType": "datetime2(7)"
+        }
+      ],
+      "rows": [
+        [
+          "d:2020-06-15",
+          "n:1",
+          "∅",
+          "∅",
+          "∅",
+          "∅",
+          "n:100",
+          "n:15",
+          "n:115",
+          "n:0",
+          "b:1",
+          "n:5",
+          "n:5",
+          "∅",
+          "n:1",
+          "∅",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-15",
+          "∅",
+          "n:1",
+          "∅",
+          "∅",
+          "∅",
+          "n:-50",
+          "n:-7.5",
+          "n:-57.5",
+          "n:0",
+          "b:0",
+          "∅",
+          "∅",
+          "n:4",
+          "n:5",
+          "n:2",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-15",
+          "∅",
+          "n:2",
+          "∅",
+          "∅",
+          "s:",
+          "n:-50",
+          "n:-7.5",
+          "n:-57.5",
+          "n:0",
+          "b:0",
+          "∅",
+          "∅",
+          "n:4",
+          "n:5",
+          "n:2",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-15",
+          "∅",
+          "n:3",
+          "∅",
+          "∅",
+          "s: ",
+          "n:-50",
+          "n:-7.5",
+          "n:-57.5",
+          "n:0",
+          "b:0",
+          "∅",
+          "∅",
+          "n:4",
+          "n:5",
+          "n:2",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-15",
+          "∅",
+          "n:4",
+          "∅",
+          "∅",
+          "s:inv-1",
+          "n:-50",
+          "n:-7.5",
+          "n:-57.5",
+          "n:0",
+          "b:0",
+          "∅",
+          "∅",
+          "n:4",
+          "n:5",
+          "n:2",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-15",
+          "∅",
+          "n:5",
+          "∅",
+          "∅",
+          "s:INV-1",
+          "n:-50",
+          "n:-7.5",
+          "n:-57.5",
+          "n:0",
+          "b:0",
+          "∅",
+          "∅",
+          "n:4",
+          "n:5",
+          "n:2",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-15",
+          "∅",
+          "n:6",
+          "∅",
+          "∅",
+          "s:INV-2 ",
+          "n:-50",
+          "n:-7.5",
+          "n:-57.5",
+          "n:0",
+          "b:0",
+          "∅",
+          "∅",
+          "n:4",
+          "n:5",
+          "n:2",
+          "t:2020-06-15T12:00:00.000000"
+        ]
+      ]
+    },
+    {
+      "label": "[A04] amounts ending in 5 and at 15 significant digits, negative balances; IsFinalized NULL, 0 and 1 in both halves",
+      "columns": [
+        {
+          "name": "Date Key",
+          "sqlServerType": "date"
+        },
+        {
+          "name": "WWI Customer Transaction ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Supplier Transaction ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Invoice ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Purchase Order ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Supplier Invoice Number",
+          "sqlServerType": "nvarchar(20)"
+        },
+        {
+          "name": "Total Excluding Tax",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Tax Amount",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Total Including Tax",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Outstanding Balance",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Is Finalized",
+          "sqlServerType": "bit"
+        },
+        {
+          "name": "WWI Customer ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Bill To Customer ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Supplier ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Transaction Type ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Payment Method ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Last Modified When",
+          "sqlServerType": "datetime2(7)"
+        }
+      ],
+      "rows": [
+        [
+          "d:2020-06-15",
+          "n:1",
+          "∅",
+          "∅",
+          "∅",
+          "∅",
+          "n:0.05",
+          "n:-0.15",
+          "n:-0.1",
+          "n:-9999999999999.95",
+          "∅",
+          "n:5",
+          "n:5",
+          "∅",
+          "n:1",
+          "∅",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-15",
+          "n:2",
+          "∅",
+          "∅",
+          "∅",
+          "∅",
+          "n:9999999999999.95",
+          "n:15",
+          "n:115",
+          "n:0",
+          "b:0",
+          "n:5",
+          "n:5",
+          "∅",
+          "n:1",
+          "∅",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-15",
+          "∅",
+          "n:1",
+          "∅",
+          "∅",
+          "s:INV-1",
+          "n:-9999999999999.95",
+          "n:-7.5",
+          "n:-57.5",
+          "n:0.05",
+          "∅",
+          "∅",
+          "∅",
+          "n:4",
+          "n:5",
+          "n:2",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-15",
+          "∅",
+          "n:2",
+          "∅",
+          "∅",
+          "s:INV-2",
+          "n:-50",
+          "n:-7.5",
+          "n:-57.5",
+          "n:0",
+          "b:1",
+          "∅",
+          "∅",
+          "n:4",
+          "n:5",
+          "n:2",
+          "t:2020-06-15T12:00:00.000000"
+        ]
+      ]
+    },
+    {
+      "label": "[A05] rows sharing every value but their key, in both halves: UNION ALL keeps them all",
+      "columns": [
+        {
+          "name": "Date Key",
+          "sqlServerType": "date"
+        },
+        {
+          "name": "WWI Customer Transaction ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Supplier Transaction ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Invoice ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Purchase Order ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Supplier Invoice Number",
+          "sqlServerType": "nvarchar(20)"
+        },
+        {
+          "name": "Total Excluding Tax",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Tax Amount",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Total Including Tax",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Outstanding Balance",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Is Finalized",
+          "sqlServerType": "bit"
+        },
+        {
+          "name": "WWI Customer ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Bill To Customer ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Supplier ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Transaction Type ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Payment Method ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Last Modified When",
+          "sqlServerType": "datetime2(7)"
+        }
+      ],
+      "rows": [
+        [
+          "d:2020-06-15",
+          "n:1",
+          "∅",
+          "∅",
+          "∅",
+          "∅",
+          "n:100",
+          "n:15",
+          "n:115",
+          "n:0",
+          "b:1",
+          "n:5",
+          "n:5",
+          "∅",
+          "n:1",
+          "∅",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-15",
+          "n:2",
+          "∅",
+          "∅",
+          "∅",
+          "∅",
+          "n:100",
+          "n:15",
+          "n:115",
+          "n:0",
+          "b:1",
+          "n:5",
+          "n:5",
+          "∅",
+          "n:1",
+          "∅",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-15",
+          "∅",
+          "n:1",
+          "∅",
+          "∅",
+          "s:X",
+          "n:-50",
+          "n:-7.5",
+          "n:-57.5",
+          "n:0",
+          "b:0",
+          "∅",
+          "∅",
+          "n:4",
+          "n:5",
+          "n:2",
+          "t:2020-06-15T12:00:00.000000"
+        ],
+        [
+          "d:2020-06-15",
+          "∅",
+          "n:2",
+          "∅",
+          "∅",
+          "s:X",
+          "n:-50",
+          "n:-7.5",
+          "n:-57.5",
+          "n:0",
+          "b:0",
+          "∅",
+          "∅",
+          "n:4",
+          "n:5",
+          "n:2",
+          "t:2020-06-15T12:00:00.000000"
+        ]
+      ]
+    },
+    {
+      "label": "[A06] window at the extremes of datetime2 and transaction dates 1753-01-01 and 9999-12-31 on both halves",
+      "columns": [
+        {
+          "name": "Date Key",
+          "sqlServerType": "date"
+        },
+        {
+          "name": "WWI Customer Transaction ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Supplier Transaction ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Invoice ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Purchase Order ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Supplier Invoice Number",
+          "sqlServerType": "nvarchar(20)"
+        },
+        {
+          "name": "Total Excluding Tax",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Tax Amount",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Total Including Tax",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Outstanding Balance",
+          "sqlServerType": "decimal(18,2)"
+        },
+        {
+          "name": "Is Finalized",
+          "sqlServerType": "bit"
+        },
+        {
+          "name": "WWI Customer ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Bill To Customer ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Supplier ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Transaction Type ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "WWI Payment Method ID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Last Modified When",
+          "sqlServerType": "datetime2(7)"
+        }
+      ],
+      "rows": [
+        [
+          "d:9999-12-31",
+          "n:2",
+          "∅",
+          "∅",
+          "∅",
+          "∅",
+          "n:100",
+          "n:15",
+          "n:115",
+          "n:0",
+          "b:1",
+          "n:5",
+          "n:5",
+          "∅",
+          "n:1",
+          "∅",
+          "t:9999-12-31T23:59:59.999999"
+        ],
+        [
+          "d:1753-01-01",
+          "∅",
+          "n:1",
+          "∅",
+          "∅",
+          "s:INV-1",
+          "n:-50",
+          "n:-7.5",
+          "n:-57.5",
+          "n:0",
+          "b:0",
+          "∅",
+          "∅",
+          "n:4",
+          "n:5",
+          "n:2",
+          "t:0001-01-01T00:00:00.000001"
+        ]
+      ]
+    }
+  ]
+}

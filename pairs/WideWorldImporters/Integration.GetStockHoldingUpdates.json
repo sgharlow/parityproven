@@ -75,7 +75,15 @@
       "SQL Server: AgreedTests.[test 01 every holding is listed: empty and trailing-space bin locations kept, zero and negative quantities, c…]: pass",
       "PostgreSQL: AgreedTests.[test 01 every holding is listed: empty and trailing-space bin locations kept, zero and negative quantities, c…]: pass",
       "planted defects caught by the agreed tests: 1 of 2"
-    ]
+    ],
+    "adversarial": {
+      "gate": "fail",
+      "ran": 5,
+      "differed": 0,
+      "evidencePath": "evidence/adversarial/WideWorldImporters/Integration.GetStockHoldingUpdates.json",
+      "conversionSha256": "eb2a3aed3e96b8909687d5b94bc43bdc3a1fea2531165a8ca18e6857f748b854",
+      "runAt": "2026-11-19T05:05:32.898Z"
+    }
   },
   "effort": {
     "humanMinutes": 0,

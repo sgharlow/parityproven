@@ -107,7 +107,64 @@
       "SQL Server: AgreedTests.[test 01 window edges to the microsecond (at @LastCutoff excluded, +1 µs included, at @NewCutoff included, +1…]: pass",
       "PostgreSQL: AgreedTests.[test 01 window edges to the microsecond (at @LastCutoff excluded, +1 µs included, at @NewCutoff included, +1…]: pass",
       "planted defects caught by the agreed tests: 2 of 2"
-    ]
+    ],
+    "adversarial": {
+      "gate": "pass",
+      "ran": 4,
+      "differed": 0,
+      "evidencePath": "evidence/adversarial/WideWorldImporters/Integration.GetPurchaseUpdates.json",
+      "runAt": "2026-11-19T05:05:16.166Z",
+      "agentWritten": true,
+      "wording": "4 adversarial cases ran, 0 differed",
+      "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
+      "auditorModel": "gpt-5.6-sol",
+      "sameModel": false,
+      "mutantAdequacy": "adequate",
+      "gateReasons": [],
+      "cases": [
+        {
+          "id": "A01",
+          "label": "the later of order and line time decides: order inside with line after @NewCutoff (excluded); order after @NewCutoff with line inside (excluded); both at @NewCutoff (included); later time exactly @LastCutoff (excluded)",
+          "traps": [
+            "dates-datetime"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A02",
+          "label": "Ordered Quantity near the int limit: 46340 x 46340 = 2147395600, -46340 x 46341, zero outers, and QuantityPerOuter 0 and 1",
+          "traps": [
+            "top-ties"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A03",
+          "label": "window at the extremes of datetime2 and dates at the limits: @NewCutoff 9999-12-31 23:59:59.999999; OrderDate 1753-01-01 and 9999-12-31",
+          "traps": [
+            "dates-datetime"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A04",
+          "label": "inner joins and keys: a missing stock item and a missing package type drop their lines; a package name with a trailing space; ids with gaps and at the int limits",
+          "traps": [
+            "identity-gaps",
+            "trailing-spaces"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        }
+      ]
+    }
   },
   "effort": {
     "humanMinutes": 0,
@@ -118,5 +175,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-19T04:20:26.203Z"
+  "builtAt": "2026-11-19T05:06:27.363Z"
 }

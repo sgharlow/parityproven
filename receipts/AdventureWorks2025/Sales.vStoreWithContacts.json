@@ -108,7 +108,82 @@
       "SQL Server: AgreedTests.[test 01 two phones give two rows (unknown phone type is NULL); no email or a NULL email is NULL; Title kept;…]: pass",
       "PostgreSQL: AgreedTests.[test 01 two phones give two rows (unknown phone type is NULL); no email or a NULL email is NULL; Title kept;…]: pass",
       "planted defects caught by the agreed tests: 2 of 2"
-    ]
+    ],
+    "adversarial": {
+      "gate": "pass",
+      "ran": 6,
+      "differed": 0,
+      "evidencePath": "evidence/adversarial/AdventureWorks2025/Sales.vStoreWithContacts.json",
+      "runAt": "2026-11-19T05:04:49.670Z",
+      "agentWritten": true,
+      "wording": "6 adversarial cases ran, 0 differed",
+      "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
+      "auditorModel": "gpt-5.6-sol",
+      "sameModel": false,
+      "mutantAdequacy": "adequate",
+      "gateReasons": [],
+      "cases": [
+        {
+          "id": "A01",
+          "label": "NULL versus '': Title, MiddleName and Suffix as NULL and as ''; an email row whose address is NULL, one with '', and no email row",
+          "traps": [
+            "null-vs-empty"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A02",
+          "label": "text returned as stored: first names differing only in case or by a trailing space, a store name with a trailing space, an emoji and combining accents",
+          "traps": [
+            "collation-case",
+            "trailing-spaces"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A03",
+          "label": "fan-out without duplicate keys: a contact under two contact types, with one email and three phones (one of an unknown phone type)",
+          "traps": [
+            "top-ties"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A04",
+          "label": "join keys: the store's own BusinessEntityID is also a person with an email and a phone, which must not be attached to the contact",
+          "traps": [
+            "identity-gaps"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A05",
+          "label": "keys with gaps and at the int limits: store 0, person 2147483647, contact type -2147483648; EmailPromotion at the int limits; a contact without email or phone",
+          "traps": [
+            "identity-gaps"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A06",
+          "label": "rows dropped by the inner joins: a contact of a missing contact type, a missing person, and a business entity that is not a store",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        }
+      ]
+    }
   },
   "effort": {
     "humanMinutes": 0,
@@ -119,5 +194,5 @@
     "p50Hours": 0.75,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-19T04:20:26.199Z"
+  "builtAt": "2026-11-19T05:06:27.358Z"
 }

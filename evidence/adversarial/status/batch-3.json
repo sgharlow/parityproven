@@ -1,0 +1,63 @@
+{
+  "batch": "3",
+  "startedAt": "2026-11-19T05:04:17.670Z",
+  "total": 11,
+  "done": [
+    {
+      "object": "Sales.vSalesPersonSalesByFiscalYears",
+      "gate": "pass",
+      "wording": "6 adversarial cases ran, 0 differed"
+    },
+    {
+      "object": "Sales.vStoreWithAddresses",
+      "gate": "fail",
+      "wording": "9 adversarial cases ran, 0 differed"
+    },
+    {
+      "object": "Sales.vStoreWithContacts",
+      "gate": "pass",
+      "wording": "6 adversarial cases ran, 0 differed"
+    },
+    {
+      "object": "Integration.GetMovementUpdates",
+      "gate": "pass",
+      "wording": "5 adversarial cases ran, 0 differed"
+    },
+    {
+      "object": "Integration.GetOrderUpdates",
+      "gate": "pass",
+      "wording": "7 adversarial cases ran, 0 differed"
+    },
+    {
+      "object": "Integration.GetPurchaseUpdates",
+      "gate": "pass",
+      "wording": "4 adversarial cases ran, 0 differed"
+    },
+    {
+      "object": "Integration.GetSaleUpdates",
+      "gate": "fail",
+      "wording": "5 adversarial cases ran, 0 differed"
+    },
+    {
+      "object": "Integration.GetStockHoldingUpdates",
+      "gate": "fail",
+      "wording": "5 adversarial cases ran, 0 differed"
+    },
+    {
+      "object": "Integration.GetTransactionUpdates",
+      "gate": "fail",
+      "wording": "6 adversarial cases ran, 0 differed"
+    },
+    {
+      "object": "Sequences.ReseedSequenceBeyondTableValues",
+      "gate": "fail",
+      "wording": "10 adversarial cases ran, 0 differed"
+    },
+    {
+      "object": "Website.ActivateWebsiteLogon",
+      "gate": "fail",
+      "wording": "12 adversarial cases ran, 0 differed"
+    }
+  ],
+  "finished": true
+}

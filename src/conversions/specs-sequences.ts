@@ -128,10 +128,10 @@ export const SEQUENCE_SPECS: ObjectSpec[] = [
     },
     fixedCases: fixedCases(),
     mutants: [
-      { name: "reads pg_sequences.last_value (NULL after a restart or before first use)", from: `EXECUTE format('SELECT last_value FROM sequences.%I', sequence_name)`, to: `EXECUTE format('SELECT last_value FROM pg_sequences WHERE schemaname = ''sequences'' AND sequencename = %L', sequence_name)` },
+      { name: "reads pg_sequences.last_value (NULL after a restart or before first use)", from: `EXECUTE format('SELECT last_value FROM sequences.%I', actual_sequence_name)`, to: `EXECUTE format('SELECT last_value FROM pg_sequences WHERE schemaname = ''sequences'' AND sequencename = %L', actual_sequence_name)` },
       { name: "strictly greater instead of >=", from: `current_table_maximum_value >= current_sequence_maximum_value`, to: `current_table_maximum_value > current_sequence_maximum_value` },
       { name: "restarts at the maximum instead of maximum + 1", from: `new_sequence_value := current_table_maximum_value + 1;`, to: `new_sequence_value := current_table_maximum_value;` },
-      { name: "empty table maximum NULL instead of 0", from: `SELECT COALESCE(MAX(%I), 0) FROM %I.%I`, to: `SELECT MAX(%I) FROM %I.%I` },
+      { name: "empty table maximum NULL instead of 0", from: `SELECT COALESCE(MAX(%I), 0) FROM %s`, to: `SELECT MAX(%I) FROM %s` },
     ],
     notes: [
       "Dynamic SQL: EXECUTE (@SQL) with QUOTENAME becomes PL/pgSQL EXECUTE format() with %I. The #CurrentValue temp table that carries MAX() out of the dynamic statement becomes EXECUTE ... INTO.",

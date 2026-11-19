@@ -1,0 +1,218 @@
+{
+  "schemaVersion": 1,
+  "object": "Integration.GetMovementUpdates",
+  "database": "WideWorldImporters",
+  "runAt": "2026-11-19T05:04:58.189Z",
+  "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
+  "conversionSha256": "ab955274ff94f4e9262ab92da96b3f9f2b12cd80df523f5e3a0e10803f48d725",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-19T04:36:25.160Z",
+    "file": "adversarial/WideWorldImporters/Integration.GetMovementUpdates.cases.json",
+    "sha256": "b5b3521df44db3c1ed7b017d7927b14df292fe50750e81a3c7c0cd5ae7ef420d"
+  },
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T21:39:58.1908526-07:00",
+    "file": "adversarial/WideWorldImporters/Integration.GetMovementUpdates.audit.json",
+    "sha256": "24affb1319ffef8425044b7ed4ac4ef153e6ec7efa05b05335ea4ec9a5284a64"
+  },
+  "sameModel": false,
+  "casesAudited": [
+    "A01",
+    "A02",
+    "A03",
+    "A04",
+    "A05"
+  ],
+  "traps": {
+    "null-vs-empty": {
+      "applicable": false,
+      "coveredBy": []
+    },
+    "collation-case": {
+      "applicable": false,
+      "coveredBy": []
+    },
+    "trailing-spaces": {
+      "applicable": false,
+      "coveredBy": []
+    },
+    "dates-datetime": {
+      "applicable": true,
+      "coveredBy": [
+        "A02",
+        "A03",
+        "A04",
+        "A05"
+      ]
+    },
+    "numeric-rounding": {
+      "applicable": true,
+      "coveredBy": [
+        "A01",
+        "A05"
+      ]
+    },
+    "top-ties": {
+      "applicable": true,
+      "coveredBy": [
+        "A01"
+      ]
+    },
+    "identity-gaps": {
+      "applicable": true,
+      "coveredBy": [
+        "A01"
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "Quantity truncates toward zero at the int limits and on halves: 2147483647.999, -2147483648.999, 0.500, -0.500, 1.500, -1.505, 0.005; rows inserted in descending id order with gaps",
+      "traps": [
+        "numeric-rounding",
+        "identity-gaps",
+        "top-ties"
+      ],
+      "reasoning": "CAST(decimal(18,3) AS int) truncates in T-SQL. The conversion uses TRUNC then a cast; a plain ::integer cast rounds half away from zero (0.5 -> 1, -0.5 -> -1) and would overflow on 2147483647.999. Ids 21, 13, 8, 5, 3, 2, 1 are inserted in that order, so a result relying on insertion order instead of ORDER BY would come back reversed. All rows share StockItemID 1.",
+      "trapChecks": {
+        "numeric-rounding": {
+          "present": true,
+          "detail": "-1.505 in Quantity ends in a 5"
+        },
+        "identity-gaps": {
+          "present": true,
+          "detail": "Warehouse.StockItemTransactions.StockItemTransactionID jumps from 3 to 5"
+        },
+        "top-ties": {
+          "present": true,
+          "detail": "two rows of Warehouse.StockItemTransactions share StockItemID = 1"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A02",
+      "label": "window at the extremes of datetime2: @LastCutoff 0001-01-01 00:00:00, @NewCutoff 9999-12-31 23:59:59.999999; rows at both instants and 1 µs inside",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "A row edited exactly at 0001-01-01 is excluded (> is strict); 1 µs later is included; 9999-12-31 23:59:59.999999 equals @NewCutoff and is included (<=). TransactionOccurredWhen 9999-12-31 23:59:59.999999 must give Date Key 9999-12-31 (truncation, not rounding into year 10000) and 1753-01-01 must stay 1753-01-01.",
+      "trapChecks": {
+        "dates-datetime": {
+          "present": true,
+          "detail": "boundary date \"1753-01-01T00:00:00.000000\" in TransactionOccurredWhen"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A03",
+      "label": "empty window: @LastCutoff equal to @NewCutoff; rows at that instant and 1 µs either side are all excluded",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "> @LastCutoff AND <= @NewCutoff with equal cutoffs can never hold. A conversion that used BETWEEN or >= on the lower bound would return the row edited at exactly 12:00:00.",
+      "trapChecks": {
+        "dates-datetime": {
+          "present": true,
+          "detail": "a cutoff equals \"2020-06-15T12:00:00.000000\" in TransactionOccurredWhen"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A04",
+      "label": "inverted window: @LastCutoff after @NewCutoff returns nothing, even for rows between them",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "With @LastCutoff = 13:00 and @NewCutoff = 11:00 both predicates are never true together. A conversion that normalised the window (LEAST/GREATEST) or swapped the parameters would return the rows at 11:00, 12:00 and 13:00.",
+      "trapChecks": {
+        "dates-datetime": {
+          "present": true,
+          "detail": "a cutoff equals \"2020-06-15T11:00:00.000000\" in LastEditedWhen"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A05",
+      "label": "day rollover in the microsecond digits: cutoffs at 23:59:59.999999; Date Key of 23:59:59.999999 stays on that day; Quantity 0.999 and -0.995 truncate to 0",
+      "traps": [
+        "dates-datetime",
+        "numeric-rounding"
+      ],
+      "reasoning": "@LastCutoff 2020-06-14 23:59:59.999999 excludes a row at that instant and includes the next midnight; @NewCutoff 2020-06-15 23:59:59.999999 includes a row at that instant and excludes the next midnight. The included rows occurred at 23:59:59.999999, whose CAST to date keeps the day. -0.995 and 0.999 truncate to 0 (a rounding cast would give -1 and 1).",
+      "trapChecks": {
+        "dates-datetime": {
+          "present": true,
+          "detail": "a cutoff equals \"2020-06-14T23:59:59.999999\" in LastEditedWhen"
+        },
+        "numeric-rounding": {
+          "present": true,
+          "detail": "-0.995 in Quantity ends in a 5"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    }
+  ],
+  "summary": {
+    "ran": 5,
+    "differed": 0,
+    "invalid": 0
+  },
+  "objections": [],
+  "mutantAdequacy": {
+    "verdict": "adequate",
+    "caught": [
+      "Quantity rounds instead of truncating",
+      "upper cutoff exclusive"
+    ],
+    "missed": [],
+    "skipped": [],
+    "equivalentRecorded": []
+  },
+  "gate": {
+    "passed": true,
+    "reasons": []
+  },
+  "wording": "5 adversarial cases ran, 0 differed"
+}
