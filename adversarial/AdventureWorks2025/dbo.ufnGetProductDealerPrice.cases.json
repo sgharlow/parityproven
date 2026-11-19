@@ -1,0 +1,586 @@
+{
+  "schemaVersion": 1,
+  "object": "dbo.ufnGetProductDealerPrice",
+  "database": "AdventureWorks2025",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-18T19:13:01-07:00"
+  },
+  "notApplicable": {
+    "null-vs-empty": "No text column or parameter (ProductID int, dates datetime, value money).",
+    "collation-case": "No text input.",
+    "trailing-spaces": "No text input.",
+    "top-ties": "Scalar function: returns one value. Two candidate history rows for one product are excluded by the precondition (one period per product; ProductID is the key of the history table in the spec)."
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "order instant 1 ms after the end date (.001): SQL Server rounds the datetime argument to .000, inside the period",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "The T-SQL parameter is datetime, so '2020-12-31T00:00:00.001' becomes .000 (3.33 ms ticks) and BETWEEN includes the end date. The PostgreSQL parameter is timestamp and keeps .001, which is after EndDate, so it may return NULL.",
+      "fixedCase": {
+        "args": [
+          1,
+          "2020-12-31T00:00:00.001"
+        ],
+        "tables": {
+          "Production.Product": [
+            {
+              "ProductID": 1
+            }
+          ],
+          "Production.ProductListPriceHistory": [
+            {
+              "ProductID": 1,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": "2020-12-31T00:00:00.000",
+              "ListPrice": "10.0000"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A02",
+      "label": "order instant 1 ms before the start date (.999): SQL Server rounds it up to the start, inside the period",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "datetime rounds 23:59:59.999 up to 00:00:00.000 of the next day, which equals StartDate. PostgreSQL timestamp keeps .999, before StartDate.",
+      "fixedCase": {
+        "args": [
+          1,
+          "2019-12-31T23:59:59.999"
+        ],
+        "tables": {
+          "Production.Product": [
+            {
+              "ProductID": 1
+            }
+          ],
+          "Production.ProductListPriceHistory": [
+            {
+              "ProductID": 1,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": "2020-12-31T00:00:00.000",
+              "ListPrice": "10.0000"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A03",
+      "label": "StartDate stored as .001 (datetime keeps .000) and an order instant at .000: inside the period on SQL Server",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "Loading '00:00:00.001' into a datetime column rounds it to .000; the PostgreSQL timestamp(3) column keeps .001. The argument .000 is then on the start on SQL Server and 1 ms before it on PostgreSQL.",
+      "fixedCase": {
+        "args": [
+          1,
+          "2020-01-01T00:00:00.000"
+        ],
+        "tables": {
+          "Production.Product": [
+            {
+              "ProductID": 1
+            }
+          ],
+          "Production.ProductListPriceHistory": [
+            {
+              "ProductID": 1,
+              "StartDate": "2020-01-01T00:00:00.001",
+              "EndDate": "2020-12-31T00:00:00.000",
+              "ListPrice": "10.0000"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A04",
+      "label": "EndDate stored as 23:59:59.999 (datetime rounds to the next midnight) and an order instant at that midnight",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "datetime stores 2020-12-31 23:59:59.999 as 2021-01-01 00:00:00.000, so BETWEEN includes 2021-01-01 00:00. PostgreSQL timestamp(3) keeps .999, so the midnight argument is after the end.",
+      "fixedCase": {
+        "args": [
+          1,
+          "2021-01-01T00:00:00.000"
+        ],
+        "tables": {
+          "Production.Product": [
+            {
+              "ProductID": 1
+            }
+          ],
+          "Production.ProductListPriceHistory": [
+            {
+              "ProductID": 1,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": "2020-12-31T23:59:59.999",
+              "ListPrice": "10.0000"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A05",
+      "label": "EndDate stored as .002 (datetime keeps .003) and an order instant at .003",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "datetime rounds .002 to .003, so an argument of .003 equals EndDate on SQL Server. PostgreSQL keeps .002, so .003 is after the end.",
+      "fixedCase": {
+        "args": [
+          1,
+          "2020-12-31T00:00:00.003"
+        ],
+        "tables": {
+          "Production.Product": [
+            {
+              "ProductID": 1
+            }
+          ],
+          "Production.ProductListPriceHistory": [
+            {
+              "ProductID": 1,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": "2020-12-31T00:00:00.002",
+              "ListPrice": "10.0000"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A06",
+      "label": "StartDate stored as half a millisecond (.0005) and an order instant at .000",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "The loader casts '00:00:00.000500' through datetime2(7) to datetime, which rounds to the .000 tick. PostgreSQL timestamp(3) rounds .0005 half up to .001. The argument .000 is on the start on SQL Server and before it on PostgreSQL.",
+      "fixedCase": {
+        "args": [
+          1,
+          "2020-01-01T00:00:00.000"
+        ],
+        "tables": {
+          "Production.Product": [
+            {
+              "ProductID": 1
+            }
+          ],
+          "Production.ProductListPriceHistory": [
+            {
+              "ProductID": 1,
+              "StartDate": "2020-01-01T00:00:00.000500",
+              "EndDate": "2020-12-31T00:00:00.000",
+              "ListPrice": "10.0000"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A07",
+      "label": "a period starting on 1753-01-01 (datetime minimum), order instant at that minimum, value 0.0005: 60% of the list price",
+      "traps": [
+        "dates-datetime",
+        "numeric-rounding"
+      ],
+      "reasoning": "1753-01-01 is the smallest datetime; PostgreSQL timestamp has no such floor. The value 0.0005 is at money's last place; x 0.60 gives exactly 0.0003.",
+      "fixedCase": {
+        "args": [
+          1,
+          "1753-01-01T00:00:00.000"
+        ],
+        "tables": {
+          "Production.Product": [
+            {
+              "ProductID": 1
+            }
+          ],
+          "Production.ProductListPriceHistory": [
+            {
+              "ProductID": 1,
+              "StartDate": "1753-01-01T00:00:00.000",
+              "EndDate": "1753-12-31T00:00:00.000",
+              "ListPrice": "0.0005"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A08",
+      "label": "open-ended period on 9999-12-31 00:00 exactly (the COALESCE end, inclusive): 60% of the list price",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "COALESCE(EndDate, CONVERT(datetime, '99991231', 112)) is 9999-12-31 00:00:00.000 and BETWEEN is inclusive; the conversion writes TIMESTAMP '9999-12-31 00:00:00'. A different end-of-time constant (infinity, 23:59:59) would change this case or the next.",
+      "fixedCase": {
+        "args": [
+          2,
+          "9999-12-31T00:00:00.000"
+        ],
+        "tables": {
+          "Production.Product": [
+            {
+              "ProductID": 2
+            }
+          ],
+          "Production.ProductListPriceHistory": [
+            {
+              "ProductID": 2,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "ListPrice": "3.3333"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A09",
+      "label": "open-ended period on 9999-12-31 23:59:59.997 (after the COALESCE end at midnight): NULL",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "The open end is midnight of 9999-12-31, not the end of that day; the latest datetime instant is after it. A conversion that used 'infinity' or 23:59:59.999 for a NULL EndDate would return the value.",
+      "fixedCase": {
+        "args": [
+          2,
+          "9999-12-31T23:59:59.997"
+        ],
+        "tables": {
+          "Production.Product": [
+            {
+              "ProductID": 2
+            }
+          ],
+          "Production.ProductListPriceHistory": [
+            {
+              "ProductID": 2,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "ListPrice": "3.3333"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A10",
+      "label": "an explicit EndDate at the datetime maximum (9999-12-31 23:59:59.997), order instant equal to it: 60% of the list price",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "The largest datetime value, stored and passed on both engines; the inclusive BETWEEN must match it.",
+      "fixedCase": {
+        "args": [
+          2,
+          "9999-12-31T23:59:59.997"
+        ],
+        "tables": {
+          "Production.Product": [
+            {
+              "ProductID": 2
+            }
+          ],
+          "Production.ProductListPriceHistory": [
+            {
+              "ProductID": 2,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": "9999-12-31T23:59:59.997",
+              "ListPrice": "3.3333"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A11",
+      "label": "a value with 5 decimals (10.00005) rounds to money's 4 places on load: 60% of the list price",
+      "traps": [
+        "numeric-rounding"
+      ],
+      "reasoning": "money has 4 decimal places, so 10.00005 is stored as 10.0001 (round half away from zero); PostgreSQL numeric(19,4) also rounds on load, but a numeric without scale, or banker's rounding, would keep or round it differently; then x 0.60 = 6.00006, rounded to 6.0001.",
+      "fixedCase": {
+        "args": [
+          1,
+          "2020-06-01T00:00:00.000"
+        ],
+        "tables": {
+          "Production.Product": [
+            {
+              "ProductID": 1
+            }
+          ],
+          "Production.ProductListPriceHistory": [
+            {
+              "ProductID": 1,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": "2020-12-31T00:00:00.000",
+              "ListPrice": "10.00005"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A12",
+      "label": "a negative value at the last place (-0.0005): 60% of the list price",
+      "traps": [
+        "numeric-rounding"
+      ],
+      "reasoning": "Negative money at the 4th decimal place; x 0.60 = -0.0003 exactly. Sign handling of the rounding (half away from zero on both) is what differs when an engine rounds negatives toward zero.",
+      "fixedCase": {
+        "args": [
+          1,
+          "2020-06-01T00:00:00.000"
+        ],
+        "tables": {
+          "Production.Product": [
+            {
+              "ProductID": 1
+            }
+          ],
+          "Production.ProductListPriceHistory": [
+            {
+              "ProductID": 1,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": "2020-12-31T00:00:00.000",
+              "ListPrice": "-0.0005"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A13",
+      "label": "a negative value -1.0001: 60% of the list price (-0.60006 rounds away from zero to -0.6001)",
+      "traps": [],
+      "reasoning": "money * money in T-SQL rounds the product to 4 places; for -1.0001 x 0.60 = -0.60006 that is -0.6001. Truncation (or rounding toward zero) gives -0.6000; PostgreSQL round(x, 4) rounds half away from zero.",
+      "fixedCase": {
+        "args": [
+          1,
+          "2020-06-01T00:00:00.000"
+        ],
+        "tables": {
+          "Production.Product": [
+            {
+              "ProductID": 1
+            }
+          ],
+          "Production.ProductListPriceHistory": [
+            {
+              "ProductID": 1,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": "2020-12-31T00:00:00.000",
+              "ListPrice": "-1.0001"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A14",
+      "label": "a large list price 9999999.9999: 60% is 5999999.99994, rounded to 5999999.9999",
+      "traps": [],
+      "reasoning": "Large money times money: SQL Server computes the product at money's scale; PostgreSQL computes numeric exactly and rounds. A float intermediate would lose the last places at this magnitude.",
+      "fixedCase": {
+        "args": [
+          1,
+          "2020-06-01T00:00:00.000"
+        ],
+        "tables": {
+          "Production.Product": [
+            {
+              "ProductID": 1
+            }
+          ],
+          "Production.ProductListPriceHistory": [
+            {
+              "ProductID": 1,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": "2020-12-31T00:00:00.000",
+              "ListPrice": "9999999.9999"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A15",
+      "label": "product keys with gaps (10, 20, 2147483647): the int-maximum product's dealer price",
+      "traps": [
+        "identity-gaps"
+      ],
+      "reasoning": "ProductID is the key of both tables here; the queried key is the int maximum, and its neighbours are far apart. A conversion that looked up by position or narrowed the key type would pick the wrong row or overflow.",
+      "fixedCase": {
+        "args": [
+          2147483647,
+          "2020-06-01T00:00:00.000"
+        ],
+        "tables": {
+          "Production.Product": [
+            {
+              "ProductID": 10
+            },
+            {
+              "ProductID": 20
+            },
+            {
+              "ProductID": 2147483647
+            }
+          ],
+          "Production.ProductListPriceHistory": [
+            {
+              "ProductID": 10,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": "2020-12-31T00:00:00.000",
+              "ListPrice": "1.0000"
+            },
+            {
+              "ProductID": 20,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": "2020-12-31T00:00:00.000",
+              "ListPrice": "2.0000"
+            },
+            {
+              "ProductID": 2147483647,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": "2020-12-31T00:00:00.000",
+              "ListPrice": "7.0000"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A16",
+      "label": "a one-instant period (StartDate = EndDate = 12:34:56.789) and an order instant equal to it",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "12:34:56.789 is off datetime's tick grid: SQL Server stores and passes .790 for both, PostgreSQL keeps .789 for both. Both should still match each other; a mapping that rounded only one side (column or parameter) would not.",
+      "fixedCase": {
+        "args": [
+          1,
+          "2020-06-15T12:34:56.789"
+        ],
+        "tables": {
+          "Production.Product": [
+            {
+              "ProductID": 1
+            }
+          ],
+          "Production.ProductListPriceHistory": [
+            {
+              "ProductID": 1,
+              "StartDate": "2020-06-15T12:34:56.789",
+              "EndDate": "2020-06-15T12:34:56.789",
+              "ListPrice": "10.0000"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A17",
+      "label": "an inverted period (EndDate before StartDate) and an order instant between them: NULL",
+      "traps": [],
+      "reasoning": "BETWEEN with low > high is false on both engines (no symmetric BETWEEN). A conversion using BETWEEN SYMMETRIC or a range type that normalises bounds would return the value.",
+      "fixedCase": {
+        "args": [
+          1,
+          "2020-06-01T00:00:00.000"
+        ],
+        "tables": {
+          "Production.Product": [
+            {
+              "ProductID": 1
+            }
+          ],
+          "Production.ProductListPriceHistory": [
+            {
+              "ProductID": 1,
+              "StartDate": "2020-12-31T00:00:00.000",
+              "EndDate": "2020-01-01T00:00:00.000",
+              "ListPrice": "10.0000"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A18",
+      "label": "a period starting at 08:00 on 2020-01-01 and an order instant at midnight that day: NULL",
+      "traps": [],
+      "reasoning": "The comparison is on the full datetime, not the date. A conversion that cast the instant or the columns to date would match.",
+      "fixedCase": {
+        "args": [
+          1,
+          "2020-01-01T00:00:00.000"
+        ],
+        "tables": {
+          "Production.Product": [
+            {
+              "ProductID": 1
+            }
+          ],
+          "Production.ProductListPriceHistory": [
+            {
+              "ProductID": 1,
+              "StartDate": "2020-01-01T08:00:00.000",
+              "EndDate": "2020-12-31T00:00:00.000",
+              "ListPrice": "10.0000"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A19",
+      "label": "a product whose only period ended, with the queried instant in a later year and a different product's period covering it: NULL",
+      "traps": [],
+      "reasoning": "The join condition ties the history row to the queried ProductID; a conversion that moved p.ProductID = @ProductID out of the ON clause incorrectly, or dropped it, would pick product 5's value.",
+      "fixedCase": {
+        "args": [
+          1,
+          "2022-06-01T00:00:00.000"
+        ],
+        "tables": {
+          "Production.Product": [
+            {
+              "ProductID": 1
+            },
+            {
+              "ProductID": 5
+            }
+          ],
+          "Production.ProductListPriceHistory": [
+            {
+              "ProductID": 1,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": "2020-12-31T00:00:00.000",
+              "ListPrice": "10.0000"
+            },
+            {
+              "ProductID": 5,
+              "StartDate": "2020-01-01T00:00:00.000",
+              "EndDate": null,
+              "ListPrice": "55.0000"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

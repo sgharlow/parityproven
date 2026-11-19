@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "object": "dbo.ufnGetDocumentStatusText",
+  "database": "AdventureWorks2025",
+  "attacker": { "model": "claude (Kiro subagent; exact model version not exposed to the agent)", "at": "2026-11-18T19:13:01-07:00" },
+  "notApplicable": {
+    "null-vs-empty": "The only input is a tinyint; no text input exists. A NULL status is already a fixed case (CASE NULL takes the ELSE branch).",
+    "collation-case": "No text input; the result is a constant chosen by CASE, never compared.",
+    "trailing-spaces": "No text input.",
+    "dates-datetime": "No date input.",
+    "numeric-rounding": "No decimal or money input.",
+    "top-ties": "Scalar function: returns one value, no rows from tables.",
+    "identity-gaps": "Reads no table, no key or sequence."
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "status 5 (second unmapped value above the last WHEN) is the ELSE text",
+      "traps": [],
+      "reasoning": "A conversion that mapped by range (status > 3) or by array index would agree on 4 but could differ on later values; T-SQL CASE @Status matches only the listed WHEN values.",
+      "fixedCase": { "args": [5], "tables": {} }
+    },
+    {
+      "id": "A02",
+      "label": "status 127 (signed 1-byte maximum) is the ELSE text",
+      "traps": [],
+      "reasoning": "tinyint is mapped to smallint on PostgreSQL; a conversion through a signed byte (or a char cast) would wrap at 127/128. SQL Server tinyint is unsigned 0..255.",
+      "fixedCase": { "args": [127], "tables": {} }
+    },
+    {
+      "id": "A03",
+      "label": "status 128 (one above the signed 1-byte maximum) is the ELSE text, not an error",
+      "traps": [],
+      "reasoning": "128 overflows a signed byte; SQL Server tinyint accepts it. The PostgreSQL smallint parameter must accept it and fall to ELSE.",
+      "fixedCase": { "args": [128], "tables": {} }
+    },
+    {
+      "id": "A04",
+      "label": "status 254 (one below the tinyint maximum) is the ELSE text",
+      "traps": [],
+      "reasoning": "Upper boundary next to 255; a modulo or bit-mask mapping (status & 3, status % 4) would map 254 to a WHEN text.",
+      "fixedCase": { "args": [254], "tables": {} }
+    },
+    {
+      "id": "A05",
+      "label": "status 131 (3 + 128, same low bits as a mapped value) is the ELSE text",
+      "traps": [],
+      "reasoning": "131 has the same low 7 bits as 3 ('Obsolete'); a conversion that truncated to a signed or 7-bit value would return 'Obsolete'. SQL Server returns the ELSE text.",
+      "fixedCase": { "args": [131], "tables": {} }
+    },
+    {
+      "id": "A06",
+      "label": "status 1 gives the 16-character text exactly at the nvarchar(16) limit, untruncated",
+      "traps": [],
+      "reasoning": "'Pending approval' is exactly 16 characters, the declared length of @ret and the return type. A varchar(15) or a padded char(16) return on PostgreSQL would cut or pad it; SQL Server returns it whole.",
+      "fixedCase": { "args": [1], "tables": {} }
+    }
+  ]
+}

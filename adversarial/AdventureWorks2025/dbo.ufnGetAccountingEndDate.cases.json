@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "object": "dbo.ufnGetAccountingEndDate",
+  "database": "AdventureWorks2025",
+  "attacker": { "model": "claude (Kiro subagent; exact model version not exposed to the agent)", "at": "2026-11-18T19:13:01-07:00" },
+  "notApplicable": {
+    "null-vs-empty": "The function takes no parameter and reads no table, so no text input exists.",
+    "collation-case": "No text input and no text comparison.",
+    "trailing-spaces": "No text input.",
+    "dates-datetime": "No date input: the only dates are constants inside the function. The datetime 3.33 ms rounding of DATEADD(millisecond, -2, ...) is attacked through the result value (A01).",
+    "numeric-rounding": "No decimal or money input or result.",
+    "top-ties": "Scalar function: returns one value, no rows from tables.",
+    "identity-gaps": "Reads no table, no key or sequence."
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "midnight minus 2 ms on datetime: the result is the .997 tick, kept at 3 digits (not .998, not rounded to the second)",
+      "traps": [],
+      "reasoning": "T-SQL DATEADD(millisecond, -2, datetime '2004-07-01') lands on the datetime tick .997 (3.33 ms resolution). PostgreSQL interval arithmetic would give .998; the conversion hard-codes .997 and returns timestamp(3). A timestamp(0) or a date return type, or the exact -2 ms, would differ from the value SQL Server returns.",
+      "fixedCase": { "args": [], "tables": {} }
+    }
+  ]
+}

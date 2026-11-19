@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "object": "dbo.ufnLeadingZeros",
+  "database": "AdventureWorks2025",
+  "attacker": { "model": "claude (Kiro subagent; exact model version not exposed to the agent)", "at": "2026-11-18T19:13:01-07:00" },
+  "notApplicable": {
+    "null-vs-empty": "The only input is an int; no text input exists. A NULL value is already a fixed case (REPLICATE with a NULL length is NULL).",
+    "collation-case": "No text input; the result is never compared as text.",
+    "trailing-spaces": "No text input; CONVERT(varchar(8), int) never adds spaces.",
+    "dates-datetime": "No date input.",
+    "numeric-rounding": "The input is an int; no decimal or money value.",
+    "top-ties": "Scalar function: returns one value, no rows from tables.",
+    "identity-gaps": "Reads no table, no key or sequence."
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "-1 keeps its sign inside the padding: '000000-1'",
+      "traps": [],
+      "reasoning": "T-SQL pads the string '-1' with REPLICATE('0', 8 - DATALENGTH) on the left, so the zeros go before the sign. A to_char or lpad of abs() with a leading sign would give '-0000001'.",
+      "fixedCase": { "args": [-1] , "tables": {} }
+    },
+    {
+      "id": "A02",
+      "label": "-1000000 (exactly 8 characters with the sign) is unchanged",
+      "traps": [],
+      "reasoning": "8 characters including the sign fits varchar(8) exactly: REPLICATE('0', 0) is ''. A length test that counts digits only (not the sign) would treat it as 7 and pad, or as too long.",
+      "fixedCase": { "args": [-1000000], "tables": {} }
+    },
+    {
+      "id": "A03",
+      "label": "-99999999 (9 characters with the sign) does not fit varchar(8): '0000000*'",
+      "traps": [],
+      "reasoning": "8 digits but 9 characters with the sign. A check on the number of digits (or on abs(value) > 99999999) would keep it and lpad would truncate; SQL Server's CONVERT gives '*'.",
+      "fixedCase": { "args": [-99999999], "tables": {} }
+    },
+    {
+      "id": "A04",
+      "label": "10000000 (8 digits, smallest 8-digit value) is unchanged",
+      "traps": [],
+      "reasoning": "Lower boundary of the 8-character range from below; an off-by-one in the length test (>= 8 instead of > 8) would turn it into '*'.",
+      "fixedCase": { "args": [10000000], "tables": {} }
+    },
+    {
+      "id": "A05",
+      "label": "9999999 (7 digits) gets one leading zero: '09999999'",
+      "traps": [],
+      "reasoning": "One below the 8-digit boundary; REPLICATE('0', 1). An integer-division or log10-based length would be off by one here.",
+      "fixedCase": { "args": [9999999], "tables": {} }
+    },
+    {
+      "id": "A06",
+      "label": "-10 keeps its sign inside the padding: '00000-10'",
+      "traps": [],
+      "reasoning": "Two-digit negative value; checks that the sign counts as one character of the 8 (DATALENGTH of varchar counts bytes, one per ASCII character).",
+      "fixedCase": { "args": [-10], "tables": {} }
+    },
+    {
+      "id": "A07",
+      "label": "2147483646 (one below int maximum) gives '0000000*'",
+      "traps": [],
+      "reasoning": "Large positive value next to the int maximum; an implementation that adds 1 or works in a narrower type would overflow or truncate instead of returning '*'.",
+      "fixedCase": { "args": [2147483646], "tables": {} }
+    },
+    {
+      "id": "A08",
+      "label": "-2147483647 (one above int minimum) gives '0000000*'",
+      "traps": [],
+      "reasoning": "Large negative value next to the int minimum, where abs() is still representable; a digit-count test via abs() would give a different branch than at the minimum itself.",
+      "fixedCase": { "args": [-2147483647], "tables": {} }
+    }
+  ]
+}

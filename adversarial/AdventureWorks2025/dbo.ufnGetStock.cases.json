@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "object": "dbo.ufnGetStock",
+  "database": "AdventureWorks2025",
+  "attacker": { "model": "claude (Kiro subagent; exact model version not exposed to the agent)", "at": "2026-11-18T19:13:01-07:00" },
+  "notApplicable": {
+    "null-vs-empty": "No text column or parameter (ProductID int; LocationID and Quantity smallint). The source's '6' is a constant compared with a smallint, attacked in A04.",
+    "collation-case": "No text input.",
+    "trailing-spaces": "No text input.",
+    "dates-datetime": "No date input.",
+    "numeric-rounding": "Integer inputs only (smallint, int); the SUM is an integer sum, attacked for type width in A01 and A02.",
+    "top-ties": "Scalar function: returns one value, not rows.",
+    "identity-gaps": "The spec gives ProductInventory no key column (ProductID is a reference, LocationID a value), so no key run exists to leave gaps in."
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "two rows of 32767 at location 6 sum to 65534, beyond smallint: int result, no overflow",
+      "traps": [],
+      "reasoning": "T-SQL SUM(smallint) returns int, so 32767 + 32767 = 65534. PostgreSQL SUM(smallint) is bigint, cast to integer. A conversion that cast the sum (or each value) to smallint would overflow or wrap.",
+      "fixedCase": {
+        "args": [1],
+        "tables": { "Production.ProductInventory": [
+          { "ProductID": 1, "LocationID": 6, "Quantity": 32767 },
+          { "ProductID": 1, "LocationID": 6, "Quantity": 32767 }
+        ] }
+      }
+    },
+    {
+      "id": "A02",
+      "label": "two rows of -32768 at location 6 sum to -65536: a negative int result",
+      "traps": [],
+      "reasoning": "Negative smallint minimum twice; checks the sign and width of the sum on both engines, and that a negative total is returned as is (the source only replaces NULL with 0, not values below 0).",
+      "fixedCase": {
+        "args": [2],
+        "tables": { "Production.ProductInventory": [
+          { "ProductID": 2, "LocationID": 6, "Quantity": -32768 },
+          { "ProductID": 2, "LocationID": 6, "Quantity": -32768 }
+        ] }
+      }
+    },
+    {
+      "id": "A03",
+      "label": "+7 and -7 at location 6 sum to 0 (a real zero sum, not the NULL replacement)",
+      "traps": [],
+      "reasoning": "The T-SQL replaces only a NULL sum with 0. A conversion that used NULLIF or treated 0 as missing would differ; here SUM is 0 from two rows.",
+      "fixedCase": {
+        "args": [3],
+        "tables": { "Production.ProductInventory": [
+          { "ProductID": 3, "LocationID": 6, "Quantity": 7 },
+          { "ProductID": 3, "LocationID": 6, "Quantity": -7 }
+        ] }
+      }
+    },
+    {
+      "id": "A04",
+      "label": "locations -6, 0, 16, 60 and 32767 are not location 6: only the 4 at location 6 counts",
+      "traps": [],
+      "reasoning": "The source compares LocationID with the string '6' (implicit conversion to smallint). A conversion that compared as text (LIKE '6%', '%6', or a text cast) would also match 60 or 16 or -6.",
+      "fixedCase": {
+        "args": [4],
+        "tables": { "Production.ProductInventory": [
+          { "ProductID": 4, "LocationID": -6, "Quantity": 1000 },
+          { "ProductID": 4, "LocationID": 0, "Quantity": 100 },
+          { "ProductID": 4, "LocationID": 16, "Quantity": 10 },
+          { "ProductID": 4, "LocationID": 60, "Quantity": 20 },
+          { "ProductID": 4, "LocationID": 32767, "Quantity": 30 },
+          { "ProductID": 4, "LocationID": 6, "Quantity": 4 }
+        ] }
+      }
+    },
+    {
+      "id": "A05",
+      "label": "int maximum ProductID 2147483647 with stock at location 6: 9 (other products' rows ignored)",
+      "traps": [],
+      "reasoning": "ProductID at the int maximum, next to rows for ProductID -2147483648 and 0. A parameter mapped to smallint or a signed overflow in the comparison would match the wrong product or fail.",
+      "fixedCase": {
+        "args": [2147483647],
+        "tables": { "Production.ProductInventory": [
+          { "ProductID": 2147483647, "LocationID": 6, "Quantity": 9 },
+          { "ProductID": -2147483648, "LocationID": 6, "Quantity": 500 },
+          { "ProductID": 0, "LocationID": 6, "Quantity": 50 }
+        ] }
+      }
+    },
+    {
+      "id": "A06",
+      "label": "ProductID 0 is a real product, not 'no product': its stock 50 is returned",
+      "traps": [],
+      "reasoning": "0 is falsy in many client and PL/pgSQL idioms (COALESCE/NULLIF(product_id, 0)); T-SQL treats it as an ordinary value.",
+      "fixedCase": {
+        "args": [0],
+        "tables": { "Production.ProductInventory": [
+          { "ProductID": 0, "LocationID": 6, "Quantity": 50 },
+          { "ProductID": 1, "LocationID": 6, "Quantity": 5 }
+        ] }
+      }
+    },
+    {
+      "id": "A07",
+      "label": "an empty inventory table: 0",
+      "traps": [],
+      "reasoning": "SUM over no rows is NULL on both engines and is replaced by 0. A conversion that returned the SUM without COALESCE, or no row at all from a set-returning SQL function, would give NULL.",
+      "fixedCase": {
+        "args": [1],
+        "tables": { "Production.ProductInventory": [] }
+      }
+    }
+  ]
+}
