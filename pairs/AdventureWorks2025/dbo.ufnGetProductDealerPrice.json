@@ -12,8 +12,8 @@
   "code": {
     "source": "\r\nCREATE FUNCTION [dbo].[ufnGetProductDealerPrice](@ProductID [int], @OrderDate [datetime])\r\nRETURNS [money]\r\nAS\r\n-- Returns the dealer price for the product on a specific date.\r\nBEGIN\r\n    DECLARE @DealerPrice money;\r\n    DECLARE @DealerDiscount money;\r\n\r\n    SET @DealerDiscount = 0.60  -- 60% of list price\r\n\r\n    SELECT @DealerPrice = plph.[ListPrice] * @DealerDiscount\r\n    FROM [Production].[Product] p\r\n        INNER JOIN [Production].[ProductListPriceHistory] plph\r\n        ON p.[ProductID] = plph.[ProductID]\r\n            AND p.[ProductID] = @ProductID\r\n            AND @OrderDate BETWEEN plph.[StartDate] AND COALESCE(plph.[EndDate], CONVERT(datetime, '99991231', 112)); -- Make sure we get all the prices!\r\n\r\n    RETURN @DealerPrice;\r\nEND;\r\n",
     "engineOutput": "-- First draft: multiply list price by 0.60 in numeric arithmetic.\n\nCREATE OR REPLACE FUNCTION dbo.ufn_get_product_dealer_price(product_id integer, order_date timestamp)\nRETURNS numeric(19,4)\nLANGUAGE sql\nSTABLE\nAS $$\n    SELECT plph.\"ListPrice\" * 0.60            -- 60% of list price\n      FROM production.product AS p\n     INNER JOIN production.product_list_price_history AS plph\n        ON p.\"ProductID\" = plph.\"ProductID\"\n       AND p.\"ProductID\" = product_id\n       AND order_date BETWEEN plph.\"StartDate\" AND COALESCE(plph.\"EndDate\", TIMESTAMP '9999-12-31 00:00:00')\n     LIMIT 1\n$$;\n",
-    "final": "-- PostgreSQL conversion of dbo.ufnGetProductDealerPrice (AdventureWorks2025).\n-- Engine: Kiro; first draft corrected after the harness failed it (see pair record).\n-- money -> numeric(19,4) (not PostgreSQL's locale-dependent money type); datetime -> timestamp.\n-- Precondition: at most one price period per product (T-SQL `SELECT @x = ...` keeps the last row read).\n--\n-- In T-SQL, money * money is computed at 4 decimal places and rounded, so the product of the list price\n-- and @DealerDiscount (a money variable) is rounded to 4 places (e.g. -0.0001 * 0.60 = -0.0001, not\n-- -0.00006). The 0.60 literal alone would give exact numeric arithmetic, so the rounding is explicit.\n\nCREATE OR REPLACE FUNCTION dbo.ufn_get_product_dealer_price(product_id integer, order_date timestamp)\nRETURNS numeric(19,4)\nLANGUAGE sql\nSTABLE\nAS $$\n    SELECT round(plph.\"ListPrice\" * 0.60, 4)  -- 60% of list price, at money precision\n      FROM production.product AS p\n     INNER JOIN production.product_list_price_history AS plph\n        ON p.\"ProductID\" = plph.\"ProductID\"\n       AND p.\"ProductID\" = product_id\n       AND order_date BETWEEN plph.\"StartDate\" AND COALESCE(plph.\"EndDate\", TIMESTAMP '9999-12-31 00:00:00')\n     LIMIT 1\n$$;\n",
-    "diff": "--- engineOutput\n+++ final\n+-- PostgreSQL conversion of dbo.ufnGetProductDealerPrice (AdventureWorks2025).\n+-- Engine: Kiro; first draft corrected after the harness failed it (see pair record).\n+-- money -> numeric(19,4) (not PostgreSQL's locale-dependent money type); datetime -> timestamp.\n+-- Precondition: at most one price period per product (T-SQL `SELECT @x = ...` keeps the last row read).\n+--\n+-- In T-SQL, money * money is computed at 4 decimal places and rounded, so the product of the list price\n+-- and @DealerDiscount (a money variable) is rounded to 4 places (e.g. -0.0001 * 0.60 = -0.0001, not\n+-- -0.00006). The 0.60 literal alone would give exact numeric arithmetic, so the rounding is explicit.\n--- First draft: multiply list price by 0.60 in numeric arithmetic.\n@@ engineOutput line 8 / final line 15 @@\n+    SELECT round(plph.\"ListPrice\" * 0.60, 4)  -- 60% of list price, at money precision\n-    SELECT plph.\"ListPrice\" * 0.60            -- 60% of list price",
+    "final": "-- PostgreSQL conversion of dbo.ufnGetProductDealerPrice (AdventureWorks2025).\n-- Engine: Kiro; first draft corrected after the harness failed it (see pair record), and again after the adversarial\n-- run of 2026-11-19 (cases A01-A06).\n-- money -> numeric(19,4) (not PostgreSQL's locale-dependent money type); datetime -> timestamp.\n-- Precondition: at most one price period per product (T-SQL `SELECT @x = ...` keeps the last row read).\n--\n-- In T-SQL, money * money is computed at 4 decimal places and rounded, so the product of the list price\n-- and @DealerDiscount (a money variable) is rounded to 4 places (e.g. -0.0001 * 0.60 = -0.0001, not\n-- -0.00006). The 0.60 literal alone would give exact numeric arithmetic, so the rounding is explicit.\n--\n-- @OrderDate, StartDate and EndDate are datetime in T-SQL, so SQL Server rounds each of them to its 1/300 s ticks\n-- (.001 -> .000, .002 -> .003, 23:59:59.999 -> the next midnight; halves round up) before BETWEEN compares them.\n-- timestamp keeps the value as given. Rounding is monotonic, so with d = the argument rounded to tick k of its second:\n--   round(StartDate) <= d  exactly when  StartDate <  second + (k + 0.5)/300 s\n--   round(EndDate)   >= d  exactly when  EndDate   >= second + (k - 0.5)/300 s\n-- Both bounds are computed once per call from the argument in integer microseconds: us = microseconds within the\n-- second, k = (us*3 + 5000) / 10000, bound offsets ceil((2k +/- 1) * 5000/3) = ((2k +/- 1) * 5000 + 2) / 3 (integer\n-- division truncates toward zero, which is the ceiling here, also for k = 0). The columns are compared as stored.\n--\n-- PL/pgSQL, not LANGUAGE sql: inside a SQL-language function the bound expressions cost about 5 us per call\n-- (20,000 calls: 280 ms against 170 ms without them, measured 2026-11-19); as PL/pgSQL variables they cost about 1.5 us.\nCREATE OR REPLACE FUNCTION dbo.ufn_get_product_dealer_price(product_id integer, order_date timestamp)\nRETURNS numeric(19,4)\nLANGUAGE plpgsql\nSTABLE\nAS $$\nDECLARE\n    us    integer   := date_part('microseconds', order_date)::integer % 1000000;\n    k     integer   := (us * 3 + 5000) / 10000;\n    below timestamp := order_date + interval '1 microsecond' * (((2 * k + 1) * 5000 + 2) / 3 - us);\n    from_ timestamp := order_date + interval '1 microsecond' * (((2 * k - 1) * 5000 + 2) / 3 - us);\nBEGIN\n    RETURN (\n        SELECT round(plph.\"ListPrice\" * 0.60, 4)  -- 60% of list price, at money precision\n          FROM production.product AS p\n         INNER JOIN production.product_list_price_history AS plph\n            ON p.\"ProductID\" = plph.\"ProductID\"\n           AND p.\"ProductID\" = product_id\n           AND plph.\"StartDate\" < below\n           AND COALESCE(plph.\"EndDate\", TIMESTAMP '9999-12-31 00:00:00') >= from_\n         LIMIT 1);\nEND\n$$;\n",
+    "diff": "--- engineOutput\n+++ final\n+-- PostgreSQL conversion of dbo.ufnGetProductDealerPrice (AdventureWorks2025).\n+-- Engine: Kiro; first draft corrected after the harness failed it (see pair record), and again after the adversarial\n+-- run of 2026-11-19 (cases A01-A06).\n+-- money -> numeric(19,4) (not PostgreSQL's locale-dependent money type); datetime -> timestamp.\n+-- Precondition: at most one price period per product (T-SQL `SELECT @x = ...` keeps the last row read).\n+--\n+-- In T-SQL, money * money is computed at 4 decimal places and rounded, so the product of the list price\n+-- and @DealerDiscount (a money variable) is rounded to 4 places (e.g. -0.0001 * 0.60 = -0.0001, not\n+-- -0.00006). The 0.60 literal alone would give exact numeric arithmetic, so the rounding is explicit.\n+--\n+-- @OrderDate, StartDate and EndDate are datetime in T-SQL, so SQL Server rounds each of them to its 1/300 s ticks\n+-- (.001 -> .000, .002 -> .003, 23:59:59.999 -> the next midnight; halves round up) before BETWEEN compares them.\n+-- timestamp keeps the value as given. Rounding is monotonic, so with d = the argument rounded to tick k of its second:\n+--   round(StartDate) <= d  exactly when  StartDate <  second + (k + 0.5)/300 s\n+--   round(EndDate)   >= d  exactly when  EndDate   >= second + (k - 0.5)/300 s\n+-- Both bounds are computed once per call from the argument in integer microseconds: us = microseconds within the\n+-- second, k = (us*3 + 5000) / 10000, bound offsets ceil((2k +/- 1) * 5000/3) = ((2k +/- 1) * 5000 + 2) / 3 (integer\n+-- division truncates toward zero, which is the ceiling here, also for k = 0). The columns are compared as stored.\n+--\n+-- PL/pgSQL, not LANGUAGE sql: inside a SQL-language function the bound expressions cost about 5 us per call\n+-- (20,000 calls: 280 ms against 170 ms without them, measured 2026-11-19); as PL/pgSQL variables they cost about 1.5 us.\n--- First draft: multiply list price by 0.60 in numeric arithmetic.\n-\n@@ engineOutput line 5 / final line 24 @@\n+LANGUAGE plpgsql\n-LANGUAGE sql\n@@ engineOutput line 8 / final line 27 @@\n+DECLARE\n+    us    integer   := date_part('microseconds', order_date)::integer % 1000000;\n+    k     integer   := (us * 3 + 5000) / 10000;\n+    below timestamp := order_date + interval '1 microsecond' * (((2 * k + 1) * 5000 + 2) / 3 - us);\n+    from_ timestamp := order_date + interval '1 microsecond' * (((2 * k - 1) * 5000 + 2) / 3 - us);\n+BEGIN\n+    RETURN (\n+        SELECT round(plph.\"ListPrice\" * 0.60, 4)  -- 60% of list price, at money precision\n+          FROM production.product AS p\n+         INNER JOIN production.product_list_price_history AS plph\n+            ON p.\"ProductID\" = plph.\"ProductID\"\n+           AND p.\"ProductID\" = product_id\n+           AND plph.\"StartDate\" < below\n+           AND COALESCE(plph.\"EndDate\", TIMESTAMP '9999-12-31 00:00:00') >= from_\n+         LIMIT 1);\n+END\n-    SELECT plph.\"ListPrice\" * 0.60            -- 60% of list price\n-      FROM production.product AS p\n-     INNER JOIN production.product_list_price_history AS plph\n-        ON p.\"ProductID\" = plph.\"ProductID\"\n-       AND p.\"ProductID\" = product_id\n-       AND order_date BETWEEN plph.\"StartDate\" AND COALESCE(plph.\"EndDate\", TIMESTAMP '9999-12-31 00:00:00')\n-     LIMIT 1",
     "engine": "kiro",
     "notes": [
       "At most one price period per product (precondition): with overlapping periods the T-SQL `SELECT @x = ...` keeps the last row read, which is undefined.",
@@ -47,42 +47,9 @@
     "step1": "pass",
     "step2": "pass",
     "step3": "pass",
-    "step4": "pass",
+    "step4": "fail",
     "step5": "not-run",
     "step6": "n/a",
-    "runtimeRatio": 2.12,
-    "runtime": {
-      "volume": 2000,
-      "timedRuns": 7,
-      "sqlServerMs": 70,
-      "postgresMs": 148.45,
-      "ratio": 2.12,
-      "threshold": 2.5,
-      "passed": true,
-      "belowResolution": false,
-      "resultRows": 100,
-      "volumeMismatch": null
-    },
-    "rowsCompared": 208,
-    "trapsCovered": [
-      "NULL in every nullable column"
-    ],
-    "pbtSeeds": [
-      38079584
-    ],
-    "engineOutputCheck": {
-      "step3": "fail",
-      "seed": 38079584,
-      "detail": "fixed case \"open-ended period (EndDate NULL -> 9999-12-31) on 9999-12-30: 60% of an odd price (3.3333 x 0.60), kept to money's 4 places\": value differs in group 0 (key \"*\"), column \"result\": SQL Server n:2 vs PostgreSQL n:1.99998"
-    },
-    "samples": 200,
-    "samplesWithRows": 117,
-    "subMicrosecondNormalised": 0,
-    "mutantsDetected": [
-      "auto: join condition uses a different key",
-      "auto: first numeric literal changed"
-    ],
-    "harnessVersion": "harness-generic-0.3.0",
     "testsRun": [
       "tSQLt V1.0.8083.3529 on SQL Server (tests/AdventureWorks2025/dbo.ufnGetProductDealerPrice.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/AdventureWorks2025/dbo.ufnGetProductDealerPrice.pg.sql); expected results tests/AdventureWorks2025/dbo.ufnGetProductDealerPrice.expected.json",
       "SQL Server: AgreedTests.[test 01 on the start date exactly (BETWEEN is inclusive): 60% of the list price (10.0000 x 0.60)]: pass",
@@ -102,12 +69,46 @@
       "PostgreSQL: AgreedTests.[test 07 a product with no history: NULL]: pass",
       "PostgreSQL: AgreedTests.[test 08 NULL ProductID: NULL]: pass",
       "planted defects caught by the agreed tests: 2 of 2"
-    ]
+    ],
+    "runtimeRatio": 2.73,
+    "runtime": {
+      "volume": 2000,
+      "timedRuns": 7,
+      "sqlServerMs": 77,
+      "postgresMs": 210.5,
+      "ratio": 2.73,
+      "threshold": 2.5,
+      "passed": false,
+      "belowResolution": false,
+      "resultRows": 100,
+      "volumeMismatch": null
+    },
+    "rowsCompared": 208,
+    "trapsCovered": [
+      "NULL in every nullable column"
+    ],
+    "pbtSeeds": [
+      1296714984
+    ],
+    "engineOutputCheck": {
+      "step3": "fail",
+      "seed": 1296714984,
+      "detail": "fixed case \"open-ended period (EndDate NULL -> 9999-12-31) on 9999-12-30: 60% of an odd price (3.3333 x 0.60), kept to money's 4 places\": value differs in group 0 (key \"*\"), column \"result\": SQL Server n:2 vs PostgreSQL n:1.99998"
+    },
+    "samples": 200,
+    "samplesWithRows": 126,
+    "subMicrosecondNormalised": 0,
+    "mutantsDetected": [
+      "auto: join condition uses a different key",
+      "auto: first numeric literal changed"
+    ],
+    "failureDetail": "Step 4: PostgreSQL 210.5 ms vs SQL Server 77 ms = 2.73x, above the 2.5x limit. Results are equivalent (step 3 pass); see the notes for the cause.",
+    "harnessVersion": "harness-generic-0.3.0"
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "failed"
 }

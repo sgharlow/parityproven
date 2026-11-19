@@ -12,8 +12,8 @@
   "code": {
     "source": "\r\nCREATE FUNCTION [dbo].[ufnGetProductStandardCost](@ProductID [int], @OrderDate [datetime])\r\nRETURNS [money]\r\nAS\r\n-- Returns the standard cost for the product on a specific date.\r\nBEGIN\r\n    DECLARE @StandardCost money;\r\n\r\n    SELECT @StandardCost = pch.[StandardCost]\r\n    FROM [Production].[Product] p\r\n        INNER JOIN [Production].[ProductCostHistory] pch\r\n        ON p.[ProductID] = pch.[ProductID]\r\n            AND p.[ProductID] = @ProductID\r\n            AND @OrderDate BETWEEN pch.[StartDate] AND COALESCE(pch.[EndDate], CONVERT(datetime, '99991231', 112)); -- Make sure we get all the prices!\r\n\r\n    RETURN @StandardCost;\r\nEND;\r\n",
     "engineOutput": "-- PostgreSQL conversion of dbo.ufnGetProductStandardCost (AdventureWorks2025).\n-- Engine: Kiro first draft (see pair record).\n-- money -> numeric(19,4); datetime -> timestamp.\n-- Precondition: at most one cost period per product (T-SQL `SELECT @x = ...` keeps the last row read).\n\nCREATE OR REPLACE FUNCTION dbo.ufn_get_product_standard_cost(product_id integer, order_date timestamp)\nRETURNS numeric(19,4)\nLANGUAGE sql\nSTABLE\nAS $$\n    SELECT pch.\"StandardCost\"\n      FROM production.product AS p\n     INNER JOIN production.product_cost_history AS pch\n        ON p.\"ProductID\" = pch.\"ProductID\"\n       AND p.\"ProductID\" = product_id\n       AND order_date BETWEEN pch.\"StartDate\" AND COALESCE(pch.\"EndDate\", TIMESTAMP '9999-12-31 00:00:00')\n     LIMIT 1\n$$;\n",
-    "final": "-- PostgreSQL conversion of dbo.ufnGetProductStandardCost (AdventureWorks2025).\n-- Engine: Kiro first draft (see pair record).\n-- money -> numeric(19,4); datetime -> timestamp.\n-- Precondition: at most one cost period per product (T-SQL `SELECT @x = ...` keeps the last row read).\n\nCREATE OR REPLACE FUNCTION dbo.ufn_get_product_standard_cost(product_id integer, order_date timestamp)\nRETURNS numeric(19,4)\nLANGUAGE sql\nSTABLE\nAS $$\n    SELECT pch.\"StandardCost\"\n      FROM production.product AS p\n     INNER JOIN production.product_cost_history AS pch\n        ON p.\"ProductID\" = pch.\"ProductID\"\n       AND p.\"ProductID\" = product_id\n       AND order_date BETWEEN pch.\"StartDate\" AND COALESCE(pch.\"EndDate\", TIMESTAMP '9999-12-31 00:00:00')\n     LIMIT 1\n$$;\n",
-    "diff": "--- engineOutput\n+++ final\n(no changes: engine output accepted as final)",
+    "final": "-- PostgreSQL conversion of dbo.ufnGetProductStandardCost (AdventureWorks2025).\n-- Engine: Kiro first draft (see pair record), corrected after the adversarial run of 2026-11-19 (cases A01-A06).\n-- money -> numeric(19,4); datetime -> timestamp.\n-- Precondition: at most one cost period per product (T-SQL `SELECT @x = ...` keeps the last row read).\n--\n-- @OrderDate, StartDate and EndDate are datetime in T-SQL, so SQL Server rounds each of them to its 1/300 s ticks\n-- (.001 -> .000, .002 -> .003, 23:59:59.999 -> the next midnight; halves round up) before BETWEEN compares them.\n-- timestamp keeps the value as given. Rounding is monotonic, so with d = the argument rounded to tick k of its second:\n--   round(StartDate) <= d  exactly when  StartDate <  second + (k + 0.5)/300 s\n--   round(EndDate)   >= d  exactly when  EndDate   >= second + (k - 0.5)/300 s\n-- Both bounds are computed once per call from the argument in integer microseconds: us = microseconds within the\n-- second, k = (us*3 + 5000) / 10000, bound offsets ceil((2k +/- 1) * 5000/3) = ((2k +/- 1) * 5000 + 2) / 3 (integer\n-- division truncates toward zero, which is the ceiling here, also for k = 0). The columns are compared as stored.\n--\n-- PL/pgSQL, not LANGUAGE sql: inside a SQL-language function the bound expressions cost about 5 us per call\n-- (20,000 calls: 280 ms against 170 ms without them, measured 2026-11-19); as PL/pgSQL variables they cost about 1.5 us.\nCREATE OR REPLACE FUNCTION dbo.ufn_get_product_standard_cost(product_id integer, order_date timestamp)\nRETURNS numeric(19,4)\nLANGUAGE plpgsql\nSTABLE\nAS $$\nDECLARE\n    us    integer   := date_part('microseconds', order_date)::integer % 1000000;\n    k     integer   := (us * 3 + 5000) / 10000;\n    below timestamp := order_date + interval '1 microsecond' * (((2 * k + 1) * 5000 + 2) / 3 - us);\n    from_ timestamp := order_date + interval '1 microsecond' * (((2 * k - 1) * 5000 + 2) / 3 - us);\nBEGIN\n    RETURN (\n        SELECT pch.\"StandardCost\"\n          FROM production.product AS p\n         INNER JOIN production.product_cost_history AS pch\n            ON p.\"ProductID\" = pch.\"ProductID\"\n           AND p.\"ProductID\" = product_id\n           AND pch.\"StartDate\" < below\n           AND COALESCE(pch.\"EndDate\", TIMESTAMP '9999-12-31 00:00:00') >= from_\n         LIMIT 1);\nEND\n$$;\n",
+    "diff": "--- engineOutput\n+++ final\n@@ engineOutput line 2 / final line 2 @@\n+-- Engine: Kiro first draft (see pair record), corrected after the adversarial run of 2026-11-19 (cases A01-A06).\n--- Engine: Kiro first draft (see pair record).\n@@ engineOutput line 5 / final line 5 @@\n+--\n+-- @OrderDate, StartDate and EndDate are datetime in T-SQL, so SQL Server rounds each of them to its 1/300 s ticks\n+-- (.001 -> .000, .002 -> .003, 23:59:59.999 -> the next midnight; halves round up) before BETWEEN compares them.\n+-- timestamp keeps the value as given. Rounding is monotonic, so with d = the argument rounded to tick k of its second:\n+--   round(StartDate) <= d  exactly when  StartDate <  second + (k + 0.5)/300 s\n+--   round(EndDate)   >= d  exactly when  EndDate   >= second + (k - 0.5)/300 s\n+-- Both bounds are computed once per call from the argument in integer microseconds: us = microseconds within the\n+-- second, k = (us*3 + 5000) / 10000, bound offsets ceil((2k +/- 1) * 5000/3) = ((2k +/- 1) * 5000 + 2) / 3 (integer\n+-- division truncates toward zero, which is the ceiling here, also for k = 0). The columns are compared as stored.\n+--\n+-- PL/pgSQL, not LANGUAGE sql: inside a SQL-language function the bound expressions cost about 5 us per call\n+-- (20,000 calls: 280 ms against 170 ms without them, measured 2026-11-19); as PL/pgSQL variables they cost about 1.5 us.\n-\n@@ engineOutput line 8 / final line 19 @@\n+LANGUAGE plpgsql\n-LANGUAGE sql\n@@ engineOutput line 11 / final line 22 @@\n+DECLARE\n+    us    integer   := date_part('microseconds', order_date)::integer % 1000000;\n+    k     integer   := (us * 3 + 5000) / 10000;\n+    below timestamp := order_date + interval '1 microsecond' * (((2 * k + 1) * 5000 + 2) / 3 - us);\n+    from_ timestamp := order_date + interval '1 microsecond' * (((2 * k - 1) * 5000 + 2) / 3 - us);\n+BEGIN\n+    RETURN (\n+        SELECT pch.\"StandardCost\"\n+          FROM production.product AS p\n+         INNER JOIN production.product_cost_history AS pch\n+            ON p.\"ProductID\" = pch.\"ProductID\"\n+           AND p.\"ProductID\" = product_id\n+           AND pch.\"StartDate\" < below\n+           AND COALESCE(pch.\"EndDate\", TIMESTAMP '9999-12-31 00:00:00') >= from_\n+         LIMIT 1);\n+END\n-    SELECT pch.\"StandardCost\"\n-      FROM production.product AS p\n-     INNER JOIN production.product_cost_history AS pch\n-        ON p.\"ProductID\" = pch.\"ProductID\"\n-       AND p.\"ProductID\" = product_id\n-       AND order_date BETWEEN pch.\"StartDate\" AND COALESCE(pch.\"EndDate\", TIMESTAMP '9999-12-31 00:00:00')\n-     LIMIT 1",
     "engine": "kiro",
     "notes": [
       "At most one price period per product (precondition): with overlapping periods the T-SQL `SELECT @x = ...` keeps the last row read, which is undefined.",
@@ -50,34 +50,6 @@
     "step4": "pass",
     "step5": "not-run",
     "step6": "n/a",
-    "runtimeRatio": 1.54,
-    "runtime": {
-      "volume": 2000,
-      "timedRuns": 7,
-      "sqlServerMs": 97,
-      "postgresMs": 148.9,
-      "ratio": 1.54,
-      "threshold": 2.5,
-      "passed": true,
-      "belowResolution": false,
-      "resultRows": 100,
-      "volumeMismatch": null
-    },
-    "rowsCompared": 208,
-    "trapsCovered": [
-      "NULL in every nullable column"
-    ],
-    "pbtSeeds": [
-      95490315
-    ],
-    "samples": 200,
-    "samplesWithRows": 136,
-    "subMicrosecondNormalised": 0,
-    "mutantsDetected": [
-      "auto: join condition uses a different key",
-      "auto: first AND becomes OR"
-    ],
-    "harnessVersion": "harness-generic-0.3.0",
     "testsRun": [
       "tSQLt V1.0.8083.3529 on SQL Server (tests/AdventureWorks2025/dbo.ufnGetProductStandardCost.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/AdventureWorks2025/dbo.ufnGetProductStandardCost.pg.sql); expected results tests/AdventureWorks2025/dbo.ufnGetProductStandardCost.expected.json",
       "SQL Server: AgreedTests.[test 01 on the start date exactly (BETWEEN is inclusive): the StandardCost]: pass",
@@ -97,7 +69,47 @@
       "PostgreSQL: AgreedTests.[test 07 a product with no history: NULL]: pass",
       "PostgreSQL: AgreedTests.[test 08 NULL ProductID: NULL]: pass",
       "planted defects caught by the agreed tests: 2 of 2"
-    ]
+    ],
+    "runtimeRatio": 2.44,
+    "runtime": {
+      "volume": 2000,
+      "timedRuns": 7,
+      "sqlServerMs": 80,
+      "postgresMs": 195.08,
+      "ratio": 2.44,
+      "threshold": 2.5,
+      "passed": true,
+      "belowResolution": false,
+      "resultRows": 100,
+      "volumeMismatch": null
+    },
+    "rowsCompared": 208,
+    "trapsCovered": [
+      "NULL in every nullable column"
+    ],
+    "pbtSeeds": [
+      1245171876
+    ],
+    "engineOutputCheck": {
+      "step3": "pass",
+      "seed": 1245171876
+    },
+    "samples": 200,
+    "samplesWithRows": 135,
+    "subMicrosecondNormalised": 0,
+    "mutantsDetected": [
+      "auto: join condition uses a different key",
+      "auto: first AND becomes OR"
+    ],
+    "harnessVersion": "harness-generic-0.3.0",
+    "adversarial": {
+      "gate": "pass",
+      "ran": 19,
+      "differed": 0,
+      "evidencePath": "evidence/adversarial/AdventureWorks2025/dbo.ufnGetProductStandardCost.json",
+      "conversionSha256": "8ea417c3934c5ba834c8569710249482e5a5867074b5377214a05abc4de18834",
+      "runAt": "2026-11-19T03:07:14.575Z"
+    }
   },
   "effort": {
     "humanMinutes": 0,
