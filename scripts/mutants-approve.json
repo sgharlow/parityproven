@@ -1,0 +1,17 @@
+[
+  { "name": "approve ignores the gate re-evaluation", "from": "reasons.push(...g.reasons.map((r) => `gate: ${r}`));", "to": "" },
+  { "name": "approve ignores differed cases", "from": "if (ev.summary.differed > 0)", "to": "if (false)" },
+  { "name": "approve ignores invalid cases", "from": "if (ev.summary.invalid > 0)", "to": "if (false)" },
+  { "name": "approve ignores inadequate attacks", "from": "if (ev.mutantAdequacy.verdict === \"inadequate\")", "to": "if (false)" },
+  { "name": "approve ignores a stale hash", "from": "if (ev.conversionSha256 !== finalSha)", "to": "if (false)" },
+  { "name": "approve accepts a missing evidence file", "from": "if (!ev) reasons.push(\"no adversarial evidence file\");", "to": "if (!ev) { }" },
+  { "name": "approve ignores the pair record gate", "from": "if (e.adversarial?.gate !== \"pass\")", "to": "if (false)" },
+  { "name": "approve accepts a failed record", "from": "if (i.pair.status === \"failed\")", "to": "if (false)" },
+  { "name": "approve skips steps 1 to 3", "from": "if (s !== \"pass\") reasons.push", "to": "if (false) reasons.push" },
+  { "name": "approve skips step 4", "from": "if (e.step4 !== \"pass\" && e.step4 !== \"n/a\")", "to": "if (false)" },
+  { "name": "approve skips the one-day rule", "from": "if (d) reasons.push(d);", "to": "" },
+  { "name": "tty guard accepts a pipe on stdout", "from": "stdinIsTty && stdoutIsTty ? null", "to": "stdinIsTty ? null" },
+  { "name": "tty guard accepts a pipe on stdin", "from": "stdinIsTty && stdoutIsTty ? null", "to": "stdoutIsTty ? null" },
+  { "name": "reviewer retype not compared", "from": "given.trim() === retyped.trim()", "to": "true" },
+  { "name": "empty reviewer accepted", "from": "given.trim().length > 0 && ", "to": "" }
+]

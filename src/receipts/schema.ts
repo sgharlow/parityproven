@@ -7,6 +7,27 @@ export interface VerificationStep {
   status: StepStatus;
 }
 
+export interface ReceiptAdversarial {
+  gate: "pass" | "fail" | "not-run";
+  ran: number;
+  differed: number;
+  evidencePath: string;
+  runAt: string;
+  /** Always true: the cases are written by agents, not hand-derived. */
+  agentWritten: true;
+  /** "N adversarial cases ran, M differed" (present when the evidence file was read) */
+  wording?: string;
+  attackerModel?: string;
+  auditorModel?: string;
+  sameModel?: boolean;
+  mutantAdequacy?: string;
+  gateReasons?: string[];
+  cases?: Array<{
+    id: string; label: string; traps: string[]; status: "ran" | "invalid";
+    sqlServer?: "pass" | "fail"; postgres?: "pass" | "fail";
+  }>;
+}
+
 export interface ReceiptFile {
   database: string;
   schemaName: string;
@@ -47,6 +68,11 @@ export interface ReceiptFile {
     /** Step 5: the second review. */
     reviewer?: string;
     reviewDate?: string;
+    /** Set when step 5 was recorded from the adversarial evidence report. */
+    step5Method?: "adversarial-report";
+    step5Report?: string;
+    /** Adversarial review (ruling A1): agent-written cases run on both engines; expected values from the original T-SQL. */
+    adversarial?: ReceiptAdversarial;
   };
   effort: { humanMinutes: number; engineName: string; engineVersion: string };
   predictionCell: { p50Hours: number; p90Hours: number } | null;

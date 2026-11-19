@@ -15,7 +15,7 @@
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 import { existsSync, readFileSync, writeFileSync, readdirSync } from "fs";
-import { execFileSync } from "child_process";
+import { firstCommitDate } from "../pairs/review-rules.js";
 import type { PairRecord } from "../pairs/schema.js";
 import { computeStatus, missingForVerified } from "../pairs/status.js";
 
@@ -31,16 +31,6 @@ function findPair(object: string): string {
     if (existsSync(p)) return p;
   }
   throw new Error(`no pair record for ${object}`);
-}
-
-function firstCommitDate(path: string): string | null {
-  try {
-    const out = execFileSync("git", ["log", "--diff-filter=A", "--follow", "--format=%cs", "--", path], { cwd: ROOT, encoding: "utf-8" }).trim();
-    const lines = out.split("\n").filter(Boolean);
-    return lines.length ? lines[lines.length - 1] : null;
-  } catch {
-    return null;
-  }
 }
 
 function main(): void {
@@ -61,11 +51,14 @@ function main(): void {
   const reviewer = arg("--review");
   if (reviewer !== undefined) {
     const date = arg("--date") ?? new Date().toISOString().slice(0, 10);
-    const first = firstCommitDate(path);
+    const first = firstCommitDate(ROOT, path);
     if (first && date <= first) {
       throw new Error(`step 5 must be at least one day after the first pass (${first}); review date given: ${date}`);
     }
     const fail = arg("--fail");
+    if (!fail && rec.evidence.adversarial?.gate !== "pass") {
+      throw new Error(`step 5 pass refused: the adversarial gate is ${rec.evidence.adversarial?.gate ?? "not-run"} (ruling A1). Run the gate, then approve on its report.`);
+    }
     rec.evidence.step5 = fail ? "fail" : "pass";
     rec.evidence.reviewer = reviewer;
     rec.evidence.reviewDate = date;

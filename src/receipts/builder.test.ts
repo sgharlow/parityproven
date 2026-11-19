@@ -1,7 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { buildReceipts } from "./builder.js";
 import { computeStatus } from "../pairs/status.js";
-import { resolve } from "path";
+import { resolve, join } from "path";
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "fs";
+import { tmpdir } from "os";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 
@@ -58,6 +60,43 @@ describe("buildReceipts", () => {
     for (const r of output.receipts) {
       expect(r.predictionCell).toBeNull();
     }
+  });
+});
+
+describe("adversarial section", () => {
+  function setup(withEvidenceFile: boolean) {
+    const root = mkdtempSync(join(tmpdir(), "pp-receipt-"));
+    const src = JSON.parse(readFileSync(resolve(REPO_ROOT, "pairs", "WideWorldImporters", "Integration.GetMovementUpdates.json"), "utf-8"));
+    src.evidence.adversarial = { gate: "pass", ran: 1, differed: 0, evidencePath: "evidence/adversarial/WideWorldImporters/Integration.GetMovementUpdates.json", conversionSha256: "x", runAt: "2026-11-19T10:00:00Z" };
+    src.evidence.step5Method = "adversarial-report";
+    src.evidence.step5Report = "evidence/adversarial/reports/batch-1.md";
+    mkdirSync(join(root, "pairs", "WideWorldImporters"), { recursive: true });
+    writeFileSync(join(root, "pairs", "WideWorldImporters", "Integration.GetMovementUpdates.json"), JSON.stringify(src));
+    if (withEvidenceFile) {
+      mkdirSync(join(root, "evidence", "adversarial", "WideWorldImporters"), { recursive: true });
+      writeFileSync(join(root, "evidence", "adversarial", "WideWorldImporters", "Integration.GetMovementUpdates.json"), JSON.stringify({
+        wording: "1 adversarial case ran, 0 differed", attacker: { model: "m1" }, auditor: { model: "m2" }, sameModel: false,
+        mutantAdequacy: { verdict: "adequate" }, gate: { passed: true, reasons: [] },
+        cases: [{ id: "A01", label: "x", traps: ["top-ties"], status: "ran", sqlServer: { passed: true }, postgres: { passed: false } }],
+      }));
+    }
+    return root;
+  }
+  const build = (root: string) => buildReceipts({ pairsDir: join(root, "pairs"), inventoryDir: join(root, "none"), predictionsDir: join(root, "none"), repoRoot: root });
+
+  it("copies the gate summary and the evidence file detail", () => {
+    const a = build(setup(true)).receipts[0]!.evidence.adversarial!;
+    expect(a).toMatchObject({ gate: "pass", ran: 1, differed: 0, agentWritten: true, wording: "1 adversarial case ran, 0 differed", attackerModel: "m1", auditorModel: "m2", mutantAdequacy: "adequate" });
+    expect(a.cases).toEqual([{ id: "A01", label: "x", traps: ["top-ties"], status: "ran", sqlServer: "pass", postgres: "fail" }]);
+    expect(build(setup(true)).receipts[0]!.evidence.step5Method).toBe("adversarial-report");
+  });
+
+  it("keeps the summary when the evidence file is absent, and omits the section without a gate record", () => {
+    const a = build(setup(false)).receipts[0]!.evidence.adversarial!;
+    expect(a.gate).toBe("pass");
+    expect(a.cases).toBeUndefined();
+    const out = buildReceipts({ pairsDir: resolve(REPO_ROOT, "pairs"), inventoryDir: resolve(REPO_ROOT, "inventory"), predictionsDir: resolve(REPO_ROOT, "predictions") });
+    expect(out.receipts.find((r) => !r.evidence.adversarial)).toBeDefined();
   });
 });
 

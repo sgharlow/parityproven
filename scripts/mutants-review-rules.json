@@ -1,0 +1,7 @@
+[
+  { "name": "same-day review accepted", "from": "date <= first", "to": "date < first" },
+  { "name": "earlier review accepted", "from": "if (first && date <= first)", "to": "if (false)" },
+  { "name": "malformed date accepted", "from": "if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(date) || Number.isNaN(Date.parse(date)))", "to": "if (false)" },
+  { "name": "impossible date accepted", "from": " || Number.isNaN(Date.parse(date))", "to": "" },
+  { "name": "assertOneDay never throws", "from": "if (p) throw new Error(p);", "to": "" }
+]

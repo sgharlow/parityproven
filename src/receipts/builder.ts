@@ -3,7 +3,8 @@ import { join } from "path";
 import type { PairRecord } from "../pairs/schema.js";
 import type { InventoryReport } from "../inventory/types.js";
 import type { PredictionFile } from "../predictions/schema.js";
-import type { ReceiptExclusion, ReceiptFile, ReceiptIndex, ReceiptIndexEntry } from "./schema.js";
+import type { AdversarialEvidence } from "../adversarial/schema.js";
+import type { ReceiptAdversarial, ReceiptExclusion, ReceiptFile, ReceiptIndex, ReceiptIndexEntry } from "./schema.js";
 import { STEP_LABELS } from "./schema.js";
 import { classifyTierAtPrediction } from "../inventory/tier.js";
 
@@ -11,6 +12,8 @@ export interface BuildInput {
   pairsDir: string;       // e.g. repo/pairs
   inventoryDir: string;   // e.g. repo/inventory
   predictionsDir: string; // e.g. repo/predictions
+  /** Repo root, used to read the adversarial evidence JSON named on a pair record. */
+  repoRoot?: string;
   /** Out-of-scope objects, listed on the scorecard with their reason (src/conversions/dispositions.ts). */
   exclusions?: BuildExclusion[];
   /** In-scope objects with no conversion attempt, listed with what they would need (src/conversions/dispositions.ts). */
@@ -20,6 +23,28 @@ export interface BuildInput {
    * (read from git history by the CLI). Objects first committed before their database's predictions are disclosed.
    */
   firstCommits?: Record<string, { at: string; commit: string }>;
+}
+
+/** Receipt section from the pair record's gate summary, with detail from the evidence JSON when it can be read. */
+function adversarialOf(a: PairRecord["evidence"]["adversarial"], repoRoot?: string): ReceiptAdversarial | undefined {
+  if (!a) return undefined;
+  const out: ReceiptAdversarial = { gate: a.gate, ran: a.ran, differed: a.differed, evidencePath: a.evidencePath, runAt: a.runAt, agentWritten: true };
+  const file = repoRoot ? join(repoRoot, a.evidencePath) : undefined;
+  if (file && existsSync(file)) {
+    const ev = JSON.parse(readFileSync(file, "utf-8")) as AdversarialEvidence;
+    out.wording = ev.wording;
+    out.attackerModel = ev.attacker.model;
+    out.auditorModel = ev.auditor.model;
+    out.sameModel = ev.sameModel;
+    out.mutantAdequacy = ev.mutantAdequacy.verdict;
+    out.gateReasons = ev.gate.reasons;
+    out.cases = ev.cases.map((c) => ({
+      id: c.id, label: c.label, traps: c.traps, status: c.status,
+      ...(c.sqlServer ? { sqlServer: c.sqlServer.passed ? "pass" as const : "fail" as const } : {}),
+      ...(c.postgres ? { postgres: c.postgres.passed ? "pass" as const : "fail" as const } : {}),
+    }));
+  }
+  return out;
 }
 
 export interface BuildExclusion {
@@ -117,6 +142,9 @@ export function buildReceipts(input: BuildInput): BuildOutput {
           testsRun: evidence.testsRun,
           reviewer: evidence.reviewer,
           reviewDate: evidence.reviewDate,
+          step5Method: evidence.step5Method,
+          step5Report: evidence.step5Report,
+          adversarial: adversarialOf(evidence.adversarial, input.repoRoot),
         },
         effort: pair.effort,
         predictionCell: predCell

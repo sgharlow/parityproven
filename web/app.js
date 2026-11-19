@@ -159,7 +159,7 @@ async function initReceipt() {
   const stepDetail = (n) => {
     const e = receipt.evidence;
     if (n === 2 && e.testsRun?.length) return `<span style="color:var(--c-muted);font-size:0.85rem">${e.testsRun.length} agreed test(s) on each engine</span>`;
-    if (n === 5 && e.reviewer) return `<span style="color:var(--c-muted);font-size:0.85rem">by ${esc(e.reviewer)} on ${esc(e.reviewDate ?? '')}</span>`;
+    if (n === 5 && e.reviewer) return `<span style="color:var(--c-muted);font-size:0.85rem">by ${esc(e.reviewer)} on ${esc(e.reviewDate ?? '')}${e.step5Method ? ' (on the adversarial report)' : ''}</span>`;
     return '';
   };
   const stepsHtml = receipt.verificationSteps.map(s => `
@@ -194,6 +194,23 @@ async function initReceipt() {
 
   const testsHtml = ev.testsRun?.length
     ? `<h3>Agreed tests (step 2)</h3><ul>${ev.testsRun.map(t => `<li style="font-size:0.85rem">${esc(t)}</li>`).join('')}</ul>` : '';
+
+  const adv = ev.adversarial;
+  const advCase = (c) => {
+    const result = c.status === 'invalid' ? 'invalid'
+      : `SQL Server ${c.sqlServer ?? 'no data'}, PostgreSQL ${c.postgres ?? 'no data'}`;
+    return `<li style="font-size:0.85rem">${esc(c.id)} ${esc(c.label)}: ${esc(result)}${c.traps.length ? ` (${c.traps.map(esc).join(', ')})` : ''}</li>`;
+  };
+  const adversarialHtml = adv
+    ? `<h3>Adversarial review (agent-written cases, run on both engines)</h3>
+       <ul>
+         <li><strong>${esc(adv.wording ?? `${adv.ran} adversarial case${adv.ran === 1 ? '' : 's'} ran, ${adv.differed} differed`)}</strong>; gate: ${esc(adv.gate)}.
+           <span style="color:var(--c-muted);font-size:0.85rem">Expected values were captured from the original T-SQL, not written by an agent.</span></li>
+         ${adv.attackerModel ? `<li style="font-size:0.85rem">Cases written by ${esc(adv.attackerModel)}, audited by ${esc(adv.auditorModel ?? 'no data')}${adv.sameModel ? ' (same model)' : ''}. Planted-defect check on these cases: ${esc(adv.mutantAdequacy ?? 'no data')}.</li>` : ''}
+         ${(adv.gateReasons ?? []).map(r => `<li style="font-size:0.85rem">${esc(r)}</li>`).join('')}
+         ${(adv.cases ?? []).map(advCase).join('')}
+       </ul>`
+    : `<h3>Adversarial review</h3><p style="color:var(--c-muted)">no data yet</p>`;
 
   const pbtHtml = ev.pbtSeeds?.length
     ? `<ul style="padding-left:1.2rem">
@@ -272,6 +289,7 @@ async function initReceipt() {
     <h2>Evidence</h2>
     ${pbtHtml}
     ${testsHtml}
+    ${adversarialHtml}
     ${loadFindings}
 
     <p style="color:var(--c-muted);font-size:0.78rem;margin-top:2rem">Receipt built ${new Date(receipt.builtAt).toLocaleString()}</p>`;

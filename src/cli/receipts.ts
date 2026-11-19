@@ -55,6 +55,7 @@ async function main(): Promise<void> {
     pairsDir:       resolve(REPO_ROOT, "pairs"),
     inventoryDir:   resolve(REPO_ROOT, "inventory"),
     predictionsDir: resolve(REPO_ROOT, "predictions"),
+    repoRoot: REPO_ROOT,
     exclusions: DISPOSITIONS.filter((d) => d.kind === "excluded").map((d) => ({
       database: d.database, schemaName: d.schema, objectName: d.name, reason: d.reason,
     })),
