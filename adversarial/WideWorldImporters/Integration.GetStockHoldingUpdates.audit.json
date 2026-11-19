@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "object": "Integration.GetStockHoldingUpdates",
   "database": "WideWorldImporters",
-  "auditor": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" },
+  "auditor": { "model": "gpt-5.6-sol", "at": "2026-11-19T17:43:51.5194020Z" },
   "casesAudited": ["A01", "A02", "A03", "A04", "A05"],
   "acceptedNotApplicable": ["null-vs-empty"],
   "equivalentMutants": [],
@@ -12,7 +12,9 @@
       "caseId": "A01",
       "kind": "other",
       "text": "A01 supplies distinct StockItemID values in descending insertion order and therefore would expose the planted descending-order defect under the required ordered comparison. The adversarial plain-SQL assertions compare these rows as a multiset, despite spec.orderKey naming 'WWI Stock Item ID', so no input-only revision can catch the defect. Descending order is observable because the source query guarantees ascending order; it must not be recorded as equivalent. The harness needs to enforce the order key in adversarial assertions.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "Commit 6702ba2 added an order-key sequence assertion to both the agreed and adversarial PostgreSQL scripts. The adversarial script captures row_number() over the function result and compares the WWI Stock Item ID sequence with the source-captured expected sequence; fresh evidence records the descending-order mutant as caught and reports 2 of 2 planted defects caught by the agreed tests.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T17:43:51.5194020Z" }
     }
   ]
 }
