@@ -86,7 +86,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "pass",
-    "step5": "not-run",
+    "step5": "pass",
     "step6": "n/a",
     "testsRun": [
       "tSQLt V1.0.8083.3529 on SQL Server (tests/AdventureWorks2025/Sales.vSalesPerson.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/AdventureWorks2025/Sales.vSalesPerson.pg.sql); expected results tests/AdventureWorks2025/Sales.vSalesPerson.expected.json",
@@ -132,12 +132,14 @@
       "trailing spaces count in the join (rtrim dropped)",
       "LEFT JOIN to email made an inner join (people without email dropped)"
     ],
-    "harnessVersion": "harness-generic-0.3.0"
+    "harnessVersion": "harness-generic-0.3.0",
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-18"
   },
   "effort": {
-    "humanMinutes": 0,
+    "humanMinutes": 10,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }
