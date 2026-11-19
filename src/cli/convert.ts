@@ -30,6 +30,7 @@ import { lineDiff } from "../pairs/diff.js";
 import { autoMutants } from "../conversions/automutants.js";
 import type { PairRecord } from "../pairs/schema.js";
 import { computeStatus, STEP4_NA_REASON } from "../pairs/status.js";
+import { carriedGateFields } from "../pairs/carry-gate.js";
 import { hookFilePath } from "./hook-input.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -279,6 +280,9 @@ function writePair(p: PairInput): void {
       mutantsDetected: p.detected,
       failureDetail: p.failureDetail,
       harnessVersion: HARNESS_VERSION,
+      // a re-run keeps the gate result and the owner's approval; the gate records the conversion's hash, so a changed
+      // conversion still fails the gate and refuses approval (gate.ts, approve-decision.ts)
+      ...carriedGateFields(previous, p.finalSql),
     },
     effort: {
       humanMinutes: previous?.effort.humanMinutes ?? 0,
