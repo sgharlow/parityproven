@@ -2,72 +2,52 @@
   "schemaVersion": 1,
   "object": "dbo.ufnLeadingZeros",
   "database": "AdventureWorks2025",
-  "auditor": {
-    "model": "gpt-5.6-sol",
-    "at": "2026-11-18T19:19:51.7066204-07:00"
-  },
-  "casesAudited": [
-    "A01",
-    "A02",
-    "A03",
-    "A04",
-    "A05",
-    "A06",
-    "A07",
-    "A08"
-  ],
-  "acceptedNotApplicable": [
-    "null-vs-empty",
-    "collation-case",
-    "trailing-spaces",
-    "dates-datetime",
-    "numeric-rounding",
-    "top-ties",
-    "identity-gaps"
-  ],
+  "auditor": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" },
+  "casesAudited": ["A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08"],
+  "acceptedNotApplicable": ["null-vs-empty", "collation-case", "trailing-spaces", "dates-datetime", "numeric-rounding", "top-ties", "identity-gaps"],
   "equivalentMutants": [],
   "objections": [
     {
-      "id": "O01",
-      "caseId": "A01",
-      "kind": "duplicate",
+      "id": "O01", "caseId": "A01", "kind": "duplicate",
       "text": "The hand-derived -5 case already supplies a two-character negative integer and requires the sign after six padding zeros. A01 changes only the digit from 5 to 1 and attacks the same input class and mechanism.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A01 now sends the five-character value -1000, a negative length class absent from the hand-derived cases.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     },
     {
-      "id": "O02",
-      "caseId": "A02",
-      "kind": "duplicate",
+      "id": "O02", "caseId": "A02", "kind": "duplicate",
       "text": "The hand-derived -9999999 case already supplies an eight-character negative integer, including the sign, and requires it unchanged. A02 is the same length class and attacks the same boundary behavior.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A02 now sends the seven-character value -100000, one character short of exact fit and absent from the hand-derived cases.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     },
     {
-      "id": "O03",
-      "caseId": "A03",
-      "kind": "duplicate",
+      "id": "O03", "caseId": "A03", "kind": "duplicate",
       "text": "The hand-derived -10000000 case already supplies a nine-character negative integer and requires CONVERT(varchar(8), int) to produce '*' before padding. A03 attacks the same length and conversion path.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A03 now sends a ten-character negative value, filling the overflow length class between the hand-derived nine- and eleven-character cases.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     },
     {
-      "id": "O04",
-      "caseId": "A04",
-      "kind": "duplicate",
+      "id": "O04", "caseId": "A04", "kind": "duplicate",
       "text": "The hand-derived 12345678 and 99999999 cases already supply eight-character positive integers and require them unchanged. A04 is the same length boundary and does not add a distinct attack mechanism.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A04 now sends the four-digit power of ten 1000, a positive length class absent from the hand-derived inputs and sensitive to log-based length errors.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     },
     {
-      "id": "O05",
-      "caseId": "A07",
-      "kind": "duplicate",
+      "id": "O05", "caseId": "A07", "kind": "duplicate",
       "text": "The hand-derived int-maximum case already exercises a positive value above eight characters and requires '0000000*'. Moving one below the maximum uses the same conversion and padding path.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A07 now sends the six-digit power of ten 100000, a non-overflow length class absent from the hand-derived cases.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     },
     {
-      "id": "O06",
-      "caseId": "A08",
-      "kind": "duplicate",
+      "id": "O06", "caseId": "A08", "kind": "duplicate",
       "text": "The hand-derived int-minimum case already exercises a negative value above eight characters and requires '0000000*'. Moving one above the minimum uses the same conversion and padding path.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A08 now sends the six-character negative value -10000, a padded non-overflow length class absent from the hand-derived cases.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     }
   ]
 }

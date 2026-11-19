@@ -2,67 +2,59 @@
   "schemaVersion": 1,
   "object": "dbo.uspGetWhereUsedProductID",
   "database": "AdventureWorks2025",
-  "auditor": {
-    "model": "gpt-5.6-sol",
-    "at": "2026-11-18T20:33:12.9525152-07:00"
-  },
-  "casesAudited": [
-    "A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09",
-    "A10", "A11", "A12", "A13", "A14", "A15", "A16", "A17", "A18"
-  ],
-  "acceptedNotApplicable": [
-    "null-vs-empty"
-  ],
+  "auditor": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" },
+  "casesAudited": ["A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09", "A10", "A11", "A12", "A13", "A14", "A15", "A16", "A17", "A18", "A19"],
+  "acceptedNotApplicable": ["null-vs-empty", "collation-case"],
   "equivalentMutants": [],
   "objections": [
     {
-      "id": "O01",
-      "caseId": "A05",
-      "kind": "label-mismatch",
+      "id": "O01", "caseId": "A05", "kind": "label-mismatch",
       "text": "The reasoning says PostgreSQL drops the final edge and returns 27 rows. The input contains 27 edges, so dropping the final edge leaves 26 result rows. The case remains a date-rounding/MAXRECURSION attack, but its stated non-error outcome does not match the values sent.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A05 now states that dropping the final edge leaves 26 rows. Its edge count and MAXRECURSION outcome match the sent chain.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     },
     {
-      "id": "O02",
-      "caseId": "A06",
-      "kind": "not-an-attack",
+      "id": "O02", "caseId": "A06", "kind": "not-an-attack",
       "text": "The two rows for assembly 2, component 1 have the same StartDate. They violate the source table's unique key on ProductAssemblyID, ComponentID and StartDate, so this input is outside the source schema preconditions.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A06 now gives the two same-pair rows different StartDate values, so the source unique key is satisfied while the overlapping-row sum remains visible.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     },
     {
-      "id": "O03",
-      "caseId": "A11",
-      "kind": "not-an-attack",
+      "id": "O03", "caseId": "A11", "kind": "not-an-attack",
       "text": "The BillOfMaterials quantities 0.05 through 0.45 violate the source check requiring PerAssemblyQty >= 1.00, and product 5 has a negative StandardCost contrary to the source Product check. The diamond input is not valid source data.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A11 now uses quantities 1.05 through 1.45 and nonnegative costs. The diamond satisfies the source checks and retains the grouped-sum rounding attack.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     },
     {
-      "id": "O04",
-      "caseId": "A13",
-      "kind": "not-an-attack",
+      "id": "O04", "caseId": "A13", "kind": "not-an-attack",
       "text": "Products 2 and 3 both use Name 'P2'. Production.Product has a case-insensitive unique key on Name, so the repeated value used to satisfy the top-ties claim cannot occur under the source schema preconditions.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A13 now gives every product a distinct name and creates its non-key tie with shared StandardCost and ListPrice values.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     },
     {
-      "id": "O05",
-      "caseId": "A14",
-      "kind": "not-an-attack",
+      "id": "O05", "caseId": "A14", "kind": "not-an-attack",
       "text": "Product names 'Bolt', 'BOLT' and 'bolt ' collide under the source case-insensitive, trailing-space-insensitive unique key on Production.Product.Name. The input cannot be loaded into the source table with its constraints.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A14 now uses distinct names and removes the impossible case-only variants. It retains empty, trailing-space, non-ASCII, emoji, and maximum-length text inputs.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     },
     {
-      "id": "O06",
-      "caseId": "A15",
-      "kind": "not-an-attack",
+      "id": "O06", "caseId": "A15", "kind": "not-an-attack",
       "text": "The three identical BillOfMaterials rows violate the source unique key; the negative PerAssemblyQty violates its >= 1.00 check; and the negative Product.ListPrice violates the source Product check. This overflow case is outside the source schema preconditions.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A15 now separates the same-pair rows by StartDate, uses positive quantities, and uses nonnegative product prices. It still drives SUM(decimal(8,2)) beyond the input precision.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     },
     {
-      "id": "O07",
-      "caseId": "A17",
-      "kind": "not-an-attack",
+      "id": "O07", "caseId": "A17", "kind": "not-an-attack",
       "text": "The 2 -> 3 row ends on 2019-12-31 but starts on 2020-01-01. That violates the source BillOfMaterials check requiring EndDate after StartDate (or NULL), so the filtered-cycle input is not valid source data.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A17 now starts the expired 2 -> 3 edge on 2019-01-01, before its 2019-12-31 end date. The filtered cycle is valid source data.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     }
   ]
 }

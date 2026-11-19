@@ -2,28 +2,33 @@
   "schemaVersion": 1,
   "object": "Purchasing.vVendorWithAddresses",
   "database": "AdventureWorks2025",
-  "auditor": {
-    "model": "gpt-5.6-sol",
-    "at": "2026-11-18T20:33:12.9525152-07:00"
-  },
-  "casesAudited": [
-    "A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09"
-  ],
+  "auditor": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" },
+  "casesAudited": ["A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09", "A10"],
   "acceptedNotApplicable": [],
-  "equivalentMutants": [],
+  "equivalentMutants": [
+    {
+      "name": "inner join to address type made a left join (unknown address types kept)",
+      "reason": "Under the source schema foreign key, every BusinessEntityAddress.AddressTypeID has a matching AddressType row, so changing this join from inner to left cannot affect an input satisfying the source preconditions."
+    }
+  ],
   "objections": [
     {
-      "id": "O01",
-      "caseId": "A01",
-      "kind": "duplicate",
+      "id": "O01", "caseId": "A01", "kind": "duplicate",
       "text": "The hand-derived fixed cases already test a lowercase province code joining 'US' under CI_AS and a province code with a trailing space joining 'US'. Additional mixed-case spellings and combining case with the trailing space attack the same two join mechanisms.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A01 now uses non-ASCII Latin-1 and Greek case pairs and puts the combined case/trailing-space variant on the country side, exercising Unicode folding and asymmetric trimming paths absent from the hand-derived inputs.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     },
     {
-      "id": "O02",
-      "caseId": "A08",
-      "kind": "not-an-attack",
+      "id": "O02", "caseId": "A08", "kind": "not-an-attack",
       "text": "A08 duplicates the exact BusinessEntityAddress primary-key tuple (vendor 1, address 1, address type 2). It also sends AddressType names 'Shipping' and 'SHIPPING', which collide under the source case-insensitive unique key. The duplicate fan-out input is not valid source data.",
+      "status": "resolved",
+      "resolution": "A08 now uses three distinct BusinessEntityAddress primary-key tuples and distinct AddressType names. Its case-only pair crosses Vendor.Name and AddressType.Name, avoiding both unique constraints.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
+    },
+    {
+      "id": "O03", "caseId": "A10", "kind": "not-an-attack",
+      "text": "A10 sends BusinessEntityAddress.AddressTypeID 9 without a matching AddressType row. The source foreign key requires that match, so the new case is outside the source schema preconditions. The inner-to-left-join mutant is unobservable for valid source inputs and is recorded in equivalentMutants instead.",
       "status": "open"
     }
   ]

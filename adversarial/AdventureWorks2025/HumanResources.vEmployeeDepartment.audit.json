@@ -2,36 +2,31 @@
   "schemaVersion": 1,
   "object": "HumanResources.vEmployeeDepartment",
   "database": "AdventureWorks2025",
-  "auditor": {
-    "model": "gpt-5.6-sol",
-    "at": "2026-11-18T20:33:12.9525152-07:00"
-  },
-  "casesAudited": [
-    "A01", "A02", "A03", "A04", "A05", "A06", "A07"
-  ],
+  "auditor": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" },
+  "casesAudited": ["A01", "A02", "A03", "A04", "A05", "A06", "A07"],
   "acceptedNotApplicable": [],
   "equivalentMutants": [],
   "objections": [
     {
-      "id": "O01",
-      "caseId": "A01",
-      "kind": "label-mismatch",
+      "id": "O01", "caseId": "A01", "kind": "label-mismatch",
       "text": "The label says the input includes EndDate 0001-01-01, but no EmployeeDepartmentHistory row sends that end date. The only 0001-01-01 value is a StartDate; the sent EndDate boundaries are 1900-01-01 and 9999-12-31.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A01 now includes a history whose StartDate and EndDate are both 0001-01-01, so the label matches the sent end-date boundary and the row satisfies EndDate >= StartDate.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     },
     {
-      "id": "O02",
-      "caseId": "A02",
-      "kind": "not-an-attack",
+      "id": "O02", "caseId": "A02", "kind": "not-an-attack",
       "text": "The first history ends on 2010-06-14 after starting on 2010-06-15. It violates the source EmployeeDepartmentHistory check requiring EndDate >= StartDate (or NULL), so the case's central input cannot occur under the source schema preconditions.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "The first history now starts on 2010-06-14 and ends on 2010-06-15; all sent histories satisfy the source date check while retaining the equal-date boundary attack.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     },
     {
-      "id": "O03",
-      "caseId": "A04",
-      "kind": "not-an-attack",
+      "id": "O03", "caseId": "A04", "kind": "not-an-attack",
       "text": "Department names 'Sales', 'SALES' and 'sales ' collide under the source case-insensitive, trailing-space-insensitive unique key on HumanResources.Department.Name. The input cannot occur in the source table with its constraints.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A04 now uses distinct department names. Its case-only pairs occur across Department.Name, GroupName, and Person.FirstName, so no source unique key is violated.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     }
   ]
 }

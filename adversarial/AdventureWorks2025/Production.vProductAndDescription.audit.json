@@ -2,38 +2,31 @@
   "schemaVersion": 1,
   "object": "Production.vProductAndDescription",
   "database": "AdventureWorks2025",
-  "auditor": {
-    "model": "gpt-5.6-sol",
-    "at": "2026-11-18T20:33:12.9525152-07:00"
-  },
-  "casesAudited": [
-    "A01", "A02", "A03", "A04", "A05"
-  ],
-  "acceptedNotApplicable": [
-    "null-vs-empty"
-  ],
+  "auditor": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" },
+  "casesAudited": ["A01", "A02", "A03", "A04", "A05"],
+  "acceptedNotApplicable": ["null-vs-empty"],
   "equivalentMutants": [],
   "objections": [
     {
-      "id": "O01",
-      "caseId": "A01",
-      "kind": "not-an-attack",
+      "id": "O01", "caseId": "A01", "kind": "not-an-attack",
       "text": "The rows (ProductModelID 1, ProductDescriptionID 1, CultureID 'en') and the same tuple with CultureID 'EN' collide under the source case-insensitive composite primary key; nchar padding also applies. Both rows cannot coexist under the source schema preconditions.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A01 now assigns 'en' and 'EN' to different ProductDescriptionID values, so the composite keys are distinct while both stored culture spellings are projected.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     },
     {
-      "id": "O02",
-      "caseId": "A03",
-      "kind": "not-an-attack",
+      "id": "O02", "caseId": "A03", "kind": "not-an-attack",
       "text": "Product names 'Chain' and 'CHAIN' collide under the source case-insensitive unique key on Product.Name, and model names 'Road' and 'ROAD' collide under the corresponding ProductModel.Name key. The case-only rows cannot coexist in source data.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A03 now places each case-only pair across Product.Name and ProductModel.Name rather than within one uniquely constrained column. Product names and model names are each unique under the source collation.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     },
     {
-      "id": "O03",
-      "caseId": "A04",
-      "kind": "not-an-attack",
+      "id": "O03", "caseId": "A04", "kind": "not-an-attack",
       "text": "A04 duplicates the exact ProductModelProductDescriptionCulture primary-key tuple (1, 1, 'en'), and the two products both use Name 'Bike' despite the source unique key on Product.Name. The claimed duplicate fan-out input is outside the source schema preconditions.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A04 now uses distinct product names and distinct description ids for the equal description text. Every culture bridge key is distinct, while two descriptions still project identical rows per product.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     }
   ]
 }

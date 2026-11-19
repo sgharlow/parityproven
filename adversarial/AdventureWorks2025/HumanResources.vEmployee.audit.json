@@ -2,13 +2,8 @@
   "schemaVersion": 1,
   "object": "HumanResources.vEmployee",
   "database": "AdventureWorks2025",
-  "auditor": {
-    "model": "gpt-5.6-sol",
-    "at": "2026-11-18T20:33:12.9525152-07:00"
-  },
-  "casesAudited": [
-    "A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09", "A10", "A11"
-  ],
+  "auditor": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" },
+  "casesAudited": ["A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09", "A10", "A11"],
   "acceptedNotApplicable": [],
   "equivalentMutants": [],
   "objections": [
@@ -17,14 +12,18 @@
       "caseId": "A01",
       "kind": "duplicate",
       "text": "The hand-derived fixed cases already test a lowercase province code joining 'US' under CI_AS and a province code with a trailing space joining 'US'. Using additional mixed-case spellings and combining case with the trailing space attacks the same two join mechanisms.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A01 now uses non-ASCII Latin-1 and Greek case pairs and places the combined case/trailing-space difference on the country side. Those inputs exercise case folding beyond ASCII and asymmetric trimming paths not covered by the hand-derived cases.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     },
     {
       "id": "O02",
       "caseId": "A09",
       "kind": "not-an-attack",
       "text": "A09 inserts the identical PersonPhone primary-key tuple (BusinessEntityID 1, PhoneNumber '555-0100', PhoneNumberTypeID 1) twice. That duplicate cannot occur under the source schema preconditions.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A09 now sends the same number under two distinct PhoneNumberTypeID values. The PersonPhone primary-key tuples are distinct while the equal type names still produce identical projected rows.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     }
   ]
 }

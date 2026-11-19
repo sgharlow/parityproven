@@ -2,29 +2,24 @@
   "schemaVersion": 1,
   "object": "Website.Suppliers",
   "database": "WideWorldImporters",
-  "auditor": {
-    "model": "gpt-5.6-sol",
-    "at": "2026-11-18T22:23:38.8804730-07:00"
-  },
-  "casesAudited": [
-    "A01", "A02", "A03", "A04"
-  ],
+  "auditor": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" },
+  "casesAudited": ["A01", "A02", "A03", "A04"],
   "acceptedNotApplicable": [],
   "equivalentMutants": [],
   "objections": [
     {
-      "id": "O01",
-      "caseId": "A01",
-      "kind": "duplicate",
+      "id": "O01", "caseId": "A01", "kind": "duplicate",
       "text": "The single hand-derived case already supplies SupplierReference '' and NULL on separate suppliers and a NULL DeliveryMethodID, then compares all projected values. A01 repeats those exact NULL-versus-empty and LEFT JOIN mechanisms.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A01 now contrasts an empty name from an existing delivery-method row with NULL from a nullable DeliveryMethodID in the same output column, and reverses the SupplierReference NULL-empty arrangement. This adds a join-produced NULL versus stored-empty attack.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     },
     {
-      "id": "O02",
-      "caseId": "A02",
-      "kind": "duplicate",
+      "id": "O02", "caseId": "A02", "kind": "duplicate",
       "text": "The hand-derived case already keeps a supplier whose category, both contacts and city point to missing rows, and its supplier rows already share the default fax number. A02 repeats both the LEFT JOIN and non-key-tie conditions.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A02 now uses valid nullable DeliveryMethodID only, crosses primary and alternate contacts to expose a wrong self-join, and ties phone, fax, and website values. It no longer repeats dangling required references.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     }
   ]
 }

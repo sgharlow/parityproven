@@ -2,43 +2,38 @@
   "schemaVersion": 1,
   "object": "Website.SearchForStockItemsByTags",
   "database": "WideWorldImporters",
-  "auditor": {
-    "model": "gpt-5.6-sol",
-    "at": "2026-11-18T22:23:38.8804730-07:00"
-  },
-  "casesAudited": [
-    "A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08"
-  ],
+  "auditor": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" },
+  "casesAudited": ["A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09"],
   "acceptedNotApplicable": [],
   "equivalentMutants": [],
   "objections": [
     {
-      "id": "O01",
-      "caseId": "A01",
-      "kind": "duplicate",
+      "id": "O01", "caseId": "A01", "kind": "duplicate",
       "text": "The hand-derived five-hit case already includes Tags 'ab' and 'AB' and requires case-insensitive matching. A01 repeats those values with fewer rows and does not attack a different collation path.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A01 now uses Cyrillic lower-, upper-, and title-case values with nonmatching Cyrillic and accented controls, testing Unicode case folding beyond the ASCII hand-derived inputs.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     },
     {
-      "id": "O02",
-      "caseId": "A03",
-      "kind": "weak",
+      "id": "O02", "caseId": "A03", "kind": "weak",
       "text": "Searching for 'abc' matches Tags 'abc ' both before and after trimming its trailing space, and Tags is not returned in the JSON. The supplied case therefore cannot expose trailing-space loss despite claiming that trap.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A03 now places the trailing space in SearchText. Its pattern selects values with a space after 'amy' and excludes 'amy' and 'amyx', so trimming the argument changes the result.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     },
     {
-      "id": "O03",
-      "caseId": "A04",
-      "kind": "duplicate",
+      "id": "O03", "caseId": "A04", "kind": "duplicate",
       "text": "The hand-derived LIKE '[a-c]' case already supplies matching and non-matching values, including the case-insensitive member 'B', and exercises the same T-SQL character-class translation. A04 is a reduced copy of that attack.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A04 now sends the reversed range '[c-a]'. That form exercises T-SQL acceptance versus regular-expression invalid-range handling, a mechanism absent from the ordered hand-derived range.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     },
     {
-      "id": "O04",
-      "caseId": "A05",
-      "kind": "duplicate",
+      "id": "O04", "caseId": "A05", "kind": "duplicate",
       "text": "The hand-derived LIKE 'a\\b' case already supplies 'a\\b' and 'ab' and tests that backslash is ordinary in T-SQL LIKE. A05 repeats the same search and rows.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A05 now ends SearchText with a backslash. A trailing backslash can become a dangling regular-expression escape or escape the appended wildcard, unlike the hand-derived interior backslash.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     }
   ]
 }

@@ -2,29 +2,24 @@
   "schemaVersion": 1,
   "object": "Website.ActivateWebsiteLogon",
   "database": "WideWorldImporters",
-  "auditor": {
-    "model": "gpt-5.6-sol",
-    "at": "2026-11-18T21:39:58.1908526-07:00"
-  },
-  "casesAudited": [
-    "A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09", "A10", "A11", "A12"
-  ],
+  "auditor": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" },
+  "casesAudited": ["A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09", "A10", "A11", "A12", "A13"],
   "acceptedNotApplicable": [],
   "equivalentMutants": [],
   "objections": [
     {
-      "id": "O01",
-      "caseId": "A11",
-      "kind": "duplicate",
+      "id": "O01", "caseId": "A11", "kind": "duplicate",
       "text": "The hand-derived 'person 1 is refused' fixed case already calls the procedure for PersonID 1 while that person is not permitted to log on and requires the error path with unchanged table state. A11 changes only the logon name and template preferences, which the refused call does not read or write.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A11 now documents the unavoidable overlap: PersonID 1 is the only input that can expose removal of the template-person guard, and the adversarial-only planted-defect check does not run the hand-derived case.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     },
     {
-      "id": "O02",
-      "caseId": "A12",
-      "kind": "duplicate",
+      "id": "O02", "caseId": "A12", "kind": "duplicate",
       "text": "The hand-derived 'an already-enabled person is refused' fixed case already calls PersonID 2 with IsPermittedToLogon true and requires the error path with every Application.People value unchanged. Adding pre-existing logon, hash and preference values does not attack a different predicate or update mechanism.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A12 is now paired with A13. A12 has an enabled flag and old credentials and must be refused; A13 has the same old-credential shape but a disabled flag and must be activated. Together they distinguish the actual IsPermittedToLogon predicate from an incorrect credential-presence predicate.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     }
   ]
 }

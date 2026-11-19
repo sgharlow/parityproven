@@ -2,29 +2,24 @@
   "schemaVersion": 1,
   "object": "Website.CalculateCustomerPrice",
   "database": "WideWorldImporters",
-  "auditor": {
-    "model": "gpt-5.6-sol",
-    "at": "2026-11-18T22:23:38.8804730-07:00"
-  },
-  "casesAudited": [
-    "A01", "A02", "A03", "A04", "A05", "A06"
-  ],
+  "auditor": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" },
+  "casesAudited": ["A01", "A02", "A03", "A04", "A05", "A06", "A07"],
   "acceptedNotApplicable": [],
   "equivalentMutants": [],
   "objections": [
     {
-      "id": "O01",
-      "caseId": "A01",
-      "kind": "duplicate",
+      "id": "O01", "caseId": "A01", "kind": "duplicate",
       "text": "The hand-derived percentage-discount case already exercises the same ROUND-versus-truncation path with a value (2.49875) that rounds to 2.50 but truncates to 2.49. Changing the operands to produce 0.00525 does not attack a different branch or mechanism.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A01 now produces the exact midpoint 0.125. It distinguishes half-away-from-zero (0.13) from both truncation and half-even rounding (0.12), unlike the non-midpoint hand-derived value.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     },
     {
-      "id": "O02",
-      "caseId": "A01",
-      "kind": "label-mismatch",
+      "id": "O02", "caseId": "A01", "kind": "label-mismatch",
       "text": "The label says banker's rounding would produce 0.00, but 0.00525 is above the exact 0.005 midpoint and therefore rounds to 0.01 under both half-even and half-away-from-zero rounding. The supplied value does not test the claimed tie-breaking difference.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "The revised arithmetic is exactly 0.125, where half-even yields 0.12 and SQL Server's half-away rule yields 0.13. The label and reasoning now match the input.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     }
   ]
 }

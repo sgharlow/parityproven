@@ -2,45 +2,24 @@
   "schemaVersion": 1,
   "object": "dbo.ufnGetContactInformation",
   "database": "AdventureWorks2025",
-  "auditor": {
-    "model": "gpt-5.6-sol",
-    "at": "2026-11-18T19:19:51.7066204-07:00"
-  },
-  "casesAudited": [
-    "A01",
-    "A02",
-    "A03",
-    "A04",
-    "A05",
-    "A06",
-    "A07",
-    "A08",
-    "A09",
-    "A10",
-    "A11",
-    "A12"
-  ],
-  "acceptedNotApplicable": [
-    "null-vs-empty",
-    "dates-datetime",
-    "numeric-rounding",
-    "top-ties"
-  ],
+  "auditor": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" },
+  "casesAudited": ["A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09", "A10", "A11", "A12", "A13"],
+  "acceptedNotApplicable": ["null-vs-empty", "dates-datetime", "numeric-rounding", "top-ties"],
   "equivalentMutants": [],
   "objections": [
     {
-      "id": "O01",
-      "caseId": "A06",
-      "kind": "duplicate",
+      "id": "O01", "caseId": "A06", "kind": "duplicate",
       "text": "The hand-derived person-1 case already makes the vendor and store predicates true in the same call and requires rows from both independent branches. It already catches the ELSIF or early-return defect named for A06; using one entity in both tables does not create a distinct attack on that mechanism.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A06 now uses one BusinessEntityContact row whose entity is simultaneously a vendor and a store. This distinguishes a row-classifying set rewrite from the hand-derived input, which reaches the branches through separate entities and contact rows.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     },
     {
-      "id": "O02",
-      "caseId": "A07",
-      "kind": "not-an-attack",
+      "id": "O02", "caseId": "A07", "kind": "not-an-attack",
       "text": "A07 duplicates the same (BusinessEntityID, PersonID, ContactTypeID) row, but those three columns form the source table's composite primary key. The claim that BusinessEntityContact has no key is false, and this input cannot occur under the source schema preconditions.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A07 now uses two vendors, producing distinct BusinessEntityContact primary-key tuples that project identical rows because the vendor id is not returned.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     }
   ]
 }

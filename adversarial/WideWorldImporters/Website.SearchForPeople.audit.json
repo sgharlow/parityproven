@@ -2,45 +2,38 @@
   "schemaVersion": 1,
   "object": "Website.SearchForPeople",
   "database": "WideWorldImporters",
-  "auditor": {
-    "model": "gpt-5.6-sol",
-    "at": "2026-11-18T22:23:38.8804730-07:00"
-  },
-  "casesAudited": [
-    "A01", "A02", "A03", "A04", "A05", "A06"
-  ],
-  "acceptedNotApplicable": [
-    "null-vs-empty"
-  ],
+  "auditor": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" },
+  "casesAudited": ["A01", "A02", "A03", "A04", "A05", "A06"],
+  "acceptedNotApplicable": ["null-vs-empty"],
   "equivalentMutants": [],
   "objections": [
     {
-      "id": "O01",
-      "caseId": "A01",
-      "kind": "duplicate",
+      "id": "O01", "caseId": "A01", "kind": "duplicate",
       "text": "The hand-derived five-hit case already includes SearchName values 'ab' and 'AB', gives every row PreferredName 'Q', and exercises the same case-insensitive matching and non-key tie. A01 reduces that existing input to two rows without adding a new mechanism.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A01 now uses Cyrillic lower-, upper-, and title-case values plus nonmatching Cyrillic and accented controls. It tests Unicode case folding beyond the hand-derived ASCII inputs while retaining the tie.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     },
     {
-      "id": "O02",
-      "caseId": "A02",
-      "kind": "weak",
+      "id": "O02", "caseId": "A02", "kind": "weak",
       "text": "Searching for 'amy' matches SearchName 'amy ' both before and after trimming its trailing space, and SearchName is not returned in the JSON. The supplied case therefore cannot expose trailing-space loss despite claiming that trap.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A02 now puts the trailing space in the search text. The pattern '%amy %' distinguishes 'amy ' and 'amy b' from 'amy' and 'amyx', so trimming the argument changes the selected rows.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     },
     {
-      "id": "O03",
-      "caseId": "A03",
-      "kind": "duplicate",
+      "id": "O03", "caseId": "A03", "kind": "duplicate",
       "text": "The hand-derived LIKE '[^a]' case already supplies SearchName values 'a', 'A', 'b' and '' with the same search term. A03 repeats that pattern-semantics attack.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A03 now combines '_' with a multi-character negated range and includes digit, accented-letter, space, case-folded range, and too-short controls. It attacks wildcard character classes absent from the hand-derived case and exposes the missed letter-only '_' defect.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     },
     {
-      "id": "O04",
-      "caseId": "A04",
-      "kind": "duplicate",
+      "id": "O04", "caseId": "A04", "kind": "duplicate",
       "text": "The hand-derived relationship-precedence case already supplies people marked both salesperson and employee and requires 'Salesperson'. Reducing it to one matching person does not attack a different CASE branch.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A04 now targets the later customer, supplier-alternate-contact, and no-relationship branches, including a person who has both customer and supplier links. Those branches and COALESCE precedence are absent from the hand-derived salesperson/employee case.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     }
   ]
 }

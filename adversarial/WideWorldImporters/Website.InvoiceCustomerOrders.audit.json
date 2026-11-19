@@ -2,36 +2,31 @@
   "schemaVersion": 1,
   "object": "Website.InvoiceCustomerOrders",
   "database": "WideWorldImporters",
-  "auditor": {
-    "model": "gpt-5.6-sol",
-    "at": "2026-11-18T22:23:38.8804730-07:00"
-  },
-  "casesAudited": [
-    "A01", "A02", "A03", "A04", "A05", "A06", "A07"
-  ],
+  "auditor": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" },
+  "casesAudited": ["A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08"],
   "acceptedNotApplicable": [],
   "equivalentMutants": [],
   "objections": [
     {
-      "id": "O01",
-      "caseId": "A01",
-      "kind": "label-mismatch",
+      "id": "O01", "caseId": "A01", "kind": "label-mismatch",
       "text": "The supplied arithmetic is 3 * 0.95 * 0.505 / 100 = 0.0143925, not 0.01438875. It rounds and truncates to the same two-decimal value, 0.01, so this input does not test the claimed rounding tie or the planted round-versus-truncation defect.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A01 now supplies 1 * 0.25 * 50 / 100 = 0.125 exactly. SQL Server rounds it to 0.13 while truncation and half-even rounding produce 0.12, matching the revised label.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     },
     {
-      "id": "O02",
-      "caseId": "A03",
-      "kind": "weak",
+      "id": "O02", "caseId": "A03", "kind": "weak",
       "text": "DeliveryAddressLine2 is NULL, so the entire address expression is NULL whether DeliveryAddressLine1 is '' or NULL. The fixed two-order case already tests NULL line 2. A03 cannot expose a conversion that collapses the supplied empty line 1 to NULL.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A03 now pairs an empty line 1 with non-NULL line 2 'Back door', producing ', Back door'. Collapsing the empty first line to NULL changes that result, while the second customer separately retains the NULL-line-2 concatenation case.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     },
     {
-      "id": "O03",
-      "caseId": "A06",
-      "kind": "duplicate",
+      "id": "O03", "caseId": "A06", "kind": "duplicate",
       "text": "The hand-derived 'an order without lines' case has the same requested order, empty Sales.OrderLines table and expected NOT NULL failure with rollback. A06 does not change any input that reaches a different path.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "A06 now requests one order with a valid line before a second order without lines. It tests that the later failure rolls back writes already made for the first order, a transaction-wide behavior absent from the single-order hand-derived case.",
+      "confirmedBy": { "model": "gpt-5.6-sol", "at": "2026-11-19T06:06:57.652Z" }
     }
   ]
 }
