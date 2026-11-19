@@ -133,7 +133,9 @@ export async function capture(scratch: MssqlClient, spec: ObjectSpec, invalid?: 
       if (names.join("\u0001") !== columns.map((c) => c.name).join("\u0001")) {
         throw new Error(`${spec.name}: described columns ${JSON.stringify(columns.map((c) => c.name))} differ from returned ${JSON.stringify(names)}`);
       }
-      cases.push({ label: fc.label, columns, rows: rs.rows.map((r) => r.map((v, i) => canonicalCell(v, rs.columns[i].declaredType))) });
+      const rows = rs.rows.map((r) => r.map((v, i) => canonicalCell(v, rs.columns[i].declaredType)));
+      await exactMoney(scratch, call, columns, rs.rows, rows);
+      cases.push({ label: fc.label, columns, rows });
     }
     } catch (e) {
       if (!invalid) throw e;
@@ -153,6 +155,34 @@ export async function capture(scratch: MssqlClient, spec: ObjectSpec, invalid?: 
       "at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
     cases,
   };
+}
+
+/** Largest money magnitude whose 4 decimal places survive the driver's conversion to a JS number (2^53 / 10^4). */
+const MONEY_EXACT_LIMIT = 2 ** 53 / 10_000;
+
+/**
+ * The SQL Server driver returns money as a JS number, which cannot hold 4 decimal places above about 9.0e11
+ * (922337203685477.5807 arrives as 922337203685477.6). Such a value is re-read as text: for a one-row SELECT the call is
+ * wrapped and the column converted with CONVERT(varchar, ..., 2); any other shape is an error, so the case is reported
+ * instead of being captured wrongly. Values within the limit are left as they are (the expected files do not change).
+ */
+async function exactMoney(
+  scratch: MssqlClient, call: string, columns: Array<{ name: string; sqlServerType: string }>, raw: unknown[][], rows: string[][]
+): Promise<void> {
+  const unsafe = columns
+    .map((c, i) => ({ c, i }))
+    .filter(({ c, i }) => /^(small)?money$/i.test(c.sqlServerType) && raw.some((r) => typeof r[i] === "number" && Math.abs(r[i] as number) >= MONEY_EXACT_LIMIT));
+  if (!unsafe.length) return;
+  if (raw.length !== 1 || !/^\s*SELECT\b/i.test(call) || /\bORDER\s+BY\b/i.test(call)) {
+    throw new Error(`money value beyond ${MONEY_EXACT_LIMIT} cannot be captured exactly through the driver for this call shape: ${call}`);
+  }
+  const list = unsafe.map(({ c }) => `CONVERT(varchar(40), pp_q.[${c.name.replace(/]/g, "]]")}], 2)`).join(", ");
+  const exact = await scratch.query(`SELECT ${list} FROM (${call}) AS pp_q`, []);
+  unsafe.forEach(({ i }, k) => {
+    const text = String(exact.rows[0][k]);
+    const trimmed = text.includes(".") ? text.replace(/0+$/, "").replace(/\.$/, "") : text;
+    rows[0][i] = `n:${trimmed === "-0" ? "0" : trimmed}`;
+  });
 }
 
 export interface InvalidCase { index: number; label: string; reason: string }

@@ -311,7 +311,10 @@ function pgOutcomeCases(spec: ObjectSpec): Array<{ label: string; codes: string[
 /** tSQLt test names: "test NN <label>", trimmed to fit sysname with room to spare. */
 export function testName(index: number, label: string): string {
   // quotes are dropped: tSQLt builds dynamic SQL from test names (the full label stays in the script comment)
-  const clean = label.replace(/['"]/g, "").replace(/[\]\r\n\t]/g, " ").replace(/\s+/g, " ").trim();
+  // characters outside Windows-1252 become "?": tSQLt.RunAll silently skips a test whose name has any (seen 2026-11-19
+  // with CJK and Cyrillic text in a label; tSQLt.Run on the same test ran it), and the scratch databases use a CP1 collation
+  const clean = label.replace(/['"]/g, "").replace(/[\]\r\n\t]/g, " ").replace(/\s+/g, " ").trim()
+    .replace(/[^\u0000-\u00ff€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ]/gu, "?");
   const head = `test ${String(index + 1).padStart(2, "0")} `;
   return head + (clean.length > 110 - head.length ? clean.slice(0, 110 - head.length - 1).trimEnd() + "…" : clean);
 }
