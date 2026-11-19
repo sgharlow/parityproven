@@ -13,6 +13,19 @@ CREATE SCHEMA IF NOT EXISTS tsql_compat;
 CREATE COLLATION IF NOT EXISTS tsql_compat.ci_as_equal (
     provider = icu, locale = 'und-u-ks-level2', deterministic = false
 );
+-- Adversarial run 2026-11-19 (cases A02-A04): the ICU collation alone differs from SQL Server's on 'Æ' = 'AE' and
+-- 'ß' = 'SS' (SQL Server equal, ICU not) and on the Kelvin sign U+212A and the soft hyphen U+00AD (ICU equates U+212A with
+-- 'K' and ignores U+00AD; SQL Server does neither). PostgreSQL 18 ignores the ICU strength when tailoring rules are given, so
+-- ci_as_key() trims trailing spaces and maps those characters (the last two to private-use code points) before the
+-- comparison. Checked for the characters the cases use, not for every collation rule.
+CREATE OR REPLACE FUNCTION tsql_compat.ci_as_key(s text)
+RETURNS text
+LANGUAGE sql
+IMMUTABLE
+PARALLEL SAFE
+AS $fn$
+    SELECT replace(replace(replace(translate(rtrim(s, ' '), U&'\00AD\212A', U&'\E000\E001'), 'ß', 'ss'), 'æ', 'ae'), 'Æ', 'AE')
+$fn$;
 
 CREATE OR REPLACE VIEW person.v_state_province_country_region AS
 SELECT
@@ -25,4 +38,4 @@ SELECT
     ,cr."Name" AS "CountryRegionName"
 FROM person.state_province sp
     INNER JOIN person.country_region cr
-    ON rtrim(sp."CountryRegionCode", ' ') COLLATE tsql_compat.ci_as_equal = rtrim(cr."CountryRegionCode", ' ') COLLATE tsql_compat.ci_as_equal;
+    ON tsql_compat.ci_as_key(sp."CountryRegionCode") COLLATE tsql_compat.ci_as_equal = tsql_compat.ci_as_key(cr."CountryRegionCode") COLLATE tsql_compat.ci_as_equal;

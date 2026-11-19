@@ -1,0 +1,368 @@
+{
+  "schemaVersion": 1,
+  "object": "Sales.vIndividualCustomer",
+  "database": "AdventureWorks2025",
+  "runAt": "2026-11-19T04:17:23.132Z",
+  "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
+  "conversionSha256": "5ddb81d7087b776df698418ce2f79b986920175604a9dbe3bdad97c1b6105c49",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-18T20:21:05-07:00",
+    "file": "adversarial/AdventureWorks2025/Sales.vIndividualCustomer.cases.json",
+    "sha256": "84b4e223f32e236c9d925db85d1a19459913ec7957aa290b8f8420258dc55418"
+  },
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T20:33:12.9525152-07:00",
+    "file": "adversarial/AdventureWorks2025/Sales.vIndividualCustomer.audit.json",
+    "sha256": "1c3cdcfe6d6a78f3691c6102ebe7b3ba27596d121b5057b0e3530757d5944ba8"
+  },
+  "sameModel": false,
+  "casesAudited": [
+    "A01",
+    "A02",
+    "A03",
+    "A04",
+    "A05",
+    "A06",
+    "A07",
+    "A08",
+    "A09",
+    "A10",
+    "A11"
+  ],
+  "traps": {
+    "null-vs-empty": {
+      "applicable": true,
+      "coveredBy": [
+        "A09"
+      ]
+    },
+    "collation-case": {
+      "applicable": true,
+      "coveredBy": [
+        "A01",
+        "A02",
+        "A03",
+        "A05",
+        "A10"
+      ]
+    },
+    "trailing-spaces": {
+      "applicable": true,
+      "coveredBy": [
+        "A01",
+        "A04",
+        "A06",
+        "A10"
+      ]
+    },
+    "dates-datetime": {
+      "applicable": false,
+      "coveredBy": []
+    },
+    "numeric-rounding": {
+      "applicable": false,
+      "coveredBy": []
+    },
+    "top-ties": {
+      "applicable": true,
+      "coveredBy": [
+        "A08"
+      ]
+    },
+    "identity-gaps": {
+      "applicable": true,
+      "coveredBy": [
+        "A11"
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "case-only variants 'Us', 'uS' and 'us ' of a country code join 'US'",
+      "traps": [
+        "collation-case",
+        "trailing-spaces"
+      ],
+      "reasoning": "CI_AS ignores case and SQL Server equality ignores trailing spaces, so all three province codes join country 'US'. The conversion uses rtrim under an ICU level-2 collation; this checks mixed case and case plus trailing space together.",
+      "trapChecks": {
+        "collation-case": {
+          "present": true,
+          "detail": "\"Us\" and \"uS\" differ only in case"
+        },
+        "trailing-spaces": {
+          "present": true,
+          "detail": "\"us \" ends in a space"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A02",
+      "label": "expansions: province code 'Æ' against country 'AE' and 'ß' against 'SS', with 'ae' and 'ss' as case-only controls",
+      "traps": [
+        "collation-case"
+      ],
+      "reasoning": "Windows collation rules (used by SQL_Latin1_General_CP1_CI_AS for nvarchar) treat 'Æ' as equal to 'AE' and 'ß' as equal to 'ss'. The ICU root collation at strength 2 gives 'æ' its own primary weight (not equal to 'ae') while 'ß' = 'ss' differs only at the tertiary level. The engines may disagree on whether the 'Æ' province joins.",
+      "trapChecks": {
+        "collation-case": {
+          "present": true,
+          "detail": "\"ae\" and \"AE\" differ only in case"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A03",
+      "label": "compatibility forms: full-width U+FF35 U+FF33 against 'US' and the Kelvin sign U+212A followed by 'E' against 'KE', with 'ke' as a case-only control",
+      "traps": [
+        "collation-case"
+      ],
+      "reasoning": "SQL Server collations without _WS are width-insensitive, so full-width 'ＵＳ' equals 'US'; U+212A KELVIN SIGN is canonically equivalent to 'K'. ICU at strength 2 ignores width (a tertiary difference) and normalises canonical equivalents. Either engine may treat one of these differently.",
+      "trapChecks": {
+        "collation-case": {
+          "present": true,
+          "detail": "\"KE\" and \"ke\" differ only in case"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A04",
+      "label": "whitespace look-alikes: 'US' with a trailing no-break space (U+00A0), a trailing tab, a leading space, a soft hyphen (U+00AD) inside, and 'CA ' (a real trailing space)",
+      "traps": [
+        "trailing-spaces"
+      ],
+      "reasoning": "SQL Server pads the shorter value with U+0020 before comparing, so only 'CA ' is certain to join. Whether U+00A0 compares equal to the pad space, and whether the soft hyphen U+00AD is ignorable, are collation rules; PostgreSQL rtrim(' ') removes U+0020 only and ICU treats U+00AD as ignorable and U+00A0 as a space variant. A tab and a leading space should join on neither engine.",
+      "trapChecks": {
+        "trailing-spaces": {
+          "present": true,
+          "detail": "\"CA \" ends in a space"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A05",
+      "label": "accents and dotted/dotless I: 'ÜS' against 'US' (accent-sensitive); U+0131 and U+0130 followed by 'T' against 'IT', with 'it' as a case-only control",
+      "traps": [
+        "collation-case"
+      ],
+      "reasoning": "CI_AS is accent-sensitive, so 'ÜS' must not join 'US'. U+0131 (dotless i) and U+0130 (I with dot above) case-fold differently by rule set: Windows rules and ICU root may each match or not match 'IT'. 'it' joins on both.",
+      "trapChecks": {
+        "collation-case": {
+          "present": true,
+          "detail": "\"it\" and \"IT\" differ only in case"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A06",
+      "label": "an empty country code: province codes '' and ' ' both join country '' (trailing spaces ignored)",
+      "traps": [
+        "trailing-spaces"
+      ],
+      "reasoning": "SQL Server compares '' and ' ' as equal (padding), so both provinces join the country whose code is ''. rtrim(' ') gives '' on PostgreSQL; this checks the empty-string edge of the rtrim + ICU equality and that '' is not treated as NULL.",
+      "trapChecks": {
+        "trailing-spaces": {
+          "present": true,
+          "detail": "\" \" ends in a space"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A07",
+      "label": "StoreID NULL versus 0: a customer with StoreID 0 is a store customer and dropped; a customer row with PersonID NULL joins nobody",
+      "traps": [],
+      "reasoning": "WHERE c.StoreID IS NULL keeps only NULL; 0 is a value. A conversion using COALESCE(StoreID, 0) = 0 or NULLIF would keep person 2. A Customer row with PersonID NULL never joins.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A08",
+      "label": "a person with two individual customer rows and two identical phones: rows multiply (2 x 2), duplicates kept",
+      "traps": [
+        "top-ties"
+      ],
+      "reasoning": "Customer and PersonPhone have no key on PersonID in the scratch tables, so two customer rows (both StoreID NULL) and two identical phone rows give four identical rows; there is no DISTINCT. A third customer row with a store adds nothing.",
+      "trapChecks": {
+        "top-ties": {
+          "present": true,
+          "detail": "two rows of Sales.Customer share PersonID = 1"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A09",
+      "label": "NULL versus '': Title, MiddleName, Suffix, AddressLine2 and EmailAddress as NULL and as ''; empty phone number and type name",
+      "traps": [
+        "null-vs-empty"
+      ],
+      "reasoning": "Each nullable text column is sent as NULL for person 1 and '' for person 2; person 2's email row has '' and person 3's a NULL address. '' must stay ''.",
+      "trapChecks": {
+        "null-vs-empty": {
+          "present": true,
+          "detail": "empty string: yes; NULL in a text input: yes"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A10",
+      "label": "text returned as stored and Demographics xml passed through: case-only name variants, trailing spaces, an emoji, namespaced xml and a fragment",
+      "traps": [
+        "collation-case",
+        "trailing-spaces"
+      ],
+      "reasoning": "Names 'Bo', 'BO' and 'bo ' are passed through with their own spelling. Demographics is xml; the documents are in SQL Server's serialised form (namespace declaration, escaped &amp;, empty element), plus a two-root fragment, so any difference is in how the engines store and return xml.",
+      "trapChecks": {
+        "collation-case": {
+          "present": true,
+          "detail": "\"Bo\" and \"BO\" differ only in case"
+        },
+        "trailing-spaces": {
+          "present": true,
+          "detail": "\"bo \" ends in a space"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A11",
+      "label": "keys with gaps and at the int limits: persons 0 and 2147483647, address -2147483648, address type 0",
+      "traps": [
+        "identity-gaps"
+      ],
+      "reasoning": "BusinessEntityID, AddressID and AddressTypeID jump and sit at the int limits; both persons share the address.",
+      "trapChecks": {
+        "identity-gaps": {
+          "present": true,
+          "detail": "Person.Person.BusinessEntityID jumps from 0 to 2147483647"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    }
+  ],
+  "summary": {
+    "ran": 11,
+    "differed": 0,
+    "invalid": 0
+  },
+  "objections": [
+    {
+      "id": "O01",
+      "caseId": "A01",
+      "kind": "duplicate",
+      "text": "The hand-derived fixed cases already test a lowercase province code joining 'US' under CI_AS and a province code with a trailing space joining 'US'. Additional mixed-case spellings and combining case with the trailing space attack the same two join mechanisms.",
+      "status": "open"
+    },
+    {
+      "id": "O02",
+      "caseId": "A08",
+      "kind": "not-an-attack",
+      "text": "A08 inserts the identical PersonPhone primary-key tuple (BusinessEntityID 1, PhoneNumber '555-0100', PhoneNumberTypeID 1) twice. The claimed 2 x 2 duplicate fan-out cannot occur under the source schema preconditions.",
+      "status": "open"
+    }
+  ],
+  "mutantAdequacy": {
+    "verdict": "adequate",
+    "caught": [
+      "join is case-sensitive (collation dropped)",
+      "trailing spaces count in the join (rtrim dropped)",
+      "LEFT JOIN to email made an inner join (people without email dropped)"
+    ],
+    "missed": [],
+    "skipped": [],
+    "equivalentRecorded": []
+  },
+  "gate": {
+    "passed": false,
+    "reasons": [
+      "objection O01 is open",
+      "objection O02 is open"
+    ]
+  },
+  "wording": "11 adversarial cases ran, 0 differed"
+}

@@ -82,7 +82,15 @@
       "SQL Server: AgreedTests.[test 01 two products sharing a model fan out over its three described cultures; char(6) culture codes padded;…]: pass",
       "PostgreSQL: AgreedTests.[test 01 two products sharing a model fan out over its three described cultures; char(6) culture codes padded;…]: pass",
       "planted defects caught by the agreed tests: 2 of 2"
-    ]
+    ],
+    "adversarial": {
+      "gate": "fail",
+      "ran": 5,
+      "differed": 0,
+      "evidencePath": "evidence/adversarial/AdventureWorks2025/Production.vProductAndDescription.json",
+      "conversionSha256": "b04818b79472d8adae28766cf48e97d95761a9b57595cc0d347097766e317a7a",
+      "runAt": "2026-11-19T04:16:49.738Z"
+    }
   },
   "effort": {
     "humanMinutes": 0,

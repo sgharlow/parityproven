@@ -1,5 +1,5 @@
 -- PL/pgSQL conversion of dbo.uspGetBillOfMaterials (AdventureWorks2025).
--- Engine: Kiro. No separate first draft was kept for this object.
+-- Engine: Kiro. Kiro's earlier conversion is kept as dbo.uspGetBillOfMaterials.draft.sql; datetime rounding added after the adversarial run of 2026-11-19 (cases A01-A06).
 --
 -- Differences from a literal translation:
 --  * The procedure returns one result set, so it becomes a set-returning function (SELECT * FROM ...).
@@ -9,6 +9,17 @@
 --  * ISNULL(b.EndDate, @CheckDate) -> COALESCE.
 
 CREATE SCHEMA IF NOT EXISTS dbo;
+-- datetime semantics: T-SQL datetime keeps 1/300 s ticks (.000, .003, .007), so SQL Server rounds @CheckDate and the
+-- stored StartDate/EndDate to a tick (.001 -> .000, .002 -> .003, 23:59:59.999 -> the next midnight) before comparing.
+-- timestamp keeps the value as given, so the comparison rounds every operand the same way (adversarial cases A01-A06, 2026-11-19).
+CREATE OR REPLACE FUNCTION dbo.round_datetime(ts timestamp)
+RETURNS timestamp
+LANGUAGE sql
+IMMUTABLE
+AS $fn$
+    SELECT date_trunc('second', ts)
+         + interval '1 millisecond' * ((((date_part('microseconds', ts)::integer % 1000000) * 3 + 5000) / 10000 * 10 + 1) / 3)
+$fn$;
 
 -- The recursive walk, bounded one level past the limit so that exceeding it is detectable.
 CREATE OR REPLACE FUNCTION dbo.usp_get_bill_of_materials_walk(start_product_id integer, check_date timestamp)
@@ -24,8 +35,8 @@ AS $fn$
             INNER JOIN production.product AS p
             ON b."ComponentID" = p."ProductID"
         WHERE b."ProductAssemblyID" = start_product_id
-            AND check_date >= b."StartDate"
-            AND check_date <= COALESCE(b."EndDate", check_date)
+            AND dbo.round_datetime(check_date) >= dbo.round_datetime(b."StartDate")
+            AND dbo.round_datetime(check_date) <= COALESCE(dbo.round_datetime(b."EndDate"), dbo.round_datetime(check_date))
         UNION ALL
         -- Join recursive member to anchor
         SELECT b."ProductAssemblyID", b."ComponentID", p."Name", b."PerAssemblyQty", p."StandardCost", p."ListPrice", b."BOMLevel", cte.recursion_level + 1
@@ -34,8 +45,8 @@ AS $fn$
             ON b."ProductAssemblyID" = cte.component_id
             INNER JOIN production.product AS p
             ON b."ComponentID" = p."ProductID"
-        WHERE check_date >= b."StartDate"
-            AND check_date <= COALESCE(b."EndDate", check_date)
+        WHERE dbo.round_datetime(check_date) >= dbo.round_datetime(b."StartDate")
+            AND dbo.round_datetime(check_date) <= COALESCE(dbo.round_datetime(b."EndDate"), dbo.round_datetime(check_date))
             AND cte.recursion_level < 26
     )
     SELECT * FROM bom_cte

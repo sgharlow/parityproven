@@ -12,11 +12,12 @@
   "code": {
     "source": "\r\nCREATE VIEW [Person].[vStateProvinceCountryRegion]\r\nWITH SCHEMABINDING\r\nAS\r\nSELECT\r\n    sp.[StateProvinceID]\r\n    ,sp.[StateProvinceCode]\r\n    ,sp.[IsOnlyStateProvinceFlag]\r\n    ,sp.[Name] AS [StateProvinceName]\r\n    ,sp.[TerritoryID]\r\n    ,cr.[CountryRegionCode]\r\n    ,cr.[Name] AS [CountryRegionName]\r\nFROM [Person].[StateProvince] sp\r\n    INNER JOIN [Person].[CountryRegion] cr\r\n    ON sp.[CountryRegionCode] = cr.[CountryRegionCode];\r\n",
     "engineOutput": "-- PostgreSQL conversion of the view Person.vStateProvinceCountryRegion (AdventureWorks2025).\n-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case).\n-- Verified by the property-based harness, not by this script.\n\nCREATE OR REPLACE VIEW person.v_state_province_country_region AS\nSELECT\r\n    sp.\"StateProvinceID\" AS \"StateProvinceID\"\r\n    ,sp.\"StateProvinceCode\" AS \"StateProvinceCode\"\r\n    ,sp.\"IsOnlyStateProvinceFlag\" AS \"IsOnlyStateProvinceFlag\"\r\n    ,sp.\"Name\" AS \"StateProvinceName\"\r\n    ,sp.\"TerritoryID\" AS \"TerritoryID\"\r\n    ,cr.\"CountryRegionCode\" AS \"CountryRegionCode\"\r\n    ,cr.\"Name\" AS \"CountryRegionName\"\r\nFROM person.state_province sp\r\n    INNER JOIN person.country_region cr\r\n    ON sp.\"CountryRegionCode\" = cr.\"CountryRegionCode\";\n",
-    "final": "-- PostgreSQL conversion of the view Person.vStateProvinceCountryRegion (AdventureWorks2025).\r\n-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case; kept as the .draft.sql),\r\n-- corrected by Kiro on 2026-11-18 after step 2 found a difference that step 3's generated data had not produced.\r\n-- No human edit; the owner's step 5 review is still to come.\r\n--\r\n-- The source database's collation is SQL_Latin1_General_CP1_CI_AS, so the join\r\n--   sp.CountryRegionCode = cr.CountryRegionCode\r\n-- is case-insensitive ('us' joins 'US'), accent-sensitive, and ignores trailing spaces ('CA ' joins 'CA').\r\n-- PostgreSQL's '=' is none of those. The join compares the codes without trailing spaces under a case-insensitive,\r\n-- accent-sensitive ICU collation (strength level 2). It must be nondeterministic for '=' to use it.\r\n-- Checked for the text the harness and the fixed cases use (ASCII codes), not for every collation rule.\r\nCREATE SCHEMA IF NOT EXISTS tsql_compat;\r\nCREATE COLLATION IF NOT EXISTS tsql_compat.ci_as_equal (\r\n    provider = icu, locale = 'und-u-ks-level2', deterministic = false\r\n);\r\n\r\nCREATE OR REPLACE VIEW person.v_state_province_country_region AS\r\nSELECT\r\n    sp.\"StateProvinceID\" AS \"StateProvinceID\"\r\n    ,sp.\"StateProvinceCode\" AS \"StateProvinceCode\"\r\n    ,sp.\"IsOnlyStateProvinceFlag\" AS \"IsOnlyStateProvinceFlag\"\r\n    ,sp.\"Name\" AS \"StateProvinceName\"\r\n    ,sp.\"TerritoryID\" AS \"TerritoryID\"\r\n    ,cr.\"CountryRegionCode\" AS \"CountryRegionCode\"\r\n    ,cr.\"Name\" AS \"CountryRegionName\"\r\nFROM person.state_province sp\r\n    INNER JOIN person.country_region cr\r\n    ON rtrim(sp.\"CountryRegionCode\", ' ') COLLATE tsql_compat.ci_as_equal = rtrim(cr.\"CountryRegionCode\", ' ') COLLATE tsql_compat.ci_as_equal;\r\n",
-    "diff": "--- engineOutput\n+++ final\n@@ engineOutput line 2 / final line 2 @@\n+-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case; kept as the .draft.sql),\n+-- corrected by Kiro on 2026-11-18 after step 2 found a difference that step 3's generated data had not produced.\n+-- No human edit; the owner's step 5 review is still to come.\n+--\n+-- The source database's collation is SQL_Latin1_General_CP1_CI_AS, so the join\n+--   sp.CountryRegionCode = cr.CountryRegionCode\n+-- is case-insensitive ('us' joins 'US'), accent-sensitive, and ignores trailing spaces ('CA ' joins 'CA').\n+-- PostgreSQL's '=' is none of those. The join compares the codes without trailing spaces under a case-insensitive,\n+-- accent-sensitive ICU collation (strength level 2). It must be nondeterministic for '=' to use it.\n+-- Checked for the text the harness and the fixed cases use (ASCII codes), not for every collation rule.\n+CREATE SCHEMA IF NOT EXISTS tsql_compat;\n+CREATE COLLATION IF NOT EXISTS tsql_compat.ci_as_equal (\n+    provider = icu, locale = 'und-u-ks-level2', deterministic = false\n+);\n--- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case).\n--- Verified by the property-based harness, not by this script.\n@@ engineOutput line 16 / final line 28 @@\n+    ON rtrim(sp.\"CountryRegionCode\", ' ') COLLATE tsql_compat.ci_as_equal = rtrim(cr.\"CountryRegionCode\", ' ') COLLATE tsql_compat.ci_as_equal;\n-    ON sp.\"CountryRegionCode\" = cr.\"CountryRegionCode\";",
+    "final": "-- PostgreSQL conversion of the view Person.vStateProvinceCountryRegion (AdventureWorks2025).\r\n-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case; kept as the .draft.sql),\r\n-- corrected by Kiro on 2026-11-18 after step 2 found a difference that step 3's generated data had not produced.\r\n-- No human edit; the owner's step 5 review is still to come.\r\n--\r\n-- The source database's collation is SQL_Latin1_General_CP1_CI_AS, so the join\r\n--   sp.CountryRegionCode = cr.CountryRegionCode\r\n-- is case-insensitive ('us' joins 'US'), accent-sensitive, and ignores trailing spaces ('CA ' joins 'CA').\r\n-- PostgreSQL's '=' is none of those. The join compares the codes without trailing spaces under a case-insensitive,\r\n-- accent-sensitive ICU collation (strength level 2). It must be nondeterministic for '=' to use it.\r\n-- Checked for the text the harness and the fixed cases use (ASCII codes), not for every collation rule.\r\nCREATE SCHEMA IF NOT EXISTS tsql_compat;\r\nCREATE COLLATION IF NOT EXISTS tsql_compat.ci_as_equal (\r\n    provider = icu, locale = 'und-u-ks-level2', deterministic = false\r\n);\r\n-- Adversarial run 2026-11-19 (cases A02-A04): the ICU collation alone differs from SQL Server's on 'Æ' = 'AE' and\n-- 'ß' = 'SS' (SQL Server equal, ICU not) and on the Kelvin sign U+212A and the soft hyphen U+00AD (ICU equates U+212A with\n-- 'K' and ignores U+00AD; SQL Server does neither). PostgreSQL 18 ignores the ICU strength when tailoring rules are given, so\n-- ci_as_key() trims trailing spaces and maps those characters (the last two to private-use code points) before the\n-- comparison. Checked for the characters the cases use, not for every collation rule.\nCREATE OR REPLACE FUNCTION tsql_compat.ci_as_key(s text)\nRETURNS text\nLANGUAGE sql\nIMMUTABLE\nPARALLEL SAFE\nAS $fn$\n    SELECT replace(replace(replace(translate(rtrim(s, ' '), U&'\\00AD\\212A', U&'\\E000\\E001'), 'ß', 'ss'), 'æ', 'ae'), 'Æ', 'AE')\n$fn$;\n\r\nCREATE OR REPLACE VIEW person.v_state_province_country_region AS\r\nSELECT\r\n    sp.\"StateProvinceID\" AS \"StateProvinceID\"\r\n    ,sp.\"StateProvinceCode\" AS \"StateProvinceCode\"\r\n    ,sp.\"IsOnlyStateProvinceFlag\" AS \"IsOnlyStateProvinceFlag\"\r\n    ,sp.\"Name\" AS \"StateProvinceName\"\r\n    ,sp.\"TerritoryID\" AS \"TerritoryID\"\r\n    ,cr.\"CountryRegionCode\" AS \"CountryRegionCode\"\r\n    ,cr.\"Name\" AS \"CountryRegionName\"\r\nFROM person.state_province sp\r\n    INNER JOIN person.country_region cr\r\n    ON tsql_compat.ci_as_key(sp.\"CountryRegionCode\") COLLATE tsql_compat.ci_as_equal = tsql_compat.ci_as_key(cr.\"CountryRegionCode\") COLLATE tsql_compat.ci_as_equal;\r\n",
+    "diff": "--- engineOutput\n+++ final\n@@ engineOutput line 2 / final line 2 @@\n+-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case; kept as the .draft.sql),\n+-- corrected by Kiro on 2026-11-18 after step 2 found a difference that step 3's generated data had not produced.\n+-- No human edit; the owner's step 5 review is still to come.\n+--\n+-- The source database's collation is SQL_Latin1_General_CP1_CI_AS, so the join\n+--   sp.CountryRegionCode = cr.CountryRegionCode\n+-- is case-insensitive ('us' joins 'US'), accent-sensitive, and ignores trailing spaces ('CA ' joins 'CA').\n+-- PostgreSQL's '=' is none of those. The join compares the codes without trailing spaces under a case-insensitive,\n+-- accent-sensitive ICU collation (strength level 2). It must be nondeterministic for '=' to use it.\n+-- Checked for the text the harness and the fixed cases use (ASCII codes), not for every collation rule.\n+CREATE SCHEMA IF NOT EXISTS tsql_compat;\n+CREATE COLLATION IF NOT EXISTS tsql_compat.ci_as_equal (\n+    provider = icu, locale = 'und-u-ks-level2', deterministic = false\n+);\n+-- Adversarial run 2026-11-19 (cases A02-A04): the ICU collation alone differs from SQL Server's on 'Æ' = 'AE' and\n+-- 'ß' = 'SS' (SQL Server equal, ICU not) and on the Kelvin sign U+212A and the soft hyphen U+00AD (ICU equates U+212A with\n+-- 'K' and ignores U+00AD; SQL Server does neither). PostgreSQL 18 ignores the ICU strength when tailoring rules are given, so\n+-- ci_as_key() trims trailing spaces and maps those characters (the last two to private-use code points) before the\n+-- comparison. Checked for the characters the cases use, not for every collation rule.\n+CREATE OR REPLACE FUNCTION tsql_compat.ci_as_key(s text)\n+RETURNS text\n+LANGUAGE sql\n+IMMUTABLE\n+PARALLEL SAFE\n+AS $fn$\n+    SELECT replace(replace(replace(translate(rtrim(s, ' '), U&'\\00AD\\212A', U&'\\E000\\E001'), 'ß', 'ss'), 'æ', 'ae'), 'Æ', 'AE')\n+$fn$;\n--- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case).\n--- Verified by the property-based harness, not by this script.\n@@ engineOutput line 16 / final line 41 @@\n+    ON tsql_compat.ci_as_key(sp.\"CountryRegionCode\") COLLATE tsql_compat.ci_as_equal = tsql_compat.ci_as_key(cr.\"CountryRegionCode\") COLLATE tsql_compat.ci_as_equal;\n-    ON sp.\"CountryRegionCode\" = cr.\"CountryRegionCode\";",
     "engine": "kiro",
     "notes": [
       "Finding (step 2, 2026-11-18): Kiro's draft joined CountryRegionCode with PostgreSQL '=', which is case-sensitive and counts trailing spaces. Under the source collation (SQL_Latin1_General_CP1_CI_AS) 'us' joins 'US' and 'CA ' joins 'CA'. Step 3 passed because the generated codes never differed only in case or trailing spaces; the fixed cases 'collation' and 'trailing space' failed on PostgreSQL. Fixed in the conversion (rtrim + a case-insensitive ICU collation in the join); both cases are kept as regression cases.",
+      "Finding (adversarial run, 2026-11-19, cases A02-A04): the ICU collation in Person.vStateProvinceCountryRegion's CountryRegionCode join differed from SQL Server's on three agent-written inputs: SQL Server joins 'Æ' to 'AE' and 'ß' to 'SS' (ICU does not), and ICU equates the Kelvin sign U+212A with 'K' and ignores the soft hyphen U+00AD (SQL Server does neither). PostgreSQL 18 drops the ICU strength setting when tailoring rules are given, so the conversion maps those characters in tsql_compat.ci_as_key() before comparing under the same collation. Checked for the characters the cases use, not for every collation rule; the three cases are kept as regression cases.",
       "Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step)."
     ]
   },
@@ -60,40 +61,48 @@
       "PostgreSQL: AgreedTests.[test 03 trailing space: province code CA joins country CA (SQL Server equality ignores trailing spaces)]: pass",
       "planted defects caught by the agreed tests: 3 of 3"
     ],
-    "runtimeRatio": 0.71,
+    "runtimeRatio": 0.67,
     "runtime": {
       "volume": 5000,
       "timedRuns": 7,
-      "sqlServerMs": 8,
-      "postgresMs": 5.66,
-      "ratio": 0.71,
+      "sqlServerMs": 12,
+      "postgresMs": 8.07,
+      "ratio": 0.67,
       "threshold": 1.5,
       "passed": true,
       "belowResolution": false,
       "resultRows": 5000,
       "volumeMismatch": null
     },
-    "rowsCompared": 336,
+    "rowsCompared": 333,
     "trapsCovered": [
       "empty string and trailing spaces"
     ],
     "pbtSeeds": [
-      1885045325
+      336601928
     ],
     "engineOutputCheck": {
       "step3": "fail",
-      "seed": 1885045325,
+      "seed": 336601928,
       "detail": "fixed case \"collation: province code 'us' joins country 'US' (case-insensitive CI_AS); CountryRegionCode comes from the country row ('US')\": row count differs: SQL Server 1, PostgreSQL 0"
     },
     "samples": 200,
-    "samplesWithRows": 180,
+    "samplesWithRows": 171,
     "subMicrosecondNormalised": 0,
     "mutantsDetected": [
       "join is case-sensitive (collation dropped)",
       "trailing spaces count in the join (rtrim dropped)",
       "inner join made a left join (provinces of unknown countries kept)"
     ],
-    "harnessVersion": "harness-generic-0.3.0"
+    "harnessVersion": "harness-generic-0.3.0",
+    "adversarial": {
+      "gate": "fail",
+      "ran": 8,
+      "differed": 0,
+      "evidencePath": "evidence/adversarial/AdventureWorks2025/Person.vStateProvinceCountryRegion.json",
+      "conversionSha256": "0ff4afa5c1ec5d0c2eb55fde4153422859391380960eec59ad3b3fd636b99f11",
+      "runAt": "2026-11-19T04:16:41.513Z"
+    }
   },
   "effort": {
     "humanMinutes": 0,

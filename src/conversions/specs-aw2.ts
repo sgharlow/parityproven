@@ -98,13 +98,14 @@ function bom(name: "uspGetBillOfMaterials" | "uspGetWhereUsedProductID", pgName:
     mutants: [
       { name: "no recursion limit check (rows returned up to the depth guard)", from: "WHERE r.recursion_level > 25)", to: "WHERE false)" },
       { name: "limit one level too low", from: "WHERE r.recursion_level > 25)", to: "WHERE r.recursion_level > 24)" },
-      { name: "open-ended components excluded (ISNULL(EndDate, @CheckDate) dropped)", from: "check_date <= COALESCE(b.\"EndDate\", check_date)\n", to: "check_date <= b.\"EndDate\"\n" },
+      { name: "open-ended components excluded (ISNULL(EndDate, @CheckDate) dropped)", from: "COALESCE(dbo.round_datetime(b.\"EndDate\"), dbo.round_datetime(check_date))\n", to: "dbo.round_datetime(b.\"EndDate\")\n" },
       { name: "quantities not summed", from: "SUM(r.per_assembly_qty)", to: "MAX(r.per_assembly_qty)" },
     ],
     notes: [
       "The procedure becomes a set-returning function (SELECT * FROM ...).",
       "OPTION (MAXRECURSION 25): SQL Server stops with error 530 when the recursive CTE would produce a row at recursion level 26. PostgreSQL has no such option, and a cycle would recurse forever. The conversion bounds the recursion at level 26 and raises (SQLSTATE 54001) if that level is reached, before returning anything. Both outcomes are compared: the same error, or the same rows.",
       "Random data is acyclic (component > assembly), as real bills of materials are; cycles and the 25/26 boundary are covered by fixed cases.",
+      "Finding (adversarial run, 2026-11-19, cases A01-A06): @CheckDate, StartDate and EndDate are datetime, so SQL Server rounds each to its 1/300 s ticks (.001 -> .000, 23:59:59.999 -> the next midnight) before comparing; Kiro's conversion compared the timestamp values as given and dropped or kept edges that SQL Server did the opposite with. The conversion now rounds every operand with dbo.round_datetime() (the previous version is kept as the .draft.sql); the six cases are kept as regression cases.",
       "Step 4 runs on 25 rows per table (larger acyclic volumes would exceed the recursion limit), so the timing is indicative only.",
     ],
   });
@@ -239,8 +240,8 @@ function employeeCases(): FixedCase[] {
 const AW2_SPECS_RAW: ObjectSpec[] = [
   {
     ...view("HumanResources.vEmployee", "humanresources.v_employee", [XML_NOTE]), fixedCases: employeeCases(),
-    mutants: ciJoinFix("HumanResources.vEmployee", EMAIL_LEFT_JOIN).mutants,
-    notes: [XML_NOTE, ...(ciJoinFix("HumanResources.vEmployee").notes ?? [])],
+    mutants: ciJoinFix("HumanResources.vEmployee", EMAIL_LEFT_JOIN, true).mutants,
+    notes: [XML_NOTE, ...(ciJoinFix("HumanResources.vEmployee", undefined, true).notes ?? [])],
   },
   // the view keeps only customers without a store (StoreID IS NULL), so that must be the common case
   {
@@ -250,8 +251,8 @@ const AW2_SPECS_RAW: ObjectSpec[] = [
     // the StoreID filter have applied (seed 1787570662 produced none in 300 samples, and the planted LEFT -> INNER JOIN
     // defect passed). This hand-derived case makes those rows certain on every seed.
     fixedCases: [individualCustomerCase(), ...countryCodeVariants(individualCustomerCase())],
-    mutants: ciJoinFix("Sales.vIndividualCustomer", EMAIL_LEFT_JOIN).mutants,
-    notes: [XML_NOTE, ...(ciJoinFix("Sales.vIndividualCustomer").notes ?? [])],
+    mutants: ciJoinFix("Sales.vIndividualCustomer", EMAIL_LEFT_JOIN, true).mutants,
+    notes: [XML_NOTE, ...(ciJoinFix("Sales.vIndividualCustomer", undefined, true).notes ?? [])],
   },
   contactInformation,
   bom("uspGetBillOfMaterials", "usp_get_bill_of_materials", "down"),

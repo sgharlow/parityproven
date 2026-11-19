@@ -1,0 +1,63 @@
+{
+  "batch": "2",
+  "startedAt": "2026-11-19T04:15:36.544Z",
+  "total": 11,
+  "done": [
+    {
+      "object": "dbo.uspGetBillOfMaterials",
+      "gate": "fail",
+      "wording": "17 adversarial cases ran, 0 differed"
+    },
+    {
+      "object": "dbo.uspGetWhereUsedProductID",
+      "gate": "fail",
+      "wording": "17 adversarial cases ran, 0 differed"
+    },
+    {
+      "object": "HumanResources.vEmployee",
+      "gate": "fail",
+      "wording": "11 adversarial cases ran, 0 differed"
+    },
+    {
+      "object": "HumanResources.vEmployeeDepartment",
+      "gate": "fail",
+      "wording": "7 adversarial cases ran, 0 differed"
+    },
+    {
+      "object": "HumanResources.vEmployeeDepartmentHistory",
+      "gate": "fail",
+      "wording": "7 adversarial cases ran, 0 differed"
+    },
+    {
+      "object": "Person.vStateProvinceCountryRegion",
+      "gate": "fail",
+      "wording": "8 adversarial cases ran, 0 differed"
+    },
+    {
+      "object": "Production.vProductAndDescription",
+      "gate": "fail",
+      "wording": "5 adversarial cases ran, 0 differed"
+    },
+    {
+      "object": "Purchasing.vVendorWithAddresses",
+      "gate": "fail",
+      "wording": "9 adversarial cases ran, 0 differed"
+    },
+    {
+      "object": "Purchasing.vVendorWithContacts",
+      "gate": "fail",
+      "wording": "5 adversarial cases ran, 0 differed"
+    },
+    {
+      "object": "Sales.vIndividualCustomer",
+      "gate": "fail",
+      "wording": "11 adversarial cases ran, 0 differed"
+    },
+    {
+      "object": "Sales.vSalesPerson",
+      "gate": "fail",
+      "wording": "9 adversarial cases ran, 0 differed"
+    }
+  ],
+  "finished": true
+}

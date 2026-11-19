@@ -109,7 +109,8 @@
             }
           ]
         }
-      }
+      },
+      "regression": true
     },
     {
       "id": "A03",
@@ -157,7 +158,8 @@
             }
           ]
         }
-      }
+      },
+      "regression": true
     },
     {
       "id": "A04",
@@ -221,7 +223,8 @@
             }
           ]
         }
-      }
+      },
+      "regression": true
     },
     {
       "id": "A05",

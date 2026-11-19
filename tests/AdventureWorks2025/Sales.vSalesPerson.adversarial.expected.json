@@ -1,0 +1,1416 @@
+{
+  "object": "Sales.vSalesPerson",
+  "database": "AdventureWorks2025",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-19T04:17:28.815Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "[A01] case-only variants 'Us', 'uS' and 'us ' of a country code join 'US'",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Title",
+          "sqlServerType": "nvarchar(8)"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "MiddleName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Suffix",
+          "sqlServerType": "nvarchar(10)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PhoneNumber",
+          "sqlServerType": "nvarchar(25)"
+        },
+        {
+          "name": "PhoneNumberType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailAddress",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailPromotion",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "AddressLine1",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "AddressLine2",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "City",
+          "sqlServerType": "nvarchar(30)"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PostalCode",
+          "sqlServerType": "nvarchar(15)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TerritoryName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TerritoryGroup",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "SalesQuota",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "SalesYTD",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "SalesLastYear",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "∅",
+          "s:First1",
+          "∅",
+          "s:Last1",
+          "∅",
+          "s:Sales Representative",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "s:1 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 1",
+          "s:98011",
+          "s:United States",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "n:0"
+        ],
+        [
+          "n:2",
+          "∅",
+          "s:First2",
+          "∅",
+          "s:Last2",
+          "∅",
+          "s:Sales Representative",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "s:2 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 2",
+          "s:98011",
+          "s:United States",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "n:0"
+        ],
+        [
+          "n:3",
+          "∅",
+          "s:First3",
+          "∅",
+          "s:Last3",
+          "∅",
+          "s:Sales Representative",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "s:3 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 3",
+          "s:98011",
+          "s:United States",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "n:0"
+        ]
+      ]
+    },
+    {
+      "label": "[A02] expansions: province code 'Æ' against country 'AE' and 'ß' against 'SS', with 'ae' and 'ss' as case-only controls",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Title",
+          "sqlServerType": "nvarchar(8)"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "MiddleName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Suffix",
+          "sqlServerType": "nvarchar(10)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PhoneNumber",
+          "sqlServerType": "nvarchar(25)"
+        },
+        {
+          "name": "PhoneNumberType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailAddress",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailPromotion",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "AddressLine1",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "AddressLine2",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "City",
+          "sqlServerType": "nvarchar(30)"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PostalCode",
+          "sqlServerType": "nvarchar(15)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TerritoryName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TerritoryGroup",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "SalesQuota",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "SalesYTD",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "SalesLastYear",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "∅",
+          "s:First1",
+          "∅",
+          "s:Last1",
+          "∅",
+          "s:Sales Representative",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "s:1 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 1",
+          "s:98011",
+          "s:United Arab Emirates",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "n:0"
+        ],
+        [
+          "n:2",
+          "∅",
+          "s:First2",
+          "∅",
+          "s:Last2",
+          "∅",
+          "s:Sales Representative",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "s:2 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 2",
+          "s:98011",
+          "s:South Sudan",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "n:0"
+        ],
+        [
+          "n:3",
+          "∅",
+          "s:First3",
+          "∅",
+          "s:Last3",
+          "∅",
+          "s:Sales Representative",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "s:3 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 3",
+          "s:98011",
+          "s:United Arab Emirates",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "n:0"
+        ],
+        [
+          "n:4",
+          "∅",
+          "s:First4",
+          "∅",
+          "s:Last4",
+          "∅",
+          "s:Sales Representative",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "s:4 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 4",
+          "s:98011",
+          "s:South Sudan",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "n:0"
+        ]
+      ]
+    },
+    {
+      "label": "[A03] compatibility forms: full-width U+FF35 U+FF33 against 'US' and the Kelvin sign U+212A followed by 'E' against 'KE', with 'ke' as a case-only control",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Title",
+          "sqlServerType": "nvarchar(8)"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "MiddleName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Suffix",
+          "sqlServerType": "nvarchar(10)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PhoneNumber",
+          "sqlServerType": "nvarchar(25)"
+        },
+        {
+          "name": "PhoneNumberType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailAddress",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailPromotion",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "AddressLine1",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "AddressLine2",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "City",
+          "sqlServerType": "nvarchar(30)"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PostalCode",
+          "sqlServerType": "nvarchar(15)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TerritoryName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TerritoryGroup",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "SalesQuota",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "SalesYTD",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "SalesLastYear",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "∅",
+          "s:First1",
+          "∅",
+          "s:Last1",
+          "∅",
+          "s:Sales Representative",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "s:1 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 1",
+          "s:98011",
+          "s:United States",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "n:0"
+        ],
+        [
+          "n:3",
+          "∅",
+          "s:First3",
+          "∅",
+          "s:Last3",
+          "∅",
+          "s:Sales Representative",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "s:3 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 3",
+          "s:98011",
+          "s:Kenya",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "n:0"
+        ]
+      ]
+    },
+    {
+      "label": "[A04] whitespace look-alikes: 'US' with a trailing no-break space (U+00A0), a trailing tab, a leading space, a soft hyphen (U+00AD) inside, and 'CA ' (a real trailing space)",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Title",
+          "sqlServerType": "nvarchar(8)"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "MiddleName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Suffix",
+          "sqlServerType": "nvarchar(10)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PhoneNumber",
+          "sqlServerType": "nvarchar(25)"
+        },
+        {
+          "name": "PhoneNumberType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailAddress",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailPromotion",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "AddressLine1",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "AddressLine2",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "City",
+          "sqlServerType": "nvarchar(30)"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PostalCode",
+          "sqlServerType": "nvarchar(15)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TerritoryName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TerritoryGroup",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "SalesQuota",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "SalesYTD",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "SalesLastYear",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "n:5",
+          "∅",
+          "s:First5",
+          "∅",
+          "s:Last5",
+          "∅",
+          "s:Sales Representative",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "s:5 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 5",
+          "s:98011",
+          "s:Canada",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "n:0"
+        ]
+      ]
+    },
+    {
+      "label": "[A05] accents and dotted/dotless I: 'ÜS' against 'US' (accent-sensitive); U+0131 and U+0130 followed by 'T' against 'IT', with 'it' as a case-only control",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Title",
+          "sqlServerType": "nvarchar(8)"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "MiddleName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Suffix",
+          "sqlServerType": "nvarchar(10)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PhoneNumber",
+          "sqlServerType": "nvarchar(25)"
+        },
+        {
+          "name": "PhoneNumberType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailAddress",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailPromotion",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "AddressLine1",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "AddressLine2",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "City",
+          "sqlServerType": "nvarchar(30)"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PostalCode",
+          "sqlServerType": "nvarchar(15)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TerritoryName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TerritoryGroup",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "SalesQuota",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "SalesYTD",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "SalesLastYear",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "n:4",
+          "∅",
+          "s:First4",
+          "∅",
+          "s:Last4",
+          "∅",
+          "s:Sales Representative",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "s:4 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 4",
+          "s:98011",
+          "s:Italy",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "n:0"
+        ]
+      ]
+    },
+    {
+      "label": "[A06] an empty country code: province codes '' and ' ' both join country '' (trailing spaces ignored)",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Title",
+          "sqlServerType": "nvarchar(8)"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "MiddleName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Suffix",
+          "sqlServerType": "nvarchar(10)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PhoneNumber",
+          "sqlServerType": "nvarchar(25)"
+        },
+        {
+          "name": "PhoneNumberType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailAddress",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailPromotion",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "AddressLine1",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "AddressLine2",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "City",
+          "sqlServerType": "nvarchar(30)"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PostalCode",
+          "sqlServerType": "nvarchar(15)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TerritoryName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TerritoryGroup",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "SalesQuota",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "SalesYTD",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "SalesLastYear",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "∅",
+          "s:First1",
+          "∅",
+          "s:Last1",
+          "∅",
+          "s:Sales Representative",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "s:1 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 1",
+          "s:98011",
+          "s:Nowhere",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "n:0"
+        ],
+        [
+          "n:2",
+          "∅",
+          "s:First2",
+          "∅",
+          "s:Last2",
+          "∅",
+          "s:Sales Representative",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "s:2 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 2",
+          "s:98011",
+          "s:Nowhere",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "n:0"
+        ]
+      ]
+    },
+    {
+      "label": "[A08] territory: TerritoryID NULL, a missing territory (LEFT JOIN NULL), a territory named '' and a group with a trailing space",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Title",
+          "sqlServerType": "nvarchar(8)"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "MiddleName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Suffix",
+          "sqlServerType": "nvarchar(10)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PhoneNumber",
+          "sqlServerType": "nvarchar(25)"
+        },
+        {
+          "name": "PhoneNumberType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailAddress",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailPromotion",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "AddressLine1",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "AddressLine2",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "City",
+          "sqlServerType": "nvarchar(30)"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PostalCode",
+          "sqlServerType": "nvarchar(15)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TerritoryName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TerritoryGroup",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "SalesQuota",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "SalesYTD",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "SalesLastYear",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "∅",
+          "s:First1",
+          "∅",
+          "s:Last1",
+          "∅",
+          "s:Sales Representative",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "s:1 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 1",
+          "s:98011",
+          "s:United States",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "n:0"
+        ],
+        [
+          "n:2",
+          "s:",
+          "s:First2",
+          "∅",
+          "s:Last2",
+          "∅",
+          "s:Sales Representative",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "s:2 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 2",
+          "s:98011",
+          "s:United States",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "n:0"
+        ],
+        [
+          "n:3",
+          "s:Mr.",
+          "s:First3",
+          "s:",
+          "s:Last3",
+          "s:",
+          "s:Sales Representative",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "s:3 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 3",
+          "s:98011",
+          "s:United States",
+          "s:",
+          "s:North America ",
+          "∅",
+          "n:0",
+          "n:0"
+        ]
+      ]
+    },
+    {
+      "label": "[A09] text returned as stored and fan-out: case-only name variants, an emoji, two identical phone rows and an unknown phone type",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Title",
+          "sqlServerType": "nvarchar(8)"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "MiddleName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Suffix",
+          "sqlServerType": "nvarchar(10)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PhoneNumber",
+          "sqlServerType": "nvarchar(25)"
+        },
+        {
+          "name": "PhoneNumberType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailAddress",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailPromotion",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "AddressLine1",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "AddressLine2",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "City",
+          "sqlServerType": "nvarchar(30)"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PostalCode",
+          "sqlServerType": "nvarchar(15)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TerritoryName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TerritoryGroup",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "SalesQuota",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "SalesYTD",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "SalesLastYear",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "∅",
+          "s:Ann",
+          "∅",
+          "s:Last1",
+          "∅",
+          "s:Sales Representative",
+          "s:555-0100",
+          "s:Cell",
+          "∅",
+          "n:0",
+          "s:1 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 1",
+          "s:98011",
+          "s:United States",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "n:0"
+        ],
+        [
+          "n:1",
+          "∅",
+          "s:Ann",
+          "∅",
+          "s:Last1",
+          "∅",
+          "s:Sales Representative",
+          "s:555-0100",
+          "s:Cell",
+          "∅",
+          "n:0",
+          "s:1 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 1",
+          "s:98011",
+          "s:United States",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "n:0"
+        ],
+        [
+          "n:1",
+          "∅",
+          "s:Ann",
+          "∅",
+          "s:Last1",
+          "∅",
+          "s:Sales Representative",
+          "s:555-0199",
+          "∅",
+          "∅",
+          "n:0",
+          "s:1 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 1",
+          "s:98011",
+          "s:United States",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "n:0"
+        ],
+        [
+          "n:2",
+          "∅",
+          "s:ANN",
+          "∅",
+          "s:Zoë 😀",
+          "∅",
+          "s:Sales Representative",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "s:2 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 2",
+          "s:98011",
+          "s:United States",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "n:0"
+        ],
+        [
+          "n:3",
+          "∅",
+          "s:ann",
+          "∅",
+          "s:Last3",
+          "∅",
+          "s:Sales Representative",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "s:3 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 3",
+          "s:98011",
+          "s:United States",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "n:0"
+        ]
+      ]
+    },
+    {
+      "label": "[A10] keys with gaps and at the int limits: sales persons 0 and 2147483647, territory -2147483648, a sales person without an Employee row",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Title",
+          "sqlServerType": "nvarchar(8)"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "MiddleName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Suffix",
+          "sqlServerType": "nvarchar(10)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PhoneNumber",
+          "sqlServerType": "nvarchar(25)"
+        },
+        {
+          "name": "PhoneNumberType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailAddress",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "EmailPromotion",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "AddressLine1",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "AddressLine2",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "City",
+          "sqlServerType": "nvarchar(30)"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PostalCode",
+          "sqlServerType": "nvarchar(15)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TerritoryName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TerritoryGroup",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "SalesQuota",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "SalesYTD",
+          "sqlServerType": "money"
+        },
+        {
+          "name": "SalesLastYear",
+          "sqlServerType": "money"
+        }
+      ],
+      "rows": [
+        [
+          "n:0",
+          "∅",
+          "s:First0",
+          "∅",
+          "s:Last0",
+          "∅",
+          "s:Sales Representative",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "s:1 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 1",
+          "s:98011",
+          "s:United States",
+          "s:Min",
+          "s:Group",
+          "∅",
+          "n:0",
+          "n:0"
+        ],
+        [
+          "n:2147483647",
+          "∅",
+          "s:First2147483647",
+          "∅",
+          "s:Last2147483647",
+          "∅",
+          "s:Sales Representative",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "s:1 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 1",
+          "s:98011",
+          "s:United States",
+          "∅",
+          "∅",
+          "∅",
+          "n:0",
+          "n:0"
+        ]
+      ]
+    }
+  ]
+}

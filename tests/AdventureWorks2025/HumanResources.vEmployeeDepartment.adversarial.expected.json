@@ -1,0 +1,530 @@
+{
+  "object": "HumanResources.vEmployeeDepartment",
+  "database": "AdventureWorks2025",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-19T04:16:18.088Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "[A01] date boundaries: start dates 0001-01-01, 1752-12-31, 1753-01-01, 2000-02-29 and 9999-12-31; end dates 0001-01-01 and 9999-12-31",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Title",
+          "sqlServerType": "nvarchar(8)"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "MiddleName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Suffix",
+          "sqlServerType": "nvarchar(10)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Department",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "GroupName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "StartDate",
+          "sqlServerType": "date"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "∅",
+          "s:First1",
+          "∅",
+          "s:Last1",
+          "∅",
+          "s:Job 1",
+          "s:Dept 1",
+          "s:Group 1",
+          "d:0001-01-01"
+        ],
+        [
+          "n:1",
+          "∅",
+          "s:First1",
+          "∅",
+          "s:Last1",
+          "∅",
+          "s:Job 1",
+          "s:Dept 2",
+          "s:Group 2",
+          "d:1752-12-31"
+        ],
+        [
+          "n:2",
+          "∅",
+          "s:First2",
+          "∅",
+          "s:Last2",
+          "∅",
+          "s:Job 2",
+          "s:Dept 1",
+          "s:Group 1",
+          "d:1753-01-01"
+        ],
+        [
+          "n:3",
+          "∅",
+          "s:First3",
+          "∅",
+          "s:Last3",
+          "∅",
+          "s:Job 3",
+          "s:Dept 1",
+          "s:Group 1",
+          "d:9999-12-31"
+        ]
+      ]
+    },
+    {
+      "label": "[A02] an end date before the start date, and an end date equal to it: the view does not compare the two",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Title",
+          "sqlServerType": "nvarchar(8)"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "MiddleName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Suffix",
+          "sqlServerType": "nvarchar(10)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Department",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "GroupName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "StartDate",
+          "sqlServerType": "date"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "∅",
+          "s:First1",
+          "∅",
+          "s:Last1",
+          "∅",
+          "s:Job 1",
+          "s:Dept 1",
+          "s:Group 1",
+          "d:2012-01-01"
+        ]
+      ]
+    },
+    {
+      "label": "[A03] NULL versus '': Title, MiddleName and Suffix as NULL and as ''; an empty department name and group",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Title",
+          "sqlServerType": "nvarchar(8)"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "MiddleName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Suffix",
+          "sqlServerType": "nvarchar(10)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Department",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "GroupName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "StartDate",
+          "sqlServerType": "date"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "∅",
+          "s:First1",
+          "∅",
+          "s:Last1",
+          "∅",
+          "s:Job 1",
+          "s:",
+          "s:",
+          "d:2001-01-01"
+        ],
+        [
+          "n:2",
+          "s:",
+          "s:First2",
+          "s:",
+          "s:Last2",
+          "s:",
+          "s:Job 2",
+          "s:Dept 2",
+          "s:Group 2",
+          "d:2001-01-01"
+        ]
+      ]
+    },
+    {
+      "label": "[A04] text returned as stored: department names differing only in case, trailing spaces, non-ASCII and an emoji",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Title",
+          "sqlServerType": "nvarchar(8)"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "MiddleName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Suffix",
+          "sqlServerType": "nvarchar(10)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Department",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "GroupName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "StartDate",
+          "sqlServerType": "date"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "∅",
+          "s:Ann ",
+          "∅",
+          "s:Last1",
+          "∅",
+          "s:Job 1",
+          "s:Sales",
+          "s:Sales and Marketing",
+          "d:2001-01-01"
+        ],
+        [
+          "n:2",
+          "∅",
+          "s:ANN",
+          "∅",
+          "s:Last2",
+          "∅",
+          "s:Job 2",
+          "s:SALES",
+          "s:Sales and Marketing ",
+          "d:2001-01-01"
+        ],
+        [
+          "n:3",
+          "∅",
+          "s:ann",
+          "∅",
+          "s:Last3",
+          "∅",
+          "s:Job 3",
+          "s:sales ",
+          "s:Ventes 😀 é",
+          "d:2001-01-01"
+        ]
+      ]
+    },
+    {
+      "label": "[A05] duplicate history rows (same employee, department and start date twice): two identical output rows",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Title",
+          "sqlServerType": "nvarchar(8)"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "MiddleName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Suffix",
+          "sqlServerType": "nvarchar(10)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Department",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "GroupName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "StartDate",
+          "sqlServerType": "date"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "∅",
+          "s:First1",
+          "∅",
+          "s:Last1",
+          "∅",
+          "s:Job 1",
+          "s:Dept 1",
+          "s:Group 1",
+          "d:2005-07-01"
+        ],
+        [
+          "n:1",
+          "∅",
+          "s:First1",
+          "∅",
+          "s:Last1",
+          "∅",
+          "s:Job 1",
+          "s:Dept 1",
+          "s:Group 1",
+          "d:2005-07-01"
+        ],
+        [
+          "n:1",
+          "∅",
+          "s:First1",
+          "∅",
+          "s:Last1",
+          "∅",
+          "s:Job 1",
+          "s:Dept 1",
+          "s:Group 1",
+          "d:2001-01-01"
+        ]
+      ]
+    },
+    {
+      "label": "[A06] smallint and int extremes: departments -32768 and 32767, employees 0 and 2147483647",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Title",
+          "sqlServerType": "nvarchar(8)"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "MiddleName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Suffix",
+          "sqlServerType": "nvarchar(10)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Department",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "GroupName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "StartDate",
+          "sqlServerType": "date"
+        }
+      ],
+      "rows": [
+        [
+          "n:0",
+          "∅",
+          "s:First0",
+          "∅",
+          "s:Last0",
+          "∅",
+          "s:Job 0",
+          "s:Dept -32768",
+          "s:Group -32768",
+          "d:2001-01-01"
+        ],
+        [
+          "n:2147483647",
+          "∅",
+          "s:First2147483647",
+          "∅",
+          "s:Last2147483647",
+          "∅",
+          "s:Job 2147483647",
+          "s:Dept 32767",
+          "s:Group 32767",
+          "d:2001-01-01"
+        ]
+      ]
+    },
+    {
+      "label": "[A07] rows dropped by the inner joins: a history for a missing department, a missing person; a person who is not an employee",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Title",
+          "sqlServerType": "nvarchar(8)"
+        },
+        {
+          "name": "FirstName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "MiddleName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "LastName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Suffix",
+          "sqlServerType": "nvarchar(10)"
+        },
+        {
+          "name": "JobTitle",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "Department",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "GroupName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "StartDate",
+          "sqlServerType": "date"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "∅",
+          "s:First1",
+          "∅",
+          "s:Last1",
+          "∅",
+          "s:Job 1",
+          "s:Dept 1",
+          "s:Group 1",
+          "d:2002-01-01"
+        ]
+      ]
+    }
+  ]
+}

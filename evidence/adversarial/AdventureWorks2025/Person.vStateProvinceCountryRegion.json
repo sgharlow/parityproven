@@ -1,0 +1,317 @@
+{
+  "schemaVersion": 1,
+  "object": "Person.vStateProvinceCountryRegion",
+  "database": "AdventureWorks2025",
+  "runAt": "2026-11-19T04:16:41.513Z",
+  "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
+  "conversionSha256": "0ff4afa5c1ec5d0c2eb55fde4153422859391380960eec59ad3b3fd636b99f11",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-18T20:21:05-07:00",
+    "file": "adversarial/AdventureWorks2025/Person.vStateProvinceCountryRegion.cases.json",
+    "sha256": "764d663b3af32bf880f39522f0567269e485d454575d713438fe5a1fe68af7eb"
+  },
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T20:33:12.9525152-07:00",
+    "file": "adversarial/AdventureWorks2025/Person.vStateProvinceCountryRegion.audit.json",
+    "sha256": "c04abcbe42b27723acc6f6cb8a64b219fbd3256653d633709cbfe6afadb44803"
+  },
+  "sameModel": false,
+  "casesAudited": [
+    "A01",
+    "A02",
+    "A03",
+    "A04",
+    "A05",
+    "A06",
+    "A07",
+    "A08"
+  ],
+  "traps": {
+    "null-vs-empty": {
+      "applicable": true,
+      "coveredBy": [],
+      "notApplicableReason": "Every text column of StateProvince and CountryRegion is NOT NULL, so no NULL text value can be sent; '' is attacked as an empty country code and an empty nchar(3) province code.",
+      "accepted": true
+    },
+    "collation-case": {
+      "applicable": true,
+      "coveredBy": [
+        "A01",
+        "A02",
+        "A03",
+        "A05",
+        "A07"
+      ]
+    },
+    "trailing-spaces": {
+      "applicable": true,
+      "coveredBy": [
+        "A01",
+        "A04",
+        "A06",
+        "A07",
+        "A08"
+      ]
+    },
+    "dates-datetime": {
+      "applicable": false,
+      "coveredBy": []
+    },
+    "numeric-rounding": {
+      "applicable": false,
+      "coveredBy": []
+    },
+    "top-ties": {
+      "applicable": true,
+      "coveredBy": [
+        "A08"
+      ]
+    },
+    "identity-gaps": {
+      "applicable": true,
+      "coveredBy": [
+        "A08"
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "case-only variants 'Us', 'uS' and 'us ' of a country code join 'US'",
+      "traps": [
+        "collation-case",
+        "trailing-spaces"
+      ],
+      "reasoning": "CI_AS ignores case and SQL Server equality ignores trailing spaces, so all three province codes join country 'US'. The conversion uses rtrim under an ICU level-2 collation; this checks mixed case and case plus trailing space together.",
+      "trapChecks": {
+        "collation-case": {
+          "present": true,
+          "detail": "\"Us\" and \"uS\" differ only in case"
+        },
+        "trailing-spaces": {
+          "present": true,
+          "detail": "\"us \" ends in a space"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A02",
+      "label": "expansions: province code 'Æ' against country 'AE' and 'ß' against 'SS', with 'ae' and 'ss' as case-only controls",
+      "traps": [
+        "collation-case"
+      ],
+      "reasoning": "Windows collation rules (used by SQL_Latin1_General_CP1_CI_AS for nvarchar) treat 'Æ' as equal to 'AE' and 'ß' as equal to 'ss'. The ICU root collation at strength 2 gives 'æ' its own primary weight (not equal to 'ae') while 'ß' = 'ss' differs only at the tertiary level. The engines may disagree on whether the 'Æ' province joins.",
+      "trapChecks": {
+        "collation-case": {
+          "present": true,
+          "detail": "\"ae\" and \"AE\" differ only in case"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A03",
+      "label": "compatibility forms: full-width U+FF35 U+FF33 against 'US' and the Kelvin sign U+212A followed by 'E' against 'KE', with 'ke' as a case-only control",
+      "traps": [
+        "collation-case"
+      ],
+      "reasoning": "SQL Server collations without _WS are width-insensitive, so full-width 'ＵＳ' equals 'US'; U+212A KELVIN SIGN is canonically equivalent to 'K'. ICU at strength 2 ignores width (a tertiary difference) and normalises canonical equivalents. Either engine may treat one of these differently.",
+      "trapChecks": {
+        "collation-case": {
+          "present": true,
+          "detail": "\"KE\" and \"ke\" differ only in case"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A04",
+      "label": "whitespace look-alikes: 'US' with a trailing no-break space (U+00A0), a trailing tab, a leading space, a soft hyphen (U+00AD) inside, and 'CA ' (a real trailing space)",
+      "traps": [
+        "trailing-spaces"
+      ],
+      "reasoning": "SQL Server pads the shorter value with U+0020 before comparing, so only 'CA ' is certain to join. Whether U+00A0 compares equal to the pad space, and whether the soft hyphen U+00AD is ignorable, are collation rules; PostgreSQL rtrim(' ') removes U+0020 only and ICU treats U+00AD as ignorable and U+00A0 as a space variant. A tab and a leading space should join on neither engine.",
+      "trapChecks": {
+        "trailing-spaces": {
+          "present": true,
+          "detail": "\"CA \" ends in a space"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A05",
+      "label": "accents and dotted/dotless I: 'ÜS' against 'US' (accent-sensitive); U+0131 and U+0130 followed by 'T' against 'IT', with 'it' as a case-only control",
+      "traps": [
+        "collation-case"
+      ],
+      "reasoning": "CI_AS is accent-sensitive, so 'ÜS' must not join 'US'. U+0131 (dotless i) and U+0130 (I with dot above) case-fold differently by rule set: Windows rules and ICU root may each match or not match 'IT'. 'it' joins on both.",
+      "trapChecks": {
+        "collation-case": {
+          "present": true,
+          "detail": "\"it\" and \"IT\" differ only in case"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A06",
+      "label": "an empty country code: province codes '' and ' ' both join country '' (trailing spaces ignored)",
+      "traps": [
+        "trailing-spaces"
+      ],
+      "reasoning": "SQL Server compares '' and ' ' as equal (padding), so both provinces join the country whose code is ''. rtrim(' ') gives '' on PostgreSQL; this checks the empty-string edge of the rtrim + ICU equality and that '' is not treated as NULL.",
+      "trapChecks": {
+        "trailing-spaces": {
+          "present": true,
+          "detail": "\" \" ends in a space"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A07",
+      "label": "nchar(3) province codes: '', 'A', 'AB ', 'ABC', 'abc' and 'é' come back padded to three characters",
+      "traps": [
+        "collation-case",
+        "trailing-spaces"
+      ],
+      "reasoning": "StateProvinceCode is nchar(3) (char(3) on PostgreSQL). Both engines pad with spaces on output; 'ABC' and 'abc' are distinct values passed through. The empty string pads to three spaces on both, and is not NULL.",
+      "trapChecks": {
+        "collation-case": {
+          "present": true,
+          "detail": "\"ABC\" and \"abc\" differ only in case"
+        },
+        "trailing-spaces": {
+          "present": true,
+          "detail": "\"AB \" ends in a space"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A08",
+      "label": "several provinces of one country, ids with gaps and at the int limits, territory -2147483648, names with trailing spaces and an emoji",
+      "traps": [
+        "identity-gaps",
+        "top-ties",
+        "trailing-spaces"
+      ],
+      "reasoning": "StateProvinceID jumps (0, 9, 2147483647); TerritoryID is not joined and is passed through at the int minimum. Three provinces share a country and a TerritoryID (a repeated non-key value). Names keep their trailing space; the emoji checks the load.",
+      "trapChecks": {
+        "identity-gaps": {
+          "present": true,
+          "detail": "Person.StateProvince.StateProvinceID jumps from 0 to 9"
+        },
+        "top-ties": {
+          "present": true,
+          "detail": "two rows of Person.StateProvince share CountryRegionCode = \"US\""
+        },
+        "trailing-spaces": {
+          "present": true,
+          "detail": "\"Alpha \" ends in a space"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    }
+  ],
+  "summary": {
+    "ran": 8,
+    "differed": 0,
+    "invalid": 0
+  },
+  "objections": [
+    {
+      "id": "O01",
+      "caseId": "A01",
+      "kind": "duplicate",
+      "text": "The hand-derived fixed cases already test a lowercase province code joining 'US' under CI_AS and a province code with a trailing space joining its country. Additional mixed-case spellings and a combined case/trailing-space spelling attack the same two join mechanisms.",
+      "status": "open"
+    },
+    {
+      "id": "O02",
+      "caseId": "A07",
+      "kind": "not-an-attack",
+      "text": "StateProvinceCode values 'ABC' and 'abc' for the same country collide under the source case-insensitive unique key on StateProvinceCode and CountryRegionCode. Those two source rows cannot coexist, so the case-only output portion is outside the source schema preconditions.",
+      "status": "open"
+    }
+  ],
+  "mutantAdequacy": {
+    "verdict": "adequate",
+    "caught": [
+      "join is case-sensitive (collation dropped)",
+      "trailing spaces count in the join (rtrim dropped)",
+      "inner join made a left join (provinces of unknown countries kept)"
+    ],
+    "missed": [],
+    "skipped": [],
+    "equivalentRecorded": []
+  },
+  "gate": {
+    "passed": false,
+    "reasons": [
+      "objection O01 is open",
+      "objection O02 is open"
+    ]
+  },
+  "wording": "8 adversarial cases ran, 0 differed"
+}

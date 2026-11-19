@@ -99,7 +99,15 @@
       "SQL Server: AgreedTests.[test 01 ended and open histories both listed (EndDate NULL kept); missing shift or person dropped; 1753-01-01…]: pass",
       "PostgreSQL: AgreedTests.[test 01 ended and open histories both listed (EndDate NULL kept); missing shift or person dropped; 1753-01-01…]: pass",
       "planted defects caught by the agreed tests: 2 of 2"
-    ]
+    ],
+    "adversarial": {
+      "gate": "fail",
+      "ran": 7,
+      "differed": 0,
+      "evidencePath": "evidence/adversarial/AdventureWorks2025/HumanResources.vEmployeeDepartmentHistory.json",
+      "conversionSha256": "3c4aab538cbdbbf16ded3383a1866702e6d6ab5e999bac1f48faaf7a7df2140a",
+      "runAt": "2026-11-19T04:16:34.014Z"
+    }
   },
   "effort": {
     "humanMinutes": 0,

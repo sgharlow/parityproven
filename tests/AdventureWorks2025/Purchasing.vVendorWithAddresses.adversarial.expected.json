@@ -1,0 +1,627 @@
+{
+  "object": "Purchasing.vVendorWithAddresses",
+  "database": "AdventureWorks2025",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-19T04:16:53.644Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "[A01] case-only variants 'Us', 'uS' and 'us ' of a country code join 'US'",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Name",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AddressType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AddressLine1",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "AddressLine2",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "City",
+          "sqlServerType": "nvarchar(30)"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PostalCode",
+          "sqlServerType": "nvarchar(15)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:Vendor 1",
+          "s:Main Office",
+          "s:1 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 1",
+          "s:98011",
+          "s:United States"
+        ],
+        [
+          "n:2",
+          "s:Vendor 2",
+          "s:Main Office",
+          "s:2 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 2",
+          "s:98011",
+          "s:United States"
+        ],
+        [
+          "n:3",
+          "s:Vendor 3",
+          "s:Main Office",
+          "s:3 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 3",
+          "s:98011",
+          "s:United States"
+        ]
+      ]
+    },
+    {
+      "label": "[A02] expansions: province code 'Æ' against country 'AE' and 'ß' against 'SS', with 'ae' and 'ss' as case-only controls",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Name",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AddressType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AddressLine1",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "AddressLine2",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "City",
+          "sqlServerType": "nvarchar(30)"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PostalCode",
+          "sqlServerType": "nvarchar(15)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:Vendor 1",
+          "s:Main Office",
+          "s:1 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 1",
+          "s:98011",
+          "s:United Arab Emirates"
+        ],
+        [
+          "n:2",
+          "s:Vendor 2",
+          "s:Main Office",
+          "s:2 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 2",
+          "s:98011",
+          "s:South Sudan"
+        ],
+        [
+          "n:3",
+          "s:Vendor 3",
+          "s:Main Office",
+          "s:3 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 3",
+          "s:98011",
+          "s:United Arab Emirates"
+        ],
+        [
+          "n:4",
+          "s:Vendor 4",
+          "s:Main Office",
+          "s:4 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 4",
+          "s:98011",
+          "s:South Sudan"
+        ]
+      ]
+    },
+    {
+      "label": "[A03] compatibility forms: full-width U+FF35 U+FF33 against 'US' and the Kelvin sign U+212A followed by 'E' against 'KE', with 'ke' as a case-only control",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Name",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AddressType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AddressLine1",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "AddressLine2",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "City",
+          "sqlServerType": "nvarchar(30)"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PostalCode",
+          "sqlServerType": "nvarchar(15)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:Vendor 1",
+          "s:Main Office",
+          "s:1 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 1",
+          "s:98011",
+          "s:United States"
+        ],
+        [
+          "n:3",
+          "s:Vendor 3",
+          "s:Main Office",
+          "s:3 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 3",
+          "s:98011",
+          "s:Kenya"
+        ]
+      ]
+    },
+    {
+      "label": "[A04] whitespace look-alikes: 'US' with a trailing no-break space (U+00A0), a trailing tab, a leading space, a soft hyphen (U+00AD) inside, and 'CA ' (a real trailing space)",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Name",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AddressType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AddressLine1",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "AddressLine2",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "City",
+          "sqlServerType": "nvarchar(30)"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PostalCode",
+          "sqlServerType": "nvarchar(15)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:5",
+          "s:Vendor 5",
+          "s:Main Office",
+          "s:5 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 5",
+          "s:98011",
+          "s:Canada"
+        ]
+      ]
+    },
+    {
+      "label": "[A05] accents and dotted/dotless I: 'ÜS' against 'US' (accent-sensitive); U+0131 and U+0130 followed by 'T' against 'IT', with 'it' as a case-only control",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Name",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AddressType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AddressLine1",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "AddressLine2",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "City",
+          "sqlServerType": "nvarchar(30)"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PostalCode",
+          "sqlServerType": "nvarchar(15)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:4",
+          "s:Vendor 4",
+          "s:Main Office",
+          "s:4 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 4",
+          "s:98011",
+          "s:Italy"
+        ]
+      ]
+    },
+    {
+      "label": "[A06] an empty country code: province codes '' and ' ' both join country '' (trailing spaces ignored)",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Name",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AddressType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AddressLine1",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "AddressLine2",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "City",
+          "sqlServerType": "nvarchar(30)"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PostalCode",
+          "sqlServerType": "nvarchar(15)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:Vendor 1",
+          "s:Main Office",
+          "s:1 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 1",
+          "s:98011",
+          "s:Nowhere"
+        ],
+        [
+          "n:2",
+          "s:Vendor 2",
+          "s:Main Office",
+          "s:2 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 2",
+          "s:98011",
+          "s:Nowhere"
+        ]
+      ]
+    },
+    {
+      "label": "[A07] NULL versus '' in AddressLine2, an empty vendor name, address type name and city, and a single-space AddressLine2",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Name",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AddressType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AddressLine1",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "AddressLine2",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "City",
+          "sqlServerType": "nvarchar(30)"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PostalCode",
+          "sqlServerType": "nvarchar(15)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:",
+          "s:",
+          "s:1 Main St",
+          "∅",
+          "s:",
+          "s:Province 1",
+          "s:98011",
+          "s:United States"
+        ],
+        [
+          "n:2",
+          "s:Two",
+          "s:",
+          "s:2 Main St",
+          "s:",
+          "s:Bothell",
+          "s:Province 1",
+          "s:98011",
+          "s:United States"
+        ],
+        [
+          "n:3",
+          "s:Three",
+          "s:",
+          "s:3 Main St",
+          "s: ",
+          "s:Bothell",
+          "s:Province 1",
+          "s:98011",
+          "s:United States"
+        ]
+      ]
+    },
+    {
+      "label": "[A08] one address used twice by a vendor under two address types, a duplicate BusinessEntityAddress row, and an address type of another case",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Name",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AddressType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AddressLine1",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "AddressLine2",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "City",
+          "sqlServerType": "nvarchar(30)"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PostalCode",
+          "sqlServerType": "nvarchar(15)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:Vendor 1",
+          "s:Shipping",
+          "s:1 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 1",
+          "s:98011",
+          "s:United States"
+        ],
+        [
+          "n:1",
+          "s:Vendor 1",
+          "s:SHIPPING",
+          "s:1 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 1",
+          "s:98011",
+          "s:United States"
+        ],
+        [
+          "n:1",
+          "s:Vendor 1",
+          "s:SHIPPING",
+          "s:1 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Province 1",
+          "s:98011",
+          "s:United States"
+        ]
+      ]
+    },
+    {
+      "label": "[A09] keys with gaps and at the int limits: vendor 2147483647, address -2147483648, address type 0; text with an emoji and full length",
+      "columns": [
+        {
+          "name": "BusinessEntityID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Name",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AddressType",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AddressLine1",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "AddressLine2",
+          "sqlServerType": "nvarchar(60)"
+        },
+        {
+          "name": "City",
+          "sqlServerType": "nvarchar(30)"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PostalCode",
+          "sqlServerType": "nvarchar(15)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:2147483647",
+          "s:Max",
+          "s:Zero",
+          "s:ÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖÅÄÖ",
+          "∅",
+          "s:Köln 😀",
+          "s:Nordrhein-Westfalen",
+          "s:98011",
+          "s:Germany"
+        ],
+        [
+          "n:3",
+          "s:Three",
+          "s:Zero",
+          "s:10 Main St",
+          "∅",
+          "s:Bothell",
+          "s:Nordrhein-Westfalen",
+          "s:98011",
+          "s:Germany"
+        ]
+      ]
+    }
+  ]
+}

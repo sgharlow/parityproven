@@ -1,0 +1,291 @@
+{
+  "object": "Production.vProductAndDescription",
+  "database": "AdventureWorks2025",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-19T04:16:45.455Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "[A01] culture codes differing only in case or by a trailing space ('en', 'EN', 'en '), an empty code and a six-character code",
+      "columns": [
+        {
+          "name": "ProductID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Name",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "ProductModel",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "CultureID",
+          "sqlServerType": "char(6)"
+        },
+        {
+          "name": "Description",
+          "sqlServerType": "nvarchar(400)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:Bike",
+          "s:Road",
+          "s:en    ",
+          "s:one"
+        ],
+        [
+          "n:1",
+          "s:Bike",
+          "s:Road",
+          "s:EN    ",
+          "s:one"
+        ],
+        [
+          "n:1",
+          "s:Bike",
+          "s:Road",
+          "s:en    ",
+          "s:two"
+        ],
+        [
+          "n:1",
+          "s:Bike",
+          "s:Road",
+          "s:      ",
+          "s:two"
+        ],
+        [
+          "n:1",
+          "s:Bike",
+          "s:Road",
+          "s:zh-cht",
+          "s:two"
+        ]
+      ]
+    },
+    {
+      "label": "[A02] descriptions with an emoji, combining accents, right-to-left text, CR LF and a tab, leading and trailing spaces, and 400 characters",
+      "columns": [
+        {
+          "name": "ProductID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Name",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "ProductModel",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "CultureID",
+          "sqlServerType": "char(6)"
+        },
+        {
+          "name": "Description",
+          "sqlServerType": "nvarchar(400)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:Bike",
+          "s:Road",
+          "s:en    ",
+          "s:Light 😀 frame 🚲"
+        ],
+        [
+          "n:1",
+          "s:Bike",
+          "s:Road",
+          "s:fr    ",
+          "s:Café cèdre"
+        ],
+        [
+          "n:1",
+          "s:Bike",
+          "s:Road",
+          "s:ar    ",
+          "s:دراجة خفيفة"
+        ],
+        [
+          "n:1",
+          "s:Bike",
+          "s:Road",
+          "s:de    ",
+          "s:line 1\r\nline 2\tend"
+        ],
+        [
+          "n:1",
+          "s:Bike",
+          "s:Road",
+          "s:es    ",
+          "s:  padded  "
+        ],
+        [
+          "n:1",
+          "s:Bike",
+          "s:Road",
+          "s:it    ",
+          "s:éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééx"
+        ]
+      ]
+    },
+    {
+      "label": "[A03] an empty description and names that differ only in case: '' kept, not NULL; 'Chain' and 'CHAIN' are two products",
+      "columns": [
+        {
+          "name": "ProductID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Name",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "ProductModel",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "CultureID",
+          "sqlServerType": "char(6)"
+        },
+        {
+          "name": "Description",
+          "sqlServerType": "nvarchar(400)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:Chain",
+          "s:Road",
+          "s:en    ",
+          "s:"
+        ],
+        [
+          "n:2",
+          "s:CHAIN",
+          "s:ROAD",
+          "s:en    ",
+          "s:"
+        ]
+      ]
+    },
+    {
+      "label": "[A04] duplicate culture rows and two products on one model: rows multiply (2 products x 3 culture rows), duplicates kept",
+      "columns": [
+        {
+          "name": "ProductID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Name",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "ProductModel",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "CultureID",
+          "sqlServerType": "char(6)"
+        },
+        {
+          "name": "Description",
+          "sqlServerType": "nvarchar(400)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:Bike",
+          "s:Road",
+          "s:en    ",
+          "s:same"
+        ],
+        [
+          "n:1",
+          "s:Bike",
+          "s:Road",
+          "s:en    ",
+          "s:same"
+        ],
+        [
+          "n:1",
+          "s:Bike",
+          "s:Road",
+          "s:fr    ",
+          "s:other"
+        ],
+        [
+          "n:2",
+          "s:Bike",
+          "s:Road",
+          "s:en    ",
+          "s:same"
+        ],
+        [
+          "n:2",
+          "s:Bike",
+          "s:Road",
+          "s:en    ",
+          "s:same"
+        ],
+        [
+          "n:2",
+          "s:Bike",
+          "s:Road",
+          "s:fr    ",
+          "s:other"
+        ]
+      ]
+    },
+    {
+      "label": "[A05] keys with gaps and at the int limits: product 2147483647, model -2147483648, description 0; a NULL model and a dangling description dropped",
+      "columns": [
+        {
+          "name": "ProductID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "Name",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "ProductModel",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "CultureID",
+          "sqlServerType": "char(6)"
+        },
+        {
+          "name": "Description",
+          "sqlServerType": "nvarchar(400)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:A",
+          "s:Min",
+          "s:en    ",
+          "s:zero"
+        ],
+        [
+          "n:2147483647",
+          "s:C",
+          "s:Min",
+          "s:en    ",
+          "s:zero"
+        ]
+      ]
+    }
+  ]
+}

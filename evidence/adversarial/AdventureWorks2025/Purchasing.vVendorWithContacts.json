@@ -1,0 +1,209 @@
+{
+  "schemaVersion": 1,
+  "object": "Purchasing.vVendorWithContacts",
+  "database": "AdventureWorks2025",
+  "runAt": "2026-11-19T04:17:09.381Z",
+  "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
+  "conversionSha256": "26672aa5a4dd5bf315f0b412edaa635e50b5c180cb56e0502721f6041934b7e7",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-18T20:21:05-07:00",
+    "file": "adversarial/AdventureWorks2025/Purchasing.vVendorWithContacts.cases.json",
+    "sha256": "f3e568ca9d9c78105a3692aeb7585c4ff658a3583243826fb70a6a268c4c8230"
+  },
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T20:33:12.9525152-07:00",
+    "file": "adversarial/AdventureWorks2025/Purchasing.vVendorWithContacts.audit.json",
+    "sha256": "2ec388d97417098709e2d6e0a6de1188db43ca3159b04b63e8453d7ce5d54255"
+  },
+  "sameModel": false,
+  "casesAudited": [
+    "A01",
+    "A02",
+    "A03",
+    "A04",
+    "A05"
+  ],
+  "traps": {
+    "null-vs-empty": {
+      "applicable": true,
+      "coveredBy": [
+        "A01"
+      ]
+    },
+    "collation-case": {
+      "applicable": true,
+      "coveredBy": [
+        "A02"
+      ]
+    },
+    "trailing-spaces": {
+      "applicable": true,
+      "coveredBy": [
+        "A02"
+      ]
+    },
+    "dates-datetime": {
+      "applicable": false,
+      "coveredBy": []
+    },
+    "numeric-rounding": {
+      "applicable": false,
+      "coveredBy": []
+    },
+    "top-ties": {
+      "applicable": true,
+      "coveredBy": [
+        "A03"
+      ]
+    },
+    "identity-gaps": {
+      "applicable": true,
+      "coveredBy": [
+        "A04"
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "NULL versus '': Title, MiddleName and Suffix as NULL and as ''; an email row with NULL, one with '', and no email row",
+      "traps": [
+        "null-vs-empty"
+      ],
+      "reasoning": "Person 10 has an EmailAddress row whose address is NULL, person 11 one whose address is '', person 12 none (LEFT JOIN: NULL). Title, MiddleName and Suffix are NULL on one person and '' on another. '' must stay '' and the two NULLs look the same.",
+      "trapChecks": {
+        "null-vs-empty": {
+          "present": true,
+          "detail": "empty string: yes; NULL in a text input: yes"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A02",
+      "label": "text returned as stored: names differing only in case, trailing spaces, an emoji and combining accents",
+      "traps": [
+        "collation-case",
+        "trailing-spaces"
+      ],
+      "reasoning": "No text is compared in the view. 'Ann', 'ANN' and 'ann ' are three contacts with their own spelling; contact types 'Owner' and 'OWNER ' are separate rows joined by id. The emoji and combining characters check the load on both engines.",
+      "trapChecks": {
+        "collation-case": {
+          "present": true,
+          "detail": "\"Ann\" and \"ANN\" differ only in case"
+        },
+        "trailing-spaces": {
+          "present": true,
+          "detail": "\"Vendor 1 \" ends in a space"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A03",
+      "label": "fan-out: a contact with two identical phone rows and an unknown phone type; the same person as contact twice under two types",
+      "traps": [
+        "top-ties"
+      ],
+      "reasoning": "PersonPhone and BusinessEntityContact have no key constraint in the scratch tables, so duplicate rows give duplicate output rows (no DISTINCT). Person 10 is an Owner and a Buyer of vendor 1, with two identical phones and one of type 9 (no PhoneNumberType row: NULL): 2 x 3 = 6 rows.",
+      "trapChecks": {
+        "top-ties": {
+          "present": true,
+          "detail": "two rows of Person.BusinessEntityContact share BusinessEntityID = 1"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A04",
+      "label": "keys with gaps and at the int limits: vendor 0, person 2147483647, contact type -2147483648; EmailPromotion at the int limits",
+      "traps": [
+        "identity-gaps"
+      ],
+      "reasoning": "BusinessEntityID, PersonID and ContactTypeID jump and sit at the int limits; EmailPromotion (int, passed through) is 2147483647 and -2147483648.",
+      "trapChecks": {
+        "identity-gaps": {
+          "present": true,
+          "detail": "Purchasing.Vendor.BusinessEntityID jumps from 0 to 5"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A05",
+      "label": "rows dropped by the inner joins: a contact of a missing contact type, a missing person, and a business entity that is not a vendor",
+      "traps": [],
+      "reasoning": "ContactType and Person are inner joins: contact type 99 and person 98 do not exist. Entity 300 has a contact but no Vendor row. Only person 10's row remains.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    }
+  ],
+  "summary": {
+    "ran": 5,
+    "differed": 0,
+    "invalid": 0
+  },
+  "objections": [
+    {
+      "id": "O01",
+      "caseId": "A03",
+      "kind": "not-an-attack",
+      "text": "A03 inserts the identical PersonPhone primary-key tuple (BusinessEntityID 10, PhoneNumber '555-0100', PhoneNumberTypeID 1) twice. The resulting duplicate fan-out cannot occur under the source schema preconditions.",
+      "status": "open"
+    }
+  ],
+  "mutantAdequacy": {
+    "verdict": "adequate",
+    "caught": [
+      "auto: LEFT JOIN becomes INNER JOIN",
+      "auto: two output columns swap values"
+    ],
+    "missed": [],
+    "skipped": [],
+    "equivalentRecorded": []
+  },
+  "gate": {
+    "passed": false,
+    "reasons": [
+      "objection O01 is open"
+    ]
+  },
+  "wording": "5 adversarial cases ran, 0 differed"
+}

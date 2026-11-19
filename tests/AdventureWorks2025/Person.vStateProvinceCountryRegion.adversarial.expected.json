@@ -1,0 +1,487 @@
+{
+  "object": "Person.vStateProvinceCountryRegion",
+  "database": "AdventureWorks2025",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-19T04:16:36.970Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "[A01] case-only variants 'Us', 'uS' and 'us ' of a country code join 'US'",
+      "columns": [
+        {
+          "name": "StateProvinceID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "StateProvinceCode",
+          "sqlServerType": "char(3)"
+        },
+        {
+          "name": "IsOnlyStateProvinceFlag",
+          "sqlServerType": "bit"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TerritoryID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "CountryRegionCode",
+          "sqlServerType": "nvarchar(3)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:S1 ",
+          "b:0",
+          "s:Province 1",
+          "n:1",
+          "s:US",
+          "s:United States"
+        ],
+        [
+          "n:2",
+          "s:S2 ",
+          "b:0",
+          "s:Province 2",
+          "n:1",
+          "s:US",
+          "s:United States"
+        ],
+        [
+          "n:3",
+          "s:S3 ",
+          "b:0",
+          "s:Province 3",
+          "n:1",
+          "s:US",
+          "s:United States"
+        ]
+      ]
+    },
+    {
+      "label": "[A02] expansions: province code 'Æ' against country 'AE' and 'ß' against 'SS', with 'ae' and 'ss' as case-only controls",
+      "columns": [
+        {
+          "name": "StateProvinceID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "StateProvinceCode",
+          "sqlServerType": "char(3)"
+        },
+        {
+          "name": "IsOnlyStateProvinceFlag",
+          "sqlServerType": "bit"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TerritoryID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "CountryRegionCode",
+          "sqlServerType": "nvarchar(3)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:S1 ",
+          "b:0",
+          "s:Province 1",
+          "n:1",
+          "s:AE",
+          "s:United Arab Emirates"
+        ],
+        [
+          "n:2",
+          "s:S2 ",
+          "b:0",
+          "s:Province 2",
+          "n:1",
+          "s:SS",
+          "s:South Sudan"
+        ],
+        [
+          "n:3",
+          "s:S3 ",
+          "b:0",
+          "s:Province 3",
+          "n:1",
+          "s:AE",
+          "s:United Arab Emirates"
+        ],
+        [
+          "n:4",
+          "s:S4 ",
+          "b:0",
+          "s:Province 4",
+          "n:1",
+          "s:SS",
+          "s:South Sudan"
+        ]
+      ]
+    },
+    {
+      "label": "[A03] compatibility forms: full-width U+FF35 U+FF33 against 'US' and the Kelvin sign U+212A followed by 'E' against 'KE', with 'ke' as a case-only control",
+      "columns": [
+        {
+          "name": "StateProvinceID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "StateProvinceCode",
+          "sqlServerType": "char(3)"
+        },
+        {
+          "name": "IsOnlyStateProvinceFlag",
+          "sqlServerType": "bit"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TerritoryID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "CountryRegionCode",
+          "sqlServerType": "nvarchar(3)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:S1 ",
+          "b:0",
+          "s:Province 1",
+          "n:1",
+          "s:US",
+          "s:United States"
+        ],
+        [
+          "n:3",
+          "s:S3 ",
+          "b:0",
+          "s:Province 3",
+          "n:1",
+          "s:KE",
+          "s:Kenya"
+        ]
+      ]
+    },
+    {
+      "label": "[A04] whitespace look-alikes: 'US' with a trailing no-break space (U+00A0), a trailing tab, a leading space, a soft hyphen (U+00AD) inside, and 'CA ' (a real trailing space)",
+      "columns": [
+        {
+          "name": "StateProvinceID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "StateProvinceCode",
+          "sqlServerType": "char(3)"
+        },
+        {
+          "name": "IsOnlyStateProvinceFlag",
+          "sqlServerType": "bit"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TerritoryID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "CountryRegionCode",
+          "sqlServerType": "nvarchar(3)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:5",
+          "s:S5 ",
+          "b:0",
+          "s:Province 5",
+          "n:1",
+          "s:CA",
+          "s:Canada"
+        ]
+      ]
+    },
+    {
+      "label": "[A05] accents and dotted/dotless I: 'ÜS' against 'US' (accent-sensitive); U+0131 and U+0130 followed by 'T' against 'IT', with 'it' as a case-only control",
+      "columns": [
+        {
+          "name": "StateProvinceID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "StateProvinceCode",
+          "sqlServerType": "char(3)"
+        },
+        {
+          "name": "IsOnlyStateProvinceFlag",
+          "sqlServerType": "bit"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TerritoryID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "CountryRegionCode",
+          "sqlServerType": "nvarchar(3)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:4",
+          "s:S4 ",
+          "b:0",
+          "s:Province 4",
+          "n:1",
+          "s:IT",
+          "s:Italy"
+        ]
+      ]
+    },
+    {
+      "label": "[A06] an empty country code: province codes '' and ' ' both join country '' (trailing spaces ignored)",
+      "columns": [
+        {
+          "name": "StateProvinceID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "StateProvinceCode",
+          "sqlServerType": "char(3)"
+        },
+        {
+          "name": "IsOnlyStateProvinceFlag",
+          "sqlServerType": "bit"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TerritoryID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "CountryRegionCode",
+          "sqlServerType": "nvarchar(3)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:S1 ",
+          "b:0",
+          "s:Province 1",
+          "n:1",
+          "s:",
+          "s:Nowhere"
+        ],
+        [
+          "n:2",
+          "s:S2 ",
+          "b:0",
+          "s:Province 2",
+          "n:1",
+          "s:",
+          "s:Nowhere"
+        ]
+      ]
+    },
+    {
+      "label": "[A07] nchar(3) province codes: '', 'A', 'AB ', 'ABC', 'abc' and 'é' come back padded to three characters",
+      "columns": [
+        {
+          "name": "StateProvinceID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "StateProvinceCode",
+          "sqlServerType": "char(3)"
+        },
+        {
+          "name": "IsOnlyStateProvinceFlag",
+          "sqlServerType": "bit"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TerritoryID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "CountryRegionCode",
+          "sqlServerType": "nvarchar(3)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:   ",
+          "b:0",
+          "s:Province 1",
+          "n:0",
+          "s:US",
+          "s:United States"
+        ],
+        [
+          "n:2",
+          "s:A  ",
+          "b:1",
+          "s:Province 2",
+          "n:1",
+          "s:US",
+          "s:United States"
+        ],
+        [
+          "n:3",
+          "s:AB ",
+          "b:0",
+          "s:Province 3",
+          "n:2",
+          "s:US",
+          "s:United States"
+        ],
+        [
+          "n:4",
+          "s:ABC",
+          "b:1",
+          "s:Province 4",
+          "n:3",
+          "s:US",
+          "s:United States"
+        ],
+        [
+          "n:5",
+          "s:abc",
+          "b:0",
+          "s:Province 5",
+          "n:4",
+          "s:US",
+          "s:United States"
+        ],
+        [
+          "n:6",
+          "s:é  ",
+          "b:1",
+          "s:Province 6",
+          "n:5",
+          "s:US",
+          "s:United States"
+        ]
+      ]
+    },
+    {
+      "label": "[A08] several provinces of one country, ids with gaps and at the int limits, territory -2147483648, names with trailing spaces and an emoji",
+      "columns": [
+        {
+          "name": "StateProvinceID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "StateProvinceCode",
+          "sqlServerType": "char(3)"
+        },
+        {
+          "name": "IsOnlyStateProvinceFlag",
+          "sqlServerType": "bit"
+        },
+        {
+          "name": "StateProvinceName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "TerritoryID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "CountryRegionCode",
+          "sqlServerType": "nvarchar(3)"
+        },
+        {
+          "name": "CountryRegionName",
+          "sqlServerType": "nvarchar(50)"
+        }
+      ],
+      "rows": [
+        [
+          "n:0",
+          "s:AA ",
+          "b:1",
+          "s:Alpha ",
+          "n:-2147483648",
+          "s:US",
+          "s:United States "
+        ],
+        [
+          "n:9",
+          "s:BB ",
+          "b:0",
+          "s:Beta 😀",
+          "n:-2147483648",
+          "s:US",
+          "s:United States "
+        ],
+        [
+          "n:2147483647",
+          "s:CC ",
+          "b:0",
+          "s:",
+          "n:2147483647",
+          "s:US",
+          "s:United States "
+        ]
+      ]
+    }
+  ]
+}

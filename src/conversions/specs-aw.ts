@@ -166,6 +166,9 @@ export function countryCodeVariants(base: FixedCase): FixedCase[] {
 /** Sales.vSalesPerson was verified on 2026-11-16, then corrected on 2026-11-18; the review covered the previous code. */
 const SALES_PERSON_STEP5_RESET =
   "Step 5 reset on 2026-11-18: this object was verified after a second review by Steve Harlow on 2026-11-16, but that review covered the previous conversion. The conversion was then corrected (the CountryRegionCode join under CI_AS, finding of 2026-11-18), so the corrected code needs a new review before the object can be verified again.";
+/** Sales.vSalesPerson was reviewed again on 2026-11-18, then corrected on 2026-11-19 after the adversarial run. */
+const SALES_PERSON_STEP5_RESET_2 =
+  "Step 5 reset on 2026-11-19: Steve Harlow's step 5 pass of 2026-11-18 covered the conversion before the adversarial run of 2026-11-19. Cases A02-A04 differed (CountryRegionCode join: 'Æ'/'ß' expansions, the Kelvin sign and the soft hyphen), and the conversion was corrected (tsql_compat.ci_as_key in the join), so the corrected code needs a new review on the adversarial report before the object can be verified again.";
 
 /** Third planted defect for views whose email join is a LEFT JOIN (people without email keep their row). */
 export const EMAIL_LEFT_JOIN: ObjectSpec["mutants"] = [
@@ -186,17 +189,27 @@ export function withCaseVariantKeys(spec: ObjectSpec): ObjectSpec {
         : t),
   };
 }
+export const CI_KEY_NOTE = (qualified: string): string =>
+  `Finding (adversarial run, 2026-11-19, cases A02-A04): the ICU collation in ${qualified}'s CountryRegionCode join differed from SQL Server's on three agent-written inputs: SQL Server joins 'Æ' to 'AE' and 'ß' to 'SS' (ICU does not), and ICU equates the Kelvin sign U+212A with 'K' and ignores the soft hyphen U+00AD (SQL Server does neither). PostgreSQL 18 drops the ICU strength setting when tailoring rules are given, so the conversion maps those characters in tsql_compat.ci_as_key() before comparing under the same collation. Checked for the characters the cases use, not for every collation rule; the three cases are kept as regression cases.`;
 export const ciJoinFix = (qualified: string, extra: ObjectSpec["mutants"] = [
   { name: "inner join to address type made a left join (unknown address types kept)", from: "INNER JOIN person.address_type at", to: "LEFT JOIN person.address_type at" },
-]): Pick<ObjectSpec, "mutants" | "notes"> => ({
-  mutants: [
-    // both sides: an explicit collation on either side of '=' applies to the comparison
-    { name: "join is case-sensitive (collation dropped)", from: " COLLATE tsql_compat.ci_as_equal = rtrim(sp.\"CountryRegionCode\", ' ') COLLATE tsql_compat.ci_as_equal", to: " = rtrim(sp.\"CountryRegionCode\", ' ')" },
-    { name: "trailing spaces count in the join (rtrim dropped)", from: "rtrim(sp.\"CountryRegionCode\", ' ') COLLATE", to: "sp.\"CountryRegionCode\" COLLATE" },
-    ...extra,
-  ],
+], keyed = false): Pick<ObjectSpec, "mutants" | "notes"> => ({
+  mutants: keyed
+    ? [
+      // both sides: an explicit collation on either side of '=' applies to the comparison
+      { name: "join is case-sensitive (collation dropped)", from: " COLLATE tsql_compat.ci_as_equal = tsql_compat.ci_as_key(sp.\"CountryRegionCode\") COLLATE tsql_compat.ci_as_equal", to: " = tsql_compat.ci_as_key(sp.\"CountryRegionCode\")" },
+      { name: "trailing spaces count in the join (rtrim dropped)", from: "tsql_compat.ci_as_key(sp.\"CountryRegionCode\") COLLATE", to: "sp.\"CountryRegionCode\" COLLATE" },
+      ...extra,
+    ]
+    : [
+      // both sides: an explicit collation on either side of '=' applies to the comparison
+      { name: "join is case-sensitive (collation dropped)", from: " COLLATE tsql_compat.ci_as_equal = rtrim(sp.\"CountryRegionCode\", ' ') COLLATE tsql_compat.ci_as_equal", to: " = rtrim(sp.\"CountryRegionCode\", ' ')" },
+      { name: "trailing spaces count in the join (rtrim dropped)", from: "rtrim(sp.\"CountryRegionCode\", ' ') COLLATE", to: "sp.\"CountryRegionCode\" COLLATE" },
+      ...extra,
+    ],
   notes: [
     `Finding (step 2, 2026-11-18): Kiro's draft of ${qualified} joined CountryRegionCode with PostgreSQL '=', which is case-sensitive and counts trailing spaces. Under the source collation (SQL_Latin1_General_CP1_CI_AS) 'us' joins 'US' and 'US ' joins 'US'. Step 3 passed because the generated codes never differed only in case or trailing spaces; the fixed cases 'collation' and 'trailing space' failed on PostgreSQL. Fixed in the conversion as for Person.vStateProvinceCountryRegion (rtrim + a case-insensitive ICU collation in the join); both cases are kept as regression cases.`,
+    ...(keyed ? [CI_KEY_NOTE(qualified)] : []),
   ],
 });
 
@@ -206,23 +219,24 @@ const AW_VIEWS_RAW: ObjectSpec[] = [
     fixedCases: stateProvinceCases(),
     mutants: [
       // both sides: an explicit collation on either side of '=' applies to the comparison, so dropping one is unobservable
-      { name: "join is case-sensitive (collation dropped)", from: " COLLATE tsql_compat.ci_as_equal = rtrim(cr.\"CountryRegionCode\", ' ') COLLATE tsql_compat.ci_as_equal;", to: " = rtrim(cr.\"CountryRegionCode\", ' ');" },
-      { name: "trailing spaces count in the join (rtrim dropped)", from: "rtrim(sp.\"CountryRegionCode\", ' ') COLLATE", to: "sp.\"CountryRegionCode\" COLLATE" },
+      { name: "join is case-sensitive (collation dropped)", from: " COLLATE tsql_compat.ci_as_equal = tsql_compat.ci_as_key(cr.\"CountryRegionCode\") COLLATE tsql_compat.ci_as_equal;", to: " = tsql_compat.ci_as_key(cr.\"CountryRegionCode\");" },
+      { name: "trailing spaces count in the join (rtrim dropped)", from: "tsql_compat.ci_as_key(sp.\"CountryRegionCode\") COLLATE", to: "sp.\"CountryRegionCode\" COLLATE" },
       { name: "inner join made a left join (provinces of unknown countries kept)", from: "INNER JOIN person.country_region cr", to: "LEFT JOIN person.country_region cr" },
     ],
     notes: [
       "Finding (step 2, 2026-11-18): Kiro's draft joined CountryRegionCode with PostgreSQL '=', which is case-sensitive and counts trailing spaces. Under the source collation (SQL_Latin1_General_CP1_CI_AS) 'us' joins 'US' and 'CA ' joins 'CA'. Step 3 passed because the generated codes never differed only in case or trailing spaces; the fixed cases 'collation' and 'trailing space' failed on PostgreSQL. Fixed in the conversion (rtrim + a case-insensitive ICU collation in the join); both cases are kept as regression cases.",
+      CI_KEY_NOTE("Person.vStateProvinceCountryRegion"),
     ],
   },
   { ...view("HumanResources.vEmployeeDepartment", "humanresources.v_employee_department"), fixedCases: [employeeDepartmentCase()] },
   { ...view("HumanResources.vEmployeeDepartmentHistory", "humanresources.v_employee_department_history"), fixedCases: [employeeDepartmentHistoryCase()] },
   { ...view("Production.vProductAndDescription", "production.v_product_and_description"), fixedCases: [productAndDescriptionCase()] },
-  { ...view("Purchasing.vVendorWithAddresses", "purchasing.v_vendor_with_addresses"), fixedCases: addressCases("Purchasing.Vendor", "vendor"), ...ciJoinFix("Purchasing.vVendorWithAddresses") },
+  { ...view("Purchasing.vVendorWithAddresses", "purchasing.v_vendor_with_addresses"), fixedCases: addressCases("Purchasing.Vendor", "vendor"), ...ciJoinFix("Purchasing.vVendorWithAddresses", undefined, true) },
   { ...view("Purchasing.vVendorWithContacts", "purchasing.v_vendor_with_contacts"), fixedCases: [contactsCase("Purchasing.Vendor", "vendor")] },
   {
     ...view("Sales.vSalesPerson", "sales.v_sales_person"), fixedCases: [salesPersonCase(), ...countryCodeVariants(salesPersonCase())],
-    mutants: ciJoinFix("Sales.vSalesPerson", EMAIL_LEFT_JOIN).mutants,
-    notes: [...(ciJoinFix("Sales.vSalesPerson").notes ?? []), SALES_PERSON_STEP5_RESET],
+    mutants: ciJoinFix("Sales.vSalesPerson", EMAIL_LEFT_JOIN, true).mutants,
+    notes: [...(ciJoinFix("Sales.vSalesPerson", undefined, true).notes ?? []), SALES_PERSON_STEP5_RESET, SALES_PERSON_STEP5_RESET_2],
   },
   { ...view("Sales.vStoreWithAddresses", "sales.v_store_with_addresses"), fixedCases: addressCases("Sales.Store", "store"), ...ciJoinFix("Sales.vStoreWithAddresses") },
   { ...view("Sales.vStoreWithContacts", "sales.v_store_with_contacts"), fixedCases: [contactsCase("Sales.Store", "store")] },

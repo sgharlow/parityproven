@@ -104,7 +104,78 @@
       "SQL Server: AgreedTests.[test 01 two products sharing a model fan out over its three described cultures; char(6) culture codes padded;…]: pass",
       "PostgreSQL: AgreedTests.[test 01 two products sharing a model fan out over its three described cultures; char(6) culture codes padded;…]: pass",
       "planted defects caught by the agreed tests: 2 of 2"
-    ]
+    ],
+    "adversarial": {
+      "gate": "fail",
+      "ran": 5,
+      "differed": 0,
+      "evidencePath": "evidence/adversarial/AdventureWorks2025/Production.vProductAndDescription.json",
+      "runAt": "2026-11-19T04:16:49.738Z",
+      "agentWritten": true,
+      "wording": "5 adversarial cases ran, 0 differed",
+      "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
+      "auditorModel": "gpt-5.6-sol",
+      "sameModel": false,
+      "mutantAdequacy": "adequate",
+      "gateReasons": [
+        "objection O01 is open",
+        "objection O02 is open",
+        "objection O03 is open"
+      ],
+      "cases": [
+        {
+          "id": "A01",
+          "label": "culture codes differing only in case or by a trailing space ('en', 'EN', 'en '), an empty code and a six-character code",
+          "traps": [
+            "collation-case",
+            "trailing-spaces"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A02",
+          "label": "descriptions with an emoji, combining accents, right-to-left text, CR LF and a tab, leading and trailing spaces, and 400 characters",
+          "traps": [
+            "trailing-spaces"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A03",
+          "label": "an empty description and names that differ only in case: '' kept, not NULL; 'Chain' and 'CHAIN' are two products",
+          "traps": [
+            "collation-case"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A04",
+          "label": "duplicate culture rows and two products on one model: rows multiply (2 products x 3 culture rows), duplicates kept",
+          "traps": [
+            "top-ties"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A05",
+          "label": "keys with gaps and at the int limits: product 2147483647, model -2147483648, description 0; a NULL model and a dangling description dropped",
+          "traps": [
+            "identity-gaps"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        }
+      ]
+    }
   },
   "effort": {
     "humanMinutes": 0,
@@ -115,5 +186,5 @@
     "p50Hours": 0.75,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-19T03:12:12.014Z"
+  "builtAt": "2026-11-19T04:20:26.196Z"
 }

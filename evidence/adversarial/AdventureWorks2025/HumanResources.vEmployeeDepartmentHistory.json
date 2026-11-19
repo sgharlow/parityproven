@@ -1,0 +1,282 @@
+{
+  "schemaVersion": 1,
+  "object": "HumanResources.vEmployeeDepartmentHistory",
+  "database": "AdventureWorks2025",
+  "runAt": "2026-11-19T04:16:34.014Z",
+  "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
+  "conversionSha256": "3c4aab538cbdbbf16ded3383a1866702e6d6ab5e999bac1f48faaf7a7df2140a",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-18T20:21:05-07:00",
+    "file": "adversarial/AdventureWorks2025/HumanResources.vEmployeeDepartmentHistory.cases.json",
+    "sha256": "54599299d2e547cf99432a49adf228d2cf7e0f913f792aedae27b53275213729"
+  },
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T20:33:12.9525152-07:00",
+    "file": "adversarial/AdventureWorks2025/HumanResources.vEmployeeDepartmentHistory.audit.json",
+    "sha256": "13a4e3ad415b2b13f6b5cb288e8f1178f3b1d80737cd747e5619425c62ce3ef9"
+  },
+  "sameModel": false,
+  "casesAudited": [
+    "A01",
+    "A02",
+    "A03",
+    "A04",
+    "A05",
+    "A06",
+    "A07"
+  ],
+  "traps": {
+    "null-vs-empty": {
+      "applicable": true,
+      "coveredBy": [
+        "A03"
+      ]
+    },
+    "collation-case": {
+      "applicable": true,
+      "coveredBy": [
+        "A04"
+      ]
+    },
+    "trailing-spaces": {
+      "applicable": true,
+      "coveredBy": [
+        "A04"
+      ]
+    },
+    "dates-datetime": {
+      "applicable": true,
+      "coveredBy": [
+        "A01",
+        "A02"
+      ]
+    },
+    "numeric-rounding": {
+      "applicable": false,
+      "coveredBy": []
+    },
+    "top-ties": {
+      "applicable": true,
+      "coveredBy": [
+        "A05"
+      ]
+    },
+    "identity-gaps": {
+      "applicable": true,
+      "coveredBy": [
+        "A06"
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "date boundaries: start dates 0001-01-01, 1752-12-31, 1753-01-01, 2000-02-29 and 9999-12-31; end dates 0001-01-01 and 9999-12-31",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "date covers 0001-01-01 to 9999-12-31 on both engines (wider than datetime). Values before 1753 and the leap day check the date mapping and how both drivers read early years (a client that builds dates with Date.UTC maps years 0-99 to 1900-1999). both open and ended histories are listed.",
+      "trapChecks": {
+        "dates-datetime": {
+          "present": true,
+          "detail": "boundary date \"1753-01-01\" in StartDate"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A02",
+      "label": "an end date before the start date, and an end date equal to it: the view does not compare the two",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "Neither view compares EndDate with StartDate; a conversion that added a validity check would drop rows. both open and ended histories are listed. 9999-12-31 is the end date of one row.",
+      "trapChecks": {
+        "dates-datetime": {
+          "present": true,
+          "detail": "boundary date \"9999-12-31\" in EndDate"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A03",
+      "label": "NULL versus '': Title, MiddleName and Suffix as NULL and as ''; an empty department name and group",
+      "traps": [
+        "null-vs-empty"
+      ],
+      "reasoning": "Each nullable text column is sent as NULL for one person and '' for another; Department.Name and GroupName are NOT NULL and sent as ''. '' must stay '' and NULL stay NULL on both engines.",
+      "trapChecks": {
+        "null-vs-empty": {
+          "present": true,
+          "detail": "empty string: yes; NULL in a text input: yes"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A04",
+      "label": "text returned as stored: department names differing only in case, trailing spaces, non-ASCII and an emoji",
+      "traps": [
+        "collation-case",
+        "trailing-spaces"
+      ],
+      "reasoning": "No text is compared in the view, so 'Sales', 'SALES' and 'sales ' are three departments with their own spelling; a conversion that case-folded, trimmed or grouped them would differ. An emoji and combining characters check the nvarchar -> varchar load on both engines.",
+      "trapChecks": {
+        "collation-case": {
+          "present": true,
+          "detail": "\"ANN\" and \"ann\" differ only in case"
+        },
+        "trailing-spaces": {
+          "present": true,
+          "detail": "\"Ann \" ends in a space"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A05",
+      "label": "duplicate history rows (same employee, department and start date twice): two identical output rows",
+      "traps": [
+        "top-ties"
+      ],
+      "reasoning": "EmployeeDepartmentHistory has no key constraint in the scratch tables, so the same row twice is two rows on both engines; the view has no DISTINCT. Compared as a multiset.",
+      "trapChecks": {
+        "top-ties": {
+          "present": true,
+          "detail": "two rows of HumanResources.EmployeeDepartmentHistory share BusinessEntityID = 1"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A06",
+      "label": "smallint and int extremes: departments -32768 and 32767, employees 0 and 2147483647, shifts 0 and 255 (tinyint limits)",
+      "traps": [
+        "identity-gaps"
+      ],
+      "reasoning": "DepartmentID is smallint (smallint on PostgreSQL), BusinessEntityID int, ShiftID tinyint (smallint on PostgreSQL); the keys jump and sit at the type limits. A narrowing or sign error in the mapping would drop or change rows.",
+      "trapChecks": {
+        "identity-gaps": {
+          "present": true,
+          "detail": "HumanResources.Employee.BusinessEntityID jumps from 0 to 2147483647"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A07",
+      "label": "rows dropped by the inner joins: a history for a missing department, a missing person and a missing shift; a person who is not an employee",
+      "traps": [],
+      "reasoning": "Department, Person and Shift are inner joins. Department 9 does not exist, employee 4 has no Person row, and shift 7 does not exist; those rows are dropped. Employee 5 has a Person row but no Employee row and is not listed.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    }
+  ],
+  "summary": {
+    "ran": 7,
+    "differed": 0,
+    "invalid": 0
+  },
+  "objections": [
+    {
+      "id": "O01",
+      "caseId": "A01",
+      "kind": "not-an-attack",
+      "text": "The employee 1, department 2 history ends on 0001-01-01 after starting on 1752-12-31. It violates the source check requiring EndDate >= StartDate (or NULL), so the boundary set is not valid source data.",
+      "status": "open"
+    },
+    {
+      "id": "O02",
+      "caseId": "A02",
+      "kind": "not-an-attack",
+      "text": "The first history ends on 2010-06-14 after starting on 2010-06-15. It violates the source EmployeeDepartmentHistory check requiring EndDate >= StartDate (or NULL), so the case's central input cannot occur under the source schema preconditions.",
+      "status": "open"
+    },
+    {
+      "id": "O03",
+      "caseId": "A04",
+      "kind": "not-an-attack",
+      "text": "Department names 'Sales', 'SALES' and 'sales ' collide under the source case-insensitive, trailing-space-insensitive unique key on HumanResources.Department.Name. The input cannot occur in the source table with its constraints.",
+      "status": "open"
+    },
+    {
+      "id": "O04",
+      "caseId": "A05",
+      "kind": "not-an-attack",
+      "text": "A05 sends the exact EmployeeDepartmentHistory primary-key tuple (employee 1, department 1, shift 1, StartDate 2005-07-01) twice. The duplicate cannot occur under the source schema preconditions.",
+      "status": "open"
+    }
+  ],
+  "mutantAdequacy": {
+    "verdict": "adequate",
+    "caught": [
+      "auto: two output columns swap values",
+      "auto: join condition uses a different key"
+    ],
+    "missed": [],
+    "skipped": [],
+    "equivalentRecorded": []
+  },
+  "gate": {
+    "passed": false,
+    "reasons": [
+      "objection O01 is open",
+      "objection O02 is open",
+      "objection O03 is open",
+      "objection O04 is open"
+    ]
+  },
+  "wording": "7 adversarial cases ran, 0 differed"
+}

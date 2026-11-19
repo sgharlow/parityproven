@@ -1,0 +1,363 @@
+{
+  "schemaVersion": 1,
+  "object": "Sales.vSalesPerson",
+  "database": "AdventureWorks2025",
+  "runAt": "2026-11-19T04:17:37.464Z",
+  "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
+  "conversionSha256": "f5a932f00a10efdc881b577e448bb5e24b4a074a3045fefde601a21ee41a9071",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-18T20:21:05-07:00",
+    "file": "adversarial/AdventureWorks2025/Sales.vSalesPerson.cases.json",
+    "sha256": "69a06e274fa43c015ee0c74ac64e8d5167e1d0a87bbdb78914c9c77601bd1e20"
+  },
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T20:33:12.9525152-07:00",
+    "file": "adversarial/AdventureWorks2025/Sales.vSalesPerson.audit.json",
+    "sha256": "798f58ba73d4a0fe1d83d4831697f8eeca6ed92ac25dd1d1bb246fc74d92b556"
+  },
+  "sameModel": false,
+  "casesAudited": [
+    "A01",
+    "A02",
+    "A03",
+    "A04",
+    "A05",
+    "A06",
+    "A07",
+    "A08",
+    "A09",
+    "A10"
+  ],
+  "traps": {
+    "null-vs-empty": {
+      "applicable": true,
+      "coveredBy": [
+        "A08"
+      ]
+    },
+    "collation-case": {
+      "applicable": true,
+      "coveredBy": [
+        "A01",
+        "A02",
+        "A03",
+        "A05",
+        "A09"
+      ]
+    },
+    "trailing-spaces": {
+      "applicable": true,
+      "coveredBy": [
+        "A01",
+        "A04",
+        "A06",
+        "A08"
+      ]
+    },
+    "dates-datetime": {
+      "applicable": false,
+      "coveredBy": []
+    },
+    "numeric-rounding": {
+      "applicable": true,
+      "coveredBy": [
+        "A07"
+      ]
+    },
+    "top-ties": {
+      "applicable": true,
+      "coveredBy": [
+        "A09"
+      ]
+    },
+    "identity-gaps": {
+      "applicable": true,
+      "coveredBy": [
+        "A10"
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "case-only variants 'Us', 'uS' and 'us ' of a country code join 'US'",
+      "traps": [
+        "collation-case",
+        "trailing-spaces"
+      ],
+      "reasoning": "CI_AS ignores case and SQL Server equality ignores trailing spaces, so all three province codes join country 'US'. The conversion uses rtrim under an ICU level-2 collation; this checks mixed case and case plus trailing space together.",
+      "trapChecks": {
+        "collation-case": {
+          "present": true,
+          "detail": "\"Us\" and \"uS\" differ only in case"
+        },
+        "trailing-spaces": {
+          "present": true,
+          "detail": "\"us \" ends in a space"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A02",
+      "label": "expansions: province code 'Æ' against country 'AE' and 'ß' against 'SS', with 'ae' and 'ss' as case-only controls",
+      "traps": [
+        "collation-case"
+      ],
+      "reasoning": "Windows collation rules (used by SQL_Latin1_General_CP1_CI_AS for nvarchar) treat 'Æ' as equal to 'AE' and 'ß' as equal to 'ss'. The ICU root collation at strength 2 gives 'æ' its own primary weight (not equal to 'ae') while 'ß' = 'ss' differs only at the tertiary level. The engines may disagree on whether the 'Æ' province joins.",
+      "trapChecks": {
+        "collation-case": {
+          "present": true,
+          "detail": "\"ae\" and \"AE\" differ only in case"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A03",
+      "label": "compatibility forms: full-width U+FF35 U+FF33 against 'US' and the Kelvin sign U+212A followed by 'E' against 'KE', with 'ke' as a case-only control",
+      "traps": [
+        "collation-case"
+      ],
+      "reasoning": "SQL Server collations without _WS are width-insensitive, so full-width 'ＵＳ' equals 'US'; U+212A KELVIN SIGN is canonically equivalent to 'K'. ICU at strength 2 ignores width (a tertiary difference) and normalises canonical equivalents. Either engine may treat one of these differently.",
+      "trapChecks": {
+        "collation-case": {
+          "present": true,
+          "detail": "\"KE\" and \"ke\" differ only in case"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A04",
+      "label": "whitespace look-alikes: 'US' with a trailing no-break space (U+00A0), a trailing tab, a leading space, a soft hyphen (U+00AD) inside, and 'CA ' (a real trailing space)",
+      "traps": [
+        "trailing-spaces"
+      ],
+      "reasoning": "SQL Server pads the shorter value with U+0020 before comparing, so only 'CA ' is certain to join. Whether U+00A0 compares equal to the pad space, and whether the soft hyphen U+00AD is ignorable, are collation rules; PostgreSQL rtrim(' ') removes U+0020 only and ICU treats U+00AD as ignorable and U+00A0 as a space variant. A tab and a leading space should join on neither engine.",
+      "trapChecks": {
+        "trailing-spaces": {
+          "present": true,
+          "detail": "\"CA \" ends in a space"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A05",
+      "label": "accents and dotted/dotless I: 'ÜS' against 'US' (accent-sensitive); U+0131 and U+0130 followed by 'T' against 'IT', with 'it' as a case-only control",
+      "traps": [
+        "collation-case"
+      ],
+      "reasoning": "CI_AS is accent-sensitive, so 'ÜS' must not join 'US'. U+0131 (dotless i) and U+0130 (I with dot above) case-fold differently by rule set: Windows rules and ICU root may each match or not match 'IT'. 'it' joins on both.",
+      "trapChecks": {
+        "collation-case": {
+          "present": true,
+          "detail": "\"it\" and \"IT\" differ only in case"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A06",
+      "label": "an empty country code: province codes '' and ' ' both join country '' (trailing spaces ignored)",
+      "traps": [
+        "trailing-spaces"
+      ],
+      "reasoning": "SQL Server compares '' and ' ' as equal (padding), so both provinces join the country whose code is ''. rtrim(' ') gives '' on PostgreSQL; this checks the empty-string edge of the rtrim + ICU equality and that '' is not treated as NULL.",
+      "trapChecks": {
+        "trailing-spaces": {
+          "present": true,
+          "detail": "\" \" ends in a space"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A07",
+      "label": "money extremes passed through: SalesYTD 922337203685477.5807 and -922337203685477.5808, values ending in 5 at the fourth place, NULL quota",
+      "traps": [
+        "numeric-rounding"
+      ],
+      "reasoning": "SalesQuota, SalesYTD and SalesLastYear are money (numeric(19,4) on PostgreSQL) and are only passed through. The money limits, 0.0005 and -0.0005 check the mapping and both clients: a client that reads money as a float would lose the last digits of the limits.",
+      "trapChecks": {
+        "numeric-rounding": {
+          "present": true,
+          "detail": "0.0005 in SalesQuota ends in a 5"
+        }
+      },
+      "status": "invalid",
+      "invalidReason": "the original T-SQL raised an undeclared error: money value beyond 900719925474.0992 cannot be captured exactly through the driver for this call shape: SELECT * FROM Sales.vSalesPerson",
+      "differed": false
+    },
+    {
+      "id": "A08",
+      "label": "territory: TerritoryID NULL, a missing territory (LEFT JOIN NULL), a territory named '' and a group with a trailing space",
+      "traps": [
+        "null-vs-empty",
+        "trailing-spaces"
+      ],
+      "reasoning": "SalesTerritory is a LEFT JOIN: NULL TerritoryID and an unknown TerritoryID both give NULL TerritoryName and TerritoryGroup; a territory whose Name is '' must give '' (not NULL). Title is NULL for one person and '' for another.",
+      "trapChecks": {
+        "null-vs-empty": {
+          "present": true,
+          "detail": "empty string: yes; NULL in a text input: yes"
+        },
+        "trailing-spaces": {
+          "present": true,
+          "detail": "\"North America \" ends in a space"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A09",
+      "label": "text returned as stored and fan-out: case-only name variants, an emoji, two identical phone rows and an unknown phone type",
+      "traps": [
+        "collation-case",
+        "top-ties"
+      ],
+      "reasoning": "Names 'Ann', 'ANN' and 'ann' are passed through. PersonPhone has no key in the scratch tables, so two identical phone rows give two identical output rows; a phone of type 9 has no PhoneNumberType row (NULL).",
+      "trapChecks": {
+        "collation-case": {
+          "present": true,
+          "detail": "\"Ann\" and \"ANN\" differ only in case"
+        },
+        "top-ties": {
+          "present": true,
+          "detail": "two rows of Sales.SalesPerson share SalesYTD = \"0.0000\""
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A10",
+      "label": "keys with gaps and at the int limits: sales persons 0 and 2147483647, territory -2147483648, a sales person without an Employee row",
+      "traps": [
+        "identity-gaps"
+      ],
+      "reasoning": "BusinessEntityID and TerritoryID jump and sit at the int limits. Sales person 5 has no Employee row and is dropped by the inner join.",
+      "trapChecks": {
+        "identity-gaps": {
+          "present": true,
+          "detail": "Sales.SalesPerson.BusinessEntityID jumps from 0 to 5"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    }
+  ],
+  "summary": {
+    "ran": 9,
+    "differed": 0,
+    "invalid": 1
+  },
+  "objections": [
+    {
+      "id": "O01",
+      "caseId": "A01",
+      "kind": "duplicate",
+      "text": "The hand-derived fixed cases already test a lowercase province code joining 'US' under CI_AS and a province code with a trailing space joining 'US'. Additional mixed-case spellings and combining case with the trailing space attack the same two join mechanisms.",
+      "status": "open"
+    },
+    {
+      "id": "O02",
+      "caseId": "A07",
+      "kind": "not-an-attack",
+      "text": "A07 sends negative SalesYTD and SalesLastYear values and a zero SalesQuota. Those values violate the source SalesPerson nonnegative/positive check constraints, so the money-extremes input is outside the source schema preconditions.",
+      "status": "open"
+    },
+    {
+      "id": "O03",
+      "caseId": "A09",
+      "kind": "not-an-attack",
+      "text": "A09 inserts the identical PersonPhone primary-key tuple (BusinessEntityID 1, PhoneNumber '555-0100', PhoneNumberTypeID 1) twice. The duplicate fan-out cannot occur under the source schema preconditions.",
+      "status": "open"
+    }
+  ],
+  "mutantAdequacy": {
+    "verdict": "adequate",
+    "caught": [
+      "join is case-sensitive (collation dropped)",
+      "trailing spaces count in the join (rtrim dropped)",
+      "LEFT JOIN to email made an inner join (people without email dropped)"
+    ],
+    "missed": [],
+    "skipped": [],
+    "equivalentRecorded": []
+  },
+  "gate": {
+    "passed": false,
+    "reasons": [
+      "case A07 is invalid: the original T-SQL raised an undeclared error: money value beyond 900719925474.0992 cannot be captured exactly through the driver for this call shape: SELECT * FROM Sales.vSalesPerson",
+      "objection O01 is open",
+      "objection O02 is open",
+      "objection O03 is open"
+    ]
+  },
+  "wording": "9 adversarial cases ran, 0 differed"
+}
