@@ -53,6 +53,17 @@ const FROID_FACTOR = {
 };
 
 /**
+ * Ruling R1 (owner, 2026-11-19): step 4 factor 3.0x for the three price functions, replacing F1's 2.5x for them
+ * (ufnGetStock keeps 2.5x). Agreed after the measurements in evidence/runtime/price-functions-repeat-2026-11-19.jsonl.
+ */
+const PRICE_FACTOR = {
+  factor: 3.0,
+  agreedBy: "Steve Harlow (project owner, ruling R1, replacing F1's 2.5x for this function)",
+  date: "2026-11-19",
+  reason: `${FROID_FACTOR.reason} The datetime tick-rounding fix of 2026-11-19 (adversarial cases A01-A06) adds per-call work on PostgreSQL. Across 12 step-4 runs of the three price functions (2026-11-18/19; evidence/runtime/price-functions-repeat-2026-11-19.jsonl) the ratio was 2.10x-2.75x: PostgreSQL steady at 182-210 ms, SQL Server 69-87 ms, so pass or fail at 2.5x depended on the run. Agreed after these measurements, not before.`,
+};
+
+/**
  * Fixed cases for the price/cost functions (hand-derived from the source: SELECT @x = <value> FROM Product JOIN
  * <history> ON ... AND @OrderDate BETWEEN StartDate AND COALESCE(EndDate, '99991231')). One period per product.
  *  - product 1: 2020-01-01 to 2020-12-31 (datetime), value 10.0000
@@ -87,7 +98,7 @@ const priceFn = (name: string, pgName: string): ObjectSpec =>
     DB, `dbo.${name}`,
     {
       orderKey: [], mutants: [], pgFunction: `dbo.${pgName}`,
-      runtimeFactor: FROID_FACTOR,
+      runtimeFactor: PRICE_FACTOR,
       fixedCases: name === "ufnGetProductStandardCost"
         ? priceCases("Production.ProductCostHistory", "StandardCost")
         : priceCases("Production.ProductListPriceHistory", "ListPrice", name === "ufnGetProductDealerPrice"),
