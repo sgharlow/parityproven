@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "object": "Website.RecordColdRoomTemperatures",
+  "database": "WideWorldImporters",
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T22:23:38.8804730-07:00"
+  },
+  "casesAudited": [
+    "A01", "A02", "A03", "A04"
+  ],
+  "acceptedNotApplicable": [
+    "identity-gaps"
+  ],
+  "equivalentMutants": [],
+  "objections": [
+    {
+      "id": "O01",
+      "caseId": "A03",
+      "kind": "duplicate",
+      "text": "The hand-derived 'updates every existing row' case already has two rows for one sensor, including a non-key tie on RecordedWhen, and requires both rows to be updated. Adding a third row and moving the tie to Temperature does not attack a different selection or update mechanism.",
+      "status": "open"
+    },
+    {
+      "id": "O02",
+      "caseId": "A04",
+      "kind": "duplicate",
+      "text": "The first hand-derived case already sends two consecutive readings for the same new sensor with the same timestamps and temperatures, requiring the first reading to insert and the second to update. A04 changes only the sensor number.",
+      "status": "open"
+    }
+  ]
+}

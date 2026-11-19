@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "object": "Website.RecordVehicleTemperature",
+  "database": "WideWorldImporters",
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T22:23:38.8804730-07:00"
+  },
+  "casesAudited": [
+    "A01", "A02", "A03", "A04", "A05", "A06"
+  ],
+  "acceptedNotApplicable": [
+    "null-vs-empty",
+    "collation-case",
+    "dates-datetime",
+    "numeric-rounding",
+    "top-ties"
+  ],
+  "equivalentMutants": [],
+  "objections": [
+    {
+      "id": "O01",
+      "caseId": "A02",
+      "kind": "duplicate",
+      "text": "The hand-derived duplicate-key case sends the same first and second rego values and already requires OPENJSON-compatible first-occurrence behavior. A02 repeats that input and mechanism.",
+      "status": "open"
+    },
+    {
+      "id": "O02",
+      "caseId": "A03",
+      "kind": "duplicate",
+      "text": "The hand-derived temperature-rounding case already sends temp 3.965 in the same document shape and requires 3.97. A03 is the same attack with only the registration changed.",
+      "status": "open"
+    },
+    {
+      "id": "O03",
+      "caseId": "A06",
+      "kind": "duplicate",
+      "text": "The hand-derived NULL-document case already calls the procedure with a NULL argument and requires no error and no inserted rows. A06 is identical.",
+      "status": "open"
+    }
+  ]
+}

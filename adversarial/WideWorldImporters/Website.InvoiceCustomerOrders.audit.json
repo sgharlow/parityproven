@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "object": "Website.InvoiceCustomerOrders",
+  "database": "WideWorldImporters",
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T22:23:38.8804730-07:00"
+  },
+  "casesAudited": [
+    "A01", "A02", "A03", "A04", "A05", "A06", "A07"
+  ],
+  "acceptedNotApplicable": [],
+  "equivalentMutants": [],
+  "objections": [
+    {
+      "id": "O01",
+      "caseId": "A01",
+      "kind": "label-mismatch",
+      "text": "The supplied arithmetic is 3 * 0.95 * 0.505 / 100 = 0.0143925, not 0.01438875. It rounds and truncates to the same two-decimal value, 0.01, so this input does not test the claimed rounding tie or the planted round-versus-truncation defect.",
+      "status": "open"
+    },
+    {
+      "id": "O02",
+      "caseId": "A03",
+      "kind": "weak",
+      "text": "DeliveryAddressLine2 is NULL, so the entire address expression is NULL whether DeliveryAddressLine1 is '' or NULL. The fixed two-order case already tests NULL line 2. A03 cannot expose a conversion that collapses the supplied empty line 1 to NULL.",
+      "status": "open"
+    },
+    {
+      "id": "O03",
+      "caseId": "A06",
+      "kind": "duplicate",
+      "text": "The hand-derived 'an order without lines' case has the same requested order, empty Sales.OrderLines table and expected NOT NULL failure with rollback. A06 does not change any input that reaches a different path.",
+      "status": "open"
+    }
+  ]
+}
