@@ -7,5 +7,5 @@
 - [x] Protocol smoke test with the SDK client (`scripts/mcp-smoke.mjs`): tools listed, a call returns rows, an undeclared `sql` argument is refused
 - [x] Live page `/access-map` rendered from the map; nav link on every page; `site:check` covers it
 - [x] Pinned dependencies and notices; npm 11.5.2 dropped rolldown's optional platform entries from the lockfile when packages were added, re-added unchanged from the committed lock (`npm ci` verified)
-- [ ] Register in the workspace Kiro MCP configuration (`.kiro/settings/mcp.json`) — the agent may not write `.kiro/settings/`; the owner adds it
-- [ ] One real use by Kiro, visible in `evidence/mcp/tool-calls.jsonl` with Kiro as the client; then `product.md` and `kiroween-submission.md` say MCP was used, and how
+- [x] Register in the workspace Kiro MCP configuration (`.kiro/settings/mcp.json`) — added by the owner 2026-11-18 (the agent may not write `.kiro/settings/`); Kiro listed the server's 4 tools
+- [x] One real use by Kiro: `list_suppliers` (limit 2), approved by the owner, logged 2026-11-19T00:14:45Z with client "kiro 0.0.0" in `evidence/mcp/tool-calls.jsonl`; `product.md` and `kiroween-submission.md` updated

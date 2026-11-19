@@ -23,7 +23,7 @@ A toolkit that **checks** a conversion, object by object, against the original, 
 
 ## Hackathon scope (Kiroween 2026, Resurrection category; due Dec 4, 2026)
 - In: T-SQL procedures, functions, views and triggers from public sample databases (WideWorldImporters, AdventureWorks) converted to PostgreSQL PL/pgSQL (triggers are inventoried and listed as not attempted; AdventureWorks work stopped 2026-11-12, decision G2); the verification harness; pair capture; the receipts UI; a questionnaire scan page.
-- In, as a stretch (ruling R23, 2026-11-17, reversing R18 and M7B): a read-only MCP server over synthetic data (the Agent Access Map). It is cut from the Dec 4 entry if it is not working by the stop date the owner rules.
+- In (ruling R23, 2026-11-17, reversing R18 and M7B): a read-only MCP server over the restored WideWorldImporters public sample (local prototype, `src/mcp/`), and the Agent Access Map page (`/access-map`) rendered from `web/data/agent-access-map.json`. Working since 2026-11-18: negative test passes as its own login (`evidence/mcp/readonly-check.txt`), registered in `.kiro/settings/mcp.json`, and used by Kiro (first call 2026-11-19, `evidence/mcp/tool-calls.jsonl`).
 - Out: .NET application conversion, SSRS reports, VB6, any customer code, any hosted service that stores code.
 
 ## Principles
