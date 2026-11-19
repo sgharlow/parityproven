@@ -4,7 +4,7 @@
   "database": "AdventureWorks2025",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-19T05:46:45.561Z"
+    "at": "2026-11-19T17:36:28.089Z"
   },
   "notApplicable": {
     "null-vs-empty": "The only input is an int; no text input exists. A NULL value is already a fixed case (REPLICATE with a NULL length is NULL).",
@@ -108,6 +108,42 @@
       "fixedCase": {
         "args": [
           -10000
+        ],
+        "tables": {}
+      }
+    },
+    {
+      "id": "A09",
+      "label": "10000000 (exactly 8 digits) is returned unchanged: '10000000'",
+      "traps": [],
+      "reasoning": "The length test is strict: DATALENGTH is 8, so 8 - 8 = 0 zeros are added and CONVERT(varchar(8)) still fits. The conversion raises '*' only when length(return_value) > 8; an inclusive test (>= 8) would return '0000000*' for this input (the planted defect 'strict comparison made inclusive'). None of the eight earlier adversarial cases sends an 8-character value, so the boundary of that test was never exercised by this file.",
+      "fixedCase": {
+        "args": [
+          10000000
+        ],
+        "tables": {}
+      }
+    },
+    {
+      "id": "A10",
+      "label": "-1000000 (7 digits and a sign, exactly 8 characters) is returned unchanged: '-1000000'",
+      "traps": [],
+      "reasoning": "The negative side of the same boundary: the sign counts as one of the 8 characters, so DATALENGTH is 8, no zero is added and the value keeps its sign. An inclusive length test would give '0000000*'; a test on the digit count (7) would pad one zero before the sign ('0-1000000' truncated to 8). No earlier case in this file sends an 8-character negative value.",
+      "fixedCase": {
+        "args": [
+          -1000000
+        ],
+        "tables": {}
+      }
+    },
+    {
+      "id": "A11",
+      "label": "987654321 (9 digits) does not fit varchar(8): '0000000*'",
+      "traps": [],
+      "reasoning": "The first length above the boundary: DATALENGTH is 9, the strict test fires, CONVERT gives '*' and the result is '0000000*'. Together with A09 and A10 (8 characters) and A05 (7 digits) it pins the boundary at exactly 8, so a conversion that moves the test by one in either direction differs on one of the three.",
+      "fixedCase": {
+        "args": [
+          987654321
         ],
         "tables": {}
       }

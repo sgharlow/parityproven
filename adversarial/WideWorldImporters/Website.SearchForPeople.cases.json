@@ -4,7 +4,7 @@
   "database": "WideWorldImporters",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-19T06:00:45.121Z"
+    "at": "2026-11-19T17:36:28.089Z"
   },
   "notApplicable": {
     "null-vs-empty": "Application.People.SearchName is NOT NULL and the only text parameter (SearchText) cannot be both '' and NULL in one case; a NULL SearchText is outside the object's stated precondition. '' is covered by the empty-search case."
@@ -348,6 +348,62 @@
             }
           ],
           "Sales.Customers": [],
+          "Purchasing.Suppliers": []
+        }
+      }
+    },
+    {
+      "id": "A07",
+      "label": "people flagged both salesperson and employee are 'Salesperson' (the order of the two WHEN branches), beside a salesperson only and an employee only",
+      "traps": [],
+      "reasoning": "The CASE tests IsSalesperson before IsEmployee, so a person with both bits set is reported as 'Salesperson'. Person 1 has both bits set, person 2 is a salesperson only, person 3 an employee only, and person 4 has both bits set and is a customer's primary contact, so its Relationship is still 'Salesperson' while Company comes from the customer (the flags decide the Relationship, the COALESCE decides the Company). Swapping the two branches (the planted defect 'employee tested before salesperson') changes persons 1 and 4 to 'Employee' and leaves 2 and 3 alone; every earlier case in this file sets IsSalesperson false, so no input could see that order. Each contact person belongs to at most one customer and one supplier role, as the source preconditions require.",
+      "fixedCase": {
+        "args": [
+          "ab",
+          5
+        ],
+        "tables": {
+          "Application.People": [
+            {
+              "PersonID": 1,
+              "FullName": "Q0001",
+              "PreferredName": "Q",
+              "IsSalesperson": true,
+              "IsEmployee": true,
+              "SearchName": "ab"
+            },
+            {
+              "PersonID": 2,
+              "FullName": "Q0002",
+              "PreferredName": "Q",
+              "IsSalesperson": true,
+              "IsEmployee": false,
+              "SearchName": "abc"
+            },
+            {
+              "PersonID": 3,
+              "FullName": "Q0003",
+              "PreferredName": "Q",
+              "IsSalesperson": false,
+              "IsEmployee": true,
+              "SearchName": "xab"
+            },
+            {
+              "PersonID": 4,
+              "FullName": "Q0004",
+              "PreferredName": "Q",
+              "IsSalesperson": true,
+              "IsEmployee": true,
+              "SearchName": "abz"
+            }
+          ],
+          "Sales.Customers": [
+            {
+              "CustomerID": 40,
+              "CustomerName": "Cust Forty",
+              "PrimaryContactPersonID": 4
+            }
+          ],
           "Purchasing.Suppliers": []
         }
       }

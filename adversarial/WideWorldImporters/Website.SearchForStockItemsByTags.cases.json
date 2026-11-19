@@ -4,7 +4,7 @@
   "database": "WideWorldImporters",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-19T06:00:45.121Z"
+    "at": "2026-11-19T17:36:28.089Z"
   },
   "cases": [
     {
@@ -321,6 +321,83 @@
               "StockItemID": 5,
               "StockItemName": "Item 05",
               "Tags": "x9"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A10",
+      "label": "Tags: the range class '[a-c]' matches single letters a, b and c, not the text '[a-c]'",
+      "traps": [],
+      "reasoning": "T-SQL LIKE '%[a-c]%' matches any Tags value containing one character in a-c (case-insensitively under CI_AS): 'beta', 'CUP' and 'x[a-c]y' match, 'zoo' does not, and a NULL Tags never matches. A conversion that passed '[' and ']' through as ordinary characters (the planted defect \"'[..]' treated as literal characters\") matches only the value that literally contains '[a-c]', so it returns one row instead of three. A04's reversed range '[c-a]' matches nothing under either reading, which is why the earlier cases could not see this.",
+      "fixedCase": {
+        "args": [
+          "[a-c]",
+          5
+        ],
+        "tables": {
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "StockItemName": "Item 01",
+              "Tags": "beta"
+            },
+            {
+              "StockItemID": 2,
+              "StockItemName": "Item 02",
+              "Tags": "CUP"
+            },
+            {
+              "StockItemID": 3,
+              "StockItemName": "Item 03",
+              "Tags": "x[a-c]y"
+            },
+            {
+              "StockItemID": 4,
+              "StockItemName": "Item 04",
+              "Tags": "zoo"
+            },
+            {
+              "StockItemID": 5,
+              "StockItemName": "Item 05",
+              "Tags": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "A11",
+      "label": "Tags: the class '[%_]' matches a literal percent or underscore, not the text '[%_]'",
+      "traps": [],
+      "reasoning": "Inside a T-SQL LIKE class the wildcards lose their meaning, so '%[%_]%' matches any value containing a '%' or a '_' character: '50% off', 'a_b' and 'x[%_]y' match, 'plain' does not. Treating the brackets as literal characters leaves only the value containing '[%_]', and treating '%' or '_' inside the class as wildcards would match 'plain' too. No earlier case puts a wildcard character inside a class.",
+      "fixedCase": {
+        "args": [
+          "[%_]",
+          5
+        ],
+        "tables": {
+          "Warehouse.StockItems": [
+            {
+              "StockItemID": 1,
+              "StockItemName": "Item 01",
+              "Tags": "50% off"
+            },
+            {
+              "StockItemID": 2,
+              "StockItemName": "Item 02",
+              "Tags": "a_b"
+            },
+            {
+              "StockItemID": 3,
+              "StockItemName": "Item 03",
+              "Tags": "x[%_]y"
+            },
+            {
+              "StockItemID": 4,
+              "StockItemName": "Item 04",
+              "Tags": "plain"
             }
           ]
         }
