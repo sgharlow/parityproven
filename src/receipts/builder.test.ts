@@ -30,7 +30,7 @@ describe("buildReceipts", () => {
     // changes with reviews, e.g. reset on 2026-11-18 when this object's agreed tests were strengthened)
     expect(r.verificationSteps).toHaveLength(6);
     const steps = r.verificationSteps.map((s) => s.status);
-    expect(r.status).toBe(computeStatus({ step1: steps[0], step2: steps[1], step3: steps[2], step4: steps[3], step5: steps[4], step6: steps[5] } as never));
+    expect(r.status).toBe(computeStatus({ step1: steps[0], step2: steps[1], step3: steps[2], step4: steps[3], step5: steps[4], step6: steps[5], adversarial: r.evidence.adversarial } as never));
     expect(r.verificationSteps[2].status).toBe("pass");   // step3
     expect(r.verificationSteps[2].label).toContain("Result sets match");
 

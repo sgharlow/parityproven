@@ -614,7 +614,19 @@ export function pgScript(spec: ObjectSpec, expected: ExpectedFile, banner?: stri
       // compared as jsonb: whitespace, escaping and object key order are not compared here (step 3 compares key order),
       // array order and values are
       const doc = exp.rows?.[0]?.[0] ?? "∅";
-      lines.push([
+      if (doc === "s:") {
+        // FOR JSON ... ROOT with no qualifying row returns an empty string, which is not a JSON document: compared as text
+        lines.push([
+          "DO $pp$",
+          "DECLARE got text;",
+          "BEGIN",
+          `  SELECT (q.result)::text INTO got FROM (${call}) AS q;`,
+          "  IF got IS DISTINCT FROM '' THEN",
+          `    RAISE EXCEPTION 'agreed test failed (%): the JSON document differs: %', ${pgString(name)}, got;`,
+          "  END IF;",
+          "END $pp$;",
+        ].join("\n"));
+      } else lines.push([
         "DO $pp$",
         "DECLARE got jsonb;",
         "BEGIN",
