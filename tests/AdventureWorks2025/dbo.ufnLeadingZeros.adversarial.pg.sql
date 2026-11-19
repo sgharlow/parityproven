@@ -214,3 +214,81 @@ BEGIN
   END IF;
 END $pp$;
 ROLLBACK;
+
+-- @case 9: [A09] 10000000 (exactly 8 digits) is returned unchanged: '10000000'
+BEGIN;
+CREATE TEMP TABLE pp_actual ON COMMIT DROP AS
+SELECT dbo.ufn_leading_zeros('10000000'::integer) AS result;
+DO $pp$
+DECLARE got text[];
+BEGIN
+  SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
+  IF got IS DISTINCT FROM ARRAY['result']::text[] THEN
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 09 [A09 10000000 (exactly 8 digits) is returned unchanged: 10000000', got, ARRAY['result']::text[];
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
+INSERT INTO pp_expected VALUES
+  ('10000000');
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 09 [A09 10000000 (exactly 8 digits) is returned unchanged: 10000000', missing, extra;
+  END IF;
+END $pp$;
+ROLLBACK;
+
+-- @case 10: [A10] -1000000 (7 digits and a sign, exactly 8 characters) is returned unchanged: '-1000000'
+BEGIN;
+CREATE TEMP TABLE pp_actual ON COMMIT DROP AS
+SELECT dbo.ufn_leading_zeros('-1000000'::integer) AS result;
+DO $pp$
+DECLARE got text[];
+BEGIN
+  SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
+  IF got IS DISTINCT FROM ARRAY['result']::text[] THEN
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 10 [A10 -1000000 (7 digits and a sign, exactly 8 characters) is returned unchanged: -1000000', got, ARRAY['result']::text[];
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
+INSERT INTO pp_expected VALUES
+  ('-1000000');
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 10 [A10 -1000000 (7 digits and a sign, exactly 8 characters) is returned unchanged: -1000000', missing, extra;
+  END IF;
+END $pp$;
+ROLLBACK;
+
+-- @case 11: [A11] 987654321 (9 digits) does not fit varchar(8): '0000000*'
+BEGIN;
+CREATE TEMP TABLE pp_actual ON COMMIT DROP AS
+SELECT dbo.ufn_leading_zeros('987654321'::integer) AS result;
+DO $pp$
+DECLARE got text[];
+BEGIN
+  SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual'::regclass AND attnum > 0 AND NOT attisdropped;
+  IF got IS DISTINCT FROM ARRAY['result']::text[] THEN
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 11 [A11 987654321 (9 digits) does not fit varchar(8): 0000000*', got, ARRAY['result']::text[];
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected (LIKE pp_actual) ON COMMIT DROP;
+INSERT INTO pp_expected VALUES
+  ('0000000*');
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected) EXCEPT ALL (SELECT * FROM pp_actual)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual) EXCEPT ALL (SELECT * FROM pp_expected)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the result', 'test 11 [A11 987654321 (9 digits) does not fit varchar(8): 0000000*', missing, extra;
+  END IF;
+END $pp$;
+ROLLBACK;

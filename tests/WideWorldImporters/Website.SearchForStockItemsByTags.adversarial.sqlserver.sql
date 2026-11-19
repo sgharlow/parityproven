@@ -95,3 +95,24 @@ INSERT INTO [Warehouse].[StockItems] ([StockItemID], [StockItemName], [Tags]) VA
 EXEC Website.SearchForStockItemsByTags @SearchText = N'x_9', @MaximumRowsToReturn = 5;
 -- expected document: {"StockItems":[{"StockItemID":1,"StockItemName":"Item 01"},{"StockItemID":2,"StockItemName":"Item 02"},{"StockItemID":3,"StockItemName":"Item 03"},{"StockItemID":4,"StockItemName":"Item 04"}]}
 GO
+-- case 10: [A10] Tags: the range class '[a-c]' matches single letters a, b and c, not the text '[a-c]'
+DELETE FROM [Warehouse].[StockItems];
+INSERT INTO [Warehouse].[StockItems] ([StockItemID], [StockItemName], [Tags]) VALUES
+  (1, N'Item 01', N'beta'),
+  (2, N'Item 02', N'CUP'),
+  (3, N'Item 03', N'x[a-c]y'),
+  (4, N'Item 04', N'zoo'),
+  (5, N'Item 05', NULL);
+EXEC Website.SearchForStockItemsByTags @SearchText = N'[a-c]', @MaximumRowsToReturn = 5;
+-- expected document: {"StockItems":[{"StockItemID":1,"StockItemName":"Item 01"},{"StockItemID":2,"StockItemName":"Item 02"},{"StockItemID":3,"StockItemName":"Item 03"}]}
+GO
+-- case 11: [A11] Tags: the class '[%_]' matches a literal percent or underscore, not the text '[%_]'
+DELETE FROM [Warehouse].[StockItems];
+INSERT INTO [Warehouse].[StockItems] ([StockItemID], [StockItemName], [Tags]) VALUES
+  (1, N'Item 01', N'50% off'),
+  (2, N'Item 02', N'a_b'),
+  (3, N'Item 03', N'x[%_]y'),
+  (4, N'Item 04', N'plain');
+EXEC Website.SearchForStockItemsByTags @SearchText = N'[%_]', @MaximumRowsToReturn = 5;
+-- expected document: {"StockItems":[{"StockItemID":1,"StockItemName":"Item 01"},{"StockItemID":2,"StockItemName":"Item 02"},{"StockItemID":3,"StockItemName":"Item 03"}]}
+GO

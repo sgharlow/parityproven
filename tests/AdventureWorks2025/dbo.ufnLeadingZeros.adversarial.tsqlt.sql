@@ -146,3 +146,54 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
 END;
 GO
+-- case 9: [A09] 10000000 (exactly 8 digits) is returned unchanged: '10000000'
+CREATE PROCEDURE [AgreedTests].[test 09 [A09 10000000 (exactly 8 digits) is returned unchanged: 10000000]
+AS
+BEGIN
+  CREATE TABLE #Expected (
+    [result] varchar(8) NULL
+  );
+  CREATE TABLE #Actual (
+    [result] varchar(8) NULL
+  );
+  INSERT INTO #Expected ([result]) VALUES
+    (N'10000000');
+  INSERT INTO #Actual
+  SELECT dbo.ufnLeadingZeros(10000000) AS result;
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
+END;
+GO
+-- case 10: [A10] -1000000 (7 digits and a sign, exactly 8 characters) is returned unchanged: '-1000000'
+CREATE PROCEDURE [AgreedTests].[test 10 [A10 -1000000 (7 digits and a sign, exactly 8 characters) is returned unchanged: -1000000]
+AS
+BEGIN
+  CREATE TABLE #Expected (
+    [result] varchar(8) NULL
+  );
+  CREATE TABLE #Actual (
+    [result] varchar(8) NULL
+  );
+  INSERT INTO #Expected ([result]) VALUES
+    (N'-1000000');
+  INSERT INTO #Actual
+  SELECT dbo.ufnLeadingZeros(-1000000) AS result;
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
+END;
+GO
+-- case 11: [A11] 987654321 (9 digits) does not fit varchar(8): '0000000*'
+CREATE PROCEDURE [AgreedTests].[test 11 [A11 987654321 (9 digits) does not fit varchar(8): 0000000*]
+AS
+BEGIN
+  CREATE TABLE #Expected (
+    [result] varchar(8) NULL
+  );
+  CREATE TABLE #Actual (
+    [result] varchar(8) NULL
+  );
+  INSERT INTO #Expected ([result]) VALUES
+    (N'0000000*');
+  INSERT INTO #Actual
+  SELECT dbo.ufnLeadingZeros(987654321) AS result;
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#Expected', @Actual = N'#Actual';
+END;
+GO

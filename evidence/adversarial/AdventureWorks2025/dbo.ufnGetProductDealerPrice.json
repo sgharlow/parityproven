@@ -2,14 +2,14 @@
   "schemaVersion": 1,
   "object": "dbo.ufnGetProductDealerPrice",
   "database": "AdventureWorks2025",
-  "runAt": "2026-11-19T02:25:56.501Z",
+  "runAt": "2026-11-19T17:42:00.109Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
-  "conversionSha256": "d25ce5bf65bd5c43a07a7873c501040b1339b4b803d0463890f00c176c1aa9dd",
+  "conversionSha256": "0a07be4a3387abb04b2790e5877b00f07566b22d8e38dc91cc9b1753f15d3d8d",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
     "at": "2026-11-18T19:13:01-07:00",
     "file": "adversarial/AdventureWorks2025/dbo.ufnGetProductDealerPrice.cases.json",
-    "sha256": "24da4b303064ffe65edcb36c08a843e4dc3b593afa52f88903bac5aaa60505fd"
+    "sha256": "4d481777a09192dcec236ed4953ad7339680eec4e72d721a3649f7ab0a65efeb"
   },
   "auditor": {
     "model": "gpt-5.6-sol",
@@ -114,10 +114,9 @@
         "passed": true
       },
       "postgres": {
-        "passed": false,
-        "message": "agreed test failed (test 01 [A01 order instant 1 ms after the end date (.001): SQL Server rounds the datetime argument to .000, i…): 1 expected row(s) missing, 1 unexpected row(s) in the result"
+        "passed": true
       },
-      "differed": true
+      "differed": false
     },
     {
       "id": "A02",
@@ -137,10 +136,9 @@
         "passed": true
       },
       "postgres": {
-        "passed": false,
-        "message": "agreed test failed (test 02 [A02 order instant 1 ms before the start date (.999): SQL Server rounds it up to the start, inside th…): 1 expected row(s) missing, 1 unexpected row(s) in the result"
+        "passed": true
       },
-      "differed": true
+      "differed": false
     },
     {
       "id": "A03",
@@ -160,10 +158,9 @@
         "passed": true
       },
       "postgres": {
-        "passed": false,
-        "message": "agreed test failed (test 03 [A03 StartDate stored as .001 (datetime keeps .000) and an order instant at .000: inside the period o…): 1 expected row(s) missing, 1 unexpected row(s) in the result"
+        "passed": true
       },
-      "differed": true
+      "differed": false
     },
     {
       "id": "A04",
@@ -183,10 +180,9 @@
         "passed": true
       },
       "postgres": {
-        "passed": false,
-        "message": "agreed test failed (test 04 [A04 EndDate stored as 23:59:59.999 (datetime rounds to the next midnight) and an order instant at th…): 1 expected row(s) missing, 1 unexpected row(s) in the result"
+        "passed": true
       },
-      "differed": true
+      "differed": false
     },
     {
       "id": "A05",
@@ -206,10 +202,9 @@
         "passed": true
       },
       "postgres": {
-        "passed": false,
-        "message": "agreed test failed (test 05 [A05 EndDate stored as .002 (datetime keeps .003) and an order instant at .003): 1 expected row(s) missing, 1 unexpected row(s) in the result"
+        "passed": true
       },
-      "differed": true
+      "differed": false
     },
     {
       "id": "A06",
@@ -229,10 +224,9 @@
         "passed": true
       },
       "postgres": {
-        "passed": false,
-        "message": "agreed test failed (test 06 [A06 StartDate stored as half a millisecond (.0005) and an order instant at .000): 1 expected row(s) missing, 1 unexpected row(s) in the result"
+        "passed": true
       },
-      "differed": true
+      "differed": false
     },
     {
       "id": "A07",
@@ -493,7 +487,7 @@
   ],
   "summary": {
     "ran": 19,
-    "differed": 6,
+    "differed": 0,
     "invalid": 0
   },
   "objections": [],
@@ -508,15 +502,8 @@
     "equivalentRecorded": []
   },
   "gate": {
-    "passed": false,
-    "reasons": [
-      "case A01 differed",
-      "case A02 differed",
-      "case A03 differed",
-      "case A04 differed",
-      "case A05 differed",
-      "case A06 differed"
-    ]
+    "passed": true,
+    "reasons": []
   },
-  "wording": "19 adversarial cases ran, 6 differed"
+  "wording": "19 adversarial cases ran, 0 differed"
 }

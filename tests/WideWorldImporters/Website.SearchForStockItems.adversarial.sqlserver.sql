@@ -87,3 +87,23 @@ INSERT INTO [Warehouse].[StockItems] ([StockItemID], [StockItemName], [SearchDet
 EXEC Website.SearchForStockItems @SearchText = N'x_9', @MaximumRowsToReturn = 5;
 -- expected document: {"StockItems":[{"StockItemID":1,"StockItemName":"Item 01"},{"StockItemID":2,"StockItemName":"Item 02"},{"StockItemID":3,"StockItemName":"Item 03"},{"StockItemID":4,"StockItemName":"Item 04"}]}
 GO
+-- case 9: [A09] SearchDetails: the range class '[a-c]' matches single letters a, b and c, not the text '[a-c]'
+DELETE FROM [Warehouse].[StockItems];
+INSERT INTO [Warehouse].[StockItems] ([StockItemID], [StockItemName], [SearchDetails]) VALUES
+  (1, N'Item 01', N'beta'),
+  (2, N'Item 02', N'CUP'),
+  (3, N'Item 03', N'x[a-c]y'),
+  (4, N'Item 04', N'zoo');
+EXEC Website.SearchForStockItems @SearchText = N'[a-c]', @MaximumRowsToReturn = 5;
+-- expected document: {"StockItems":[{"StockItemID":1,"StockItemName":"Item 01"},{"StockItemID":2,"StockItemName":"Item 02"},{"StockItemID":3,"StockItemName":"Item 03"}]}
+GO
+-- case 10: [A10] SearchDetails: the class '[%_]' matches a literal percent or underscore, not the text '[%_]'
+DELETE FROM [Warehouse].[StockItems];
+INSERT INTO [Warehouse].[StockItems] ([StockItemID], [StockItemName], [SearchDetails]) VALUES
+  (1, N'Item 01', N'50% off'),
+  (2, N'Item 02', N'a_b'),
+  (3, N'Item 03', N'x[%_]y'),
+  (4, N'Item 04', N'plain');
+EXEC Website.SearchForStockItems @SearchText = N'[%_]', @MaximumRowsToReturn = 5;
+-- expected document: {"StockItems":[{"StockItemID":1,"StockItemName":"Item 01"},{"StockItemID":2,"StockItemName":"Item 02"},{"StockItemID":3,"StockItemName":"Item 03"}]}
+GO

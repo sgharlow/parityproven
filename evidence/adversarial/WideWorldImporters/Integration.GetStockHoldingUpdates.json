@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "object": "Integration.GetStockHoldingUpdates",
   "database": "WideWorldImporters",
-  "runAt": "2026-11-19T06:24:02.904Z",
+  "runAt": "2026-11-19T17:41:45.608Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "eb2a3aed3e96b8909687d5b94bc43bdc3a1fea2531165a8ca18e6857f748b854",
   "attacker": {
@@ -192,21 +192,19 @@
     }
   ],
   "mutantAdequacy": {
-    "verdict": "inadequate",
+    "verdict": "adequate",
     "caught": [
+      "descending order",
       "swapped reorder / target"
     ],
-    "missed": [
-      "descending order"
-    ],
+    "missed": [],
     "skipped": [],
     "equivalentRecorded": []
   },
   "gate": {
     "passed": false,
     "reasons": [
-      "objection O01 is open",
-      "mutant adequacy is inadequate (unexplained misses: descending order)"
+      "objection O01 is open"
     ]
   },
   "wording": "5 adversarial cases ran, 0 differed"

@@ -563,3 +563,115 @@ BEGIN
   END IF;
 END $pp$;
 ROLLBACK;
+
+-- @case 11: [A11] table maximum equals the current value of an unused sequence (start 20, maximum 20): restart at 21, which a strict '>' would not do
+BEGIN;
+DELETE FROM sales.orders;
+DELETE FROM warehouse.stock_items;
+DELETE FROM harness.sequence_start;
+INSERT INTO sales.orders ("Id", "OrderID") VALUES
+  ('1', '20'),
+  ('2', '4');
+INSERT INTO harness.sequence_start ("Id", "SequenceName", "StartValue", "Used", "Pick") VALUES
+  ('1', 'OrderID', '20', '0', '0'),
+  ('2', 'StockItemID', '1', '0', '0');
+CREATE SCHEMA IF NOT EXISTS sequences;
+DROP SEQUENCE IF EXISTS sequences."OrderID";
+CREATE SEQUENCE sequences."OrderID" AS integer START WITH 20 MINVALUE -2147483648;
+CREATE SCHEMA IF NOT EXISTS sequences;
+DROP SEQUENCE IF EXISTS sequences."StockItemID";
+CREATE SEQUENCE sequences."StockItemID" AS integer START WITH 1 MINVALUE -2147483648;
+CREATE TEMP TABLE pp_outcome (outcome text) ON COMMIT DROP;
+DO $pp$
+BEGIN
+  CALL sequences.reseed_sequence_beyond_table_values('OrderID'::text, 'Sales'::text, 'Orders'::text, 'OrderID'::text);
+  INSERT INTO pp_outcome VALUES ('completed');
+END $pp$;
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT 'completed'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'completed'::text AS outcome)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 11 [A11 table maximum equals the current value of an unused sequence (start 20, maximum 20): restart at…', missing, extra;
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_actual_query_1 ON COMMIT DROP AS
+SELECT nextval('sequences."OrderID"') AS "OrderID", nextval('sequences."StockItemID"') AS "StockItemID";
+DO $pp$
+DECLARE got text[];
+BEGIN
+  SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_1'::regclass AND attnum > 0 AND NOT attisdropped;
+  IF got IS DISTINCT FROM ARRAY['OrderID', 'StockItemID']::text[] THEN
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 11 [A11 table maximum equals the current value of an unused sequence (start 20, maximum 20): restart at…', got, ARRAY['OrderID', 'StockItemID']::text[];
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected_query_1 (LIKE pp_actual_query_1) ON COMMIT DROP;
+INSERT INTO pp_expected_query_1 VALUES
+  ('21', '1');
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_1) EXCEPT ALL (SELECT * FROM pp_actual_query_1)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_1) EXCEPT ALL (SELECT * FROM pp_expected_query_1)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in next value of each sequence after the call', 'test 11 [A11 table maximum equals the current value of an unused sequence (start 20, maximum 20): restart at…', missing, extra;
+  END IF;
+END $pp$;
+ROLLBACK;
+
+-- @case 12: [A12] the same boundary with negative values on Warehouse.StockItems (start -3, maximum -3): restart at -2, which a strict '>' would not do
+BEGIN;
+DELETE FROM sales.orders;
+DELETE FROM warehouse.stock_items;
+DELETE FROM harness.sequence_start;
+INSERT INTO warehouse.stock_items ("Id", "StockItemID") VALUES
+  ('1', '-3'),
+  ('2', '-5');
+INSERT INTO harness.sequence_start ("Id", "SequenceName", "StartValue", "Used", "Pick") VALUES
+  ('1', 'OrderID', '1', '0', '0'),
+  ('2', 'StockItemID', '-3', '0', '0');
+CREATE SCHEMA IF NOT EXISTS sequences;
+DROP SEQUENCE IF EXISTS sequences."OrderID";
+CREATE SEQUENCE sequences."OrderID" AS integer START WITH 1 MINVALUE -2147483648;
+CREATE SCHEMA IF NOT EXISTS sequences;
+DROP SEQUENCE IF EXISTS sequences."StockItemID";
+CREATE SEQUENCE sequences."StockItemID" AS integer START WITH -3 MINVALUE -2147483648;
+CREATE TEMP TABLE pp_outcome (outcome text) ON COMMIT DROP;
+DO $pp$
+BEGIN
+  CALL sequences.reseed_sequence_beyond_table_values('StockItemID'::text, 'Warehouse'::text, 'StockItems'::text, 'StockItemID'::text);
+  INSERT INTO pp_outcome VALUES ('completed');
+END $pp$;
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT 'completed'::text AS outcome) EXCEPT ALL (SELECT outcome FROM pp_outcome)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT outcome FROM pp_outcome) EXCEPT ALL (SELECT 'completed'::text AS outcome)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in the outcome', 'test 12 [A12 the same boundary with negative values on Warehouse.StockItems (start -3, maximum -3): restart a…', missing, extra;
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_actual_query_1 ON COMMIT DROP AS
+SELECT nextval('sequences."OrderID"') AS "OrderID", nextval('sequences."StockItemID"') AS "StockItemID";
+DO $pp$
+DECLARE got text[];
+BEGIN
+  SELECT array_agg(attname::text ORDER BY attnum) INTO got FROM pg_attribute WHERE attrelid = 'pp_actual_query_1'::regclass AND attnum > 0 AND NOT attisdropped;
+  IF got IS DISTINCT FROM ARRAY['OrderID', 'StockItemID']::text[] THEN
+    RAISE EXCEPTION 'agreed test failed (%): columns are %, expected %', 'test 12 [A12 the same boundary with negative values on Warehouse.StockItems (start -3, maximum -3): restart a…', got, ARRAY['OrderID', 'StockItemID']::text[];
+  END IF;
+END $pp$;
+CREATE TEMP TABLE pp_expected_query_1 (LIKE pp_actual_query_1) ON COMMIT DROP;
+INSERT INTO pp_expected_query_1 VALUES
+  ('1', '-2');
+DO $pp$
+DECLARE missing bigint; extra bigint;
+BEGIN
+  SELECT count(*) INTO missing FROM ((SELECT * FROM pp_expected_query_1) EXCEPT ALL (SELECT * FROM pp_actual_query_1)) AS d;
+  SELECT count(*) INTO extra FROM ((SELECT * FROM pp_actual_query_1) EXCEPT ALL (SELECT * FROM pp_expected_query_1)) AS d;
+  IF missing > 0 OR extra > 0 THEN
+    RAISE EXCEPTION 'agreed test failed (%): % expected row(s) missing, % unexpected row(s) in next value of each sequence after the call', 'test 12 [A12 the same boundary with negative values on Warehouse.StockItems (start -3, maximum -3): restart a…', missing, extra;
+  END IF;
+END $pp$;
+ROLLBACK;

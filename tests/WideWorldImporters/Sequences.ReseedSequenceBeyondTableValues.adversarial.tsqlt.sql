@@ -468,3 +468,95 @@ BEGIN
   EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedQuery1', @Actual = N'#ActualQuery1', @Message = N'next value of each sequence after the call';
 END;
 GO
+-- case 11: [A11] table maximum equals the current value of an unused sequence (start 20, maximum 20): restart at 21, which a strict '>' would not do
+--[@tSQLt:NoTransaction](DEFAULT)
+CREATE PROCEDURE [AgreedTests].[test 11 [A11 table maximum equals the current value of an unused sequence (start 20, maximum 20): restart at…]
+AS
+BEGIN
+  EXEC tSQLt.FakeTable @TableName = N'[Sales].[Orders]';
+  EXEC tSQLt.FakeTable @TableName = N'[Warehouse].[StockItems]';
+  EXEC tSQLt.FakeTable @TableName = N'[Harness].[SequenceStart]';
+  INSERT INTO [Sales].[Orders] ([Id], [OrderID]) VALUES
+    (1, 20),
+    (2, 4);
+  INSERT INTO [Harness].[SequenceStart] ([Id], [SequenceName], [StartValue], [Used], [Pick]) VALUES
+    (1, N'OrderID', 20, 0, 0),
+    (2, N'StockItemID', 1, 0, 0);
+  IF OBJECT_ID(N'Sequences.OrderID', N'SO') IS NOT NULL DROP SEQUENCE Sequences.[OrderID];
+  CREATE SEQUENCE Sequences.[OrderID] AS int START WITH 20 MINVALUE -2147483648;
+  IF OBJECT_ID(N'Sequences.StockItemID', N'SO') IS NOT NULL DROP SEQUENCE Sequences.[StockItemID];
+  CREATE SEQUENCE Sequences.[StockItemID] AS int START WITH 1 MINVALUE -2147483648;
+  DECLARE @outcome nvarchar(4000) = N'completed';
+  BEGIN TRY
+    EXEC Sequences.ReseedSequenceBeyondTableValues @SequenceName = N'OrderID', @SchemaName = N'Sales', @TableName = N'Orders', @ColumnName = N'OrderID';
+  END TRY
+  BEGIN CATCH
+    SET @outcome = N'unexpected error ' + CAST(ERROR_NUMBER() AS nvarchar(20)) + N': ' + ERROR_MESSAGE();
+    -- a procedure that fails inside its own transaction can leave it open (and uncommittable); the test is outside
+    -- tSQLt's transaction (NoTransaction), so this undoes only the procedure's work, as SQL Server does at batch end
+    IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+  END CATCH;
+  CREATE TABLE #ExpectedQuery1 (
+    [OrderID] int NULL,
+    [StockItemID] int NULL
+  );
+  CREATE TABLE #ActualQuery1 (
+    [OrderID] int NULL,
+    [StockItemID] int NULL
+  );
+  INSERT INTO #ExpectedQuery1 ([OrderID], [StockItemID]) VALUES
+    (21, 1);
+  INSERT INTO #ActualQuery1
+  SELECT NEXT VALUE FOR Sequences.OrderID AS OrderID, NEXT VALUE FOR Sequences.StockItemID AS StockItemID;
+  IF OBJECT_ID(N'Sequences.OrderID', N'SO') IS NOT NULL DROP SEQUENCE Sequences.[OrderID];
+  IF OBJECT_ID(N'Sequences.StockItemID', N'SO') IS NOT NULL DROP SEQUENCE Sequences.[StockItemID];
+  EXEC tSQLt.AssertEqualsString @Expected = N'completed', @Actual = @outcome, @Message = N'outcome';
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedQuery1', @Actual = N'#ActualQuery1', @Message = N'next value of each sequence after the call';
+END;
+GO
+-- case 12: [A12] the same boundary with negative values on Warehouse.StockItems (start -3, maximum -3): restart at -2, which a strict '>' would not do
+--[@tSQLt:NoTransaction](DEFAULT)
+CREATE PROCEDURE [AgreedTests].[test 12 [A12 the same boundary with negative values on Warehouse.StockItems (start -3, maximum -3): restart a…]
+AS
+BEGIN
+  EXEC tSQLt.FakeTable @TableName = N'[Sales].[Orders]';
+  EXEC tSQLt.FakeTable @TableName = N'[Warehouse].[StockItems]';
+  EXEC tSQLt.FakeTable @TableName = N'[Harness].[SequenceStart]';
+  INSERT INTO [Warehouse].[StockItems] ([Id], [StockItemID]) VALUES
+    (1, -3),
+    (2, -5);
+  INSERT INTO [Harness].[SequenceStart] ([Id], [SequenceName], [StartValue], [Used], [Pick]) VALUES
+    (1, N'OrderID', 1, 0, 0),
+    (2, N'StockItemID', -3, 0, 0);
+  IF OBJECT_ID(N'Sequences.OrderID', N'SO') IS NOT NULL DROP SEQUENCE Sequences.[OrderID];
+  CREATE SEQUENCE Sequences.[OrderID] AS int START WITH 1 MINVALUE -2147483648;
+  IF OBJECT_ID(N'Sequences.StockItemID', N'SO') IS NOT NULL DROP SEQUENCE Sequences.[StockItemID];
+  CREATE SEQUENCE Sequences.[StockItemID] AS int START WITH -3 MINVALUE -2147483648;
+  DECLARE @outcome nvarchar(4000) = N'completed';
+  BEGIN TRY
+    EXEC Sequences.ReseedSequenceBeyondTableValues @SequenceName = N'StockItemID', @SchemaName = N'Warehouse', @TableName = N'StockItems', @ColumnName = N'StockItemID';
+  END TRY
+  BEGIN CATCH
+    SET @outcome = N'unexpected error ' + CAST(ERROR_NUMBER() AS nvarchar(20)) + N': ' + ERROR_MESSAGE();
+    -- a procedure that fails inside its own transaction can leave it open (and uncommittable); the test is outside
+    -- tSQLt's transaction (NoTransaction), so this undoes only the procedure's work, as SQL Server does at batch end
+    IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+  END CATCH;
+  CREATE TABLE #ExpectedQuery1 (
+    [OrderID] int NULL,
+    [StockItemID] int NULL
+  );
+  CREATE TABLE #ActualQuery1 (
+    [OrderID] int NULL,
+    [StockItemID] int NULL
+  );
+  INSERT INTO #ExpectedQuery1 ([OrderID], [StockItemID]) VALUES
+    (1, -2);
+  INSERT INTO #ActualQuery1
+  SELECT NEXT VALUE FOR Sequences.OrderID AS OrderID, NEXT VALUE FOR Sequences.StockItemID AS StockItemID;
+  IF OBJECT_ID(N'Sequences.OrderID', N'SO') IS NOT NULL DROP SEQUENCE Sequences.[OrderID];
+  IF OBJECT_ID(N'Sequences.StockItemID', N'SO') IS NOT NULL DROP SEQUENCE Sequences.[StockItemID];
+  EXEC tSQLt.AssertEqualsString @Expected = N'completed', @Actual = @outcome, @Message = N'outcome';
+  EXEC tSQLt.AssertEqualsTable @Expected = N'#ExpectedQuery1', @Actual = N'#ActualQuery1', @Message = N'next value of each sequence after the call';
+END;
+GO

@@ -2,7 +2,7 @@
   "object": "Sequences.ReseedSequenceBeyondTableValues",
   "database": "WideWorldImporters",
   "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
-  "capturedAt": "2026-11-19T06:20:59.350Z",
+  "capturedAt": "2026-11-19T17:40:39.465Z",
   "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
   "cases": [
     {
@@ -260,6 +260,58 @@
             [
               "n:21",
               "n:1"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "label": "[A11] table maximum equals the current value of an unused sequence (start 20, maximum 20): restart at 21, which a strict '>' would not do",
+      "outcome": "completed",
+      "tables": {},
+      "queries": [
+        {
+          "label": "next value of each sequence after the call",
+          "columns": [
+            {
+              "name": "OrderID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "StockItemID",
+              "sqlServerType": "int"
+            }
+          ],
+          "rows": [
+            [
+              "n:21",
+              "n:1"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "label": "[A12] the same boundary with negative values on Warehouse.StockItems (start -3, maximum -3): restart at -2, which a strict '>' would not do",
+      "outcome": "completed",
+      "tables": {},
+      "queries": [
+        {
+          "label": "next value of each sequence after the call",
+          "columns": [
+            {
+              "name": "OrderID",
+              "sqlServerType": "int"
+            },
+            {
+              "name": "StockItemID",
+              "sqlServerType": "int"
+            }
+          ],
+          "rows": [
+            [
+              "n:1",
+              "n:-2"
             ]
           ]
         }

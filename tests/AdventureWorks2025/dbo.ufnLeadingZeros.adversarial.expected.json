@@ -2,7 +2,7 @@
   "object": "dbo.ufnLeadingZeros",
   "database": "AdventureWorks2025",
   "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
-  "capturedAt": "2026-11-19T06:19:54.342Z",
+  "capturedAt": "2026-11-19T17:40:16.058Z",
   "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
   "cases": [
     {
@@ -114,6 +114,48 @@
       "rows": [
         [
           "s:00-10000"
+        ]
+      ]
+    },
+    {
+      "label": "[A09] 10000000 (exactly 8 digits) is returned unchanged: '10000000'",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "varchar(8)"
+        }
+      ],
+      "rows": [
+        [
+          "s:10000000"
+        ]
+      ]
+    },
+    {
+      "label": "[A10] -1000000 (7 digits and a sign, exactly 8 characters) is returned unchanged: '-1000000'",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "varchar(8)"
+        }
+      ],
+      "rows": [
+        [
+          "s:-1000000"
+        ]
+      ]
+    },
+    {
+      "label": "[A11] 987654321 (9 digits) does not fit varchar(8): '0000000*'",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "varchar(8)"
+        }
+      ],
+      "rows": [
+        [
+          "s:0000000*"
         ]
       ]
     }

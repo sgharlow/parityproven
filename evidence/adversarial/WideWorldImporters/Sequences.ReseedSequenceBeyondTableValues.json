@@ -2,14 +2,14 @@
   "schemaVersion": 1,
   "object": "Sequences.ReseedSequenceBeyondTableValues",
   "database": "WideWorldImporters",
-  "runAt": "2026-11-19T06:21:09.540Z",
+  "runAt": "2026-11-19T17:40:52.817Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "421daebce24772249a9341c2573b8a8c723045ebaad08421d7045d9f16cce773",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-19T06:00:45.121Z",
+    "at": "2026-11-19T17:36:28.089Z",
     "file": "adversarial/WideWorldImporters/Sequences.ReseedSequenceBeyondTableValues.cases.json",
-    "sha256": "3aacd865ad569f39188c9d510128bd919182ee66ea5e14736d426d8b3ce3989f"
+    "sha256": "e914b6130084b866aca2004936b25fb6c40ef94fb0fdfd49acb487a53059e75a"
   },
   "auditor": {
     "model": "gpt-5.6-sol",
@@ -261,10 +261,40 @@
         "passed": true
       },
       "differed": false
+    },
+    {
+      "id": "A11",
+      "label": "table maximum equals the current value of an unused sequence (start 20, maximum 20): restart at 21, which a strict '>' would not do",
+      "traps": [],
+      "reasoning": "An unused sequence reports its start value as current_value, and the next value it issues is that same start value. With the maximum equal to it (20 = 20) the source takes the >= branch and restarts at 21, so the next value issued is 21; a conversion comparing with '>' (the planted defect 'strictly greater instead of >=') skips the restart and issues 20. A08 also sits on the boundary, but its sequence had already issued 7, so the next value was 8 either way and the comparison could not be observed.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A12",
+      "label": "the same boundary with negative values on Warehouse.StockItems (start -3, maximum -3): restart at -2, which a strict '>' would not do",
+      "traps": [],
+      "reasoning": "The equality boundary on the other target: StockItemID is unused and starts at -3, and MAX(StockItemID) over the snake_cased warehouse.stock_items is -3, so the >= branch restarts at -2 and the next value issued is -2; a strict '>' leaves the sequence to issue -3. It also checks that the boundary holds for negative values, where a conversion comparing absolute values or using COALESCE(MAX, 0) in the wrong place would differ. OrderID is not named and must keep issuing 1.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
     }
   ],
   "summary": {
-    "ran": 10,
+    "ran": 12,
     "differed": 0,
     "invalid": 0
   },
@@ -283,23 +313,22 @@
     }
   ],
   "mutantAdequacy": {
-    "verdict": "inadequate",
+    "verdict": "adequate",
     "caught": [
       "reads pg_sequences.last_value (NULL after a restart or before first use)",
+      "strictly greater instead of >=",
       "restarts at the maximum instead of maximum + 1",
       "empty table maximum NULL instead of 0"
     ],
-    "missed": [
-      "strictly greater instead of >="
-    ],
+    "missed": [],
     "skipped": [],
     "equivalentRecorded": []
   },
   "gate": {
     "passed": false,
     "reasons": [
-      "mutant adequacy is inadequate (unexplained misses: strictly greater instead of >=)"
+      "audited case ids differ from the case ids"
     ]
   },
-  "wording": "10 adversarial cases ran, 0 differed"
+  "wording": "12 adversarial cases ran, 0 differed"
 }

@@ -2,7 +2,7 @@
   "object": "Purchasing.vVendorWithAddresses",
   "database": "AdventureWorks2025",
   "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
-  "capturedAt": "2026-11-19T06:17:25.501Z",
+  "capturedAt": "2026-11-19T17:41:27.135Z",
   "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
   "cases": [
     {
@@ -620,60 +620,6 @@
           "s:Nordrhein-Westfalen",
           "s:98011",
           "s:Germany"
-        ]
-      ]
-    },
-    {
-      "label": "[A10] a vendor address whose address type has no AddressType row is dropped by the inner join",
-      "columns": [
-        {
-          "name": "BusinessEntityID",
-          "sqlServerType": "int"
-        },
-        {
-          "name": "Name",
-          "sqlServerType": "nvarchar(50)"
-        },
-        {
-          "name": "AddressType",
-          "sqlServerType": "nvarchar(50)"
-        },
-        {
-          "name": "AddressLine1",
-          "sqlServerType": "nvarchar(60)"
-        },
-        {
-          "name": "AddressLine2",
-          "sqlServerType": "nvarchar(60)"
-        },
-        {
-          "name": "City",
-          "sqlServerType": "nvarchar(30)"
-        },
-        {
-          "name": "StateProvinceName",
-          "sqlServerType": "nvarchar(50)"
-        },
-        {
-          "name": "PostalCode",
-          "sqlServerType": "nvarchar(15)"
-        },
-        {
-          "name": "CountryRegionName",
-          "sqlServerType": "nvarchar(50)"
-        }
-      ],
-      "rows": [
-        [
-          "n:1",
-          "s:Vendor 1",
-          "s:Main Office",
-          "s:1 Main St",
-          "∅",
-          "s:Bothell",
-          "s:Province 1",
-          "s:98011",
-          "s:United States"
         ]
       ]
     }

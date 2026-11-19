@@ -2,7 +2,7 @@
   "object": "Website.SearchForPeople",
   "database": "WideWorldImporters",
   "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
-  "capturedAt": "2026-11-19T06:23:28.086Z",
+  "capturedAt": "2026-11-19T17:41:00.281Z",
   "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
   "cases": [
     {
@@ -86,6 +86,20 @@
       "rows": [
         [
           "s:"
+        ]
+      ]
+    },
+    {
+      "label": "[A07] people flagged both salesperson and employee are 'Salesperson' (the order of the two WHEN branches), beside a salesperson only and an employee only",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"People\":[{\"PersonID\":1,\"FullName\":\"Q0001\",\"PreferredName\":\"Q\",\"Relationship\":\"Salesperson\",\"Company\":\"WWI\"},{\"PersonID\":2,\"FullName\":\"Q0002\",\"PreferredName\":\"Q\",\"Relationship\":\"Salesperson\",\"Company\":\"WWI\"},{\"PersonID\":3,\"FullName\":\"Q0003\",\"PreferredName\":\"Q\",\"Relationship\":\"Employee\",\"Company\":\"WWI\"},{\"PersonID\":4,\"FullName\":\"Q0004\",\"PreferredName\":\"Q\",\"Relationship\":\"Salesperson\",\"Company\":\"Cust Forty\"}]}"
         ]
       ]
     }

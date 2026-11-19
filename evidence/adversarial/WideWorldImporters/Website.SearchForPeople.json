@@ -2,14 +2,14 @@
   "schemaVersion": 1,
   "object": "Website.SearchForPeople",
   "database": "WideWorldImporters",
-  "runAt": "2026-11-19T06:23:28.819Z",
+  "runAt": "2026-11-19T17:41:01.081Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "ccbeeb76bd739e4f53ebbec023b5353bb95f68f05ca65e1774582ea33385a895",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-19T06:00:45.121Z",
+    "at": "2026-11-19T17:36:28.089Z",
     "file": "adversarial/WideWorldImporters/Website.SearchForPeople.cases.json",
-    "sha256": "10cb296434650a08e88e39431ee66121fac65a3083c1650757b1a9e6ffd47eab"
+    "sha256": "2f327483dbfeffbca6d35cafe03c03ca5b9acccd5d20b06bf4634f3719956179"
   },
   "auditor": {
     "model": "gpt-5.6-sol",
@@ -182,10 +182,25 @@
         "passed": true
       },
       "differed": false
+    },
+    {
+      "id": "A07",
+      "label": "people flagged both salesperson and employee are 'Salesperson' (the order of the two WHEN branches), beside a salesperson only and an employee only",
+      "traps": [],
+      "reasoning": "The CASE tests IsSalesperson before IsEmployee, so a person with both bits set is reported as 'Salesperson'. Person 1 has both bits set, person 2 is a salesperson only, person 3 an employee only, and person 4 has both bits set and is a customer's primary contact, so its Relationship is still 'Salesperson' while Company comes from the customer (the flags decide the Relationship, the COALESCE decides the Company). Swapping the two branches (the planted defect 'employee tested before salesperson') changes persons 1 and 4 to 'Employee' and leaves 2 and 3 alone; every earlier case in this file sets IsSalesperson false, so no input could see that order. Each contact person belongs to at most one customer and one supplier role, as the source preconditions require.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
     }
   ],
   "summary": {
-    "ran": 6,
+    "ran": 7,
     "differed": 0,
     "invalid": 0
   },
@@ -240,26 +255,25 @@
     }
   ],
   "mutantAdequacy": {
-    "verdict": "inadequate",
+    "verdict": "adequate",
     "caught": [
       "match is case-sensitive",
       "'[..]' treated as literal characters",
       "'_' matches a letter only",
       "one row too many returned",
       "results in descending order",
+      "employee tested before salesperson",
       "company defaults to empty instead of 'WWI'"
     ],
-    "missed": [
-      "employee tested before salesperson"
-    ],
+    "missed": [],
     "skipped": [],
     "equivalentRecorded": []
   },
   "gate": {
     "passed": false,
     "reasons": [
-      "mutant adequacy is inadequate (unexplained misses: employee tested before salesperson)"
+      "audited case ids differ from the case ids"
     ]
   },
-  "wording": "6 adversarial cases ran, 0 differed"
+  "wording": "7 adversarial cases ran, 0 differed"
 }

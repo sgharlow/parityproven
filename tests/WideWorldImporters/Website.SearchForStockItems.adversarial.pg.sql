@@ -149,3 +149,39 @@ BEGIN
   END IF;
 END $pp$;
 ROLLBACK;
+
+-- @case 9: [A09] SearchDetails: the range class '[a-c]' matches single letters a, b and c, not the text '[a-c]'
+BEGIN;
+DELETE FROM warehouse.stock_items;
+INSERT INTO warehouse.stock_items ("StockItemID", "StockItemName", "SearchDetails") VALUES
+  ('1', 'Item 01', 'beta'),
+  ('2', 'Item 02', 'CUP'),
+  ('3', 'Item 03', 'x[a-c]y'),
+  ('4', 'Item 04', 'zoo');
+DO $pp$
+DECLARE got jsonb;
+BEGIN
+  SELECT (q.result)::jsonb INTO got FROM (SELECT website.search_for_stock_items('[a-c]'::text, '5'::integer) AS result) AS q;
+  IF got IS DISTINCT FROM '{"StockItems":[{"StockItemID":1,"StockItemName":"Item 01"},{"StockItemID":2,"StockItemName":"Item 02"},{"StockItemID":3,"StockItemName":"Item 03"}]}'::jsonb THEN
+    RAISE EXCEPTION 'agreed test failed (%): the JSON document differs: %', 'test 09 [A09 SearchDetails: the range class [a-c matches single letters a, b and c, not the text [a-c', got;
+  END IF;
+END $pp$;
+ROLLBACK;
+
+-- @case 10: [A10] SearchDetails: the class '[%_]' matches a literal percent or underscore, not the text '[%_]'
+BEGIN;
+DELETE FROM warehouse.stock_items;
+INSERT INTO warehouse.stock_items ("StockItemID", "StockItemName", "SearchDetails") VALUES
+  ('1', 'Item 01', '50% off'),
+  ('2', 'Item 02', 'a_b'),
+  ('3', 'Item 03', 'x[%_]y'),
+  ('4', 'Item 04', 'plain');
+DO $pp$
+DECLARE got jsonb;
+BEGIN
+  SELECT (q.result)::jsonb INTO got FROM (SELECT website.search_for_stock_items('[%_]'::text, '5'::integer) AS result) AS q;
+  IF got IS DISTINCT FROM '{"StockItems":[{"StockItemID":1,"StockItemName":"Item 01"},{"StockItemID":2,"StockItemName":"Item 02"},{"StockItemID":3,"StockItemName":"Item 03"}]}'::jsonb THEN
+    RAISE EXCEPTION 'agreed test failed (%): the JSON document differs: %', 'test 10 [A10 SearchDetails: the class [%_ matches a literal percent or underscore, not the text [%_', got;
+  END IF;
+END $pp$;
+ROLLBACK;

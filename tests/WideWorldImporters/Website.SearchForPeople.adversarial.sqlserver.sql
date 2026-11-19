@@ -87,3 +87,17 @@ INSERT INTO [Application].[People] ([PersonID], [FullName], [PreferredName], [Is
 EXEC Website.SearchForPeople @SearchText = N'zzz', @MaximumRowsToReturn = 5;
 -- expected document: 
 GO
+-- case 7: [A07] people flagged both salesperson and employee are 'Salesperson' (the order of the two WHEN branches), beside a salesperson only and an employee only
+DELETE FROM [Application].[People];
+DELETE FROM [Sales].[Customers];
+DELETE FROM [Purchasing].[Suppliers];
+INSERT INTO [Application].[People] ([PersonID], [FullName], [PreferredName], [IsSalesperson], [IsEmployee], [SearchName]) VALUES
+  (1, N'Q0001', N'Q', 1, 1, N'ab'),
+  (2, N'Q0002', N'Q', 1, 0, N'abc'),
+  (3, N'Q0003', N'Q', 0, 1, N'xab'),
+  (4, N'Q0004', N'Q', 1, 1, N'abz');
+INSERT INTO [Sales].[Customers] ([CustomerID], [CustomerName], [PrimaryContactPersonID]) VALUES
+  (40, N'Cust Forty', 4);
+EXEC Website.SearchForPeople @SearchText = N'ab', @MaximumRowsToReturn = 5;
+-- expected document: {"People":[{"PersonID":1,"FullName":"Q0001","PreferredName":"Q","Relationship":"Salesperson","Company":"WWI"},{"PersonID":2,"FullName":"Q0002","PreferredName":"Q","Relationship":"Salesperson","Company":"WWI"},{"PersonID":3,"FullName":"Q0003","PreferredName":"Q","Relationship":"Employee","Company":"WWI"},{"PersonID":4,"FullName":"Q0004","PreferredName":"Q","Relationship":"Salesperson","Company":"Cust Forty"}]}
+GO

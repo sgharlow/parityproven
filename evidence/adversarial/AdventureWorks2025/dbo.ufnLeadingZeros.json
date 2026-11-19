@@ -2,14 +2,14 @@
   "schemaVersion": 1,
   "object": "dbo.ufnLeadingZeros",
   "database": "AdventureWorks2025",
-  "runAt": "2026-11-19T06:19:58.663Z",
+  "runAt": "2026-11-19T17:40:25.704Z",
   "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
   "conversionSha256": "71fbec7f435258e2d71571bdf1980b124670f38daa9b4d97753eba7d5fb418e2",
   "attacker": {
     "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
-    "at": "2026-11-19T05:46:45.561Z",
+    "at": "2026-11-19T17:36:28.089Z",
     "file": "adversarial/AdventureWorks2025/dbo.ufnLeadingZeros.cases.json",
-    "sha256": "1b4dd5ff6c1f9f098a6ebf0e7e5498febae105440e26e9203aecc98b781d689b"
+    "sha256": "cb1ccf877c267dd3736d305ffbafe779d1d44a419851fdbc2dbe4f716c1ebfa3"
   },
   "auditor": {
     "model": "gpt-5.6-sol",
@@ -192,10 +192,55 @@
         "passed": true
       },
       "differed": false
+    },
+    {
+      "id": "A09",
+      "label": "10000000 (exactly 8 digits) is returned unchanged: '10000000'",
+      "traps": [],
+      "reasoning": "The length test is strict: DATALENGTH is 8, so 8 - 8 = 0 zeros are added and CONVERT(varchar(8)) still fits. The conversion raises '*' only when length(return_value) > 8; an inclusive test (>= 8) would return '0000000*' for this input (the planted defect 'strict comparison made inclusive'). None of the eight earlier adversarial cases sends an 8-character value, so the boundary of that test was never exercised by this file.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A10",
+      "label": "-1000000 (7 digits and a sign, exactly 8 characters) is returned unchanged: '-1000000'",
+      "traps": [],
+      "reasoning": "The negative side of the same boundary: the sign counts as one of the 8 characters, so DATALENGTH is 8, no zero is added and the value keeps its sign. An inclusive length test would give '0000000*'; a test on the digit count (7) would pad one zero before the sign ('0-1000000' truncated to 8). No earlier case in this file sends an 8-character negative value.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A11",
+      "label": "987654321 (9 digits) does not fit varchar(8): '0000000*'",
+      "traps": [],
+      "reasoning": "The first length above the boundary: DATALENGTH is 9, the strict test fires, CONVERT gives '*' and the result is '0000000*'. Together with A09 and A10 (8 characters) and A05 (7 digits) it pins the boundary at exactly 8, so a conversion that moves the test by one in either direction differs on one of the three.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
     }
   ],
   "summary": {
-    "ran": 8,
+    "ran": 11,
     "differed": 0,
     "invalid": 0
   },
@@ -274,19 +319,19 @@
     }
   ],
   "mutantAdequacy": {
-    "verdict": "inadequate",
-    "caught": [],
-    "missed": [
+    "verdict": "adequate",
+    "caught": [
       "auto: strict comparison made inclusive"
     ],
+    "missed": [],
     "skipped": [],
     "equivalentRecorded": []
   },
   "gate": {
     "passed": false,
     "reasons": [
-      "mutant adequacy is inadequate (unexplained misses: auto: strict comparison made inclusive)"
+      "audited case ids differ from the case ids"
     ]
   },
-  "wording": "8 adversarial cases ran, 0 differed"
+  "wording": "11 adversarial cases ran, 0 differed"
 }

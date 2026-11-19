@@ -90,11 +90,11 @@
     "harnessVersion": "harness-generic-0.3.0",
     "adversarial": {
       "gate": "fail",
-      "ran": 10,
+      "ran": 12,
       "differed": 0,
       "evidencePath": "evidence/adversarial/WideWorldImporters/Sequences.ReseedSequenceBeyondTableValues.json",
       "conversionSha256": "421daebce24772249a9341c2573b8a8c723045ebaad08421d7045d9f16cce773",
-      "runAt": "2026-11-19T06:21:09.540Z"
+      "runAt": "2026-11-19T17:40:52.817Z"
     }
   },
   "effort": {
