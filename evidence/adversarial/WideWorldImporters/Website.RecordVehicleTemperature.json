@@ -1,0 +1,223 @@
+{
+  "schemaVersion": 1,
+  "object": "Website.RecordVehicleTemperature",
+  "database": "WideWorldImporters",
+  "runAt": "2026-11-19T05:30:09.791Z",
+  "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
+  "conversionSha256": "46156b46b7be9426e71faa55826546979ce2ce2fd0e570d8509bfbcf03ecae3b",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-19T05:20:49.498Z",
+    "file": "adversarial/WideWorldImporters/Website.RecordVehicleTemperature.cases.json",
+    "sha256": "8974659a6a5bc023b4c5c0912717e633aded89e152e2e907456a83f6c93ac750"
+  },
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T22:23:38.8804730-07:00",
+    "file": "adversarial/WideWorldImporters/Website.RecordVehicleTemperature.audit.json",
+    "sha256": "046fe259fe561ae9330105ef52a825bb685771d4e17916fe519e21dc704562d0"
+  },
+  "sameModel": false,
+  "casesAudited": [
+    "A01",
+    "A02",
+    "A03",
+    "A04",
+    "A05",
+    "A06"
+  ],
+  "traps": {
+    "null-vs-empty": {
+      "applicable": true,
+      "coveredBy": [],
+      "notApplicableReason": "The only parameter is one nvarchar(1000) JSON document; NULL vs '' (NULL document inserts nothing without error, '' fails ISJSON) is exercised by named cases on the payload, not by a typed text column the trap checker inspects.",
+      "accepted": true
+    },
+    "collation-case": {
+      "applicable": true,
+      "coveredBy": [],
+      "notApplicableReason": "Case sensitivity of the stored VehicleRegistration is exercised by a named case ('WWI-A' vs an existing 'wwi-a' row); the rego value itself is a JSON token inside the string argument, not a typed text column.",
+      "accepted": true
+    },
+    "trailing-spaces": {
+      "applicable": true,
+      "coveredBy": [
+        "A01"
+      ]
+    },
+    "dates-datetime": {
+      "applicable": true,
+      "coveredBy": [],
+      "notApplicableReason": "The datetime boundary is a 'when' token inside the JSON string (covered by a named case), not a typed date column or a cutoff window the trap checker reads.",
+      "accepted": true
+    },
+    "numeric-rounding": {
+      "applicable": true,
+      "coveredBy": [],
+      "notApplicableReason": "The decimal rounding is a 'temp' token inside the JSON string (covered by the 3.965 case), not a typed decimal column the trap checker reads.",
+      "accepted": true
+    },
+    "top-ties": {
+      "applicable": true,
+      "coveredBy": [],
+      "notApplicableReason": "The procedure inserts rows parsed from one JSON document and reads no table for row selection, so there is no two-row tie in a typed input to construct; array order within the document is covered by the parsing cases.",
+      "accepted": true
+    },
+    "identity-gaps": {
+      "applicable": false,
+      "coveredBy": []
+    }
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "a trailing space after the JSON object: still valid JSON, so the recording is inserted",
+      "traps": [
+        "trailing-spaces"
+      ],
+      "reasoning": "The nvarchar(1000) argument ends in a space. ISJSON ignores trailing whitespace and the conversion's IS JSON test does too, so the single recording must still be parsed and inserted on both engines.",
+      "trapChecks": {
+        "trailing-spaces": {
+          "present": true,
+          "detail": "\"{\\\"Recordings\\\":[{\\\"type\\\":\\\"Feature\\\",\\\"geometry\\\":{\\\"type\\\":\\\"Point\\\",\\\"coordinates\\\":[-89.76,50.47]},\\\"properties\\\":{\\\"rego\\\":\\\"WWI-1\\\",\\\"sensor\\\":1,\\\"when\\\":\\\"2016-01-01T07:00:00\\\",\\\"temp\\\":3.96}}]} \" ends in a space"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A02",
+      "label": "duplicate 'rego' key: the first occurrence wins",
+      "traps": [],
+      "reasoning": "OPENJSON ... WITH takes the first of duplicate keys; the conversion's json_member does the same (json, not jsonb, keeps order). VehicleRegistration must be 'first' on both engines.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A03",
+      "label": "temperature 3.965 rounds half away from zero to 3.97",
+      "traps": [],
+      "reasoning": "CAST of 3.965 to decimal(18,2) rounds half away from zero to 3.97; tsql_compat.to_decimal_18_2 uses round(numeric,2) which must match, not banker's rounding.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A04",
+      "label": "boundary datetime 9999-12-31 in 'when'",
+      "traps": [],
+      "reasoning": "A 'when' of 9999-12-31T23:59:59.999999 is parsed by to_datetime2 and stored in datetime2(7)/timestamp; the maximum date tests the mapping's microsecond rounding against SQL Server's tick resolution.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A05",
+      "label": "registration whose name differs only in case from an existing row",
+      "traps": [],
+      "reasoning": "VehicleRegistration is stored verbatim; 'WWI-A' is inserted alongside an existing 'wwi-a' row. No case folding on either engine, so both rows remain distinct in Warehouse.VehicleTemperatures.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A06",
+      "label": "NULL document: ISJSON(NULL) is NULL, so nothing is inserted and no error is raised",
+      "traps": [],
+      "reasoning": "ISJSON returns NULL for a NULL argument, which is not = 0, so the THROW is skipped; OPENJSON over NULL yields no rows. The conversion's isjson() returns NULL and inserts nothing. No error on either engine.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    }
+  ],
+  "summary": {
+    "ran": 6,
+    "differed": 0,
+    "invalid": 0
+  },
+  "objections": [
+    {
+      "id": "O01",
+      "caseId": "A02",
+      "kind": "duplicate",
+      "text": "The hand-derived duplicate-key case sends the same first and second rego values and already requires OPENJSON-compatible first-occurrence behavior. A02 repeats that input and mechanism.",
+      "status": "open"
+    },
+    {
+      "id": "O02",
+      "caseId": "A03",
+      "kind": "duplicate",
+      "text": "The hand-derived temperature-rounding case already sends temp 3.965 in the same document shape and requires 3.97. A03 is the same attack with only the registration changed.",
+      "status": "open"
+    },
+    {
+      "id": "O03",
+      "caseId": "A06",
+      "kind": "duplicate",
+      "text": "The hand-derived NULL-document case already calls the procedure with a NULL argument and requires no error and no inserted rows. A06 is identical.",
+      "status": "open"
+    }
+  ],
+  "mutantAdequacy": {
+    "verdict": "inadequate",
+    "caught": [
+      "duplicate keys: last one wins",
+      "AS JSON fragment normalised (jsonb)"
+    ],
+    "missed": [
+      "parameter not truncated to nvarchar(1000)",
+      "ISJSON accepts JSON scalars",
+      "empty string is not 1900-01-01",
+      "decimal accepts exponent notation"
+    ],
+    "skipped": [],
+    "equivalentRecorded": []
+  },
+  "gate": {
+    "passed": false,
+    "reasons": [
+      "objection O01 is open",
+      "objection O02 is open",
+      "objection O03 is open",
+      "mutant adequacy is inadequate (unexplained misses: parameter not truncated to nvarchar(1000), ISJSON accepts JSON scalars, empty string is not 1900-01-01, decimal accepts exponent notation)"
+    ]
+  },
+  "wording": "6 adversarial cases ran, 0 differed"
+}

@@ -1,0 +1,98 @@
+{
+  "object": "Website.RecordColdRoomTemperatures",
+  "database": "WideWorldImporters",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-19T05:29:48.825Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "[A01] a reading at the maximum datetime2 (9999-12-31) updates every existing row for its sensor",
+      "outcome": "completed",
+      "tables": {
+        "Warehouse.ColdRoomTemperatures": {
+          "columns": [
+            "ColdRoomSensorNumber",
+            "RecordedWhen",
+            "Temperature"
+          ],
+          "rows": [
+            [
+              "n:1",
+              "t:9999-12-31T23:59:59.999999",
+              "n:5.25"
+            ],
+            [
+              "n:1",
+              "t:9999-12-31T23:59:59.999999",
+              "n:5.25"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "label": "[A02] temperature 4.25 is stored exactly; a second reading overflows decimal(10,2) and rolls both back",
+      "outcome": "raised",
+      "tables": {
+        "Warehouse.ColdRoomTemperatures": {
+          "columns": [
+            "ColdRoomSensorNumber",
+            "RecordedWhen",
+            "Temperature"
+          ],
+          "rows": []
+        }
+      }
+    },
+    {
+      "label": "[A03] three existing rows for one sensor share a temperature; one reading updates all of them",
+      "outcome": "completed",
+      "tables": {
+        "Warehouse.ColdRoomTemperatures": {
+          "columns": [
+            "ColdRoomSensorNumber",
+            "RecordedWhen",
+            "Temperature"
+          ],
+          "rows": [
+            [
+              "n:3",
+              "t:2020-01-02T00:00:00.000000",
+              "n:7"
+            ],
+            [
+              "n:3",
+              "t:2020-01-02T00:00:00.000000",
+              "n:7"
+            ],
+            [
+              "n:3",
+              "t:2020-01-02T00:00:00.000000",
+              "n:7"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "label": "[A04] two readings for the same new sensor: the first inserts, the second updates it (loop order preserved)",
+      "outcome": "completed",
+      "tables": {
+        "Warehouse.ColdRoomTemperatures": {
+          "columns": [
+            "ColdRoomSensorNumber",
+            "RecordedWhen",
+            "Temperature"
+          ],
+          "rows": [
+            [
+              "n:4",
+              "t:2020-01-01T00:00:05.123456",
+              "n:4.5"
+            ]
+          ]
+        }
+      }
+    }
+  ]
+}

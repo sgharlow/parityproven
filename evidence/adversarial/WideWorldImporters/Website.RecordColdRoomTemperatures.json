@@ -1,0 +1,189 @@
+{
+  "schemaVersion": 1,
+  "object": "Website.RecordColdRoomTemperatures",
+  "database": "WideWorldImporters",
+  "runAt": "2026-11-19T05:29:55.966Z",
+  "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
+  "conversionSha256": "6a35f9a6ea380b94842288ede6569c049a286cc48ed0e721601440efa9f8608a",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-19T05:20:49.498Z",
+    "file": "adversarial/WideWorldImporters/Website.RecordColdRoomTemperatures.cases.json",
+    "sha256": "0b1052ec25be18500cecb648949f7e710441634eac7f82bd36098e11874e3ec1"
+  },
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T22:23:38.8804730-07:00",
+    "file": "adversarial/WideWorldImporters/Website.RecordColdRoomTemperatures.audit.json",
+    "sha256": "93921548f9b656f44695d57c83f3c7aec5a908ab6d968307714a42666a031345"
+  },
+  "sameModel": false,
+  "casesAudited": [
+    "A01",
+    "A02",
+    "A03",
+    "A04"
+  ],
+  "traps": {
+    "null-vs-empty": {
+      "applicable": false,
+      "coveredBy": []
+    },
+    "collation-case": {
+      "applicable": false,
+      "coveredBy": []
+    },
+    "trailing-spaces": {
+      "applicable": false,
+      "coveredBy": []
+    },
+    "dates-datetime": {
+      "applicable": true,
+      "coveredBy": [
+        "A01"
+      ]
+    },
+    "numeric-rounding": {
+      "applicable": true,
+      "coveredBy": [
+        "A02"
+      ]
+    },
+    "top-ties": {
+      "applicable": true,
+      "coveredBy": [
+        "A03"
+      ]
+    },
+    "identity-gaps": {
+      "applicable": true,
+      "coveredBy": [],
+      "notApplicableReason": "The only key column is Website.SensorDataList.SensorDataListID, an IDENTITY the harness renumbers 1..n for each call (tvpJson), so a planted gap in it cannot reach either engine; Warehouse.ColdRoomTemperatures has no key the procedure uses.",
+      "accepted": true
+    }
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "a reading at the maximum datetime2 (9999-12-31) updates every existing row for its sensor",
+      "traps": [
+        "dates-datetime"
+      ],
+      "reasoning": "A new reading for sensor 1 with RecordedWhen 9999-12-31T23:59:59.999999 updates all existing sensor-1 rows. datetime2(7) holds 100 ns ticks and timestamp holds microseconds, so the boundary value tests that the stored RecordedWhen matches after the mapping.",
+      "trapChecks": {
+        "dates-datetime": {
+          "present": true,
+          "detail": "boundary date \"9999-12-31T23:59:59.999999\" in RecordedWhen"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A02",
+      "label": "temperature 4.25 is stored exactly; a second reading overflows decimal(10,2) and rolls both back",
+      "traps": [
+        "numeric-rounding"
+      ],
+      "reasoning": "Reading 1 stores 4.25 (ends in 5, exact in decimal(10,2)); reading 2 is 123456789.00 which overflows decimal(10,2). ATOMIC/exception semantics mean both engines raise and leave Warehouse.ColdRoomTemperatures unchanged (reading 1 undone too).",
+      "trapChecks": {
+        "numeric-rounding": {
+          "present": true,
+          "detail": "4.25 in Temperature ends in a 5"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A03",
+      "label": "three existing rows for one sensor share a temperature; one reading updates all of them",
+      "traps": [
+        "top-ties"
+      ],
+      "reasoning": "Two existing sensor-3 rows share Temperature 1.00 (a non-key tie; the table has no key the procedure uses). The single reading's UPDATE ... WHERE ColdRoomSensorNumber = 3 must rewrite every matching row on both engines.",
+      "trapChecks": {
+        "top-ties": {
+          "present": true,
+          "detail": "two rows of Warehouse.ColdRoomTemperatures share ColdRoomSensorNumber = 3"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A04",
+      "label": "two readings for the same new sensor: the first inserts, the second updates it (loop order preserved)",
+      "traps": [],
+      "reasoning": "Readings are applied in SensorDataListID order; for a brand-new sensor the first inserts and the second updates. A conversion that swapped the loop bounds, or inserted even when the update matched, would differ.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    }
+  ],
+  "summary": {
+    "ran": 4,
+    "differed": 0,
+    "invalid": 0
+  },
+  "objections": [
+    {
+      "id": "O01",
+      "caseId": "A03",
+      "kind": "duplicate",
+      "text": "The hand-derived 'updates every existing row' case already has two rows for one sensor, including a non-key tie on RecordedWhen, and requires both rows to be updated. Adding a third row and moving the tie to Temperature does not attack a different selection or update mechanism.",
+      "status": "open"
+    },
+    {
+      "id": "O02",
+      "caseId": "A04",
+      "kind": "duplicate",
+      "text": "The first hand-derived case already sends two consecutive readings for the same new sensor with the same timestamps and temperatures, requiring the first reading to insert and the second to update. A04 changes only the sensor number.",
+      "status": "open"
+    }
+  ],
+  "mutantAdequacy": {
+    "verdict": "adequate",
+    "caught": [
+      "insert even when the update found rows",
+      "loop bounds swapped (a call with several readings applies none)",
+      "an error keeps the readings applied before it",
+      "update changes the temperature only"
+    ],
+    "missed": [],
+    "skipped": [],
+    "equivalentRecorded": []
+  },
+  "gate": {
+    "passed": false,
+    "reasons": [
+      "objection O01 is open",
+      "objection O02 is open"
+    ]
+  },
+  "wording": "4 adversarial cases ran, 0 differed"
+}

@@ -117,7 +117,85 @@
       "planted defects caught by the agreed tests: 3 of 3"
     ],
     "reviewer": "Steve Harlow",
-    "reviewDate": "2026-11-16"
+    "reviewDate": "2026-11-16",
+    "adversarial": {
+      "gate": "fail",
+      "ran": 6,
+      "differed": 0,
+      "evidencePath": "evidence/adversarial/WideWorldImporters/Website.CalculateCustomerPrice.json",
+      "runAt": "2026-11-19T05:28:22.077Z",
+      "agentWritten": true,
+      "wording": "6 adversarial cases ran, 0 differed",
+      "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
+      "auditorModel": "gpt-5.6-sol",
+      "sameModel": false,
+      "mutantAdequacy": "inadequate",
+      "gateReasons": [
+        "objection O01 is open",
+        "objection O02 is open",
+        "mutant adequacy is inadequate (unexplained misses: lowest discount amount instead of highest)"
+      ],
+      "cases": [
+        {
+          "id": "A01",
+          "label": "percentage discount rounds half away from zero: 1.05 * 0.5 % = 0.00525 -> 0.01, not banker's 0.00",
+          "traps": [
+            "numeric-rounding"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A02",
+          "label": "deal priced at 19.95 competes with a percentage deal; lowest of all paths wins",
+          "traps": [
+            "numeric-rounding"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A03",
+          "label": "pricing date at the maximum date 9999-12-31 equals the deal end date (BETWEEN is inclusive)",
+          "traps": [
+            "dates-datetime"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A04",
+          "label": "a negative discount amount would raise the price, so the < guard must reject it",
+          "traps": [
+            "numeric-rounding"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A05",
+          "label": "StockGroup-scoped deal applies only through the StockItemStockGroups bridge; deal ids are non-contiguous",
+          "traps": [
+            "identity-gaps"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A06",
+          "label": "no customer row: BuyingGroupID and CustomerCategoryID stay NULL, so only the OR ... IS NULL deal legs match",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        }
+      ]
+    }
   },
   "effort": {
     "humanMinutes": 0,
@@ -128,5 +206,5 @@
     "p50Hours": 1,
     "p90Hours": 3
   },
-  "builtAt": "2026-11-19T05:06:27.366Z"
+  "builtAt": "2026-11-19T05:37:18.804Z"
 }

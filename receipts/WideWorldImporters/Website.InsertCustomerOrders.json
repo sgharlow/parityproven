@@ -171,7 +171,87 @@
       "PostgreSQL: AgreedTests.[test 08 NULL line description: NOT NULL violation, the orders are rolled back too]: pass",
       "PostgreSQL: AgreedTests.[test 09 no orders: nothing happens]: pass",
       "planted defects caught by the agreed tests: 6 of 6"
-    ]
+    ],
+    "adversarial": {
+      "gate": "fail",
+      "ran": 6,
+      "differed": 0,
+      "evidencePath": "evidence/adversarial/WideWorldImporters/Website.InsertCustomerOrders.json",
+      "runAt": "2026-11-19T05:29:09.851Z",
+      "agentWritten": true,
+      "wording": "6 adversarial cases ran, 0 differed",
+      "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
+      "auditorModel": "gpt-5.6-sol",
+      "sameModel": false,
+      "mutantAdequacy": "inadequate",
+      "gateReasons": [
+        "mutant adequacy is inadequate (unexplained misses: priced on the expected delivery date, lines for unknown stock items kept)"
+      ],
+      "cases": [
+        {
+          "id": "A01",
+          "label": "'' versus NULL in order comments are kept distinct through the insert",
+          "traps": [
+            "null-vs-empty"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A02",
+          "label": "two order lines whose descriptions differ only in case; both kept and priced",
+          "traps": [
+            "collation-case",
+            "top-ties"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A03",
+          "label": "customer purchase order number with a trailing space is preserved",
+          "traps": [
+            "trailing-spaces"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A04",
+          "label": "order references 1 and 5 (a gap): both orders are created and every line matches its order by reference",
+          "traps": [
+            "identity-gaps"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A05",
+          "label": "a special deal running until 9999-12-31 lowers the line price; deal unit price 7.55",
+          "traps": [
+            "dates-datetime",
+            "numeric-rounding"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A06",
+          "label": "list price 19.95 and tax rate 12.345 flow into the line unchanged",
+          "traps": [
+            "numeric-rounding"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        }
+      ]
+    }
   },
   "effort": {
     "humanMinutes": 0,
@@ -182,5 +262,5 @@
     "p50Hours": 3,
     "p90Hours": 6
   },
-  "builtAt": "2026-11-19T05:06:27.366Z"
+  "builtAt": "2026-11-19T05:37:18.805Z"
 }

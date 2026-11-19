@@ -118,7 +118,93 @@
       "PostgreSQL: AgreedTests.[test 07 SearchDetails: LIKE [a _]: pass",
       "PostgreSQL: AgreedTests.[test 08 SearchDetails: five hits, @MaximumRowsToReturn = 2 returns exactly two]: pass",
       "planted defects caught by the agreed tests: 5 of 5"
-    ]
+    ],
+    "adversarial": {
+      "gate": "fail",
+      "ran": 7,
+      "differed": 0,
+      "evidencePath": "evidence/adversarial/WideWorldImporters/Website.SearchForStockItems.json",
+      "runAt": "2026-11-19T05:36:30.597Z",
+      "agentWritten": true,
+      "wording": "7 adversarial cases ran, 0 differed",
+      "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
+      "auditorModel": "gpt-5.6-sol",
+      "sameModel": false,
+      "mutantAdequacy": "inadequate",
+      "gateReasons": [
+        "objection O01 is open",
+        "objection O02 is open",
+        "objection O03 is open",
+        "objection O04 is open",
+        "mutant adequacy is inadequate (unexplained misses: '_' matches a letter only)"
+      ],
+      "cases": [
+        {
+          "id": "A01",
+          "label": "SearchDetails: values differing only in case both match a case-insensitive search and keep their own case in the result",
+          "traps": [
+            "collation-case"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A02",
+          "label": "SearchDetails: two matching rows share the same SearchDetails value (a non-key tie); both are returned in name order",
+          "traps": [
+            "top-ties"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A03",
+          "label": "SearchDetails: a trailing space in the data is matched by LIKE '%x%'",
+          "traps": [
+            "trailing-spaces"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A04",
+          "label": "SearchDetails: character class [a-c] matches one of a, b, c (T-SQL LIKE, not PostgreSQL LIKE)",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A05",
+          "label": "SearchDetails: a backslash is an ordinary character in T-SQL LIKE (no escape)",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A06",
+          "label": "SearchDetails: TOP(@MaximumRowsToReturn) returns exactly two of five hits, ordered by the Windows collation",
+          "traps": [
+            "identity-gaps"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A07",
+          "label": "SearchDetails: no row qualifies, so FOR JSON ... ROOT returns an empty string, not an empty array",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        }
+      ]
+    }
   },
   "effort": {
     "humanMinutes": 0,
@@ -129,5 +215,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-19T05:06:27.368Z"
+  "builtAt": "2026-11-19T05:37:18.808Z"
 }

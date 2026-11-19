@@ -1,0 +1,246 @@
+{
+  "schemaVersion": 1,
+  "object": "Website.InsertCustomerOrders",
+  "database": "WideWorldImporters",
+  "runAt": "2026-11-19T05:29:09.851Z",
+  "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
+  "conversionSha256": "a4b0b66ee99c6e6d095d21c9f84f27ee166ee40eda23e3a8e7ea908c664ed694",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-19T05:20:49.498Z",
+    "file": "adversarial/WideWorldImporters/Website.InsertCustomerOrders.cases.json",
+    "sha256": "3c811b8281c470719b2246ce71091d966381ea200974f79d928d64f597785859"
+  },
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T22:23:38.8804730-07:00",
+    "file": "adversarial/WideWorldImporters/Website.InsertCustomerOrders.audit.json",
+    "sha256": "f1e6846979338f321781d2de4d77d3386b8ad9550a49a0ab0e0c1de17cbf2b45"
+  },
+  "sameModel": false,
+  "casesAudited": [
+    "A01",
+    "A02",
+    "A03",
+    "A04",
+    "A05",
+    "A06"
+  ],
+  "traps": {
+    "null-vs-empty": {
+      "applicable": true,
+      "coveredBy": [
+        "A01"
+      ]
+    },
+    "collation-case": {
+      "applicable": true,
+      "coveredBy": [
+        "A02"
+      ]
+    },
+    "trailing-spaces": {
+      "applicable": true,
+      "coveredBy": [
+        "A03"
+      ]
+    },
+    "dates-datetime": {
+      "applicable": true,
+      "coveredBy": [
+        "A05"
+      ]
+    },
+    "numeric-rounding": {
+      "applicable": true,
+      "coveredBy": [
+        "A05",
+        "A06"
+      ]
+    },
+    "top-ties": {
+      "applicable": true,
+      "coveredBy": [
+        "A02"
+      ]
+    },
+    "identity-gaps": {
+      "applicable": true,
+      "coveredBy": [
+        "A04"
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "'' versus NULL in order comments are kept distinct through the insert",
+      "traps": [
+        "null-vs-empty"
+      ],
+      "reasoning": "Order 1 has Comments '' and DeliveryInstructions NULL; order 2 has Comments NULL. Sales.Orders must store '' as '' and NULL as NULL (nvarchar). A conversion coalescing either way would differ.",
+      "trapChecks": {
+        "null-vs-empty": {
+          "present": true,
+          "detail": "empty string: yes; NULL in a text input: yes"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A02",
+      "label": "two order lines whose descriptions differ only in case; both kept and priced",
+      "traps": [
+        "collation-case",
+        "top-ties"
+      ],
+      "reasoning": "Lines 'widget' and 'Widget' differ only in case and both share Quantity 2 (a non-key tie). Descriptions are stored verbatim and each line is inserted; no case folding and no de-duplication on either engine.",
+      "trapChecks": {
+        "collation-case": {
+          "present": true,
+          "detail": "\"widget\" and \"Widget\" differ only in case"
+        },
+        "top-ties": {
+          "present": true,
+          "detail": "two rows of Website.OrderList share ContactPersonID = 3"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A03",
+      "label": "customer purchase order number with a trailing space is preserved",
+      "traps": [
+        "trailing-spaces"
+      ],
+      "reasoning": "CustomerPurchaseOrderNumber 'PO-1 ' ends in a space; Sales.Orders.CustomerPurchaseOrderNumber nvarchar(20) keeps it, and the conversion's varchar(20) keeps it too. A conversion that rtrimmed would differ.",
+      "trapChecks": {
+        "trailing-spaces": {
+          "present": true,
+          "detail": "\"PO-1 \" ends in a space"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A04",
+      "label": "order references 1 and 5 (a gap): both orders are created and every line matches its order by reference",
+      "traps": [
+        "identity-gaps"
+      ],
+      "reasoning": "OrderReference is the key of @OrdersToGenerate; using 1 and 5 (non-contiguous) confirms lines join to orders by reference value, not position, when the new OrderIDs are allocated from the sequence.",
+      "trapChecks": {
+        "identity-gaps": {
+          "present": true,
+          "detail": "Website.OrderList.OrderReference jumps from 1 to 5"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A05",
+      "label": "a special deal running until 9999-12-31 lowers the line price; deal unit price 7.55",
+      "traps": [
+        "dates-datetime",
+        "numeric-rounding"
+      ],
+      "reasoning": "The line is priced through Website.CalculateCustomerPrice on today's date; a deal valid from 2026-11-01 to the maximum date 9999-12-31 must apply (inclusive BETWEEN). 7.55 ends in 5 to check decimal(18,2) carry into Sales.OrderLines.UnitPrice.",
+      "trapChecks": {
+        "dates-datetime": {
+          "present": true,
+          "detail": "boundary date \"9999-12-31\" in EndDate"
+        },
+        "numeric-rounding": {
+          "present": true,
+          "detail": "7.55 in UnitPrice ends in a 5"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A06",
+      "label": "list price 19.95 and tax rate 12.345 flow into the line unchanged",
+      "traps": [
+        "numeric-rounding"
+      ],
+      "reasoning": "With no special deal, the line takes the stock item's UnitPrice 19.95 and TaxRate 12.345 (both ending in 5). Both engines must store the same scaled values in Sales.OrderLines.",
+      "trapChecks": {
+        "numeric-rounding": {
+          "present": true,
+          "detail": "19.95 in UnitPrice ends in a 5"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    }
+  ],
+  "summary": {
+    "ran": 6,
+    "differed": 0,
+    "invalid": 0
+  },
+  "objections": [],
+  "mutantAdequacy": {
+    "verdict": "inadequate",
+    "caught": [
+      "lines priced at the list price (no customer pricing)",
+      "picked quantity set to the ordered quantity",
+      "salesperson taken from the created-by argument",
+      "order date set to the expected delivery date"
+    ],
+    "missed": [
+      "priced on the expected delivery date",
+      "lines for unknown stock items kept"
+    ],
+    "skipped": [],
+    "equivalentRecorded": []
+  },
+  "gate": {
+    "passed": false,
+    "reasons": [
+      "mutant adequacy is inadequate (unexplained misses: priced on the expected delivery date, lines for unknown stock items kept)"
+    ]
+  },
+  "wording": "6 adversarial cases ran, 0 differed"
+}

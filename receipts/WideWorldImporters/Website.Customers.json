@@ -122,7 +122,67 @@
       "SQL Server: AgreedTests.[test 01 LEFT JOINs keep every customer: missing category, contact, method or city give NULL; same person as b…]: pass",
       "PostgreSQL: AgreedTests.[test 01 LEFT JOINs keep every customer: missing category, contact, method or city give NULL; same person as b…]: pass",
       "planted defects caught by the agreed tests: 2 of 2"
-    ]
+    ],
+    "adversarial": {
+      "gate": "fail",
+      "ran": 4,
+      "differed": 0,
+      "evidencePath": "evidence/adversarial/WideWorldImporters/Website.Customers.json",
+      "runAt": "2026-11-19T05:28:51.130Z",
+      "agentWritten": true,
+      "wording": "4 adversarial cases ran, 0 differed",
+      "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
+      "auditorModel": "gpt-5.6-sol",
+      "sameModel": false,
+      "mutantAdequacy": "adequate",
+      "gateReasons": [
+        "objection O01 is open",
+        "objection O02 is open"
+      ],
+      "cases": [
+        {
+          "id": "A01",
+          "label": "'' versus NULL in DeliveryRun and RunPosition are kept distinct across the LEFT JOINs",
+          "traps": [
+            "null-vs-empty"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A02",
+          "label": "two customers share a phone number; a missing category/contact/city still yields the row with NULLs",
+          "traps": [
+            "top-ties"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A03",
+          "label": "customer names differing only in case are both returned; a trailing space is preserved",
+          "traps": [
+            "collation-case",
+            "trailing-spaces"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A04",
+          "label": "same person is both primary and alternate contact; geography carried as well-known text; customer ids skip a value",
+          "traps": [
+            "identity-gaps"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        }
+      ]
+    }
   },
   "effort": {
     "humanMinutes": 0,
@@ -133,5 +193,5 @@
     "p50Hours": 0.75,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-19T05:06:27.366Z"
+  "builtAt": "2026-11-19T05:37:18.805Z"
 }

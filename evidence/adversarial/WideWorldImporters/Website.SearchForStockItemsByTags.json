@@ -1,0 +1,289 @@
+{
+  "schemaVersion": 1,
+  "object": "Website.SearchForStockItemsByTags",
+  "database": "WideWorldImporters",
+  "runAt": "2026-11-19T05:36:43.705Z",
+  "harnessVersion": "adversarial-0.1.0 (harness-generic-0.3.0)",
+  "conversionSha256": "591f6e02c6b0e69f7f650a8530abf1da513401de87d615d1fc0f9a3affa73b60",
+  "attacker": {
+    "model": "claude (Kiro subagent; exact model version not exposed to the agent)",
+    "at": "2026-11-19T05:20:49.498Z",
+    "file": "adversarial/WideWorldImporters/Website.SearchForStockItemsByTags.cases.json",
+    "sha256": "3f7a45ee7d3a503448bf523092bb2b4a884c6834ff393428d959016dd41ef4c2"
+  },
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T22:23:38.8804730-07:00",
+    "file": "adversarial/WideWorldImporters/Website.SearchForStockItemsByTags.audit.json",
+    "sha256": "42a3d050654224f488aea1b9adfda24c33648142aadbde218f80058615c328f5"
+  },
+  "sameModel": false,
+  "casesAudited": [
+    "A01",
+    "A02",
+    "A03",
+    "A04",
+    "A05",
+    "A06",
+    "A07",
+    "A08"
+  ],
+  "traps": {
+    "null-vs-empty": {
+      "applicable": true,
+      "coveredBy": [
+        "A08"
+      ]
+    },
+    "collation-case": {
+      "applicable": true,
+      "coveredBy": [
+        "A01"
+      ]
+    },
+    "trailing-spaces": {
+      "applicable": true,
+      "coveredBy": [
+        "A03"
+      ]
+    },
+    "dates-datetime": {
+      "applicable": false,
+      "coveredBy": []
+    },
+    "numeric-rounding": {
+      "applicable": false,
+      "coveredBy": []
+    },
+    "top-ties": {
+      "applicable": true,
+      "coveredBy": [
+        "A02"
+      ]
+    },
+    "identity-gaps": {
+      "applicable": true,
+      "coveredBy": [
+        "A06"
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "label": "Tags: values differing only in case both match a case-insensitive search and keep their own case in the result",
+      "traps": [
+        "collation-case"
+      ],
+      "reasoning": "T-SQL LIKE under the CI_AS collation is case-insensitive, so searching 'ab' matches Tags 'ab' and 'AB'; the conversion uses ~* (case-insensitive regex). Both rows are ordered by distinct names; the JSON must list both.",
+      "trapChecks": {
+        "collation-case": {
+          "present": true,
+          "detail": "\"ab\" and \"AB\" differ only in case"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A02",
+      "label": "Tags: two matching rows share the same Tags value (a non-key tie); both are returned in name order",
+      "traps": [
+        "top-ties"
+      ],
+      "reasoning": "Rows 1 and 3 share Tags = 'dup' (a non-key value) and both match the search; their StockItemNames differ, so the Windows-collation ORDER BY is deterministic and both must appear on each engine.",
+      "trapChecks": {
+        "top-ties": {
+          "present": true,
+          "detail": "two rows of Warehouse.StockItems share Tags = \"dup\""
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A03",
+      "label": "Tags: a trailing space in the data is matched by LIKE '%x%'",
+      "traps": [
+        "trailing-spaces"
+      ],
+      "reasoning": "Tags 'abc ' ends in a space; LIKE N'%abc%' matches it on SQL Server and the translated regex matches it too. A conversion that rtrimmed the column would still match here, but the stored/compared value must keep the space.",
+      "trapChecks": {
+        "trailing-spaces": {
+          "present": true,
+          "detail": "\"abc \" ends in a space"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A04",
+      "label": "Tags: character class [a-c] matches one of a, b, c (T-SQL LIKE, not PostgreSQL LIKE)",
+      "traps": [],
+      "reasoning": "T-SQL LIKE treats [a-c] as a character class; PostgreSQL LIKE does not, so the conversion must translate it to a regex class. 'b' matches, 'd' does not, 'x[a-c]' does not (literal class only when escaped).",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A05",
+      "label": "Tags: a backslash is an ordinary character in T-SQL LIKE (no escape)",
+      "traps": [],
+      "reasoning": "T-SQL LIKE has no escape character, so 'a\\b' matches the literal 'a\\b'; PostgreSQL LIKE would treat backslash specially, so the translation must emit a literal backslash in the regex.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A06",
+      "label": "Tags: TOP(@MaximumRowsToReturn) returns exactly two of five hits, ordered by the Windows collation",
+      "traps": [
+        "identity-gaps"
+      ],
+      "reasoning": "Five rows match; @MaximumRowsToReturn = 2 returns the first two in Latin1_General_100_CI_AS order (LIMIT 2 in the conversion, same ordering collation). StockItemIDs 1,3,5,7,9 (gaps) confirm the key is by value, and the two-row limit must agree.",
+      "trapChecks": {
+        "identity-gaps": {
+          "present": true,
+          "detail": "Warehouse.StockItems.StockItemID jumps from 1 to 3"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A07",
+      "label": "Tags: no row qualifies, so FOR JSON ... ROOT returns an empty string, not an empty array",
+      "traps": [],
+      "reasoning": "When nothing matches, FOR JSON AUTO with ROOT yields '' on SQL Server (not {\"StockItems\":[]}); the conversion returns '' via the count(*) = 0 branch. Both must produce the empty document.",
+      "trapChecks": {},
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    },
+    {
+      "id": "A08",
+      "label": "Tags: NULL versus '' — a NULL Tags never matches, an empty Tags matches only '%%'",
+      "traps": [
+        "null-vs-empty"
+      ],
+      "reasoning": "Tags is nullable: a NULL value makes LIKE NULL (no match) on both engines, while '' matches the search '' (pattern '%%'). Searching '' with one NULL row and one '' row distinguishes NULL from ''.",
+      "trapChecks": {
+        "null-vs-empty": {
+          "present": true,
+          "detail": "empty string: yes; NULL in a text input: yes"
+        }
+      },
+      "status": "ran",
+      "sqlServer": {
+        "passed": true
+      },
+      "postgres": {
+        "passed": true
+      },
+      "differed": false
+    }
+  ],
+  "summary": {
+    "ran": 8,
+    "differed": 0,
+    "invalid": 0
+  },
+  "objections": [
+    {
+      "id": "O01",
+      "caseId": "A01",
+      "kind": "duplicate",
+      "text": "The hand-derived five-hit case already includes Tags 'ab' and 'AB' and requires case-insensitive matching. A01 repeats those values with fewer rows and does not attack a different collation path.",
+      "status": "open"
+    },
+    {
+      "id": "O02",
+      "caseId": "A03",
+      "kind": "weak",
+      "text": "Searching for 'abc' matches Tags 'abc ' both before and after trimming its trailing space, and Tags is not returned in the JSON. The supplied case therefore cannot expose trailing-space loss despite claiming that trap.",
+      "status": "open"
+    },
+    {
+      "id": "O03",
+      "caseId": "A04",
+      "kind": "duplicate",
+      "text": "The hand-derived LIKE '[a-c]' case already supplies matching and non-matching values, including the case-insensitive member 'B', and exercises the same T-SQL character-class translation. A04 is a reduced copy of that attack.",
+      "status": "open"
+    },
+    {
+      "id": "O04",
+      "caseId": "A05",
+      "kind": "duplicate",
+      "text": "The hand-derived LIKE 'a\\b' case already supplies 'a\\b' and 'ab' and tests that backslash is ordinary in T-SQL LIKE. A05 repeats the same search and rows.",
+      "status": "open"
+    }
+  ],
+  "mutantAdequacy": {
+    "verdict": "inadequate",
+    "caught": [
+      "match is case-sensitive",
+      "'[..]' treated as literal characters",
+      "one row too many returned",
+      "results in descending order",
+      "searches the item name instead of the tags"
+    ],
+    "missed": [
+      "'_' matches a letter only"
+    ],
+    "skipped": [],
+    "equivalentRecorded": []
+  },
+  "gate": {
+    "passed": false,
+    "reasons": [
+      "objection O01 is open",
+      "objection O02 is open",
+      "objection O03 is open",
+      "objection O04 is open",
+      "mutant adequacy is inadequate (unexplained misses: '_' matches a letter only)"
+    ]
+  },
+  "wording": "8 adversarial cases ran, 0 differed"
+}

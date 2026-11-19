@@ -1,0 +1,399 @@
+# Adversarial evidence report: batch 4
+
+Built 2026-11-19 by `npm run adversarial -- report --batch 4` from the evidence JSON and pair records. The cases are agent-written; expected values were captured from the original T-SQL. The gate result below is computed by code from engine results.
+
+| Object | Cases | Gate | Mutant adequacy | Same model |
+|---|---|---|---|---|
+| WideWorldImporters Website.CalculateCustomerPrice | 6 adversarial cases ran, 0 differed | FAIL | inadequate | no |
+| WideWorldImporters Website.ChangePassword | 6 adversarial cases ran, 0 differed | FAIL | inadequate | no |
+| WideWorldImporters Website.Customers | 4 adversarial cases ran, 0 differed | FAIL | adequate | no |
+| WideWorldImporters Website.InsertCustomerOrders | 6 adversarial cases ran, 0 differed | FAIL | inadequate | no |
+| WideWorldImporters Website.InvoiceCustomerOrders | 7 adversarial cases ran, 0 differed | FAIL | inadequate | no |
+| WideWorldImporters Website.RecordColdRoomTemperatures | 4 adversarial cases ran, 0 differed | FAIL | adequate | no |
+| WideWorldImporters Website.RecordVehicleTemperature | 6 adversarial cases ran, 0 differed | FAIL | inadequate | no |
+| WideWorldImporters Website.SearchForPeople | 6 adversarial cases ran, 0 differed | FAIL | inadequate | no |
+| WideWorldImporters Website.SearchForStockItems | 7 adversarial cases ran, 0 differed | FAIL | inadequate | no |
+| WideWorldImporters Website.SearchForStockItemsByTags | 8 adversarial cases ran, 0 differed | FAIL | inadequate | no |
+| WideWorldImporters Website.Suppliers | 4 adversarial cases ran, 0 differed | FAIL | adequate | no |
+
+## WideWorldImporters Website.CalculateCustomerPrice
+
+6 adversarial cases ran, 0 differed. Gate: FAIL. Attacker claude (Kiro subagent; exact model version not exposed to the agent), auditor gpt-5.6-sol. Evidence: `evidence/adversarial/WideWorldImporters/Website.CalculateCustomerPrice.json`.
+
+- objection O01 is open
+- objection O02 is open
+- mutant adequacy is inadequate (unexplained misses: lowest discount amount instead of highest)
+
+| Step-5 checklist item | Evidence |
+|---|---|
+| The conversion does what the T-SQL does for every input the object accepts, not only for the generated ones. | 6 adversarial cases ran, 0 differed (agent-written, run on both engines). Step 3: 200 samples, 203 rows compared, seeds 227858056. owner judgment: whether the inputs cover what the object accepts. |
+| NULL versus empty string, including concatenation and ISNULL/COALESCE. | null-vs-empty: not applicable to this object's inputs |
+| Collation and case sensitivity in comparisons, ORDER BY and GROUP BY. | collation-case: not applicable to this object's inputs |
+| Dates and datetime precision (datetime 3.33 ms rounding, datetime2, time zones, boundary dates). | dates-datetime: covered by A03 (boundary date "9999-12-31" in EndDate) |
+| Numeric rounding and scale (money, decimal(p,s), integer division, ROUND). | numeric-rounding: covered by A01 (1.05 in UnitPrice ends in a 5); A02 (19.95 in UnitPrice ends in a 5); A04 (-5.05 in DiscountAmount ends in a 5) |
+| Trailing spaces; TOP with and without ties; identity and sequence gaps. | trailing-spaces: not applicable to this object's inputs<br>top-ties: not applicable to this object's inputs<br>identity-gaps: covered by A05 (Sales.SpecialDeals.SpecialDealID jumps from 1 to 3) |
+| Every 'not claimed' statement in the notes is acceptable, and nothing else is silently assumed. | owner judgment. Notes: WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted. / Scalar function: coverage counts samples where the result is not NULL. / Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step). |
+| The column-type mappings are right for this object. | int NOT NULL -> integer NOT NULL; int NULL -> integer; decimal(18,2) NOT NULL -> numeric(18,2) NOT NULL; date NOT NULL -> date NOT NULL; decimal(18,2) NULL -> numeric(18,2); decimal(18,3) NULL -> numeric(18,3) |
+| The generated data and fixed cases would catch the mistakes a converter is most likely to make here. | Planted defects on the adversarial cases: inadequate; caught 2, missed 1 (equivalent recorded: 0), not deployable 0. Missed: lowest discount amount instead of highest. |
+| Each agreed test's expected result is what its label says the T-SQL should return (they were captured from the source engine). | owner judgment. Expected results are in tests/WideWorldImporters/Website.CalculateCustomerPrice.adversarial.expected.json. Cases: A01 percentage discount rounds half away from zero: 1.05 * 0.5 % = 0.00525 -> 0.01, not banker's 0.00; A02 deal priced at 19.95 competes with a percentage deal; lowest of all paths wins; A03 pricing date at the maximum date 9999-12-31 equals the deal end date (BETWEEN is inclusive); A04 a negative discount amount would raise the price, so the < guard must reject it; A05 StockGroup-scoped deal applies only through the StockItemStockGroups bridge; deal ids are non-contiguous; A06 no customer row: BuyingGroupID and CustomerCategoryID stay NULL, so only the OR ... IS NULL deal legs match |
+
+Objections:
+- O01 (duplicate, open): The hand-derived percentage-discount case already exercises the same ROUND-versus-truncation path with a value (2.49875) that rounds to 2.50 but truncates to 2.49. Changing the operands to produce 0.00525 does not attack a different branch or mechanism.
+- O02 (label-mismatch, open): The label says banker's rounding would produce 0.00, but 0.00525 is above the exact 0.005 midpoint and therefore rounds to 0.01 under both half-even and half-away-from-zero rounding. The supplied value does not test the claimed tie-breaking difference.
+
+Cases:
+- A01 percentage discount rounds half away from zero: 1.05 * 0.5 % = 0.00525 -> 0.01, not banker's 0.00: SQL Server pass, PostgreSQL pass; traps numeric-rounding
+- A02 deal priced at 19.95 competes with a percentage deal; lowest of all paths wins: SQL Server pass, PostgreSQL pass; traps numeric-rounding
+- A03 pricing date at the maximum date 9999-12-31 equals the deal end date (BETWEEN is inclusive): SQL Server pass, PostgreSQL pass; traps dates-datetime
+- A04 a negative discount amount would raise the price, so the < guard must reject it: SQL Server pass, PostgreSQL pass; traps numeric-rounding
+- A05 StockGroup-scoped deal applies only through the StockItemStockGroups bridge; deal ids are non-contiguous: SQL Server pass, PostgreSQL pass; traps identity-gaps
+- A06 no customer row: BuyingGroupID and CustomerCategoryID stay NULL, so only the OR ... IS NULL deal legs match: SQL Server pass, PostgreSQL pass; traps none
+
+## WideWorldImporters Website.ChangePassword
+
+6 adversarial cases ran, 0 differed. Gate: FAIL. Attacker claude (Kiro subagent; exact model version not exposed to the agent), auditor gpt-5.6-sol. Evidence: `evidence/adversarial/WideWorldImporters/Website.ChangePassword.json`.
+
+- objection O01 is open
+- objection O02 is open
+- objection O03 is open
+- objection O04 is open
+- objection O05 is open
+- mutant adequacy is inadequate (unexplained misses: person 1 (the template) can change password, new password hashed without the full name, logon permission not re-enabled)
+
+| Step-5 checklist item | Evidence |
+|---|---|
+| The conversion does what the T-SQL does for every input the object accepts, not only for the generated ones. | 6 adversarial cases ran, 0 differed (agent-written, run on both engines). Step 3: 200 samples, 205 rows compared, seeds 1374901436. owner judgment: whether the inputs cover what the object accepts. |
+| NULL versus empty string, including concatenation and ISNULL/COALESCE. | null-vs-empty: covered by A04 (empty string: yes; NULL in a text input: yes) |
+| Collation and case sensitivity in comparisons, ORDER BY and GROUP BY. | collation-case: covered by A02 ("PW" and "pw" differ only in case); A03 ("Amy" and "amy" differ only in case) |
+| Dates and datetime precision (datetime 3.33 ms rounding, datetime2, time zones, boundary dates). | dates-datetime: not applicable to this object's inputs |
+| Numeric rounding and scale (money, decimal(p,s), integer division, ROUND). | numeric-rounding: not applicable to this object's inputs |
+| Trailing spaces; TOP with and without ties; identity and sequence gaps. | trailing-spaces: covered by A01 ("nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn " ends in a space); A06 ("Ab " ends in a space)<br>top-ties: covered by A03 (two rows of Application.People share FullName = "amy")<br>identity-gaps: covered by A05 (Application.People.PersonID jumps from 1 to 3) |
+| Every 'not claimed' statement in the notes is acceptable, and nothing else is silently assumed. | owner judgment. Notes: WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted. / Converted to a PostgreSQL PROCEDURE. THROW 51000 becomes RAISE EXCEPTION (SQLSTATE P0001); the harness compares whether each engine raised, not the message text. The PRINT lines before THROW are informational messages and are not compared. / HASHBYTES('SHA2_256', nvarchar) hashes UTF-16LE bytes. PostgreSQL has no UTF-16 client encoding, so tsql_compat.utf16le() builds those bytes; sha256() hashes them. Verified for the generated text, which includes non-ASCII (é); characters outside the Basic Multilingual Plane are encoded as surrogate pairs but are not generated. / Step 3 is the state form: the outcome and every row of Application.People are compared after the same call on both engines. / Shared helper tsql_compat.utf16le is created by the conversion file. / Generated data: for even PersonIDs the stored hash matches the generated old password (prepare hook), so both the success and the error path are exercised. / Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step). / Step 4 is n/a for objects that change data (ruling 2026-11-12): each call changes the data it reads, so repeated timed runs on the same data are not the same work. |
+| The column-type mappings are right for this object. | int NOT NULL -> integer NOT NULL; nvarchar(50) NOT NULL -> varchar(50) NOT NULL; bit NOT NULL -> boolean NOT NULL (bit maps to boolean; the driver returns true/false on both sides.); nvarchar(50) NULL -> varchar(50); varbinary(max) NULL -> bytea; nvarchar(400) NULL -> varchar(400) |
+| The generated data and fixed cases would catch the mistakes a converter is most likely to make here. | Planted defects on the adversarial cases: inadequate; caught 2, missed 3 (equivalent recorded: 0), not deployable 0. Missed: person 1 (the template) can change password; new password hashed without the full name; logon permission not re-enabled. |
+| Each agreed test's expected result is what its label says the T-SQL should return (they were captured from the source engine). | owner judgment. Expected results are in tests/WideWorldImporters/Website.ChangePassword.adversarial.expected.json. Cases: A01 new password of 41 characters ending in a space: SQL Server truncates nvarchar(40), PostgreSQL text keeps the space; A02 old and new passwords differ only in case; the stored hash is compared as bytes; A03 two people share a full name and both have the same stored hash; only the requested PersonID changes; A04 NULL new password with an empty-string preference present: hash becomes NULL, '' preference stays ''; A05 PersonID = 1 (the template) is refused even with the correct password; its row is unchanged; A06 a full name with a trailing space changes the hashed bytes |
+
+Objections:
+- O01 (duplicate, open): The hand-derived 'old password differs only in case' case already tests binary hash comparison with a stored hash that actually matches the lowercase password. A02 supplies unrelated bytes (00ff10), so either case variant is refused and this is a weaker duplicate of that fixed case.
+- O02 (not-an-attack, open): The stored hash aa is not SHA-256 over the UTF-16LE bytes of 'pwamy'. The password check therefore fails before any UPDATE, so the case cannot test its claim that only PersonID 2 changes while PersonID 3 stays untouched.
+- O03 (label-mismatch, open): The stored hash 00ff10 is not the hash of 'pw' plus FullName 'x'. The call is refused, so HashedPassword does not become NULL as the label says. The hand-derived NULL-new-password case already reaches that assignment with a matching old-password hash.
+- O04 (label-mismatch, open): The label says the supplied old password is correct, but the stored bytes 00ff10 are not the hash of 'pwroot'. The fixed case for PersonID 1 supplies a genuinely matching hash and already tests the template-person refusal.
+- O05 (not-an-attack, open): The stored hash 00ff10 is not the hash of 'pw' plus the trailing-space FullName 'Ab '. The procedure raises before computing or storing the new hash, so removing the trailing space from the hashed full name would not change this case's outcome.
+
+Cases:
+- A01 new password of 41 characters ending in a space: SQL Server truncates nvarchar(40), PostgreSQL text keeps the space: SQL Server pass, PostgreSQL pass; traps trailing-spaces
+- A02 old and new passwords differ only in case; the stored hash is compared as bytes: SQL Server pass, PostgreSQL pass; traps collation-case
+- A03 two people share a full name and both have the same stored hash; only the requested PersonID changes: SQL Server pass, PostgreSQL pass; traps collation-case, top-ties
+- A04 NULL new password with an empty-string preference present: hash becomes NULL, '' preference stays '': SQL Server pass, PostgreSQL pass; traps null-vs-empty
+- A05 PersonID = 1 (the template) is refused even with the correct password; its row is unchanged: SQL Server pass, PostgreSQL pass; traps identity-gaps
+- A06 a full name with a trailing space changes the hashed bytes: SQL Server pass, PostgreSQL pass; traps trailing-spaces
+
+## WideWorldImporters Website.Customers
+
+4 adversarial cases ran, 0 differed. Gate: FAIL. Attacker claude (Kiro subagent; exact model version not exposed to the agent), auditor gpt-5.6-sol. Evidence: `evidence/adversarial/WideWorldImporters/Website.Customers.json`.
+
+- objection O01 is open
+- objection O02 is open
+
+| Step-5 checklist item | Evidence |
+|---|---|
+| The conversion does what the T-SQL does for every input the object accepts, not only for the generated ones. | 4 adversarial cases ran, 0 differed (agent-written, run on both engines). Step 3: 200 samples, 378 rows compared, seeds 1762466622. owner judgment: whether the inputs cover what the object accepts. |
+| NULL versus empty string, including concatenation and ISNULL/COALESCE. | null-vs-empty: covered by A01 (empty string: yes; NULL in a text input: yes) |
+| Collation and case sensitivity in comparisons, ORDER BY and GROUP BY. | collation-case: covered by A03 ("acme" and "Acme" differ only in case) |
+| Dates and datetime precision (datetime 3.33 ms rounding, datetime2, time zones, boundary dates). | dates-datetime: not applicable to this object's inputs |
+| Numeric rounding and scale (money, decimal(p,s), integer division, ROUND). | numeric-rounding: not applicable to this object's inputs |
+| Trailing spaces; TOP with and without ties; identity and sequence gaps. | trailing-spaces: covered by A03 ("Trailing " ends in a space)<br>top-ties: covered by A02 (two rows of Sales.Customers share PhoneNumber = "(206) 555-9999")<br>identity-gaps: covered by A04 (Sales.Customers.CustomerID jumps from 1 to 3) |
+| Every 'not claimed' statement in the notes is acceptable, and nothing else is silently assumed. | owner judgment. Notes: Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step). |
+| The column-type mappings are right for this object. | int NOT NULL -> integer NOT NULL; nvarchar(100) NOT NULL -> varchar(100) NOT NULL; int NULL -> integer; nvarchar(20) NOT NULL -> varchar(20) NOT NULL; nvarchar(256) NOT NULL -> varchar(256) NOT NULL; geography NULL -> geography (SQL Server geography maps to PostGIS geography (SRID 4326). Only point values are generated and compared, as well-known text.); nvarchar(5) NULL -> varchar(5); nvarchar(50) NOT NULL -> varchar(50) NOT NULL |
+| The generated data and fixed cases would catch the mistakes a converter is most likely to make here. | Planted defects on the adversarial cases: adequate; caught 2, missed 0 (equivalent recorded: 0), not deployable 0. |
+| Each agreed test's expected result is what its label says the T-SQL should return (they were captured from the source engine). | owner judgment. Expected results are in tests/WideWorldImporters/Website.Customers.adversarial.expected.json. Cases: A01 '' versus NULL in DeliveryRun and RunPosition are kept distinct across the LEFT JOINs; A02 two customers share a phone number; a missing category/contact/city still yields the row with NULLs; A03 customer names differing only in case are both returned; a trailing space is preserved; A04 same person is both primary and alternate contact; geography carried as well-known text; customer ids skip a value |
+
+Objections:
+- O01 (duplicate, open): The single hand-derived case already supplies DeliveryRun '' and RunPosition NULL on the same customer and compares both projected values. A01 repeats that exact NULL-versus-empty mechanism with a reduced copy of the same reference data.
+- O02 (duplicate, open): The hand-derived case already keeps a customer whose category, primary contact, delivery method and city all point to missing rows, and its customer rows already share the default phone number. A02 repeats both the LEFT JOIN and non-key-tie conditions.
+
+Cases:
+- A01 '' versus NULL in DeliveryRun and RunPosition are kept distinct across the LEFT JOINs: SQL Server pass, PostgreSQL pass; traps null-vs-empty
+- A02 two customers share a phone number; a missing category/contact/city still yields the row with NULLs: SQL Server pass, PostgreSQL pass; traps top-ties
+- A03 customer names differing only in case are both returned; a trailing space is preserved: SQL Server pass, PostgreSQL pass; traps collation-case, trailing-spaces
+- A04 same person is both primary and alternate contact; geography carried as well-known text; customer ids skip a value: SQL Server pass, PostgreSQL pass; traps identity-gaps
+
+## WideWorldImporters Website.InsertCustomerOrders
+
+6 adversarial cases ran, 0 differed. Gate: FAIL. Attacker claude (Kiro subagent; exact model version not exposed to the agent), auditor gpt-5.6-sol. Evidence: `evidence/adversarial/WideWorldImporters/Website.InsertCustomerOrders.json`.
+
+- mutant adequacy is inadequate (unexplained misses: priced on the expected delivery date, lines for unknown stock items kept)
+
+| Step-5 checklist item | Evidence |
+|---|---|
+| The conversion does what the T-SQL does for every input the object accepts, not only for the generated ones. | 6 adversarial cases ran, 0 differed (agent-written, run on both engines). Step 3: 200 samples, 209 rows compared, seeds 1587702404. owner judgment: whether the inputs cover what the object accepts. |
+| NULL versus empty string, including concatenation and ISNULL/COALESCE. | null-vs-empty: covered by A01 (empty string: yes; NULL in a text input: yes) |
+| Collation and case sensitivity in comparisons, ORDER BY and GROUP BY. | collation-case: covered by A02 ("widget" and "Widget" differ only in case) |
+| Dates and datetime precision (datetime 3.33 ms rounding, datetime2, time zones, boundary dates). | dates-datetime: covered by A05 (boundary date "9999-12-31" in EndDate) |
+| Numeric rounding and scale (money, decimal(p,s), integer division, ROUND). | numeric-rounding: covered by A05 (7.55 in UnitPrice ends in a 5); A06 (19.95 in UnitPrice ends in a 5) |
+| Trailing spaces; TOP with and without ties; identity and sequence gaps. | trailing-spaces: covered by A03 ("PO-1 " ends in a space)<br>top-ties: covered by A02 (two rows of Website.OrderList share ContactPersonID = 3)<br>identity-gaps: covered by A04 (Website.OrderList.OrderReference jumps from 1 to 5) |
+| Every 'not claimed' statement in the notes is acceptable, and nothing else is silently assumed. | owner judgment. Notes: WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted. / Table-valued parameters Website.OrderList / Website.OrderLineList become composite types website.order_list / website.order_line_list and array parameters; the harness passes the same generated rows to both engines. In the source both types are memory-optimized; here they are disk-based (the procedure is interpreted T-SQL, so storage does not change its result). / NEXT VALUE FOR Sequences.OrderID -> nextval('sequences."OrderID"'). As in SQL Server, values are consumed even when the transaction rolls back. The source assigns them to the rows of @Orders in an undefined order, so order IDs are compared as a set, and each line is matched to its order through the order's purchase-order number and customer. / SYSDATETIME() -> localtimestamp. Compared as 'today' / 'within the last 5 minutes' on each engine's own clock; the exact time is not claimed. / TRY/CATCH with XACT_ABORT, ROLLBACK and THROW (re-raise) -> an exception block that re-raises. The outcome compares the error class each engine raised (NOT NULL violation 515/23502, string truncation 8152 or 2628/22001, numeric overflow 8115/22003). / Depends on Website.CalculateCustomerPrice: SQL Server runs its original definition, PostgreSQL its verified conversion. Generated special deals are dated around the day of the run so that customer pricing applies. / Preconditions: OrderReference is unique within @Orders (it is the key of @OrdersToGenerate). Sales.Orders and Sales.OrderLines start empty. / Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step). / Step 4 is n/a for objects that change data (ruling 2026-11-12): each call changes the data it reads, so repeated timed runs on the same data are not the same work. |
+| The column-type mappings are right for this object. | int NOT NULL -> integer NOT NULL; int NULL -> integer; date NULL -> date; nvarchar(20) NULL -> varchar(20); bit NULL -> boolean (bit maps to boolean; the driver returns true/false on both sides.); nvarchar(400) NULL -> varchar(400); nvarchar(100) NULL -> varchar(100); date NOT NULL -> date NOT NULL; bit NOT NULL -> boolean NOT NULL (bit maps to boolean; the driver returns true/false on both sides.); datetime2(7) NULL -> timestamp (datetime2(7) holds 100 ns ticks; PostgreSQL timestamp holds 1 µs. Harness inputs are normalised to µs and the count of normalised values is recorded as a finding.); datetime2(7) NOT NULL -> timestamp NOT NULL (datetime2(7) holds 100 ns ticks; PostgreSQL timestamp holds 1 µs. Harness inputs are normalised to µs and the count of normalised values is recorded as a finding.); nvarchar(100) NOT NULL -> varchar(100) NOT NULL; decimal(18,2) NULL -> numeric(18,2); decimal(18,3) NOT NULL -> numeric(18,3) NOT NULL; decimal(18,2) NOT NULL -> numeric(18,2) NOT NULL; decimal(18,3) NULL -> numeric(18,3) |
+| The generated data and fixed cases would catch the mistakes a converter is most likely to make here. | Planted defects on the adversarial cases: inadequate; caught 4, missed 2 (equivalent recorded: 0), not deployable 0. Missed: priced on the expected delivery date; lines for unknown stock items kept. |
+| Each agreed test's expected result is what its label says the T-SQL should return (they were captured from the source engine). | owner judgment. Expected results are in tests/WideWorldImporters/Website.InsertCustomerOrders.adversarial.expected.json. Cases: A01 '' versus NULL in order comments are kept distinct through the insert; A02 two order lines whose descriptions differ only in case; both kept and priced; A03 customer purchase order number with a trailing space is preserved; A04 order references 1 and 5 (a gap): both orders are created and every line matches its order by reference; A05 a special deal running until 9999-12-31 lowers the line price; deal unit price 7.55; A06 list price 19.95 and tax rate 12.345 flow into the line unchanged |
+
+Cases:
+- A01 '' versus NULL in order comments are kept distinct through the insert: SQL Server pass, PostgreSQL pass; traps null-vs-empty
+- A02 two order lines whose descriptions differ only in case; both kept and priced: SQL Server pass, PostgreSQL pass; traps collation-case, top-ties
+- A03 customer purchase order number with a trailing space is preserved: SQL Server pass, PostgreSQL pass; traps trailing-spaces
+- A04 order references 1 and 5 (a gap): both orders are created and every line matches its order by reference: SQL Server pass, PostgreSQL pass; traps identity-gaps
+- A05 a special deal running until 9999-12-31 lowers the line price; deal unit price 7.55: SQL Server pass, PostgreSQL pass; traps dates-datetime, numeric-rounding
+- A06 list price 19.95 and tax rate 12.345 flow into the line unchanged: SQL Server pass, PostgreSQL pass; traps numeric-rounding
+
+## WideWorldImporters Website.InvoiceCustomerOrders
+
+7 adversarial cases ran, 0 differed. Gate: FAIL. Attacker claude (Kiro subagent; exact model version not exposed to the agent), auditor gpt-5.6-sol. Evidence: `evidence/adversarial/WideWorldImporters/Website.InvoiceCustomerOrders.json`.
+
+- objection O01 is open
+- objection O02 is open
+- objection O03 is open
+- mutant adequacy is inadequate (unexplained misses: unpicked orders are invoiced)
+
+| Step-5 checklist item | Evidence |
+|---|---|
+| The conversion does what the T-SQL does for every input the object accepts, not only for the generated ones. | 7 adversarial cases ran, 0 differed (agent-written, run on both engines). Step 3: 200 samples, 206 rows compared, seeds 1519383177. owner judgment: whether the inputs cover what the object accepts. |
+| NULL versus empty string, including concatenation and ISNULL/COALESCE. | null-vs-empty: covered by A03 (empty string: yes; NULL in a text input: yes) |
+| Collation and case sensitivity in comparisons, ORDER BY and GROUP BY. | collation-case: covered by A04 ("dry" and "DRY" differ only in case) |
+| Dates and datetime precision (datetime 3.33 ms rounding, datetime2, time zones, boundary dates). | dates-datetime: covered by A02 (boundary date "9999-12-31T23:59:59.999999" in PickingCompletedWhen) |
+| Numeric rounding and scale (money, decimal(p,s), integer division, ROUND). | numeric-rounding: covered by A01 (0.95 in UnitPrice ends in a 5) |
+| Trailing spaces; TOP with and without ties; identity and sequence gaps. | trailing-spaces: covered by A05 ("PO-1 " ends in a space)<br>top-ties: covered by A04 (two rows of Sales.Orders share PickingCompletedWhen = "2020-01-01T10:00:00.000000")<br>identity-gaps: covered by A07 (Website.OrderIDList.OrderID jumps from 1 to 3) |
+| Every 'not claimed' statement in the notes is acceptable, and nothing else is silently assumed. | owner judgment. Notes: WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted. / The table-valued parameter Website.OrderIDList becomes the composite type website.order_id_list and an array parameter. The @InvoicesToGenerate table variable becomes a temporary table dropped at commit. / NEXT VALUE FOR Sequences.InvoiceID -> nextval('sequences."InvoiceID"'), one value per qualifying order, consumed even when the call fails. Which order receives which ID is undefined in the source, so it is not claimed: each invoice is identified by its OrderID, and the IDs used are compared by count, distinctness and range, with the sequence's next value. / SYSDATETIME() -> localtimestamp. CONVERT(nvarchar(20), SYSDATETIME(), 126) keeps 20 characters of the ISO text (ending in '.' when the time has a fraction; 19 characters, no fraction, on a whole second); reproduced. The JSON_MODIFY chain produces fixed text, which the conversion builds directly; the stored text is compared exactly apart from the call time and the invoice-ID-based ConNote. / c.DeliveryAddressLine1 + N', ' + c.DeliveryAddressLine2 is NULL when line 2 is NULL; \|\| keeps that (concat() would not). / TRY/CATCH with XACT_ABORT, THROW 51000 and THROW (re-raise) -> an exception block that undoes every write and re-raises the same error. The outcome compares the error class each engine raised. / Transaction types are looked up by name ('Stock Issue', 'Customer Invoice'). SQL Server compares under the database's case-insensitive collation and PostgreSQL case-sensitively; the generated names are the source's exact names, so case differences are not claimed. / Scratch modelling: Sales.InvoiceLines.InvoiceLineID is an identity column (a sequence default in the source; the procedure only uses it to order inserts). StockItemTransactionID and CustomerTransactionID (sequence defaults, not referenced) are not modelled. / Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step). / Step 4 is n/a for objects that change data (ruling 2026-11-12): each call changes the data it reads, so repeated timed runs on the same data are not the same work. |
+| The column-type mappings are right for this object. | int NOT NULL -> integer NOT NULL; nvarchar(20) NULL -> varchar(20); datetime2(7) NULL -> timestamp (datetime2(7) holds 100 ns ticks; PostgreSQL timestamp holds 1 µs. Harness inputs are normalised to µs and the count of normalised values is recorded as a finding.); nvarchar(100) NOT NULL -> varchar(100) NOT NULL; decimal(18,2) NULL -> numeric(18,2); decimal(18,3) NOT NULL -> numeric(18,3) NOT NULL; bit NOT NULL -> boolean NOT NULL (bit maps to boolean; the driver returns true/false on both sides.); decimal(18,2) NOT NULL -> numeric(18,2) NOT NULL; datetime2(7) NOT NULL -> timestamp NOT NULL (datetime2(7) holds 100 ns ticks; PostgreSQL timestamp holds 1 µs. Harness inputs are normalised to µs and the count of normalised values is recorded as a finding.); nvarchar(60) NOT NULL -> varchar(60) NOT NULL; nvarchar(60) NULL -> varchar(60); nvarchar(5) NULL -> varchar(5); int NULL -> integer; date NOT NULL -> date NOT NULL; nvarchar(400) NULL -> varchar(400); nvarchar(50) NOT NULL -> varchar(50) NOT NULL; date NULL -> date |
+| The generated data and fixed cases would catch the mistakes a converter is most likely to make here. | Planted defects on the adversarial cases: inadequate; caught 6, missed 1 (equivalent recorded: 0), not deployable 0. Missed: unpicked orders are invoiced. |
+| Each agreed test's expected result is what its label says the T-SQL should return (they were captured from the source engine). | owner judgment. Expected results are in tests/WideWorldImporters/Website.InvoiceCustomerOrders.adversarial.expected.json. Cases: A01 tax and line amounts round half away from zero: 3 x 0.95 x 0.505 % = 0.01438875 -> 0.01; A02 PickingCompletedWhen at the maximum datetime2 (9999-12-31): the order still counts as picked; A03 empty DeliveryAddressLine1 with NULL DeliveryAddressLine2 makes DeliveryInstructions NULL (+ semantics); A04 two invoice lines whose descriptions differ only in case are both written; A05 customer purchase order number with a trailing space is carried onto the invoice; A06 an order with no lines: its customer-transaction sums are NULL, hitting a NOT NULL violation that rolls everything back; A07 two orders with non-contiguous ids 1 and 3 are both invoiced; new invoice ids come from the sequence |
+
+Objections:
+- O01 (label-mismatch, open): The supplied arithmetic is 3 * 0.95 * 0.505 / 100 = 0.0143925, not 0.01438875. It rounds and truncates to the same two-decimal value, 0.01, so this input does not test the claimed rounding tie or the planted round-versus-truncation defect.
+- O02 (weak, open): DeliveryAddressLine2 is NULL, so the entire address expression is NULL whether DeliveryAddressLine1 is '' or NULL. The fixed two-order case already tests NULL line 2. A03 cannot expose a conversion that collapses the supplied empty line 1 to NULL.
+- O03 (duplicate, open): The hand-derived 'an order without lines' case has the same requested order, empty Sales.OrderLines table and expected NOT NULL failure with rollback. A06 does not change any input that reaches a different path.
+
+Cases:
+- A01 tax and line amounts round half away from zero: 3 x 0.95 x 0.505 % = 0.01438875 -> 0.01: SQL Server pass, PostgreSQL pass; traps numeric-rounding
+- A02 PickingCompletedWhen at the maximum datetime2 (9999-12-31): the order still counts as picked: SQL Server pass, PostgreSQL pass; traps dates-datetime
+- A03 empty DeliveryAddressLine1 with NULL DeliveryAddressLine2 makes DeliveryInstructions NULL (+ semantics): SQL Server pass, PostgreSQL pass; traps null-vs-empty
+- A04 two invoice lines whose descriptions differ only in case are both written: SQL Server pass, PostgreSQL pass; traps collation-case, top-ties
+- A05 customer purchase order number with a trailing space is carried onto the invoice: SQL Server pass, PostgreSQL pass; traps trailing-spaces
+- A06 an order with no lines: its customer-transaction sums are NULL, hitting a NOT NULL violation that rolls everything back: SQL Server pass, PostgreSQL pass; traps none
+- A07 two orders with non-contiguous ids 1 and 3 are both invoiced; new invoice ids come from the sequence: SQL Server pass, PostgreSQL pass; traps identity-gaps
+
+## WideWorldImporters Website.RecordColdRoomTemperatures
+
+4 adversarial cases ran, 0 differed. Gate: FAIL. Attacker claude (Kiro subagent; exact model version not exposed to the agent), auditor gpt-5.6-sol. Evidence: `evidence/adversarial/WideWorldImporters/Website.RecordColdRoomTemperatures.json`.
+
+- objection O01 is open
+- objection O02 is open
+
+| Step-5 checklist item | Evidence |
+|---|---|
+| The conversion does what the T-SQL does for every input the object accepts, not only for the generated ones. | 4 adversarial cases ran, 0 differed (agent-written, run on both engines). Step 3: 200 samples, 205 rows compared, seeds 1668109746. owner judgment: whether the inputs cover what the object accepts. |
+| NULL versus empty string, including concatenation and ISNULL/COALESCE. | null-vs-empty: not applicable to this object's inputs |
+| Collation and case sensitivity in comparisons, ORDER BY and GROUP BY. | collation-case: not applicable to this object's inputs |
+| Dates and datetime precision (datetime 3.33 ms rounding, datetime2, time zones, boundary dates). | dates-datetime: covered by A01 (boundary date "9999-12-31T23:59:59.999999" in RecordedWhen) |
+| Numeric rounding and scale (money, decimal(p,s), integer division, ROUND). | numeric-rounding: covered by A02 (4.25 in Temperature ends in a 5) |
+| Trailing spaces; TOP with and without ties; identity and sequence gaps. | trailing-spaces: not applicable to this object's inputs<br>top-ties: covered by A03 (two rows of Warehouse.ColdRoomTemperatures share ColdRoomSensorNumber = 3)<br>identity-gaps: attacker says not applicable: The only key column is Website.SensorDataList.SensorDataListID, an IDENTITY the harness renumbers 1..n for each call (tvpJson), so a planted gap in it cannot reach either engine; Warehouse.ColdRoomTemperatures has no key the procedure uses. (auditor accepted) |
+| Every 'not claimed' statement in the notes is acceptable, and nothing else is silently assumed. | owner judgment. Notes: WITH NATIVE_COMPILATION, SCHEMABINDING, EXECUTE AS OWNER and BEGIN ATOMIC (SNAPSHOT, LANGUAGE English) have no PostgreSQL equivalent. The ATOMIC block's all-or-nothing behaviour is reproduced by a PL/pgSQL exception block (a subtransaction); THROW 51000 becomes RAISE EXCEPTION (SQLSTATE P0001). / The table-valued parameter Website.SensorDataList becomes a composite type website.sensor_data_list and an array parameter. The harness passes the same generated readings to both engines. / SELECT @a = ... WHERE SensorDataListID = @Counter leaves the variables unchanged when no row matches; the conversion keeps the previous values in that case too (it cannot happen with identity-assigned IDs, which have no gaps). / Scratch modelling: the SQL Server call fills a table variable of Website.SensorDataList (memory-optimized, SensorDataListID IDENTITY as in the source) one INSERT per reading, so the readings are numbered 1..n; PostgreSQL receives the same readings with the same numbers. Warehouse.ColdRoomTemperatures is memory-optimized but not system-versioned and has no identity key; the procedure references neither. / Step 3 is the state form: whether each engine raised, and every row of Warehouse.ColdRoomTemperatures (compared as a multiset; the table has no key the procedure uses). / Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step). / Step 4 is n/a for objects that change data (ruling 2026-11-12): each call changes the data it reads, so repeated timed runs on the same data are not the same work. |
+| The column-type mappings are right for this object. | int NOT NULL -> integer NOT NULL; int NULL -> integer; datetime2(7) NULL -> timestamp (datetime2(7) holds 100 ns ticks; PostgreSQL timestamp holds 1 µs. Harness inputs are normalised to µs and the count of normalised values is recorded as a finding.); decimal(18,2) NULL -> numeric(18,2); datetime2(7) NOT NULL -> timestamp NOT NULL (datetime2(7) holds 100 ns ticks; PostgreSQL timestamp holds 1 µs. Harness inputs are normalised to µs and the count of normalised values is recorded as a finding.); decimal(10,2) NOT NULL -> numeric(10,2) NOT NULL |
+| The generated data and fixed cases would catch the mistakes a converter is most likely to make here. | Planted defects on the adversarial cases: adequate; caught 4, missed 0 (equivalent recorded: 0), not deployable 0. |
+| Each agreed test's expected result is what its label says the T-SQL should return (they were captured from the source engine). | owner judgment. Expected results are in tests/WideWorldImporters/Website.RecordColdRoomTemperatures.adversarial.expected.json. Cases: A01 a reading at the maximum datetime2 (9999-12-31) updates every existing row for its sensor; A02 temperature 4.25 is stored exactly; a second reading overflows decimal(10,2) and rolls both back; A03 three existing rows for one sensor share a temperature; one reading updates all of them; A04 two readings for the same new sensor: the first inserts, the second updates it (loop order preserved) |
+
+Objections:
+- O01 (duplicate, open): The hand-derived 'updates every existing row' case already has two rows for one sensor, including a non-key tie on RecordedWhen, and requires both rows to be updated. Adding a third row and moving the tie to Temperature does not attack a different selection or update mechanism.
+- O02 (duplicate, open): The first hand-derived case already sends two consecutive readings for the same new sensor with the same timestamps and temperatures, requiring the first reading to insert and the second to update. A04 changes only the sensor number.
+
+Cases:
+- A01 a reading at the maximum datetime2 (9999-12-31) updates every existing row for its sensor: SQL Server pass, PostgreSQL pass; traps dates-datetime
+- A02 temperature 4.25 is stored exactly; a second reading overflows decimal(10,2) and rolls both back: SQL Server pass, PostgreSQL pass; traps numeric-rounding
+- A03 three existing rows for one sensor share a temperature; one reading updates all of them: SQL Server pass, PostgreSQL pass; traps top-ties
+- A04 two readings for the same new sensor: the first inserts, the second updates it (loop order preserved): SQL Server pass, PostgreSQL pass; traps none
+
+## WideWorldImporters Website.RecordVehicleTemperature
+
+6 adversarial cases ran, 0 differed. Gate: FAIL. Attacker claude (Kiro subagent; exact model version not exposed to the agent), auditor gpt-5.6-sol. Evidence: `evidence/adversarial/WideWorldImporters/Website.RecordVehicleTemperature.json`.
+
+- objection O01 is open
+- objection O02 is open
+- objection O03 is open
+- mutant adequacy is inadequate (unexplained misses: parameter not truncated to nvarchar(1000), ISJSON accepts JSON scalars, empty string is not 1900-01-01, decimal accepts exponent notation)
+
+| Step-5 checklist item | Evidence |
+|---|---|
+| The conversion does what the T-SQL does for every input the object accepts, not only for the generated ones. | 6 adversarial cases ran, 0 differed (agent-written, run on both engines). Step 3: 200 samples, 212 rows compared, seeds 1078809522. owner judgment: whether the inputs cover what the object accepts. |
+| NULL versus empty string, including concatenation and ISNULL/COALESCE. | null-vs-empty: attacker says not applicable: The only parameter is one nvarchar(1000) JSON document; NULL vs '' (NULL document inserts nothing without error, '' fails ISJSON) is exercised by named cases on the payload, not by a typed text column the trap checker inspects. (auditor accepted) |
+| Collation and case sensitivity in comparisons, ORDER BY and GROUP BY. | collation-case: attacker says not applicable: Case sensitivity of the stored VehicleRegistration is exercised by a named case ('WWI-A' vs an existing 'wwi-a' row); the rego value itself is a JSON token inside the string argument, not a typed text column. (auditor accepted) |
+| Dates and datetime precision (datetime 3.33 ms rounding, datetime2, time zones, boundary dates). | dates-datetime: attacker says not applicable: The datetime boundary is a 'when' token inside the JSON string (covered by a named case), not a typed date column or a cutoff window the trap checker reads. (auditor accepted) |
+| Numeric rounding and scale (money, decimal(p,s), integer division, ROUND). | numeric-rounding: attacker says not applicable: The decimal rounding is a 'temp' token inside the JSON string (covered by the 3.965 case), not a typed decimal column the trap checker reads. (auditor accepted) |
+| Trailing spaces; TOP with and without ties; identity and sequence gaps. | trailing-spaces: covered by A01 ("{\"Recordings\":[{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-89.76,50.47]},\"properties\":{\"rego\":\"WWI-1\",\"sensor\":1,\"when\":\"2016-01-01T07:00:00\",\"temp\":3.96}}]} " ends in a space)<br>top-ties: attacker says not applicable: The procedure inserts rows parsed from one JSON document and reads no table for row selection, so there is no two-row tie in a typed input to construct; array order within the document is covered by the parsing cases. (auditor accepted)<br>identity-gaps: not applicable to this object's inputs |
+| Every 'not claimed' statement in the notes is acceptable, and nothing else is silently assumed. | owner judgment. Notes: WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted. / Converted to a PostgreSQL PROCEDURE. THROW 51000 becomes RAISE EXCEPTION (SQLSTATE P0001); PRINT becomes RAISE NOTICE. Step 3 is the state form: whether each engine raised, and every row of Warehouse.VehicleTemperatures. / OPENJSON ... WITH is reproduced by tsql_compat helpers on the json type (not jsonb, which would normalise the AS JSON text): lax paths with the first duplicate key winning; object and array values read as NULL for scalar columns; nvarchar(40) truncation; an object at $.Recordings is one row (the object) whose '$' AS JSON is NULL; T-SQL string conversion rules for int, decimal(18,2) and datetime2 as measured on SQL Server 2025 at compatibility level 130. / datetime2 strings: only the measured formats are generated (ISO with T and seconds, space-separated, date only, yyyymmdd, m/d/yyyy, empty string = 1900-01-01, time-zone suffix ignored). Values with more than 6 fractional digits are not generated: PostgreSQL timestamp holds microseconds. / The scratch Warehouse.VehicleTemperatures is a disk-based table without the identity column (the procedure does not reference it). In the source it is memory-optimized; the procedure is interpreted T-SQL, so storage does not change its result. / Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step). / Step 4 is n/a for objects that change data (ruling 2026-11-12): each call changes the data it reads, so repeated timed runs on the same data are not the same work. |
+| The column-type mappings are right for this object. | nvarchar(20) NOT NULL -> varchar(20) NOT NULL; int NOT NULL -> integer NOT NULL; datetime2(7) NOT NULL -> timestamp NOT NULL (datetime2(7) holds 100 ns ticks; PostgreSQL timestamp holds 1 µs. Harness inputs are normalised to µs and the count of normalised values is recorded as a finding.); decimal(10,2) NOT NULL -> numeric(10,2) NOT NULL; nvarchar(1000) NULL -> varchar(1000); bit NOT NULL -> boolean NOT NULL (bit maps to boolean; the driver returns true/false on both sides.); varbinary(max) NULL -> bytea |
+| The generated data and fixed cases would catch the mistakes a converter is most likely to make here. | Planted defects on the adversarial cases: inadequate; caught 2, missed 4 (equivalent recorded: 0), not deployable 0. Missed: parameter not truncated to nvarchar(1000); ISJSON accepts JSON scalars; empty string is not 1900-01-01; decimal accepts exponent notation. |
+| Each agreed test's expected result is what its label says the T-SQL should return (they were captured from the source engine). | owner judgment. Expected results are in tests/WideWorldImporters/Website.RecordVehicleTemperature.adversarial.expected.json. Cases: A01 a trailing space after the JSON object: still valid JSON, so the recording is inserted; A02 duplicate 'rego' key: the first occurrence wins; A03 temperature 3.965 rounds half away from zero to 3.97; A04 boundary datetime 9999-12-31 in 'when'; A05 registration whose name differs only in case from an existing row; A06 NULL document: ISJSON(NULL) is NULL, so nothing is inserted and no error is raised |
+
+Objections:
+- O01 (duplicate, open): The hand-derived duplicate-key case sends the same first and second rego values and already requires OPENJSON-compatible first-occurrence behavior. A02 repeats that input and mechanism.
+- O02 (duplicate, open): The hand-derived temperature-rounding case already sends temp 3.965 in the same document shape and requires 3.97. A03 is the same attack with only the registration changed.
+- O03 (duplicate, open): The hand-derived NULL-document case already calls the procedure with a NULL argument and requires no error and no inserted rows. A06 is identical.
+
+Cases:
+- A01 a trailing space after the JSON object: still valid JSON, so the recording is inserted: SQL Server pass, PostgreSQL pass; traps trailing-spaces
+- A02 duplicate 'rego' key: the first occurrence wins: SQL Server pass, PostgreSQL pass; traps none
+- A03 temperature 3.965 rounds half away from zero to 3.97: SQL Server pass, PostgreSQL pass; traps none
+- A04 boundary datetime 9999-12-31 in 'when': SQL Server pass, PostgreSQL pass; traps none
+- A05 registration whose name differs only in case from an existing row: SQL Server pass, PostgreSQL pass; traps none
+- A06 NULL document: ISJSON(NULL) is NULL, so nothing is inserted and no error is raised: SQL Server pass, PostgreSQL pass; traps none
+
+## WideWorldImporters Website.SearchForPeople
+
+6 adversarial cases ran, 0 differed. Gate: FAIL. Attacker claude (Kiro subagent; exact model version not exposed to the agent), auditor gpt-5.6-sol. Evidence: `evidence/adversarial/WideWorldImporters/Website.SearchForPeople.json`.
+
+- objection O01 is open
+- objection O02 is open
+- objection O03 is open
+- objection O04 is open
+- mutant adequacy is inadequate (unexplained misses: '_' matches a letter only)
+
+| Step-5 checklist item | Evidence |
+|---|---|
+| The conversion does what the T-SQL does for every input the object accepts, not only for the generated ones. | 6 adversarial cases ran, 0 differed (agent-written, run on both engines). Step 3: 200 samples, 207 rows compared, seeds 1324000737. owner judgment: whether the inputs cover what the object accepts. |
+| NULL versus empty string, including concatenation and ISNULL/COALESCE. | null-vs-empty: attacker says not applicable: Application.People.SearchName is NOT NULL and the only text parameter (SearchText) cannot be both '' and NULL in one case; a NULL SearchText is outside the object's stated precondition. '' is covered by the empty-search case. (auditor accepted) |
+| Collation and case sensitivity in comparisons, ORDER BY and GROUP BY. | collation-case: covered by A01 ("ab" and "AB" differ only in case) |
+| Dates and datetime precision (datetime 3.33 ms rounding, datetime2, time zones, boundary dates). | dates-datetime: not applicable to this object's inputs |
+| Numeric rounding and scale (money, decimal(p,s), integer division, ROUND). | numeric-rounding: not applicable to this object's inputs |
+| Trailing spaces; TOP with and without ties; identity and sequence gaps. | trailing-spaces: covered by A02 ("amy " ends in a space)<br>top-ties: covered by A01 (two rows of Application.People share PreferredName = "Q")<br>identity-gaps: covered by A05 (Application.People.PersonID jumps from 1 to 3) |
+| Every 'not claimed' statement in the notes is acceptable, and nothing else is silently assumed. | owner judgment. Notes: WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted (where the source declares it). / LIKE is translated by tsql_compat.like_to_regex into a case-insensitive regular expression: PostgreSQL LIKE has no [..] classes and treats backslash as an escape, SQL Server LIKE has no escape character. Patterns that the harness generates are checked; collation-specific equivalences outside them (for example ß = ss) are not claimed. / ORDER BY uses a tailored ICU collation (tsql_compat.latin1_general_100_ci_as: level 2, case-insensitive and accent-sensitive, ASCII punctuation order measured on SQL Server) plus removal of hyphens and apostrophes (Windows word sort), to follow the source's Latin1_General_100_CI_AS ordering. Verified for ASCII text; sort keys are generated distinct, so the order of ties is not claimed. / The JSON documents are compared as parsed values (key order, array order, nulls and strings are compared; whitespace is not). / @MaximumRowsToReturn is generated as 0..5; negative or NULL values (an error on SQL Server, not on PostgreSQL) are outside the property. / Fan-out of a person into several rows (a person who is the contact of several customers) is not generated: the source leaves the order of those rows undefined. / Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step). |
+| The column-type mappings are right for this object. | int NOT NULL -> integer NOT NULL; nvarchar(50) NOT NULL -> varchar(50) NOT NULL; bit NOT NULL -> boolean NOT NULL (bit maps to boolean; the driver returns true/false on both sides.); nvarchar(101) NOT NULL -> varchar(101) NOT NULL; nvarchar(100) NOT NULL -> varchar(100) NOT NULL |
+| The generated data and fixed cases would catch the mistakes a converter is most likely to make here. | Planted defects on the adversarial cases: inadequate; caught 6, missed 1 (equivalent recorded: 0), not deployable 0. Missed: '_' matches a letter only. |
+| Each agreed test's expected result is what its label says the T-SQL should return (they were captured from the source engine). | owner judgment. Expected results are in tests/WideWorldImporters/Website.SearchForPeople.adversarial.expected.json. Cases: A01 SearchName values differing only in case both match; the two rows share PreferredName; A02 a trailing space in SearchName is matched by LIKE '%amy%'; A03 character class [^a] matches any one character that is not 'a'; A04 relationship precedence: a person flagged both salesperson and employee is reported as 'Salesperson'; A05 TOP(2) of five hits, ordered by the Windows collation; person ids are non-contiguous; A06 no row qualifies: FOR JSON ... ROOT('People') returns an empty string |
+
+Objections:
+- O01 (duplicate, open): The hand-derived five-hit case already includes SearchName values 'ab' and 'AB', gives every row PreferredName 'Q', and exercises the same case-insensitive matching and non-key tie. A01 reduces that existing input to two rows without adding a new mechanism.
+- O02 (weak, open): Searching for 'amy' matches SearchName 'amy ' both before and after trimming its trailing space, and SearchName is not returned in the JSON. The supplied case therefore cannot expose trailing-space loss despite claiming that trap.
+- O03 (duplicate, open): The hand-derived LIKE '[^a]' case already supplies SearchName values 'a', 'A', 'b' and '' with the same search term. A03 repeats that pattern-semantics attack.
+- O04 (duplicate, open): The hand-derived relationship-precedence case already supplies people marked both salesperson and employee and requires 'Salesperson'. Reducing it to one matching person does not attack a different CASE branch.
+
+Cases:
+- A01 SearchName values differing only in case both match; the two rows share PreferredName: SQL Server pass, PostgreSQL pass; traps collation-case, top-ties
+- A02 a trailing space in SearchName is matched by LIKE '%amy%': SQL Server pass, PostgreSQL pass; traps trailing-spaces
+- A03 character class [^a] matches any one character that is not 'a': SQL Server pass, PostgreSQL pass; traps none
+- A04 relationship precedence: a person flagged both salesperson and employee is reported as 'Salesperson': SQL Server pass, PostgreSQL pass; traps none
+- A05 TOP(2) of five hits, ordered by the Windows collation; person ids are non-contiguous: SQL Server pass, PostgreSQL pass; traps identity-gaps
+- A06 no row qualifies: FOR JSON ... ROOT('People') returns an empty string: SQL Server pass, PostgreSQL pass; traps none
+
+## WideWorldImporters Website.SearchForStockItems
+
+7 adversarial cases ran, 0 differed. Gate: FAIL. Attacker claude (Kiro subagent; exact model version not exposed to the agent), auditor gpt-5.6-sol. Evidence: `evidence/adversarial/WideWorldImporters/Website.SearchForStockItems.json`.
+
+- objection O01 is open
+- objection O02 is open
+- objection O03 is open
+- objection O04 is open
+- mutant adequacy is inadequate (unexplained misses: '_' matches a letter only)
+
+| Step-5 checklist item | Evidence |
+|---|---|
+| The conversion does what the T-SQL does for every input the object accepts, not only for the generated ones. | 7 adversarial cases ran, 0 differed (agent-written, run on both engines). Step 3: 200 samples, 207 rows compared, seeds 1150224899. owner judgment: whether the inputs cover what the object accepts. |
+| NULL versus empty string, including concatenation and ISNULL/COALESCE. | null-vs-empty: attacker says not applicable: SearchDetails is NOT NULL and the only text parameter (SearchText) cannot be both '' and NULL in one case, and a NULL SearchText is outside the object's stated precondition; '' is covered by the empty-search case. (auditor accepted) |
+| Collation and case sensitivity in comparisons, ORDER BY and GROUP BY. | collation-case: covered by A01 ("ab" and "AB" differ only in case) |
+| Dates and datetime precision (datetime 3.33 ms rounding, datetime2, time zones, boundary dates). | dates-datetime: not applicable to this object's inputs |
+| Numeric rounding and scale (money, decimal(p,s), integer division, ROUND). | numeric-rounding: not applicable to this object's inputs |
+| Trailing spaces; TOP with and without ties; identity and sequence gaps. | trailing-spaces: covered by A03 ("abc " ends in a space)<br>top-ties: covered by A02 (two rows of Warehouse.StockItems share SearchDetails = "dup")<br>identity-gaps: covered by A06 (Warehouse.StockItems.StockItemID jumps from 1 to 3) |
+| Every 'not claimed' statement in the notes is acceptable, and nothing else is silently assumed. | owner judgment. Notes: WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted (where the source declares it). / LIKE is translated by tsql_compat.like_to_regex into a case-insensitive regular expression: PostgreSQL LIKE has no [..] classes and treats backslash as an escape, SQL Server LIKE has no escape character. Patterns that the harness generates are checked; collation-specific equivalences outside them (for example ß = ss) are not claimed. / ORDER BY uses a tailored ICU collation (tsql_compat.latin1_general_100_ci_as: level 2, case-insensitive and accent-sensitive, ASCII punctuation order measured on SQL Server) plus removal of hyphens and apostrophes (Windows word sort), to follow the source's Latin1_General_100_CI_AS ordering. Verified for ASCII text; sort keys are generated distinct, so the order of ties is not claimed. / The JSON documents are compared as parsed values (key order, array order, nulls and strings are compared; whitespace is not). / @MaximumRowsToReturn is generated as 0..5; negative or NULL values (an error on SQL Server, not on PostgreSQL) are outside the property. / Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step). |
+| The column-type mappings are right for this object. | int NOT NULL -> integer NOT NULL; nvarchar(100) NOT NULL -> varchar(100) NOT NULL |
+| The generated data and fixed cases would catch the mistakes a converter is most likely to make here. | Planted defects on the adversarial cases: inadequate; caught 4, missed 1 (equivalent recorded: 0), not deployable 0. Missed: '_' matches a letter only. |
+| Each agreed test's expected result is what its label says the T-SQL should return (they were captured from the source engine). | owner judgment. Expected results are in tests/WideWorldImporters/Website.SearchForStockItems.adversarial.expected.json. Cases: A01 SearchDetails: values differing only in case both match a case-insensitive search and keep their own case in the result; A02 SearchDetails: two matching rows share the same SearchDetails value (a non-key tie); both are returned in name order; A03 SearchDetails: a trailing space in the data is matched by LIKE '%x%'; A04 SearchDetails: character class [a-c] matches one of a, b, c (T-SQL LIKE, not PostgreSQL LIKE); A05 SearchDetails: a backslash is an ordinary character in T-SQL LIKE (no escape); A06 SearchDetails: TOP(@MaximumRowsToReturn) returns exactly two of five hits, ordered by the Windows collation; A07 SearchDetails: no row qualifies, so FOR JSON ... ROOT returns an empty string, not an empty array |
+
+Objections:
+- O01 (duplicate, open): The hand-derived five-hit case already includes SearchDetails 'ab' and 'AB' and requires case-insensitive matching. A01 repeats those values with fewer rows and does not attack a different collation path.
+- O02 (weak, open): Searching for 'abc' matches SearchDetails 'abc ' both before and after trimming its trailing space, and SearchDetails is not returned in the JSON. The supplied case therefore cannot expose trailing-space loss despite claiming that trap.
+- O03 (duplicate, open): The hand-derived LIKE '[a-c]' case already supplies matching and non-matching values, including the case-insensitive member 'B', and exercises the same T-SQL character-class translation. A04 is a reduced copy of that attack.
+- O04 (duplicate, open): The hand-derived LIKE 'a\b' case already supplies 'a\b' and 'ab' and tests that backslash is ordinary in T-SQL LIKE. A05 repeats the same search and rows.
+
+Cases:
+- A01 SearchDetails: values differing only in case both match a case-insensitive search and keep their own case in the result: SQL Server pass, PostgreSQL pass; traps collation-case
+- A02 SearchDetails: two matching rows share the same SearchDetails value (a non-key tie); both are returned in name order: SQL Server pass, PostgreSQL pass; traps top-ties
+- A03 SearchDetails: a trailing space in the data is matched by LIKE '%x%': SQL Server pass, PostgreSQL pass; traps trailing-spaces
+- A04 SearchDetails: character class [a-c] matches one of a, b, c (T-SQL LIKE, not PostgreSQL LIKE): SQL Server pass, PostgreSQL pass; traps none
+- A05 SearchDetails: a backslash is an ordinary character in T-SQL LIKE (no escape): SQL Server pass, PostgreSQL pass; traps none
+- A06 SearchDetails: TOP(@MaximumRowsToReturn) returns exactly two of five hits, ordered by the Windows collation: SQL Server pass, PostgreSQL pass; traps identity-gaps
+- A07 SearchDetails: no row qualifies, so FOR JSON ... ROOT returns an empty string, not an empty array: SQL Server pass, PostgreSQL pass; traps none
+
+## WideWorldImporters Website.SearchForStockItemsByTags
+
+8 adversarial cases ran, 0 differed. Gate: FAIL. Attacker claude (Kiro subagent; exact model version not exposed to the agent), auditor gpt-5.6-sol. Evidence: `evidence/adversarial/WideWorldImporters/Website.SearchForStockItemsByTags.json`.
+
+- objection O01 is open
+- objection O02 is open
+- objection O03 is open
+- objection O04 is open
+- mutant adequacy is inadequate (unexplained misses: '_' matches a letter only)
+
+| Step-5 checklist item | Evidence |
+|---|---|
+| The conversion does what the T-SQL does for every input the object accepts, not only for the generated ones. | 8 adversarial cases ran, 0 differed (agent-written, run on both engines). Step 3: 200 samples, 207 rows compared, seeds 1568978901. owner judgment: whether the inputs cover what the object accepts. |
+| NULL versus empty string, including concatenation and ISNULL/COALESCE. | null-vs-empty: covered by A08 (empty string: yes; NULL in a text input: yes) |
+| Collation and case sensitivity in comparisons, ORDER BY and GROUP BY. | collation-case: covered by A01 ("ab" and "AB" differ only in case) |
+| Dates and datetime precision (datetime 3.33 ms rounding, datetime2, time zones, boundary dates). | dates-datetime: not applicable to this object's inputs |
+| Numeric rounding and scale (money, decimal(p,s), integer division, ROUND). | numeric-rounding: not applicable to this object's inputs |
+| Trailing spaces; TOP with and without ties; identity and sequence gaps. | trailing-spaces: covered by A03 ("abc " ends in a space)<br>top-ties: covered by A02 (two rows of Warehouse.StockItems share Tags = "dup")<br>identity-gaps: covered by A06 (Warehouse.StockItems.StockItemID jumps from 1 to 3) |
+| Every 'not claimed' statement in the notes is acceptable, and nothing else is silently assumed. | owner judgment. Notes: WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted (where the source declares it). / LIKE is translated by tsql_compat.like_to_regex into a case-insensitive regular expression: PostgreSQL LIKE has no [..] classes and treats backslash as an escape, SQL Server LIKE has no escape character. Patterns that the harness generates are checked; collation-specific equivalences outside them (for example ß = ss) are not claimed. / ORDER BY uses a tailored ICU collation (tsql_compat.latin1_general_100_ci_as: level 2, case-insensitive and accent-sensitive, ASCII punctuation order measured on SQL Server) plus removal of hyphens and apostrophes (Windows word sort), to follow the source's Latin1_General_100_CI_AS ordering. Verified for ASCII text; sort keys are generated distinct, so the order of ties is not claimed. / The JSON documents are compared as parsed values (key order, array order, nulls and strings are compared; whitespace is not). / @MaximumRowsToReturn is generated as 0..5; negative or NULL values (an error on SQL Server, not on PostgreSQL) are outside the property. / Tags is nullable in the source; a NULL Tags value never matches. / Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step). |
+| The column-type mappings are right for this object. | int NOT NULL -> integer NOT NULL; nvarchar(100) NOT NULL -> varchar(100) NOT NULL; nvarchar(100) NULL -> varchar(100) |
+| The generated data and fixed cases would catch the mistakes a converter is most likely to make here. | Planted defects on the adversarial cases: inadequate; caught 5, missed 1 (equivalent recorded: 0), not deployable 0. Missed: '_' matches a letter only. |
+| Each agreed test's expected result is what its label says the T-SQL should return (they were captured from the source engine). | owner judgment. Expected results are in tests/WideWorldImporters/Website.SearchForStockItemsByTags.adversarial.expected.json. Cases: A01 Tags: values differing only in case both match a case-insensitive search and keep their own case in the result; A02 Tags: two matching rows share the same Tags value (a non-key tie); both are returned in name order; A03 Tags: a trailing space in the data is matched by LIKE '%x%'; A04 Tags: character class [a-c] matches one of a, b, c (T-SQL LIKE, not PostgreSQL LIKE); A05 Tags: a backslash is an ordinary character in T-SQL LIKE (no escape); A06 Tags: TOP(@MaximumRowsToReturn) returns exactly two of five hits, ordered by the Windows collation; A07 Tags: no row qualifies, so FOR JSON ... ROOT returns an empty string, not an empty array; A08 Tags: NULL versus '' — a NULL Tags never matches, an empty Tags matches only '%%' |
+
+Objections:
+- O01 (duplicate, open): The hand-derived five-hit case already includes Tags 'ab' and 'AB' and requires case-insensitive matching. A01 repeats those values with fewer rows and does not attack a different collation path.
+- O02 (weak, open): Searching for 'abc' matches Tags 'abc ' both before and after trimming its trailing space, and Tags is not returned in the JSON. The supplied case therefore cannot expose trailing-space loss despite claiming that trap.
+- O03 (duplicate, open): The hand-derived LIKE '[a-c]' case already supplies matching and non-matching values, including the case-insensitive member 'B', and exercises the same T-SQL character-class translation. A04 is a reduced copy of that attack.
+- O04 (duplicate, open): The hand-derived LIKE 'a\b' case already supplies 'a\b' and 'ab' and tests that backslash is ordinary in T-SQL LIKE. A05 repeats the same search and rows.
+
+Cases:
+- A01 Tags: values differing only in case both match a case-insensitive search and keep their own case in the result: SQL Server pass, PostgreSQL pass; traps collation-case
+- A02 Tags: two matching rows share the same Tags value (a non-key tie); both are returned in name order: SQL Server pass, PostgreSQL pass; traps top-ties
+- A03 Tags: a trailing space in the data is matched by LIKE '%x%': SQL Server pass, PostgreSQL pass; traps trailing-spaces
+- A04 Tags: character class [a-c] matches one of a, b, c (T-SQL LIKE, not PostgreSQL LIKE): SQL Server pass, PostgreSQL pass; traps none
+- A05 Tags: a backslash is an ordinary character in T-SQL LIKE (no escape): SQL Server pass, PostgreSQL pass; traps none
+- A06 Tags: TOP(@MaximumRowsToReturn) returns exactly two of five hits, ordered by the Windows collation: SQL Server pass, PostgreSQL pass; traps identity-gaps
+- A07 Tags: no row qualifies, so FOR JSON ... ROOT returns an empty string, not an empty array: SQL Server pass, PostgreSQL pass; traps none
+- A08 Tags: NULL versus '' — a NULL Tags never matches, an empty Tags matches only '%%': SQL Server pass, PostgreSQL pass; traps null-vs-empty
+
+## WideWorldImporters Website.Suppliers
+
+4 adversarial cases ran, 0 differed. Gate: FAIL. Attacker claude (Kiro subagent; exact model version not exposed to the agent), auditor gpt-5.6-sol. Evidence: `evidence/adversarial/WideWorldImporters/Website.Suppliers.json`.
+
+- objection O01 is open
+- objection O02 is open
+
+| Step-5 checklist item | Evidence |
+|---|---|
+| The conversion does what the T-SQL does for every input the object accepts, not only for the generated ones. | 4 adversarial cases ran, 0 differed (agent-written, run on both engines). Step 3: 200 samples, 362 rows compared, seeds 215763448. owner judgment: whether the inputs cover what the object accepts. |
+| NULL versus empty string, including concatenation and ISNULL/COALESCE. | null-vs-empty: covered by A01 (empty string: yes; NULL in a text input: yes) |
+| Collation and case sensitivity in comparisons, ORDER BY and GROUP BY. | collation-case: covered by A03 ("toys" and "Toys" differ only in case) |
+| Dates and datetime precision (datetime 3.33 ms rounding, datetime2, time zones, boundary dates). | dates-datetime: not applicable to this object's inputs |
+| Numeric rounding and scale (money, decimal(p,s), integer division, ROUND). | numeric-rounding: not applicable to this object's inputs |
+| Trailing spaces; TOP with and without ties; identity and sequence gaps. | trailing-spaces: covered by A03 ("Padded " ends in a space)<br>top-ties: covered by A02 (two rows of Purchasing.Suppliers share PhoneNumber = "(415) 555-0100")<br>identity-gaps: covered by A04 (Purchasing.Suppliers.SupplierID jumps from 1 to 3) |
+| Every 'not claimed' statement in the notes is acceptable, and nothing else is silently assumed. | owner judgment. Notes: Verified in an isolated scratch database: the original T-SQL is deployed unchanged; tables contain only the columns the object references, with no foreign key constraints and no pre-existing rows. Every foreign-key column is indexed on both engines (a modelling assumption for the runtime step). |
+| The column-type mappings are right for this object. | int NOT NULL -> integer NOT NULL; nvarchar(100) NOT NULL -> varchar(100) NOT NULL; int NULL -> integer; nvarchar(20) NULL -> varchar(20); nvarchar(20) NOT NULL -> varchar(20) NOT NULL; nvarchar(256) NOT NULL -> varchar(256) NOT NULL; geography NULL -> geography (SQL Server geography maps to PostGIS geography (SRID 4326). Only point values are generated and compared, as well-known text.); nvarchar(50) NOT NULL -> varchar(50) NOT NULL |
+| The generated data and fixed cases would catch the mistakes a converter is most likely to make here. | Planted defects on the adversarial cases: adequate; caught 2, missed 0 (equivalent recorded: 0), not deployable 0. |
+| Each agreed test's expected result is what its label says the T-SQL should return (they were captured from the source engine). | owner judgment. Expected results are in tests/WideWorldImporters/Website.Suppliers.adversarial.expected.json. Cases: A01 SupplierReference '' versus NULL kept distinct; NULL DeliveryMethodID yields a NULL method via LEFT JOIN; A02 two suppliers share a fax number; a supplier with unmatched category/contacts/city keeps NULLs; A03 supplier names differing only in case are both returned; a trailing space is preserved; A04 same person as both contacts; geography as WKT; supplier ids skip a value |
+
+Objections:
+- O01 (duplicate, open): The single hand-derived case already supplies SupplierReference '' and NULL on separate suppliers and a NULL DeliveryMethodID, then compares all projected values. A01 repeats those exact NULL-versus-empty and LEFT JOIN mechanisms.
+- O02 (duplicate, open): The hand-derived case already keeps a supplier whose category, both contacts and city point to missing rows, and its supplier rows already share the default fax number. A02 repeats both the LEFT JOIN and non-key-tie conditions.
+
+Cases:
+- A01 SupplierReference '' versus NULL kept distinct; NULL DeliveryMethodID yields a NULL method via LEFT JOIN: SQL Server pass, PostgreSQL pass; traps null-vs-empty
+- A02 two suppliers share a fax number; a supplier with unmatched category/contacts/city keeps NULLs: SQL Server pass, PostgreSQL pass; traps top-ties
+- A03 supplier names differing only in case are both returned; a trailing space is preserved: SQL Server pass, PostgreSQL pass; traps collation-case, trailing-spaces
+- A04 same person as both contacts; geography as WKT; supplier ids skip a value: SQL Server pass, PostgreSQL pass; traps identity-gaps
+
+## Approval
+
+The owner approves at a terminal, not an agent:
+
+```
+npm run approve -- --report evidence/adversarial/reports/batch-4.md --reviewer "<name>" --date <yyyy-mm-dd>
+```

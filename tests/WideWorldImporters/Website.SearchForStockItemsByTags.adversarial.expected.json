@@ -1,0 +1,121 @@
+{
+  "object": "Website.SearchForStockItemsByTags",
+  "database": "WideWorldImporters",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-19T05:36:42.968Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "[A01] Tags: values differing only in case both match a case-insensitive search and keep their own case in the result",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"StockItems\":[{\"StockItemID\":1,\"StockItemName\":\"Item A\"},{\"StockItemID\":3,\"StockItemName\":\"Item B\"}]}"
+        ]
+      ]
+    },
+    {
+      "label": "[A02] Tags: two matching rows share the same Tags value (a non-key tie); both are returned in name order",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"StockItems\":[{\"StockItemID\":1,\"StockItemName\":\"Item A\"},{\"StockItemID\":3,\"StockItemName\":\"Item B\"}]}"
+        ]
+      ]
+    },
+    {
+      "label": "[A03] Tags: a trailing space in the data is matched by LIKE '%x%'",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"StockItems\":[{\"StockItemID\":1,\"StockItemName\":\"Only\"}]}"
+        ]
+      ]
+    },
+    {
+      "label": "[A04] Tags: character class [a-c] matches one of a, b, c (T-SQL LIKE, not PostgreSQL LIKE)",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"StockItems\":[{\"StockItemID\":1,\"StockItemName\":\"I1\"},{\"StockItemID\":3,\"StockItemName\":\"I3\"}]}"
+        ]
+      ]
+    },
+    {
+      "label": "[A05] Tags: a backslash is an ordinary character in T-SQL LIKE (no escape)",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"StockItems\":[{\"StockItemID\":1,\"StockItemName\":\"I1\"}]}"
+        ]
+      ]
+    },
+    {
+      "label": "[A06] Tags: TOP(@MaximumRowsToReturn) returns exactly two of five hits, ordered by the Windows collation",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"StockItems\":[{\"StockItemID\":1,\"StockItemName\":\"Item 1\"},{\"StockItemID\":3,\"StockItemName\":\"Item 2\"}]}"
+        ]
+      ]
+    },
+    {
+      "label": "[A07] Tags: no row qualifies, so FOR JSON ... ROOT returns an empty string, not an empty array",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:"
+        ]
+      ]
+    },
+    {
+      "label": "[A08] Tags: NULL versus '' — a NULL Tags never matches, an empty Tags matches only '%%'",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"StockItems\":[{\"StockItemID\":3,\"StockItemName\":\"I2\"}]}"
+        ]
+      ]
+    }
+  ]
+}

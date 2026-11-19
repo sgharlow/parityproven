@@ -98,7 +98,15 @@
       "PostgreSQL: AgreedTests.[test 07 Tags: LIKE [a _]: pass",
       "PostgreSQL: AgreedTests.[test 08 Tags: five hits, @MaximumRowsToReturn = 2 returns exactly two]: pass",
       "planted defects caught by the agreed tests: 6 of 6"
-    ]
+    ],
+    "adversarial": {
+      "gate": "fail",
+      "ran": 8,
+      "differed": 0,
+      "evidencePath": "evidence/adversarial/WideWorldImporters/Website.SearchForStockItemsByTags.json",
+      "conversionSha256": "591f6e02c6b0e69f7f650a8530abf1da513401de87d615d1fc0f9a3affa73b60",
+      "runAt": "2026-11-19T05:36:43.705Z"
+    }
   },
   "effort": {
     "humanMinutes": 0,

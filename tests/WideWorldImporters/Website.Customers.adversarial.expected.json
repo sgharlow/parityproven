@@ -1,0 +1,389 @@
+{
+  "object": "Website.Customers",
+  "database": "WideWorldImporters",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-19T05:28:41.949Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "[A01] '' versus NULL in DeliveryRun and RunPosition are kept distinct across the LEFT JOINs",
+      "columns": [
+        {
+          "name": "CustomerID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "CustomerName",
+          "sqlServerType": "nvarchar(100)"
+        },
+        {
+          "name": "CustomerCategoryName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PrimaryContact",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AlternateContact",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PhoneNumber",
+          "sqlServerType": "nvarchar(20)"
+        },
+        {
+          "name": "FaxNumber",
+          "sqlServerType": "nvarchar(20)"
+        },
+        {
+          "name": "BuyingGroupName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "WebsiteURL",
+          "sqlServerType": "nvarchar(256)"
+        },
+        {
+          "name": "DeliveryMethod",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "CityName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "DeliveryLocation",
+          "sqlServerType": "nvarchar(max)"
+        },
+        {
+          "name": "DeliveryRun",
+          "sqlServerType": "nvarchar(5)"
+        },
+        {
+          "name": "RunPosition",
+          "sqlServerType": "nvarchar(5)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:Customer 1",
+          "s:Novelty Shop",
+          "s:Ann Lee",
+          "∅",
+          "s:(206) 555-0100",
+          "s:(206) 555-0101",
+          "∅",
+          "s:http://x",
+          "s:Delivery Van",
+          "s:Seattle",
+          "∅",
+          "s:",
+          "∅"
+        ]
+      ]
+    },
+    {
+      "label": "[A02] two customers share a phone number; a missing category/contact/city still yields the row with NULLs",
+      "columns": [
+        {
+          "name": "CustomerID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "CustomerName",
+          "sqlServerType": "nvarchar(100)"
+        },
+        {
+          "name": "CustomerCategoryName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PrimaryContact",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AlternateContact",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PhoneNumber",
+          "sqlServerType": "nvarchar(20)"
+        },
+        {
+          "name": "FaxNumber",
+          "sqlServerType": "nvarchar(20)"
+        },
+        {
+          "name": "BuyingGroupName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "WebsiteURL",
+          "sqlServerType": "nvarchar(256)"
+        },
+        {
+          "name": "DeliveryMethod",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "CityName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "DeliveryLocation",
+          "sqlServerType": "nvarchar(max)"
+        },
+        {
+          "name": "DeliveryRun",
+          "sqlServerType": "nvarchar(5)"
+        },
+        {
+          "name": "RunPosition",
+          "sqlServerType": "nvarchar(5)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:Customer 1",
+          "s:Novelty Shop",
+          "s:Ann Lee",
+          "∅",
+          "s:(206) 555-9999",
+          "s:(206) 555-0101",
+          "∅",
+          "s:http://x",
+          "s:Delivery Van",
+          "s:Seattle",
+          "∅",
+          "∅",
+          "∅"
+        ],
+        [
+          "n:2",
+          "s:Customer 2",
+          "∅",
+          "∅",
+          "∅",
+          "s:(206) 555-9999",
+          "s:(206) 555-0101",
+          "∅",
+          "s:http://x",
+          "∅",
+          "∅",
+          "∅",
+          "∅",
+          "∅"
+        ]
+      ]
+    },
+    {
+      "label": "[A03] customer names differing only in case are both returned; a trailing space is preserved",
+      "columns": [
+        {
+          "name": "CustomerID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "CustomerName",
+          "sqlServerType": "nvarchar(100)"
+        },
+        {
+          "name": "CustomerCategoryName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PrimaryContact",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AlternateContact",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PhoneNumber",
+          "sqlServerType": "nvarchar(20)"
+        },
+        {
+          "name": "FaxNumber",
+          "sqlServerType": "nvarchar(20)"
+        },
+        {
+          "name": "BuyingGroupName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "WebsiteURL",
+          "sqlServerType": "nvarchar(256)"
+        },
+        {
+          "name": "DeliveryMethod",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "CityName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "DeliveryLocation",
+          "sqlServerType": "nvarchar(max)"
+        },
+        {
+          "name": "DeliveryRun",
+          "sqlServerType": "nvarchar(5)"
+        },
+        {
+          "name": "RunPosition",
+          "sqlServerType": "nvarchar(5)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:acme",
+          "s:Novelty Shop",
+          "s:Ann Lee",
+          "∅",
+          "s:(206) 555-0100",
+          "s:(206) 555-0101",
+          "∅",
+          "s:http://x",
+          "s:Delivery Van",
+          "s:Seattle",
+          "∅",
+          "∅",
+          "∅"
+        ],
+        [
+          "n:2",
+          "s:Acme",
+          "s:Novelty Shop",
+          "s:Ann Lee",
+          "∅",
+          "s:(206) 555-0100",
+          "s:(206) 555-0101",
+          "∅",
+          "s:http://x",
+          "s:Delivery Van",
+          "s:Seattle",
+          "∅",
+          "∅",
+          "∅"
+        ],
+        [
+          "n:3",
+          "s:Trailing ",
+          "s:Novelty Shop",
+          "s:Ann Lee",
+          "∅",
+          "s:(206) 555-0100",
+          "s:(206) 555-0101",
+          "∅",
+          "s:http://x",
+          "s:Delivery Van",
+          "s:Seattle",
+          "∅",
+          "∅",
+          "∅"
+        ]
+      ]
+    },
+    {
+      "label": "[A04] same person is both primary and alternate contact; geography carried as well-known text; customer ids skip a value",
+      "columns": [
+        {
+          "name": "CustomerID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "CustomerName",
+          "sqlServerType": "nvarchar(100)"
+        },
+        {
+          "name": "CustomerCategoryName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PrimaryContact",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AlternateContact",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PhoneNumber",
+          "sqlServerType": "nvarchar(20)"
+        },
+        {
+          "name": "FaxNumber",
+          "sqlServerType": "nvarchar(20)"
+        },
+        {
+          "name": "BuyingGroupName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "WebsiteURL",
+          "sqlServerType": "nvarchar(256)"
+        },
+        {
+          "name": "DeliveryMethod",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "CityName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "DeliveryLocation",
+          "sqlServerType": "nvarchar(max)"
+        },
+        {
+          "name": "DeliveryRun",
+          "sqlServerType": "nvarchar(5)"
+        },
+        {
+          "name": "RunPosition",
+          "sqlServerType": "nvarchar(5)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:Customer 1",
+          "s:Novelty Shop",
+          "s:Ann Lee",
+          "s:Ann Lee",
+          "s:(206) 555-0100",
+          "s:(206) 555-0101",
+          "∅",
+          "s:http://x",
+          "s:Delivery Van",
+          "s:Seattle",
+          "g:POINT(-122.25 47.5)",
+          "∅",
+          "∅"
+        ],
+        [
+          "n:3",
+          "s:Customer 3",
+          "s:Novelty Shop",
+          "s:Ann Lee",
+          "∅",
+          "s:(206) 555-0100",
+          "s:(206) 555-0101",
+          "∅",
+          "s:http://x",
+          "s:Delivery Van",
+          "s:Seattle",
+          "g:POINT(0.5 -1.75)",
+          "∅",
+          "∅"
+        ]
+      ]
+    }
+  ]
+}

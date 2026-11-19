@@ -116,7 +116,64 @@
       "PostgreSQL: AgreedTests.[test 04 a temperature that overflows decimal(10,2): rolled back]: pass",
       "PostgreSQL: AgreedTests.[test 05 no readings: nothing changes]: pass",
       "planted defects caught by the agreed tests: 4 of 4"
-    ]
+    ],
+    "adversarial": {
+      "gate": "fail",
+      "ran": 4,
+      "differed": 0,
+      "evidencePath": "evidence/adversarial/WideWorldImporters/Website.RecordColdRoomTemperatures.json",
+      "runAt": "2026-11-19T05:29:55.966Z",
+      "agentWritten": true,
+      "wording": "4 adversarial cases ran, 0 differed",
+      "attackerModel": "claude (Kiro subagent; exact model version not exposed to the agent)",
+      "auditorModel": "gpt-5.6-sol",
+      "sameModel": false,
+      "mutantAdequacy": "adequate",
+      "gateReasons": [
+        "objection O01 is open",
+        "objection O02 is open"
+      ],
+      "cases": [
+        {
+          "id": "A01",
+          "label": "a reading at the maximum datetime2 (9999-12-31) updates every existing row for its sensor",
+          "traps": [
+            "dates-datetime"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A02",
+          "label": "temperature 4.25 is stored exactly; a second reading overflows decimal(10,2) and rolls both back",
+          "traps": [
+            "numeric-rounding"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A03",
+          "label": "three existing rows for one sensor share a temperature; one reading updates all of them",
+          "traps": [
+            "top-ties"
+          ],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        },
+        {
+          "id": "A04",
+          "label": "two readings for the same new sensor: the first inserts, the second updates it (loop order preserved)",
+          "traps": [],
+          "status": "ran",
+          "sqlServer": "pass",
+          "postgres": "pass"
+        }
+      ]
+    }
   },
   "effort": {
     "humanMinutes": 0,
@@ -127,5 +184,5 @@
     "p50Hours": 3,
     "p90Hours": 6
   },
-  "builtAt": "2026-11-19T05:06:27.367Z"
+  "builtAt": "2026-11-19T05:37:18.806Z"
 }

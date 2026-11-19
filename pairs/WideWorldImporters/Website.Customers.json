@@ -100,7 +100,15 @@
       "SQL Server: AgreedTests.[test 01 LEFT JOINs keep every customer: missing category, contact, method or city give NULL; same person as b…]: pass",
       "PostgreSQL: AgreedTests.[test 01 LEFT JOINs keep every customer: missing category, contact, method or city give NULL; same person as b…]: pass",
       "planted defects caught by the agreed tests: 2 of 2"
-    ]
+    ],
+    "adversarial": {
+      "gate": "fail",
+      "ran": 4,
+      "differed": 0,
+      "evidencePath": "evidence/adversarial/WideWorldImporters/Website.Customers.json",
+      "conversionSha256": "fac801299581dcd86798dac605bfe39aa39d73fcd63ed7a4afb504508f9599fd",
+      "runAt": "2026-11-19T05:28:51.130Z"
+    }
   },
   "effort": {
     "humanMinutes": 0,

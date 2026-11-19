@@ -1,0 +1,63 @@
+{
+  "batch": "4",
+  "startedAt": "2026-11-19T05:27:57.156Z",
+  "total": 11,
+  "done": [
+    {
+      "object": "Website.CalculateCustomerPrice",
+      "gate": "fail",
+      "wording": "6 adversarial cases ran, 0 differed"
+    },
+    {
+      "object": "Website.ChangePassword",
+      "gate": "fail",
+      "wording": "6 adversarial cases ran, 0 differed"
+    },
+    {
+      "object": "Website.Customers",
+      "gate": "fail",
+      "wording": "4 adversarial cases ran, 0 differed"
+    },
+    {
+      "object": "Website.InsertCustomerOrders",
+      "gate": "fail",
+      "wording": "6 adversarial cases ran, 0 differed"
+    },
+    {
+      "object": "Website.InvoiceCustomerOrders",
+      "gate": "fail",
+      "wording": "7 adversarial cases ran, 0 differed"
+    },
+    {
+      "object": "Website.RecordColdRoomTemperatures",
+      "gate": "fail",
+      "wording": "4 adversarial cases ran, 0 differed"
+    },
+    {
+      "object": "Website.RecordVehicleTemperature",
+      "gate": "fail",
+      "wording": "6 adversarial cases ran, 0 differed"
+    },
+    {
+      "object": "Website.SearchForPeople",
+      "gate": "fail",
+      "wording": "6 adversarial cases ran, 1 differed"
+    },
+    {
+      "object": "Website.SearchForStockItems",
+      "gate": "fail",
+      "wording": "7 adversarial cases ran, 1 differed"
+    },
+    {
+      "object": "Website.SearchForStockItemsByTags",
+      "gate": "fail",
+      "wording": "8 adversarial cases ran, 1 differed"
+    },
+    {
+      "object": "Website.Suppliers",
+      "gate": "fail",
+      "wording": "4 adversarial cases ran, 0 differed"
+    }
+  ],
+  "finished": true
+}

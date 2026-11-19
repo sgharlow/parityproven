@@ -109,7 +109,15 @@
       "PostgreSQL: AgreedTests.[test 08 five hits, @MaximumRowsToReturn = 2 returns exactly two]: pass",
       "PostgreSQL: AgreedTests.[test 09 person flagged salesperson and employee is a salesperson]: pass",
       "planted defects caught by the agreed tests: 7 of 7"
-    ]
+    ],
+    "adversarial": {
+      "gate": "fail",
+      "ran": 6,
+      "differed": 0,
+      "evidencePath": "evidence/adversarial/WideWorldImporters/Website.SearchForPeople.json",
+      "conversionSha256": "ccbeeb76bd739e4f53ebbec023b5353bb95f68f05ca65e1774582ea33385a895",
+      "runAt": "2026-11-19T05:36:12.238Z"
+    }
   },
   "effort": {
     "humanMinutes": 0,

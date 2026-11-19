@@ -1,0 +1,93 @@
+{
+  "object": "Website.SearchForPeople",
+  "database": "WideWorldImporters",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-19T05:36:11.532Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "[A01] SearchName values differing only in case both match; the two rows share PreferredName",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"People\":[{\"PersonID\":1,\"FullName\":\"Q0001\",\"PreferredName\":\"Q\",\"Relationship\":\"Employee\",\"Company\":\"WWI\"},{\"PersonID\":3,\"FullName\":\"Q0003\",\"PreferredName\":\"Q\",\"Relationship\":\"Employee\",\"Company\":\"WWI\"}]}"
+        ]
+      ]
+    },
+    {
+      "label": "[A02] a trailing space in SearchName is matched by LIKE '%amy%'",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"People\":[{\"PersonID\":1,\"FullName\":\"Q0001\",\"PreferredName\":\"Q\",\"Relationship\":\"Employee\",\"Company\":\"WWI\"}]}"
+        ]
+      ]
+    },
+    {
+      "label": "[A03] character class [^a] matches any one character that is not 'a'",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"People\":[{\"PersonID\":3,\"FullName\":\"Q0003\",\"PreferredName\":\"Q\",\"Relationship\":\"Employee\",\"Company\":\"WWI\"}]}"
+        ]
+      ]
+    },
+    {
+      "label": "[A04] relationship precedence: a person flagged both salesperson and employee is reported as 'Salesperson'",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"People\":[{\"PersonID\":1,\"FullName\":\"Q0001\",\"PreferredName\":\"Q\",\"Relationship\":\"Salesperson\",\"Company\":\"WWI\"}]}"
+        ]
+      ]
+    },
+    {
+      "label": "[A05] TOP(2) of five hits, ordered by the Windows collation; person ids are non-contiguous",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:{\"People\":[{\"PersonID\":1,\"FullName\":\"Q0001\",\"PreferredName\":\"Q\",\"Relationship\":\"Employee\",\"Company\":\"WWI\"},{\"PersonID\":3,\"FullName\":\"Q0003\",\"PreferredName\":\"Q\",\"Relationship\":\"Employee\",\"Company\":\"WWI\"}]}"
+        ]
+      ]
+    },
+    {
+      "label": "[A06] no row qualifies: FOR JSON ... ROOT('People') returns an empty string",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "nvarchar(max)"
+        }
+      ],
+      "rows": [
+        [
+          "s:"
+        ]
+      ]
+    }
+  ]
+}

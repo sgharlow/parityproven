@@ -1,0 +1,355 @@
+{
+  "object": "Website.Suppliers",
+  "database": "WideWorldImporters",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-19T05:30:24.543Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "[A01] SupplierReference '' versus NULL kept distinct; NULL DeliveryMethodID yields a NULL method via LEFT JOIN",
+      "columns": [
+        {
+          "name": "SupplierID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "SupplierName",
+          "sqlServerType": "nvarchar(100)"
+        },
+        {
+          "name": "SupplierCategoryName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PrimaryContact",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AlternateContact",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PhoneNumber",
+          "sqlServerType": "nvarchar(20)"
+        },
+        {
+          "name": "FaxNumber",
+          "sqlServerType": "nvarchar(20)"
+        },
+        {
+          "name": "WebsiteURL",
+          "sqlServerType": "nvarchar(256)"
+        },
+        {
+          "name": "DeliveryMethod",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "CityName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "DeliveryLocation",
+          "sqlServerType": "nvarchar(max)"
+        },
+        {
+          "name": "SupplierReference",
+          "sqlServerType": "nvarchar(20)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:Supplier 1",
+          "s:Toy Supplier",
+          "s:Ann Lee",
+          "s:Bo Ng",
+          "s:(415) 555-0100",
+          "s:(415) 555-0101",
+          "s:http://x",
+          "∅",
+          "s:Auckland",
+          "∅",
+          "s:"
+        ],
+        [
+          "n:3",
+          "s:Supplier 3",
+          "s:Toy Supplier",
+          "s:Ann Lee",
+          "s:Bo Ng",
+          "s:(415) 555-0100",
+          "s:(415) 555-0101",
+          "s:http://x",
+          "s:Air Freight",
+          "s:Auckland",
+          "∅",
+          "∅"
+        ]
+      ]
+    },
+    {
+      "label": "[A02] two suppliers share a fax number; a supplier with unmatched category/contacts/city keeps NULLs",
+      "columns": [
+        {
+          "name": "SupplierID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "SupplierName",
+          "sqlServerType": "nvarchar(100)"
+        },
+        {
+          "name": "SupplierCategoryName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PrimaryContact",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AlternateContact",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PhoneNumber",
+          "sqlServerType": "nvarchar(20)"
+        },
+        {
+          "name": "FaxNumber",
+          "sqlServerType": "nvarchar(20)"
+        },
+        {
+          "name": "WebsiteURL",
+          "sqlServerType": "nvarchar(256)"
+        },
+        {
+          "name": "DeliveryMethod",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "CityName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "DeliveryLocation",
+          "sqlServerType": "nvarchar(max)"
+        },
+        {
+          "name": "SupplierReference",
+          "sqlServerType": "nvarchar(20)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:Supplier 1",
+          "s:Toy Supplier",
+          "s:Ann Lee",
+          "s:Bo Ng",
+          "s:(415) 555-0100",
+          "s:(415) 555-7777",
+          "s:http://x",
+          "∅",
+          "s:Auckland",
+          "∅",
+          "∅"
+        ],
+        [
+          "n:2",
+          "s:Supplier 2",
+          "∅",
+          "∅",
+          "∅",
+          "s:(415) 555-0100",
+          "s:(415) 555-7777",
+          "s:http://x",
+          "∅",
+          "∅",
+          "∅",
+          "∅"
+        ]
+      ]
+    },
+    {
+      "label": "[A03] supplier names differing only in case are both returned; a trailing space is preserved",
+      "columns": [
+        {
+          "name": "SupplierID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "SupplierName",
+          "sqlServerType": "nvarchar(100)"
+        },
+        {
+          "name": "SupplierCategoryName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PrimaryContact",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AlternateContact",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PhoneNumber",
+          "sqlServerType": "nvarchar(20)"
+        },
+        {
+          "name": "FaxNumber",
+          "sqlServerType": "nvarchar(20)"
+        },
+        {
+          "name": "WebsiteURL",
+          "sqlServerType": "nvarchar(256)"
+        },
+        {
+          "name": "DeliveryMethod",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "CityName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "DeliveryLocation",
+          "sqlServerType": "nvarchar(max)"
+        },
+        {
+          "name": "SupplierReference",
+          "sqlServerType": "nvarchar(20)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:toys",
+          "s:Toy Supplier",
+          "s:Ann Lee",
+          "s:Bo Ng",
+          "s:(415) 555-0100",
+          "s:(415) 555-0101",
+          "s:http://x",
+          "∅",
+          "s:Auckland",
+          "∅",
+          "∅"
+        ],
+        [
+          "n:2",
+          "s:Toys",
+          "s:Toy Supplier",
+          "s:Ann Lee",
+          "s:Bo Ng",
+          "s:(415) 555-0100",
+          "s:(415) 555-0101",
+          "s:http://x",
+          "∅",
+          "s:Auckland",
+          "∅",
+          "∅"
+        ],
+        [
+          "n:3",
+          "s:Padded ",
+          "s:Toy Supplier",
+          "s:Ann Lee",
+          "s:Bo Ng",
+          "s:(415) 555-0100",
+          "s:(415) 555-0101",
+          "s:http://x",
+          "∅",
+          "s:Auckland",
+          "∅",
+          "∅"
+        ]
+      ]
+    },
+    {
+      "label": "[A04] same person as both contacts; geography as WKT; supplier ids skip a value",
+      "columns": [
+        {
+          "name": "SupplierID",
+          "sqlServerType": "int"
+        },
+        {
+          "name": "SupplierName",
+          "sqlServerType": "nvarchar(100)"
+        },
+        {
+          "name": "SupplierCategoryName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PrimaryContact",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "AlternateContact",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "PhoneNumber",
+          "sqlServerType": "nvarchar(20)"
+        },
+        {
+          "name": "FaxNumber",
+          "sqlServerType": "nvarchar(20)"
+        },
+        {
+          "name": "WebsiteURL",
+          "sqlServerType": "nvarchar(256)"
+        },
+        {
+          "name": "DeliveryMethod",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "CityName",
+          "sqlServerType": "nvarchar(50)"
+        },
+        {
+          "name": "DeliveryLocation",
+          "sqlServerType": "nvarchar(max)"
+        },
+        {
+          "name": "SupplierReference",
+          "sqlServerType": "nvarchar(20)"
+        }
+      ],
+      "rows": [
+        [
+          "n:1",
+          "s:Supplier 1",
+          "s:Toy Supplier",
+          "s:Ann Lee",
+          "s:Ann Lee",
+          "s:(415) 555-0100",
+          "s:(415) 555-0101",
+          "s:http://x",
+          "s:Air Freight",
+          "s:Auckland",
+          "g:POINT(-0.25 51.5)",
+          "∅"
+        ],
+        [
+          "n:3",
+          "s:Supplier 3",
+          "s:Toy Supplier",
+          "s:Ann Lee",
+          "s:Bo Ng",
+          "s:(415) 555-0100",
+          "s:(415) 555-0101",
+          "s:http://x",
+          "s:Air Freight",
+          "s:Auckland",
+          "g:POINT(174.75 -36.75)",
+          "∅"
+        ]
+      ]
+    }
+  ]
+}

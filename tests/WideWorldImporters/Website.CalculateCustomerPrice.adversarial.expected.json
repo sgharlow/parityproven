@@ -1,0 +1,93 @@
+{
+  "object": "Website.CalculateCustomerPrice",
+  "database": "WideWorldImporters",
+  "capturedFrom": "the original T-SQL object, deployed unchanged to a scratch SQL Server database with the fixed case's rows",
+  "capturedAt": "2026-11-19T05:28:10.297Z",
+  "review": "Captured from the source engine, not derived independently. A reviewer checks each case's expected values against its label at step 5 (second review). Values are canonical: n: number, s: text, b: bit, d: date, t: timestamp (microseconds), x: bytes (hex), ∅: NULL.",
+  "cases": [
+    {
+      "label": "[A01] percentage discount rounds half away from zero: 1.05 * 0.5 % = 0.00525 -> 0.01, not banker's 0.00",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "decimal(18,2)"
+        }
+      ],
+      "rows": [
+        [
+          "n:0.01"
+        ]
+      ]
+    },
+    {
+      "label": "[A02] deal priced at 19.95 competes with a percentage deal; lowest of all paths wins",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "decimal(18,2)"
+        }
+      ],
+      "rows": [
+        [
+          "n:10.25"
+        ]
+      ]
+    },
+    {
+      "label": "[A03] pricing date at the maximum date 9999-12-31 equals the deal end date (BETWEEN is inclusive)",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "decimal(18,2)"
+        }
+      ],
+      "rows": [
+        [
+          "n:5"
+        ]
+      ]
+    },
+    {
+      "label": "[A04] a negative discount amount would raise the price, so the < guard must reject it",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "decimal(18,2)"
+        }
+      ],
+      "rows": [
+        [
+          "n:10"
+        ]
+      ]
+    },
+    {
+      "label": "[A05] StockGroup-scoped deal applies only through the StockItemStockGroups bridge; deal ids are non-contiguous",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "decimal(18,2)"
+        }
+      ],
+      "rows": [
+        [
+          "n:4"
+        ]
+      ]
+    },
+    {
+      "label": "[A06] no customer row: BuyingGroupID and CustomerCategoryID stay NULL, so only the OR ... IS NULL deal legs match",
+      "columns": [
+        {
+          "name": "result",
+          "sqlServerType": "decimal(18,2)"
+        }
+      ],
+      "rows": [
+        [
+          "n:10"
+        ]
+      ]
+    }
+  ]
+}

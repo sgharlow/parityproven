@@ -100,7 +100,15 @@
       "SQL Server: AgreedTests.[test 01 LEFT JOINs keep every supplier: missing category, contacts or city, and a NULL delivery method, give…]: pass",
       "PostgreSQL: AgreedTests.[test 01 LEFT JOINs keep every supplier: missing category, contacts or city, and a NULL delivery method, give…]: pass",
       "planted defects caught by the agreed tests: 2 of 2"
-    ]
+    ],
+    "adversarial": {
+      "gate": "fail",
+      "ran": 4,
+      "differed": 0,
+      "evidencePath": "evidence/adversarial/WideWorldImporters/Website.Suppliers.json",
+      "conversionSha256": "087864ad93c475c63f0b621fa9cb7310d7c91bb1a2512a7fe85780757e639d56",
+      "runAt": "2026-11-19T05:30:30.850Z"
+    }
   },
   "effort": {
     "humanMinutes": 0,
