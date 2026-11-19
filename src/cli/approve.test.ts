@@ -1,6 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { createHash } from "crypto";
-import { decideApproval, ownerConfirmItems, reportObjects, reviewerConfirmed, ttyProblem, type ApproveInput } from "./approve-decision.js";
+import { readdirSync, readFileSync, existsSync } from "fs";
+import { resolve, dirname, join } from "path";
+import { fileURLToPath } from "url";
+import { approvalProblem, decideApproval, evidenceFileSha256, ownerConfirmItems, reportObjects, reviewerConfirmed, ttyProblem, type ApproveInput } from "./approve-decision.js";
 import { TRAP_IDS, type AdversarialEvidence, type TrapCoverage, type TrapId } from "../adversarial/schema.js";
 import type { PairRecord } from "../pairs/schema.js";
 
@@ -130,5 +133,37 @@ describe("reportObjects", () => {
       { database: "AdventureWorks2025", object: "dbo.F" },
       { database: "WideWorldImporters", object: "Website.Customers" },
     ]);
+  });
+});
+
+describe("approvalProblem", () => {
+  const ev = (): PairRecord["evidence"] => ({ step5Method: "adversarial-report", step5EvidenceSha256: evidenceFileSha256("{}") }) as unknown as PairRecord["evidence"];
+  it("accepts an approval whose evidence file is unchanged", () => {
+    expect(approvalProblem(ev(), "{}")).toBeNull();
+  });
+  it("flags an evidence file edited after approval (e.g. a confirmedBy added)", () => {
+    expect(approvalProblem(ev(), '{"objections":[]}')).toContain("changed after the owner approved it");
+  });
+  it("flags a missing hash or a missing file", () => {
+    const e = ev(); delete e.step5EvidenceSha256;
+    expect(approvalProblem(e, "{}")).toContain("hash is not recorded");
+    expect(approvalProblem(ev(), null)).toContain("file is missing");
+  });
+  it("ignores records not approved on a report", () => {
+    expect(approvalProblem({} as PairRecord["evidence"], null)).toBeNull();
+  });
+  it("holds for every committed pair record", () => {
+    const root = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
+    const problems: string[] = [];
+    for (const db of readdirSync(join(root, "pairs"))) {
+      const dir = join(root, "pairs", db);
+      for (const f of readdirSync(dir).filter((x) => x.endsWith(".json"))) {
+        const e = (JSON.parse(readFileSync(join(dir, f), "utf-8")) as PairRecord).evidence;
+        const p = e.adversarial?.evidencePath ? join(root, e.adversarial.evidencePath) : null;
+        const problem = approvalProblem(e, p && existsSync(p) ? readFileSync(p, "utf-8") : null);
+        if (problem) problems.push(`${db}/${f}: ${problem}`);
+      }
+    }
+    expect(problems).toEqual([]);
   });
 });

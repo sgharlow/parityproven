@@ -10,6 +10,11 @@ import { readFileSync, existsSync } from "fs";
 import { hookFilePath } from "./hook-input.js";
 import type { PairRecord, StepStatus } from "../pairs/schema.js";
 import { computeStatus, missingForVerified } from "../pairs/status.js";
+import { approvalProblem } from "./approve-decision.js";
+import { resolve, dirname } from "path";
+import { fileURLToPath } from "url";
+
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
 const VALID_STEP_STATUSES: StepStatus[] = ["pass", "fail", "not-run", "n/a"];
 const VALID_STATUSES = ["pending", "failed", "verified"] as const;
@@ -74,6 +79,13 @@ function validatePairRecord(record: unknown): string[] {
     }
     if (!e["harnessVersion"]) {
       errors.push("evidence.harnessVersion is required");
+    }
+    // An approval on a report must still match the evidence file the owner saw
+    const adv = e["adversarial"] as { evidencePath?: string } | undefined;
+    if (e["step5Method"] === "adversarial-report") {
+      const evPath = adv?.evidencePath ? resolve(ROOT, adv.evidencePath) : null;
+      const problem = approvalProblem(e as unknown as PairRecord["evidence"], evPath && existsSync(evPath) ? readFileSync(evPath, "utf-8") : null);
+      if (problem) errors.push(problem);
     }
     // Consistency: "verified" exactly as the status rule (src/pairs/status.ts) defines it
     if (r["status"] === "verified" && computeStatus(e as unknown as PairRecord["evidence"]) !== "verified") {

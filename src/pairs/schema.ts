@@ -95,6 +95,10 @@ export interface PairRecord {
     /** Set only by the approve CLI. */
     step5Method?: "adversarial-report";
     step5Report?: string;
+    /** Set only by the approve CLI: sha256 of the adversarial evidence file the owner approved; a later edit to that file makes the approval stale. */
+    step5EvidenceSha256?: string;
+    /** Set only by the approve CLI: the agent-written entries (resolved objections, accepted traps, equivalent mutants) the owner confirmed. */
+    step5Confirmed?: string[];
   };
   effort: {
     humanMinutes: number;

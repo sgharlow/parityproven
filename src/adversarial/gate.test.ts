@@ -134,8 +134,16 @@ describe("gateResult", () => {
     expect(reasons(ev)).toContain("objection O1 is open");
     ev.objections = [{ id: "O1", kind: "weak", text: "t", status: "resolved", resolution: "r" }];
     expect(reasons(ev)).toContain("objection O1 is resolved but not confirmed");
-    ev.objections = [{ id: "O1", kind: "weak", text: "t", status: "resolved", resolution: "r", confirmedBy: { model: "m", at: "2026-11-19T10:00:00Z" } }];
+    ev.objections = [{ id: "O1", kind: "weak", text: "t", status: "resolved", resolution: "r", confirmedBy: { model: "model-b", at: "2026-11-19T10:00:00Z" } }];
     expect(gateResult(ev, SHA).passed).toBe(true);
+  });
+
+  it("fails an objection confirmed by anyone but the auditor", () => {
+    const ev = good();
+    ev.objections = [{ id: "O1", kind: "weak", text: "t", status: "resolved", resolution: "r", confirmedBy: { model: "model-a", at: "2026-11-19T10:00:00Z" } }];
+    expect(reasons(ev)).toContain("objection O1 is confirmed by model-a, not by the auditor (model-b)");
+    ev.objections[0]!.confirmedBy = { model: "someone", at: "2026-11-19T10:00:00Z" };
+    expect(reasons(ev)).toContain("not by the auditor");
   });
 
   it("fails when audited ids differ from case ids", () => {

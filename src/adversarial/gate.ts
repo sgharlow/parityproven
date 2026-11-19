@@ -48,6 +48,9 @@ export function gateResult(ev: AdversarialEvidence, finalSha256: string): { pass
   for (const o of ev.objections) {
     if (o.status !== "resolved") reasons.push(`objection ${o.id} is open`);
     else if (!o.confirmedBy) reasons.push(`objection ${o.id} is resolved but not confirmed`);
+    // only the auditor that raised objections may confirm one; the attacker cannot clear its own case
+    else if (o.confirmedBy.model !== ev.auditor?.model) reasons.push(`objection ${o.id} is confirmed by ${o.confirmedBy.model}, not by the auditor (${ev.auditor?.model ?? "none recorded"})`);
+    else if (!ev.sameModel && o.confirmedBy.model === ev.attacker?.model) reasons.push(`objection ${o.id} is confirmed by the attacker model`);
   }
 
   const ids = ev.cases.map((c) => c.id).sort();

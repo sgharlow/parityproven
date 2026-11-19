@@ -70,6 +70,23 @@ export function ownerConfirmItems(ev: AdversarialEvidence): string[] {
   return items;
 }
 
+/** sha256 of an evidence file's exact bytes, as `approve` records it. */
+export function evidenceFileSha256(text: string): string {
+  return sha256(text);
+}
+
+/**
+ * Problem text when an approval no longer matches its evidence (null when fine or not approved on a report).
+ * `evidenceText` is the current evidence file content, or null when the file is missing.
+ */
+export function approvalProblem(e: PairRecord["evidence"], evidenceText: string | null): string | null {
+  if (e.step5Method !== "adversarial-report") return null;
+  if (!e.step5EvidenceSha256) return "step 5 was approved on a report but the approved evidence hash is not recorded";
+  if (evidenceText === null) return "step 5 was approved on a report but the adversarial evidence file is missing";
+  if (evidenceFileSha256(evidenceText) !== e.step5EvidenceSha256) return "the adversarial evidence file changed after the owner approved it";
+  return null;
+}
+
 /** Reviewer name retyped at the prompt must equal --reviewer. */
 export function reviewerConfirmed(given: string, retyped: string): boolean {
   return given.trim().length > 0 && given.trim() === retyped.trim();

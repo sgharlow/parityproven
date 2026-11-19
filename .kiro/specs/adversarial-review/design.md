@@ -1,7 +1,7 @@
 # adversarial-review design
 
 ## Core rule
-Agents write inputs only. Expected values come from the original T-SQL (`capture()` in the step-2 runner). The verdict is the engines' agreement on those inputs. The gate is computed by `src/adversarial/gate.ts`; no agent output is read as pass or fail. Agent-written fields (objection status, trap accepted, equivalentRecorded) can only block; entries that unblock the gate are listed by `approve` and confirmed by the owner there. This keeps the claim in `product.md` ("no language model in the pass/fail verdict") true.
+Agents write inputs only. Expected values come from the original T-SQL (`capture()` in the step-2 runner). The verdict is the engines' agreement on those inputs. The gate is computed by `src/adversarial/gate.ts`; no agent output is read as pass or fail. Agent-written fields (objection status, trap accepted, equivalentRecorded) can only block; entries that unblock the gate are listed by `approve` and confirmed by the owner there. `approve` records the sha256 of each evidence file and the confirmed entries in the pair record (`step5EvidenceSha256`, `step5Confirmed`); `validate-pair` and a repo test flag any evidence file edited after approval. This keeps the claim in `product.md` ("no language model in the pass/fail verdict") true.
 
 ## Data model
 Cases are committed JSON, not an `ObjectSpec` field: the 44 specs are TypeScript across nine `specs-*.ts` files, parallel agents would collide, and a separate file is visibly agent-written. The runner builds `{ ...spec, fixedCases: loadedCases }` at run time; `SPECS` is untouched, so steps 2 and 3 are unchanged.

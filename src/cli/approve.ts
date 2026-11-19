@@ -14,7 +14,7 @@ import type { PairRecord } from "../pairs/schema.js";
 import type { AdversarialEvidence } from "../adversarial/schema.js";
 import { computeStatus } from "../pairs/status.js";
 import { firstCommitDate } from "../pairs/review-rules.js";
-import { decideApproval, reportObjects, ownerConfirmItems, reviewerConfirmed, ttyProblem } from "./approve-decision.js";
+import { decideApproval, evidenceFileSha256, reportObjects, ownerConfirmItems, reviewerConfirmed, ttyProblem } from "./approve-decision.js";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const arg = (n: string): string | undefined => {
@@ -50,10 +50,14 @@ async function main(): Promise<void> {
     throw new Error(`${refused.length} of ${planned.length} objects refused; nothing was written`);
   }
 
-  // agent-written entries that let the gate pass are shown here; retyping the name confirms them
+  // agent-written entries that let the gate pass are shown here; retyping the name confirms them.
+  // The evidence file's hash is recorded, so an edit after approval (e.g. to an objection's confirmedBy) makes it stale.
+  const confirmed = new Map<string, { sha: string; items: string[] }>();
   for (const { database, object } of objects) {
     const evPath = resolve(ROOT, "evidence", "adversarial", database, `${object}.json`);
-    const items = ownerConfirmItems(JSON.parse(readFileSync(evPath, "utf-8")) as AdversarialEvidence);
+    const text = readFileSync(evPath, "utf-8");
+    const items = ownerConfirmItems(JSON.parse(text) as AdversarialEvidence);
+    confirmed.set(`${database} ${object}`, { sha: evidenceFileSha256(text), items });
     if (items.length) console.log(`\n${database} ${object}: agent-written entries you confirm by approving:\n${items.map((x) => `  - ${x}`).join("\n")}`);
   }
   const rl = createInterface({ input: process.stdin, output: process.stdout });
@@ -69,6 +73,9 @@ async function main(): Promise<void> {
     e.reviewDate = date;
     e.step5Method = "adversarial-report";
     e.step5Report = report.replace(/\\/g, "/");
+    const c = confirmed.get(p.decision.name)!;
+    e.step5EvidenceSha256 = c.sha;
+    e.step5Confirmed = c.items;
     if (e.step6 === "not-run" && typeof p.pair.origin === "object") e.step6 = "n/a";
     p.pair.status = computeStatus(e);
     writeFileSync(p.pairPath, JSON.stringify(p.pair, null, 2) + "\n", "utf-8");
