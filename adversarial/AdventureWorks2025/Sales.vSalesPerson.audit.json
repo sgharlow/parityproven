@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "object": "Sales.vSalesPerson",
+  "database": "AdventureWorks2025",
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T20:33:12.9525152-07:00"
+  },
+  "casesAudited": [
+    "A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09", "A10"
+  ],
+  "acceptedNotApplicable": [],
+  "equivalentMutants": [],
+  "objections": [
+    {
+      "id": "O01",
+      "caseId": "A01",
+      "kind": "duplicate",
+      "text": "The hand-derived fixed cases already test a lowercase province code joining 'US' under CI_AS and a province code with a trailing space joining 'US'. Additional mixed-case spellings and combining case with the trailing space attack the same two join mechanisms.",
+      "status": "open"
+    },
+    {
+      "id": "O02",
+      "caseId": "A07",
+      "kind": "not-an-attack",
+      "text": "A07 sends negative SalesYTD and SalesLastYear values and a zero SalesQuota. Those values violate the source SalesPerson nonnegative/positive check constraints, so the money-extremes input is outside the source schema preconditions.",
+      "status": "open"
+    },
+    {
+      "id": "O03",
+      "caseId": "A09",
+      "kind": "not-an-attack",
+      "text": "A09 inserts the identical PersonPhone primary-key tuple (BusinessEntityID 1, PhoneNumber '555-0100', PhoneNumberTypeID 1) twice. The duplicate fan-out cannot occur under the source schema preconditions.",
+      "status": "open"
+    }
+  ]
+}

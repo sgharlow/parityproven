@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "object": "HumanResources.vEmployeeDepartmentHistory",
+  "database": "AdventureWorks2025",
+  "auditor": {
+    "model": "gpt-5.6-sol",
+    "at": "2026-11-18T20:33:12.9525152-07:00"
+  },
+  "casesAudited": [
+    "A01", "A02", "A03", "A04", "A05", "A06", "A07"
+  ],
+  "acceptedNotApplicable": [],
+  "equivalentMutants": [],
+  "objections": [
+    {
+      "id": "O01",
+      "caseId": "A01",
+      "kind": "not-an-attack",
+      "text": "The employee 1, department 2 history ends on 0001-01-01 after starting on 1752-12-31. It violates the source check requiring EndDate >= StartDate (or NULL), so the boundary set is not valid source data.",
+      "status": "open"
+    },
+    {
+      "id": "O02",
+      "caseId": "A02",
+      "kind": "not-an-attack",
+      "text": "The first history ends on 2010-06-14 after starting on 2010-06-15. It violates the source EmployeeDepartmentHistory check requiring EndDate >= StartDate (or NULL), so the case's central input cannot occur under the source schema preconditions.",
+      "status": "open"
+    },
+    {
+      "id": "O03",
+      "caseId": "A04",
+      "kind": "not-an-attack",
+      "text": "Department names 'Sales', 'SALES' and 'sales ' collide under the source case-insensitive, trailing-space-insensitive unique key on HumanResources.Department.Name. The input cannot occur in the source table with its constraints.",
+      "status": "open"
+    },
+    {
+      "id": "O04",
+      "caseId": "A05",
+      "kind": "not-an-attack",
+      "text": "A05 sends the exact EmployeeDepartmentHistory primary-key tuple (employee 1, department 1, shift 1, StartDate 2005-07-01) twice. The duplicate cannot occur under the source schema preconditions.",
+      "status": "open"
+    }
+  ]
+}
