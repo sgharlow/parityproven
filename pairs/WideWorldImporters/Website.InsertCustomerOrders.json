@@ -102,7 +102,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "n/a",
-    "step5": "not-run",
+    "step5": "pass",
     "step6": "n/a",
     "rowsCompared": 209,
     "trapsCovered": [
@@ -156,12 +156,18 @@
       "evidencePath": "evidence/adversarial/WideWorldImporters/Website.InsertCustomerOrders.json",
       "conversionSha256": "a4b0b66ee99c6e6d095d21c9f84f27ee166ee40eda23e3a8e7ea908c664ed694",
       "runAt": "2026-11-19T06:22:24.967Z"
-    }
+    },
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-4.md",
+    "step5EvidenceSha256": "cf5747add5b0b63a6aed0390315472d675cca70051b338ff91579f53232e0657",
+    "step5Confirmed": []
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

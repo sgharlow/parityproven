@@ -50,7 +50,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "pass",
-    "step5": "not-run",
+    "step5": "pass",
     "step6": "n/a",
     "runtimeRatio": 0.4,
     "runtime": {
@@ -94,12 +94,18 @@
       "evidencePath": "evidence/adversarial/AdventureWorks2025/Sales.vStoreWithContacts.json",
       "conversionSha256": "ba5f1885379987521a442c07f27cad08988f3e1e537cff8953632ae31326f900",
       "runAt": "2026-11-19T05:04:49.670Z"
-    }
+    },
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-3.md",
+    "step5EvidenceSha256": "85c345be60b0105d033d78b196834532c50876722f6378389929cd57ac5866e1",
+    "step5Confirmed": []
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

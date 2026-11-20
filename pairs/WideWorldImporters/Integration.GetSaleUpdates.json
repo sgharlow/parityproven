@@ -70,7 +70,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "pass",
-    "step5": "not-run",
+    "step5": "pass",
     "step6": "n/a",
     "runtimeRatio": 0.5,
     "runtime": {
@@ -117,12 +117,21 @@
       "evidencePath": "evidence/adversarial/WideWorldImporters/Integration.GetSaleUpdates.json",
       "conversionSha256": "29eb61ad54858e00ce1b74298d6d938072fc0132dcb5f527cdacf5792a301822",
       "runAt": "2026-11-19T06:20:39.874Z"
-    }
+    },
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-3.md",
+    "step5EvidenceSha256": "813e62e492857d8e6f45ab4e84f8887686c97be371be7f4397c27ea45a2732fa",
+    "step5Confirmed": [
+      "objection O01 resolved (weak): A03 now uses 5000000000000.05 - (-4999999999999.95), which carries into a fourteenth integer digit, and no longer claims to reach the decimal(18,2) overflow boundary. Its reasoning explicitly records that the true boundary cannot be captured faithfully by the current SQL Server driver path.",
+      "trap null-vs-empty accepted as not applicable: Every text column this procedure reads (Sales.InvoiceLines.Description, Warehouse.PackageTypes.PackageTypeName) is NOT NULL, so no NULL text value can be sent. '' is sent as a Description in the text case."
+    ]
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

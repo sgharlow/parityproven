@@ -59,7 +59,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "pass",
-    "step5": "not-run",
+    "step5": "pass",
     "step6": "n/a",
     "runtimeRatio": 0.02,
     "runtime": {
@@ -108,12 +108,21 @@
       "evidencePath": "evidence/adversarial/WideWorldImporters/Website.Suppliers.json",
       "conversionSha256": "087864ad93c475c63f0b621fa9cb7310d7c91bb1a2512a7fe85780757e639d56",
       "runAt": "2026-11-19T06:23:52.305Z"
-    }
+    },
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-4.md",
+    "step5EvidenceSha256": "c4da6721f572608879aab9892a1a45dace7d87d6fc0a6f58038729ec08dd0deb",
+    "step5Confirmed": [
+      "objection O01 resolved (duplicate): A01 now contrasts an empty name from an existing delivery-method row with NULL from a nullable DeliveryMethodID in the same output column, and reverses the SupplierReference NULL-empty arrangement. This adds a join-produced NULL versus stored-empty attack.",
+      "objection O02 resolved (duplicate): A02 now uses valid nullable DeliveryMethodID only, crosses primary and alternate contacts to expose a wrong self-join, and ties phone, fax, and website values. It no longer repeats dangling required references."
+    ]
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

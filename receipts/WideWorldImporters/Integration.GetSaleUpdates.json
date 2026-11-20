@@ -5,7 +5,7 @@
   "objectClass": "procedure",
   "tier": "simple",
   "predictionTier": "simple",
-  "status": "pending",
+  "status": "verified",
   "code": {
     "source": "\r\nCREATE PROCEDURE Integration.GetSaleUpdates\r\n@LastCutoff datetime2(7),\r\n@NewCutoff datetime2(7)\r\nWITH EXECUTE AS OWNER\r\nAS\r\nBEGIN\r\n    SET NOCOUNT ON;\r\n    SET XACT_ABORT ON;\r\n\r\n    SELECT CAST(i.InvoiceDate AS date) AS [Invoice Date Key],\r\n           CAST(i.ConfirmedDeliveryTime AS date) AS [Delivery Date Key],\r\n           i.InvoiceID AS [WWI Invoice ID],\r\n           il.[Description],\r\n           pt.PackageTypeName AS Package,\r\n           il.Quantity,\r\n           il.UnitPrice AS [Unit Price],\r\n           il.TaxRate AS [Tax Rate],\r\n           il.ExtendedPrice - il.TaxAmount AS [Total Excluding Tax],\r\n           il.TaxAmount AS [Tax Amount],\r\n           il.LineProfit AS Profit,\r\n           il.ExtendedPrice AS [Total Including Tax],\r\n           CASE WHEN si.IsChillerStock = 0 THEN il.Quantity ELSE 0 END AS [Total Dry Items],\r\n           CASE WHEN si.IsChillerStock <> 0 THEN il.Quantity ELSE 0 END AS [Total Chiller Items],\r\n           c.DeliveryCityID AS [WWI City ID],\r\n           i.CustomerID AS [WWI Customer ID],\r\n           i.BillToCustomerID AS [WWI Bill To Customer ID],\r\n           il.StockItemID AS [WWI Stock Item ID],\r\n           i.SalespersonPersonID AS [WWI Saleperson ID],\r\n           CASE WHEN il.LastEditedWhen > i.LastEditedWhen THEN il.LastEditedWhen ELSE i.LastEditedWhen END AS [Last Modified When]\r\n    FROM Sales.Invoices AS i\r\n    INNER JOIN Sales.InvoiceLines AS il\r\n    ON i.InvoiceID = il.InvoiceID\r\n    INNER JOIN Warehouse.StockItems AS si\r\n    ON il.StockItemID = si.StockItemID\r\n    INNER JOIN Warehouse.PackageTypes AS pt\r\n    ON il.PackageTypeID = pt.PackageTypeID\r\n    INNER JOIN Sales.Customers AS c\r\n    ON i.CustomerID = c.CustomerID\r\n    INNER JOIN Sales.Customers AS bt\r\n    ON i.BillToCustomerID = bt.CustomerID\r\n    WHERE CASE WHEN il.LastEditedWhen > i.LastEditedWhen THEN il.LastEditedWhen ELSE i.LastEditedWhen END > @LastCutoff\r\n    AND CASE WHEN il.LastEditedWhen > i.LastEditedWhen THEN il.LastEditedWhen ELSE i.LastEditedWhen END <= @NewCutoff\r\n    ORDER BY i.InvoiceID, il.InvoiceLineID;\r\n\r\n    RETURN 0;\r\nEND;\r\n",
     "engineOutput": "-- PL/pgSQL conversion of Integration.GetSaleUpdates (WideWorldImporters).\n-- Engine: Kiro first draft (see pair record).\n-- WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted.\n-- Output column \"WWI Saleperson ID\" keeps the source's spelling.\n\nCREATE OR REPLACE FUNCTION integration.get_sale_updates(\n    last_cutoff timestamp,\n    new_cutoff  timestamp\n)\nRETURNS TABLE (\n    \"Invoice Date Key\"        date,\n    \"Delivery Date Key\"       date,\n    \"WWI Invoice ID\"          integer,\n    \"Description\"             varchar(100),\n    \"Package\"                 varchar(50),\n    \"Quantity\"                integer,\n    \"Unit Price\"              numeric,\n    \"Tax Rate\"                numeric,\n    \"Total Excluding Tax\"     numeric,\n    \"Tax Amount\"              numeric,\n    \"Profit\"                  numeric,\n    \"Total Including Tax\"     numeric,\n    \"Total Dry Items\"         integer,\n    \"Total Chiller Items\"     integer,\n    \"WWI City ID\"             integer,\n    \"WWI Customer ID\"         integer,\n    \"WWI Bill To Customer ID\" integer,\n    \"WWI Stock Item ID\"       integer,\n    \"WWI Saleperson ID\"       integer,\n    \"Last Modified When\"      timestamp\n)\nLANGUAGE sql\nSTABLE\nAS $$\n    SELECT\n        i.\"InvoiceDate\"::date,\n        i.\"ConfirmedDeliveryTime\"::date,\n        i.\"InvoiceID\",\n        il.\"Description\",\n        pt.\"PackageTypeName\",\n        il.\"Quantity\",\n        il.\"UnitPrice\",\n        il.\"TaxRate\",\n        il.\"ExtendedPrice\" - il.\"TaxAmount\",\n        il.\"TaxAmount\",\n        il.\"LineProfit\",\n        il.\"ExtendedPrice\",\n        CASE WHEN NOT si.\"IsChillerStock\" THEN il.\"Quantity\" ELSE 0 END,\n        CASE WHEN si.\"IsChillerStock\" THEN il.\"Quantity\" ELSE 0 END,\n        c.\"DeliveryCityID\",\n        i.\"CustomerID\",\n        i.\"BillToCustomerID\",\n        il.\"StockItemID\",\n        i.\"SalespersonPersonID\",\n        CASE WHEN il.\"LastEditedWhen\" > i.\"LastEditedWhen\" THEN il.\"LastEditedWhen\" ELSE i.\"LastEditedWhen\" END\n    FROM sales.invoices AS i\n    INNER JOIN sales.invoice_lines AS il ON i.\"InvoiceID\" = il.\"InvoiceID\"\n    INNER JOIN warehouse.stock_items AS si ON il.\"StockItemID\" = si.\"StockItemID\"\n    INNER JOIN warehouse.package_types AS pt ON il.\"PackageTypeID\" = pt.\"PackageTypeID\"\n    INNER JOIN sales.customers AS c ON i.\"CustomerID\" = c.\"CustomerID\"\n    INNER JOIN sales.customers AS bt ON bt.\"CustomerID\" = i.\"BillToCustomerID\"\n    WHERE CASE WHEN il.\"LastEditedWhen\" > i.\"LastEditedWhen\" THEN il.\"LastEditedWhen\" ELSE i.\"LastEditedWhen\" END > last_cutoff\n      AND CASE WHEN il.\"LastEditedWhen\" > i.\"LastEditedWhen\" THEN il.\"LastEditedWhen\" ELSE i.\"LastEditedWhen\" END <= new_cutoff\n    ORDER BY i.\"InvoiceID\", il.\"InvoiceLineID\"\n$$;\n",
@@ -86,7 +86,7 @@
     {
       "step": 5,
       "label": "Second human review",
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "step": 6,
@@ -132,6 +132,10 @@
       "PostgreSQL: AgreedTests.[test 01 dry and chiller lines split Quantity; Total Excluding Tax = ExtendedPrice - TaxAmount; UnitPrice and…]: pass",
       "planted defects caught by the agreed tests: 2 of 2"
     ],
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-3.md",
     "adversarial": {
       "gate": "pass",
       "ran": 5,
@@ -209,5 +213,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-19T15:58:24.815Z"
+  "builtAt": "2026-11-20T04:13:51.618Z"
 }

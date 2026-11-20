@@ -5,7 +5,7 @@
   "objectClass": "procedure",
   "tier": "simple",
   "predictionTier": "simple",
-  "status": "pending",
+  "status": "verified",
   "code": {
     "source": "\r\nCREATE PROCEDURE Integration.GetStockHoldingUpdates\r\nWITH EXECUTE AS OWNER\r\nAS\r\nBEGIN\r\n    SET NOCOUNT ON;\r\n    SET XACT_ABORT ON;\r\n\r\n    SELECT sih.QuantityOnHand AS [Quantity On Hand],\r\n           sih.BinLocation AS [Bin Location],\r\n           sih.LastStocktakeQuantity AS [Last Stocktake Quantity],\r\n           sih.LastCostPrice AS [Last Cost Price],\r\n           sih.ReorderLevel AS [Reorder Level],\r\n           sih.TargetStockLevel AS [Target Stock Level],\r\n           sih.StockItemID AS [WWI Stock Item ID]\r\n    FROM Warehouse.StockItemHoldings AS sih\r\n    ORDER BY sih.StockItemID;\r\n\r\n    RETURN 0;\r\nEND;\r\n",
     "engineOutput": "-- PL/pgSQL conversion of Integration.GetStockHoldingUpdates (WideWorldImporters).\n-- Engine: Kiro first draft (see pair record).\n-- WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted. No parameters.\n\nCREATE OR REPLACE FUNCTION integration.get_stock_holding_updates()\nRETURNS TABLE (\n    \"Quantity On Hand\"        integer,\n    \"Bin Location\"            varchar(20),\n    \"Last Stocktake Quantity\" integer,\n    \"Last Cost Price\"         numeric,\n    \"Reorder Level\"           integer,\n    \"Target Stock Level\"      integer,\n    \"WWI Stock Item ID\"       integer\n)\nLANGUAGE sql\nSTABLE\nAS $$\n    SELECT\n        sih.\"QuantityOnHand\",\n        sih.\"BinLocation\",\n        sih.\"LastStocktakeQuantity\",\n        sih.\"LastCostPrice\",\n        sih.\"ReorderLevel\",\n        sih.\"TargetStockLevel\",\n        sih.\"StockItemID\"\n    FROM warehouse.stock_item_holdings AS sih\n    ORDER BY sih.\"StockItemID\"\n$$;\n",
@@ -54,7 +54,7 @@
     {
       "step": 5,
       "label": "Second human review",
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "step": 6,
@@ -98,6 +98,10 @@
       "PostgreSQL: AgreedTests.[test 01 every holding is listed: empty and trailing-space bin locations kept, zero and negative quantities, c…]: pass",
       "planted defects caught by the agreed tests: 2 of 2"
     ],
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-3.md",
     "adversarial": {
       "gate": "pass",
       "ran": 5,
@@ -173,5 +177,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-19T18:00:02.570Z"
+  "builtAt": "2026-11-20T04:13:51.618Z"
 }

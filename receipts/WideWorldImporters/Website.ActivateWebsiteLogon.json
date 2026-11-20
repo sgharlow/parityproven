@@ -5,7 +5,7 @@
   "objectClass": "procedure",
   "tier": "simple",
   "predictionTier": "simple",
-  "status": "pending",
+  "status": "verified",
   "code": {
     "source": "\r\nCREATE PROCEDURE Website.ActivateWebsiteLogon\r\n@PersonID int,\r\n@LogonName nvarchar(50),\r\n@InitialPassword nvarchar(40)\r\nWITH EXECUTE AS OWNER\r\nAS\r\nBEGIN\r\n    SET NOCOUNT ON;\r\n    SET XACT_ABORT ON;\r\n\r\n    UPDATE [Application].People\r\n    SET IsPermittedToLogon = 1,\r\n        LogonName = @LogonName,\r\n        HashedPassword = HASHBYTES(N'SHA2_256', @InitialPassword + FullName),\r\n        UserPreferences = (SELECT UserPreferences FROM [Application].People WHERE PersonID = 1) -- Person 1 has User Preferences template\r\n    WHERE PersonID = @PersonID\r\n    AND PersonID <> 1\r\n    AND IsPermittedToLogon = 0;\r\n\r\n    IF @@ROWCOUNT = 0\r\n    BEGIN\r\n        PRINT N'The PersonID must be valid, must not be person 1, and must not already be enabled';\r\n        THROW 51000, N'Invalid PersonID', 1;\r\n        RETURN -1;\r\n    END;\r\nEND;\r\n",
     "engineOutput": "-- PL/pgSQL conversion of Website.ActivateWebsiteLogon (WideWorldImporters).\r\n-- Engine: Kiro. No separate first draft was kept for this object.\r\n-- WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted.\r\n--\r\n-- Differences from a literal translation:\r\n--  * The T-SQL procedure becomes a PostgreSQL PROCEDURE (CALL), since it returns nothing.\r\n--  * HASHBYTES(N'SHA2_256', <nvarchar>) hashes the UTF-16LE bytes of the string. convert_to() cannot produce UTF-16,\r\n--    so tsql_compat.utf16le() builds the bytes; sha256() is built in.\r\n--  * @@ROWCOUNT = 0 -> NOT FOUND after the UPDATE; THROW 51000 -> RAISE EXCEPTION (SQLSTATE P0001). The PRINT before\r\n--    THROW becomes RAISE NOTICE (informational, as PRINT is).\r\n--  * The UPDATE's correlated subquery reads person 1 from the same table, as in the source.\r\n\r\nCREATE SCHEMA IF NOT EXISTS tsql_compat;\r\n\r\n-- UTF-16LE bytes of a string, as SQL Server stores nvarchar. Characters above U+FFFF become surrogate pairs.\r\nCREATE OR REPLACE FUNCTION tsql_compat.utf16le(value text)\r\nRETURNS bytea\r\nLANGUAGE sql\r\nIMMUTABLE\r\nSTRICT\r\nAS $fn$\r\n    SELECT COALESCE(string_agg(\r\n               CASE WHEN s.cp < 65536 THEN\r\n                        set_byte(set_byte('\\x0000'::bytea, 0, s.cp & 255), 1, s.cp >> 8)\r\n                    ELSE\r\n                        set_byte(set_byte(set_byte(set_byte('\\x00000000'::bytea,\r\n                            0, (55296 + ((s.cp - 65536) >> 10)) & 255),\r\n                            1, (55296 + ((s.cp - 65536) >> 10)) >> 8),\r\n                            2, (56320 + ((s.cp - 65536) & 1023)) & 255),\r\n                            3, (56320 + ((s.cp - 65536) & 1023)) >> 8)\r\n               END, ''::bytea ORDER BY s.ord), ''::bytea)\r\n    FROM (\r\n        SELECT ascii(t.ch) AS cp, t.ord\r\n        FROM regexp_split_to_table(value, '') WITH ORDINALITY AS t(ch, ord)\r\n        WHERE t.ch <> ''\r\n    ) AS s\r\n$fn$;\r\n\r\nCREATE OR REPLACE PROCEDURE website.activate_website_logon(\r\n    person_id integer,\r\n    logon_name text,\r\n    initial_password text\r\n)\r\nLANGUAGE plpgsql\r\nAS $fn$\r\nBEGIN\r\n    UPDATE application.people AS p\r\n    SET \"IsPermittedToLogon\" = true,\r\n        \"LogonName\" = logon_name,\r\n        \"HashedPassword\" = sha256(tsql_compat.utf16le(initial_password || p.\"FullName\")),\r\n        \"UserPreferences\" = (SELECT t.\"UserPreferences\" FROM application.people AS t WHERE t.\"PersonID\" = 1) -- Person 1 has User Preferences template\r\n    WHERE p.\"PersonID\" = person_id\r\n      AND p.\"PersonID\" <> 1\r\n      AND p.\"IsPermittedToLogon\" = false;\r\n    IF NOT FOUND THEN\r\n        RAISE NOTICE 'The PersonID must be valid, must not be person 1, and must not already be enabled';\r\n        RAISE EXCEPTION 'Invalid PersonID' USING ERRCODE = 'P0001';\r\n    END IF;\r\nEND;\r\n$fn$;\r\n",
@@ -74,7 +74,7 @@
     {
       "step": 5,
       "label": "Second human review",
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "step": 6,
@@ -123,6 +123,10 @@
       "PostgreSQL: AgreedTests.[test 06 no person 1: preferences become NULL]: pass",
       "planted defects caught by the agreed tests: 5 of 5"
     ],
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-3.md",
     "adversarial": {
       "gate": "pass",
       "ran": 13,
@@ -266,5 +270,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-19T15:58:24.828Z"
+  "builtAt": "2026-11-20T04:13:51.620Z"
 }

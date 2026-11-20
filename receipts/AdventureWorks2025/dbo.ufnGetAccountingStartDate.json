@@ -5,7 +5,7 @@
   "objectClass": "function",
   "tier": "simple",
   "predictionTier": "simple",
-  "status": "pending",
+  "status": "verified",
   "code": {
     "source": "\r\nCREATE FUNCTION [dbo].[ufnGetAccountingStartDate]()\r\nRETURNS [datetime]\r\nAS\r\nBEGIN\r\n    RETURN CONVERT(datetime, '20030701', 112);\r\nEND;\r\n",
     "engineOutput": "-- PostgreSQL conversion of dbo.ufnGetAccountingStartDate (AdventureWorks2025).\n-- Engine: Kiro first draft (see pair record).\n-- datetime -> timestamp(3).\n\nCREATE OR REPLACE FUNCTION dbo.ufn_get_accounting_start_date()\nRETURNS timestamp(3)\nLANGUAGE sql\nIMMUTABLE\nAS $$\n    SELECT TIMESTAMP '2003-07-01 00:00:00'\n$$;\n",
@@ -41,7 +41,7 @@
     {
       "step": 5,
       "label": "Second human review",
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "step": 6,
@@ -80,6 +80,10 @@
       "PostgreSQL: AgreedTests.[test 01 20030701 with style 112 is 2003-07-01 00:00:00.000 (midnight, datetime)]: pass",
       "planted defects caught by the agreed tests: 1 of 1"
     ],
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-1.md",
     "adversarial": {
       "gate": "pass",
       "ran": 1,
@@ -114,5 +118,5 @@
     "p50Hours": 1.5,
     "p90Hours": 4
   },
-  "builtAt": "2026-11-19T15:58:24.704Z"
+  "builtAt": "2026-11-20T04:13:51.589Z"
 }

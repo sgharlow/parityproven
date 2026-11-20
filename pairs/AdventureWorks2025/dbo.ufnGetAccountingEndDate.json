@@ -26,7 +26,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "pass",
-    "step5": "not-run",
+    "step5": "pass",
     "step6": "n/a",
     "runtimeRatio": 0,
     "runtime": {
@@ -71,12 +71,20 @@
       "evidencePath": "evidence/adversarial/AdventureWorks2025/dbo.ufnGetAccountingEndDate.json",
       "conversionSha256": "3d090c0149df680b1a9e8fc5bb52e850aaf90a219e347a6eda61f1f03a914196",
       "runAt": "2026-11-19T06:18:46.925Z"
-    }
+    },
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-1.md",
+    "step5EvidenceSha256": "bf0040eb81435fbed4baff68d89de52d710caa77bd413c56578f025384f108f8",
+    "step5Confirmed": [
+      "objection O01 resolved (duplicate): The function has exactly one possible input payload. A01 now documents that unavoidable overlap and why the adversarial-only planted-defect check must call the function to observe the .997 result."
+    ]
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

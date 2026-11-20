@@ -49,7 +49,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "pass",
-    "step5": "not-run",
+    "step5": "pass",
     "step6": "n/a",
     "testsRun": [
       "tSQLt V1.0.8083.3529 on SQL Server (tests/AdventureWorks2025/Person.vStateProvinceCountryRegion.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/AdventureWorks2025/Person.vStateProvinceCountryRegion.pg.sql); expected results tests/AdventureWorks2025/Person.vStateProvinceCountryRegion.expected.json",
@@ -102,12 +102,22 @@
       "evidencePath": "evidence/adversarial/AdventureWorks2025/Person.vStateProvinceCountryRegion.json",
       "conversionSha256": "0ff4afa5c1ec5d0c2eb55fde4153422859391380960eec59ad3b3fd636b99f11",
       "runAt": "2026-11-19T06:17:07.914Z"
-    }
+    },
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-2.md",
+    "step5EvidenceSha256": "4e6f9f80046e3076a3fdcac222bc13e3c4e942018d8ee5210427b0bd0eee622a",
+    "step5Confirmed": [
+      "objection O01 resolved (duplicate): A01 now uses non-ASCII Latin-1 and Greek case pairs and puts the combined case/trailing-space variant on the country side, exercising Unicode folding and asymmetric trimming paths absent from the hand-derived inputs.",
+      "objection O02 resolved (not-an-attack): A07 now places 'ABC' and 'abc' in different countries. Their composite source keys are distinct while the view still returns the stored case forms.",
+      "trap null-vs-empty accepted as not applicable: Every text column of StateProvince and CountryRegion is NOT NULL, so no NULL text value can be sent; '' is attacked as an empty country code and an empty nchar(3) province code."
+    ]
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

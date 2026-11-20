@@ -48,7 +48,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "pass",
-    "step5": "not-run",
+    "step5": "pass",
     "step6": "n/a",
     "runtimeRatio": 0.32,
     "runtime": {
@@ -93,12 +93,21 @@
       "evidencePath": "evidence/adversarial/WideWorldImporters/Integration.GetPurchaseUpdates.json",
       "conversionSha256": "3ac5445d3e717e555d4608795a57f2171a090a61e9e1acd1fd6fbbb59b8e93ce",
       "runAt": "2026-11-19T05:05:16.166Z"
-    }
+    },
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-3.md",
+    "step5EvidenceSha256": "05ddf8f5a529bc185b22fc25e1e9117ecffbb0ff48d4791213ea5aa05bd1b764",
+    "step5Confirmed": [
+      "trap null-vs-empty accepted as not applicable: The only text column, Warehouse.PackageTypes.PackageTypeName, is NOT NULL, so no NULL text value can be sent; the procedure compares no text.",
+      "trap collation-case accepted as not applicable: The only text column, PackageTypeName, has a unique constraint under the database's case-insensitive collation (UQ_Warehouse_PackageTypes_PackageTypeName), so two names differing only in case are not valid source data, and no text is compared or grouped."
+    ]
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

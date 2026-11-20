@@ -36,7 +36,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "pass",
-    "step5": "not-run",
+    "step5": "pass",
     "step6": "n/a",
     "runtimeRatio": 1.96,
     "runtime": {
@@ -86,12 +86,22 @@
       "evidencePath": "evidence/adversarial/AdventureWorks2025/dbo.ufnGetStock.json",
       "conversionSha256": "137959416026468b762e5070fc3a2d52999e54e5be5e965f8e0c57e709c337ce",
       "runAt": "2026-11-19T06:19:49.325Z"
-    }
+    },
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-1.md",
+    "step5EvidenceSha256": "833fc5a50472e2a8eca1afd65a25e9ae56fd39cfc51ba1e99405e4280f7e5dae",
+    "step5Confirmed": [
+      "objection O01 resolved (not-an-attack): A01 now uses one row at location 6 and equal maximum quantities at locations 1 and 7. Every composite key is distinct, while summing before applying the location filter remains observable.",
+      "objection O02 resolved (not-an-attack): A02 now uses distinct locations 6 and 1 for the minimum quantities, satisfying the composite key and retaining the filter-before-sum attack.",
+      "objection O03 resolved (not-an-attack): A03 now places -7 at location 6 and +7 at location 1. The keys are valid, and an unfiltered sum still collapses to the no-stock sentinel zero."
+    ]
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

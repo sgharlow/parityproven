@@ -56,7 +56,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "pass",
-    "step5": "not-run",
+    "step5": "pass",
     "step6": "n/a",
     "testsRun": [
       "tSQLt V1.0.8083.3529 on SQL Server (tests/AdventureWorks2025/Purchasing.vVendorWithAddresses.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/AdventureWorks2025/Purchasing.vVendorWithAddresses.pg.sql); expected results tests/AdventureWorks2025/Purchasing.vVendorWithAddresses.expected.json",
@@ -110,12 +110,23 @@
       "evidencePath": "evidence/adversarial/AdventureWorks2025/Purchasing.vVendorWithAddresses.json",
       "conversionSha256": "4b355893ca70ec3718151f81cce63b8e674e0a782da97f1a9b9bf92ce199f64c",
       "runAt": "2026-11-19T17:49:25.364Z"
-    }
+    },
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-2.md",
+    "step5EvidenceSha256": "a659ebc4e3d6e391ac08b577f37cd6564db397beb8c1e8bdc7aa92beffe035ac",
+    "step5Confirmed": [
+      "objection O01 resolved (duplicate): A01 now uses non-ASCII Latin-1 and Greek case pairs and puts the combined case/trailing-space variant on the country side, exercising Unicode folding and asymmetric trimming paths absent from the hand-derived inputs.",
+      "objection O02 resolved (not-an-attack): A08 now uses three distinct BusinessEntityAddress primary-key tuples and distinct AddressType names. Its case-only pair crosses Vendor.Name and AddressType.Name, avoiding both unique constraints.",
+      "objection O03 resolved (not-an-attack): A10 is absent from the current case file, whose case ids are A01 through A09. The invalid input was withdrawn, and the unobservable inner-to-left-join defect remains documented in equivalentMutants.",
+      "planted defect inner join to address type made a left join (unknown address types kept) recorded as equivalent (not observable)"
+    ]
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

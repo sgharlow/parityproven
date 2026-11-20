@@ -59,7 +59,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "pass",
-    "step5": "not-run",
+    "step5": "pass",
     "step6": "n/a",
     "runtimeRatio": 0.02,
     "runtime": {
@@ -108,12 +108,21 @@
       "evidencePath": "evidence/adversarial/WideWorldImporters/Website.Customers.json",
       "conversionSha256": "fac801299581dcd86798dac605bfe39aa39d73fcd63ed7a4afb504508f9599fd",
       "runAt": "2026-11-19T06:22:06.394Z"
-    }
+    },
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-4.md",
+    "step5EvidenceSha256": "f9d498f2e8b591416f6de2cb1cd51fbaf4b1c00caf1770e8e74010f8327ead85",
+    "step5Confirmed": [
+      "objection O01 resolved (duplicate): A01 now contrasts an empty name from an existing buying-group/contact row with NULL from a nullable foreign key in the same output columns, and reverses the DeliveryRun/RunPosition NULL-empty arrangement. These mechanisms are distinct from the hand-derived projection-only pair.",
+      "objection O02 resolved (duplicate): A02 now uses valid nullable foreign keys only, crosses primary and alternate contacts to expose a wrong self-join, and ties phone, fax, and website values across three rows. It no longer repeats dangling required references."
+    ]
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

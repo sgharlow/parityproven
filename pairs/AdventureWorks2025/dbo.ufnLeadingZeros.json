@@ -26,7 +26,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "pass",
-    "step5": "not-run",
+    "step5": "pass",
     "step6": "n/a",
     "runtimeRatio": 1.08,
     "runtime": {
@@ -91,12 +91,25 @@
       "evidencePath": "evidence/adversarial/AdventureWorks2025/dbo.ufnLeadingZeros.json",
       "conversionSha256": "71fbec7f435258e2d71571bdf1980b124670f38daa9b4d97753eba7d5fb418e2",
       "runAt": "2026-11-19T17:49:03.769Z"
-    }
+    },
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-1.md",
+    "step5EvidenceSha256": "b3301b9c2e169229ea24c2257599f307d1ae26c83b42f747251bd5d5e4d30b76",
+    "step5Confirmed": [
+      "objection O01 resolved (duplicate): A01 now sends the five-character value -1000, a negative length class absent from the hand-derived cases.",
+      "objection O02 resolved (duplicate): A02 now sends the seven-character value -100000, one character short of exact fit and absent from the hand-derived cases.",
+      "objection O03 resolved (duplicate): A03 now sends a ten-character negative value, filling the overflow length class between the hand-derived nine- and eleven-character cases.",
+      "objection O04 resolved (duplicate): A04 now sends the four-digit power of ten 1000, a positive length class absent from the hand-derived inputs and sensitive to log-based length errors.",
+      "objection O05 resolved (duplicate): A07 now sends the six-digit power of ten 100000, a non-overflow length class absent from the hand-derived cases.",
+      "objection O06 resolved (duplicate): A08 now sends the six-character negative value -10000, a padded non-overflow length class absent from the hand-derived cases."
+    ]
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

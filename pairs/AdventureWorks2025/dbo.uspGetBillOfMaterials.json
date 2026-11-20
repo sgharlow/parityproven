@@ -66,7 +66,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "pass",
-    "step5": "not-run",
+    "step5": "pass",
     "step6": "n/a",
     "testsRun": [
       "tSQLt V1.0.8083.3529 on SQL Server (tests/AdventureWorks2025/dbo.uspGetBillOfMaterials.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/AdventureWorks2025/dbo.uspGetBillOfMaterials.pg.sql); expected results tests/AdventureWorks2025/dbo.uspGetBillOfMaterials.expected.json",
@@ -126,12 +126,28 @@
       "evidencePath": "evidence/adversarial/AdventureWorks2025/dbo.uspGetBillOfMaterials.json",
       "conversionSha256": "a5cc0d47499f0f6cd7bee9ad9f0d10c88b48b957561f22c9bffe97d381ad47f9",
       "runAt": "2026-11-19T06:20:13.010Z"
-    }
+    },
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-2.md",
+    "step5EvidenceSha256": "c79e67c431c4bf990b3dd1256a2b7224417e863bd6f4d4eaa354cd4ea305cecc",
+    "step5Confirmed": [
+      "objection O01 resolved (label-mismatch): A05 now states that dropping the final edge leaves 26 rows. Its edge count and MAXRECURSION outcome match the sent chain.",
+      "objection O02 resolved (not-an-attack): A06 now gives the two same-pair rows different StartDate values, so the source unique key is satisfied while the overlapping-row sum remains visible.",
+      "objection O03 resolved (not-an-attack): A11 now uses quantities 1.05 through 1.45 and nonnegative costs. The diamond satisfies the source checks and retains the grouped-sum rounding attack.",
+      "objection O04 resolved (not-an-attack): A13 now gives every product a distinct name and creates its non-key tie with shared StandardCost and ListPrice values.",
+      "objection O05 resolved (not-an-attack): A14 now uses distinct names and removes the impossible case-only variants. It retains empty, trailing-space, non-ASCII, emoji, and maximum-length text inputs.",
+      "objection O06 resolved (not-an-attack): A15 now separates the same-pair rows by StartDate, uses positive quantities, and uses nonnegative product prices. It still drives SUM(decimal(8,2)) beyond the input precision.",
+      "objection O07 resolved (not-an-attack): A17 now starts the expired 3 -> 2 edge on 2019-01-01, before its 2019-12-31 end date. The filtered cycle is valid source data.",
+      "trap null-vs-empty accepted as not applicable: The only text column, Product.Name, is NOT NULL, so no NULL text value can be sent. '' is attacked in the names case; a NULL check date and a NULL start product are attacked separately.",
+      "trap collation-case accepted as not applicable: The only text input is Production.Product.Name, which the source keeps unique under its case-insensitive collation (AK_Product_Name), so two products whose names differ only in case cannot exist. The procedure compares no text: it joins and filters on integer keys and dates."
+    ]
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

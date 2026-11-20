@@ -63,7 +63,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "pass",
-    "step5": "not-run",
+    "step5": "pass",
     "step6": "n/a",
     "runtimeRatio": 0.34,
     "runtime": {
@@ -107,12 +107,23 @@
       "evidencePath": "evidence/adversarial/AdventureWorks2025/HumanResources.vEmployeeDepartmentHistory.json",
       "conversionSha256": "3c4aab538cbdbbf16ded3383a1866702e6d6ab5e999bac1f48faaf7a7df2140a",
       "runAt": "2026-11-19T06:16:57.363Z"
-    }
+    },
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-2.md",
+    "step5EvidenceSha256": "a2b7a618a303b2346b50a4f23ee0a45325849ad8635f01eeb05f98bdcdf8154a",
+    "step5Confirmed": [
+      "objection O01 resolved (not-an-attack): The ended department-2 history now starts and ends on 0001-01-01, while the 1752-12-31 history is a separate open row. Every ended history satisfies EndDate >= StartDate.",
+      "objection O02 resolved (not-an-attack): The first history now starts on 2010-06-14 and ends on 2010-06-15; all sent histories satisfy the source date check.",
+      "objection O03 resolved (not-an-attack): A04 now uses distinct department names. The case-only pairs cross Department.Name, GroupName, and Person.FirstName, avoiding the Department.Name unique key.",
+      "objection O04 resolved (not-an-attack): A05 now uses ShiftID 1 and 0 for the two same-date histories. The full source primary-key tuples are distinct, and the projected rows remain a useful de-duplication attack because they share employee, department, and start date while differing by Shift."
+    ]
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

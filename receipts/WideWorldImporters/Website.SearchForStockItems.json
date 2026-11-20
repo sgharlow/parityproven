@@ -5,7 +5,7 @@
   "objectClass": "procedure",
   "tier": "simple",
   "predictionTier": "simple",
-  "status": "pending",
+  "status": "verified",
   "code": {
     "source": "\r\nCREATE PROCEDURE Website.SearchForStockItems\r\n@SearchText nvarchar(1000),\r\n@MaximumRowsToReturn int\r\nWITH EXECUTE AS OWNER\r\nAS\r\nBEGIN\r\n    SELECT TOP(@MaximumRowsToReturn)\r\n           si.StockItemID,\r\n           si.StockItemName\r\n    FROM Warehouse.StockItems AS si\r\n    WHERE si.SearchDetails LIKE N'%' + @SearchText + N'%'\r\n    ORDER BY si.StockItemName\r\n    FOR JSON AUTO, ROOT(N'StockItems');\r\nEND;\r\n",
     "engineOutput": "-- PL/pgSQL conversion of Website.SearchForStockItems (WideWorldImporters).\n-- Engine: Kiro first draft (see pair record).\n-- WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted.\n\nCREATE OR REPLACE FUNCTION website.search_for_stock_items(\n    search_text text,\n    maximum_rows_to_return integer\n)\nRETURNS text\nLANGUAGE sql\nSTABLE\nAS $fn$\n    SELECT json_build_object('StockItems', COALESCE(json_agg(r.item ORDER BY r.rn), '[]'::json))::text\n    FROM (\n        SELECT json_build_object('StockItemID', si.\"StockItemID\", 'StockItemName', si.\"StockItemName\") AS item,\n               row_number() OVER (ORDER BY si.\"StockItemName\") AS rn\n        FROM warehouse.stock_items AS si\n        WHERE si.\"SearchDetails\" ILIKE '%' || search_text || '%'\n        ORDER BY si.\"StockItemName\"\n        LIMIT maximum_rows_to_return\n    ) AS r\n$fn$;\n",
@@ -55,7 +55,7 @@
     {
       "step": 5,
       "label": "Second human review",
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "step": 6,
@@ -119,6 +119,10 @@
       "PostgreSQL: AgreedTests.[test 08 SearchDetails: five hits, @MaximumRowsToReturn = 2 returns exactly two]: pass",
       "planted defects caught by the agreed tests: 5 of 5"
     ],
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-4.md",
     "adversarial": {
       "gate": "pass",
       "ran": 10,
@@ -233,5 +237,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-19T18:00:02.576Z"
+  "builtAt": "2026-11-20T04:13:51.624Z"
 }

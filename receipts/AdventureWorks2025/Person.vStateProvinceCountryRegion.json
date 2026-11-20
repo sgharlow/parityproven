@@ -5,7 +5,7 @@
   "objectClass": "view",
   "tier": "simple",
   "predictionTier": "simple",
-  "status": "pending",
+  "status": "verified",
   "code": {
     "source": "\r\nCREATE VIEW [Person].[vStateProvinceCountryRegion]\r\nWITH SCHEMABINDING\r\nAS\r\nSELECT\r\n    sp.[StateProvinceID]\r\n    ,sp.[StateProvinceCode]\r\n    ,sp.[IsOnlyStateProvinceFlag]\r\n    ,sp.[Name] AS [StateProvinceName]\r\n    ,sp.[TerritoryID]\r\n    ,cr.[CountryRegionCode]\r\n    ,cr.[Name] AS [CountryRegionName]\r\nFROM [Person].[StateProvince] sp\r\n    INNER JOIN [Person].[CountryRegion] cr\r\n    ON sp.[CountryRegionCode] = cr.[CountryRegionCode];\r\n",
     "engineOutput": "-- PostgreSQL conversion of the view Person.vStateProvinceCountryRegion (AdventureWorks2025).\n-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case).\n-- Verified by the property-based harness, not by this script.\n\nCREATE OR REPLACE VIEW person.v_state_province_country_region AS\nSELECT\r\n    sp.\"StateProvinceID\" AS \"StateProvinceID\"\r\n    ,sp.\"StateProvinceCode\" AS \"StateProvinceCode\"\r\n    ,sp.\"IsOnlyStateProvinceFlag\" AS \"IsOnlyStateProvinceFlag\"\r\n    ,sp.\"Name\" AS \"StateProvinceName\"\r\n    ,sp.\"TerritoryID\" AS \"TerritoryID\"\r\n    ,cr.\"CountryRegionCode\" AS \"CountryRegionCode\"\r\n    ,cr.\"Name\" AS \"CountryRegionName\"\r\nFROM person.state_province sp\r\n    INNER JOIN person.country_region cr\r\n    ON sp.\"CountryRegionCode\" = cr.\"CountryRegionCode\";\n",
@@ -65,7 +65,7 @@
     {
       "step": 5,
       "label": "Second human review",
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "step": 6,
@@ -117,6 +117,10 @@
       "PostgreSQL: AgreedTests.[test 03 trailing space: province code CA joins country CA (SQL Server equality ignores trailing spaces)]: pass",
       "planted defects caught by the agreed tests: 3 of 3"
     ],
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-2.md",
     "adversarial": {
       "gate": "pass",
       "ran": 8,
@@ -227,5 +231,5 @@
     "p50Hours": 0.75,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-19T15:58:24.749Z"
+  "builtAt": "2026-11-20T04:13:51.597Z"
 }

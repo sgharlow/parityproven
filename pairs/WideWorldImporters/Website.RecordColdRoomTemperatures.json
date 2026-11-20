@@ -58,7 +58,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "n/a",
-    "step5": "not-run",
+    "step5": "pass",
     "step6": "n/a",
     "rowsCompared": 205,
     "trapsCovered": [
@@ -101,12 +101,22 @@
       "evidencePath": "evidence/adversarial/WideWorldImporters/Website.RecordColdRoomTemperatures.json",
       "conversionSha256": "6a35f9a6ea380b94842288ede6569c049a286cc48ed0e721601440efa9f8608a",
       "runAt": "2026-11-19T06:23:06.302Z"
-    }
+    },
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-4.md",
+    "step5EvidenceSha256": "22650548ccc59ddfd5ec53f90911b3f6100fb3f495bc6fba1c2da2e04a50be88",
+    "step5Confirmed": [
+      "objection O01 resolved (duplicate): A03 now includes two rows equal in every projected column for sensor 3 plus control sensors 30, 0, and -3 carrying the same values. This exposes single-row physical selection and imprecise sensor matching beyond the hand-derived two-row case.",
+      "objection O02 resolved (duplicate): A04 now interleaves a reading for an existing sensor between the two readings for the new sensor and gives the readings distinct values. It tests ordered, stateful per-reading processing rather than repeating a consecutive identical pair.",
+      "trap identity-gaps accepted as not applicable: The only key column is Website.SensorDataList.SensorDataListID, an IDENTITY the harness renumbers 1..n for each call (tvpJson), so a planted gap in it cannot reach either engine; Warehouse.ColdRoomTemperatures has no key the procedure uses."
+    ]
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

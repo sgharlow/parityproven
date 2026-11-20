@@ -58,7 +58,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "pass",
-    "step5": "not-run",
+    "step5": "pass",
     "step6": "n/a",
     "runtimeRatio": 0.29,
     "runtime": {
@@ -102,12 +102,22 @@
       "evidencePath": "evidence/adversarial/AdventureWorks2025/HumanResources.vEmployeeDepartment.json",
       "conversionSha256": "e58524a5f1dd7b346151e40b1e0e411e6f4706f00026b436c4fb237b1ba4a49d",
       "runAt": "2026-11-19T06:16:44.701Z"
-    }
+    },
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-2.md",
+    "step5EvidenceSha256": "abaf5211c9fc8d416ee685a953bfe9543f8267dd6d3df369f6b3c887eb277e6f",
+    "step5Confirmed": [
+      "objection O01 resolved (label-mismatch): A01 now includes a history whose StartDate and EndDate are both 0001-01-01, so the label matches the sent end-date boundary and the row satisfies EndDate >= StartDate.",
+      "objection O02 resolved (not-an-attack): The first history now starts on 2010-06-14 and ends on 2010-06-15; all sent histories satisfy the source date check while retaining the equal-date boundary attack.",
+      "objection O03 resolved (not-an-attack): A04 now uses distinct department names. Its case-only pairs occur across Department.Name, GroupName, and Person.FirstName, so no source unique key is violated."
+    ]
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

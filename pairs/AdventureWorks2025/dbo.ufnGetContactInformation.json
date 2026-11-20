@@ -39,7 +39,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "pass",
-    "step5": "not-run",
+    "step5": "pass",
     "step6": "n/a",
     "runtimeRatio": 0.45,
     "runtime": {
@@ -102,12 +102,22 @@
       "evidencePath": "evidence/adversarial/AdventureWorks2025/dbo.ufnGetContactInformation.json",
       "conversionSha256": "6ce4235c9a7b3aee479ec5695986f6d12f4ae9d19a3e5684e39ed7e8f3762cbb",
       "runAt": "2026-11-19T06:19:09.994Z"
-    }
+    },
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-1.md",
+    "step5EvidenceSha256": "dcab848096e23ac45b14240e5bf488d7b33cbb6077c8fed17a6a89cb058bd236",
+    "step5Confirmed": [
+      "objection O01 resolved (duplicate): A06 now uses one BusinessEntityContact row whose entity is simultaneously a vendor and a store. This distinguishes a row-classifying set rewrite from the hand-derived input, which reaches the branches through separate entities and contact rows.",
+      "objection O02 resolved (not-an-attack): A07 now uses two vendors, producing distinct BusinessEntityContact primary-key tuples that project identical rows because the vendor id is not returned.",
+      "trap null-vs-empty accepted as not applicable: No text input column can hold NULL: Person.FirstName, Person.LastName, Employee.JobTitle and ContactType.Name are NOT NULL in the spec (as in AdventureWorks), so a NULL text value cannot be loaded. The NULL-versus-'' contrast exists only in the output and is attacked there by A01: the same person gets an Employee row with JobTitle '' and a Consumer row whose JobTitle is the NULL the function writes."
+    ]
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

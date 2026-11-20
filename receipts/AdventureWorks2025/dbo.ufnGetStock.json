@@ -5,7 +5,7 @@
   "objectClass": "function",
   "tier": "simple",
   "predictionTier": "simple",
-  "status": "pending",
+  "status": "verified",
   "code": {
     "source": "\r\nCREATE FUNCTION [dbo].[ufnGetStock](@ProductID [int])\r\nRETURNS [int]\r\nAS\r\n-- Returns the stock level for the product. This function is used internally only\r\nBEGIN\r\n    DECLARE @ret int;\r\n   \r\n    SELECT @ret = SUM(p.[Quantity])\r\n    FROM [Production].[ProductInventory] p\r\n    WHERE p.[ProductID] = @ProductID\r\n        AND p.[LocationID] = '6'; -- Only look at inventory in the misc storage\r\n   \r\n    IF (@ret IS NULL)\r\n        SET @ret = 0\r\n   \r\n    RETURN @ret\r\nEND;\r\n",
     "engineOutput": "-- PostgreSQL conversion of dbo.ufnGetStock (AdventureWorks2025).\n-- Engine: Kiro first draft (see pair record).\n-- SUM(smallint) is int in T-SQL; the PostgreSQL SUM(smallint) is bigint, so it is cast back to integer.\n-- The source compares LocationID (smallint) with the string '6'; here it is the number 6.\n\nCREATE OR REPLACE FUNCTION dbo.ufn_get_stock(product_id integer)\nRETURNS integer\nLANGUAGE sql\nSTABLE\nAS $$\n    SELECT COALESCE(SUM(p.\"Quantity\"), 0)::integer\n      FROM production.product_inventory AS p\n     WHERE p.\"ProductID\" = product_id\n       AND p.\"LocationID\" = 6          -- only look at inventory in the misc storage\n$$;\n",
@@ -52,7 +52,7 @@
     {
       "step": 5,
       "label": "Second human review",
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "step": 6,
@@ -101,6 +101,10 @@
       "PostgreSQL: AgreedTests.[test 06 NULL ProductID: 0 (no row matches, NULL sum -> 0)]: pass",
       "planted defects caught by the agreed tests: 1 of 1"
     ],
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-1.md",
     "adversarial": {
       "gate": "pass",
       "ran": 7,
@@ -183,5 +187,5 @@
     "p50Hours": 1.5,
     "p90Hours": 4
   },
-  "builtAt": "2026-11-19T15:58:24.729Z"
+  "builtAt": "2026-11-20T04:13:51.594Z"
 }

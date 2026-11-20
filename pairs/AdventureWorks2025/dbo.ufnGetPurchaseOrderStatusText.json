@@ -25,7 +25,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "pass",
-    "step5": "not-run",
+    "step5": "pass",
     "step6": "n/a",
     "runtimeRatio": 0.21,
     "runtime": {
@@ -79,12 +79,20 @@
       "evidencePath": "evidence/adversarial/AdventureWorks2025/dbo.ufnGetPurchaseOrderStatusText.json",
       "conversionSha256": "3f430beb1a9ddcd9bd4134aba3a4c8cbdfe2cc9640e3070e3cc1c7aa79113e0b",
       "runAt": "2026-11-19T06:19:29.585Z"
-    }
+    },
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-1.md",
+    "step5EvidenceSha256": "dc19a75176a076ceb21d2e80928f6039a49420db5d990c5a5fd215c408725c72",
+    "step5Confirmed": [
+      "objection O01 resolved (duplicate): Every mapped status is already hand-derived, so overlap is unavoidable. A06-A09 now cover every mapped branch and document why the adversarial-only planted-defect check needs those values."
+    ]
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

@@ -5,7 +5,7 @@
   "objectClass": "view",
   "tier": "simple",
   "predictionTier": "simple",
-  "status": "pending",
+  "status": "verified",
   "code": {
     "source": "\r\nCREATE VIEW [Purchasing].[vVendorWithContacts] AS\r\nSELECT\r\n    v.[BusinessEntityID]\r\n    ,v.[Name]\r\n    ,ct.[Name] AS [ContactType]\r\n    ,p.[Title]\r\n    ,p.[FirstName]\r\n    ,p.[MiddleName]\r\n    ,p.[LastName]\r\n    ,p.[Suffix]\r\n    ,pp.[PhoneNumber]\r\n\t,pnt.[Name] AS [PhoneNumberType]\r\n    ,ea.[EmailAddress]\r\n    ,p.[EmailPromotion]\r\nFROM [Purchasing].[Vendor] v\r\n    INNER JOIN [Person].[BusinessEntityContact] bec\r\n    ON bec.[BusinessEntityID] = v.[BusinessEntityID]\r\n\tINNER JOIN [Person].ContactType ct\r\n\tON ct.[ContactTypeID] = bec.[ContactTypeID]\r\n\tINNER JOIN [Person].[Person] p\r\n\tON p.[BusinessEntityID] = bec.[PersonID]\r\n\tLEFT OUTER JOIN [Person].[EmailAddress] ea\r\n\tON ea.[BusinessEntityID] = p.[BusinessEntityID]\r\n\tLEFT OUTER JOIN [Person].[PersonPhone] pp\r\n\tON pp.[BusinessEntityID] = p.[BusinessEntityID]\r\n\tLEFT OUTER JOIN [Person].[PhoneNumberType] pnt\r\n\tON pnt.[PhoneNumberTypeID] = pp.[PhoneNumberTypeID];\r\n",
     "engineOutput": "-- PostgreSQL conversion of the view Purchasing.vVendorWithContacts (AdventureWorks2025).\n-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case).\n-- Verified by the property-based harness, not by this script.\n\nCREATE OR REPLACE VIEW purchasing.v_vendor_with_contacts AS\nSELECT\r\n    v.\"BusinessEntityID\" AS \"BusinessEntityID\"\r\n    ,v.\"Name\" AS \"Name\"\r\n    ,ct.\"Name\" AS \"ContactType\"\r\n    ,p.\"Title\" AS \"Title\"\r\n    ,p.\"FirstName\" AS \"FirstName\"\r\n    ,p.\"MiddleName\" AS \"MiddleName\"\r\n    ,p.\"LastName\" AS \"LastName\"\r\n    ,p.\"Suffix\" AS \"Suffix\"\r\n    ,pp.\"PhoneNumber\" AS \"PhoneNumber\"\r\n\t,pnt.\"Name\" AS \"PhoneNumberType\"\r\n    ,ea.\"EmailAddress\" AS \"EmailAddress\"\r\n    ,p.\"EmailPromotion\" AS \"EmailPromotion\"\r\nFROM purchasing.vendor v\r\n    INNER JOIN person.business_entity_contact bec\r\n    ON bec.\"BusinessEntityID\" = v.\"BusinessEntityID\"\r\n\tINNER JOIN person.contact_type ct\r\n\tON ct.\"ContactTypeID\" = bec.\"ContactTypeID\"\r\n\tINNER JOIN person.person p\r\n\tON p.\"BusinessEntityID\" = bec.\"PersonID\"\r\n\tLEFT OUTER JOIN person.email_address ea\r\n\tON ea.\"BusinessEntityID\" = p.\"BusinessEntityID\"\r\n\tLEFT OUTER JOIN person.person_phone pp\r\n\tON pp.\"BusinessEntityID\" = p.\"BusinessEntityID\"\r\n\tLEFT OUTER JOIN person.phone_number_type pnt\r\n\tON pnt.\"PhoneNumberTypeID\" = pp.\"PhoneNumberTypeID\";\n",
@@ -66,7 +66,7 @@
     {
       "step": 5,
       "label": "Second human review",
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "step": 6,
@@ -109,6 +109,10 @@
       "PostgreSQL: AgreedTests.[test 01 two phones give two rows (unknown phone type is NULL); no email or a NULL email is NULL; Title kept;…]: pass",
       "planted defects caught by the agreed tests: 2 of 2"
     ],
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-2.md",
     "adversarial": {
       "gate": "pass",
       "ran": 5,
@@ -184,5 +188,5 @@
     "p50Hours": 0.75,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-19T15:58:24.760Z"
+  "builtAt": "2026-11-20T04:13:51.598Z"
 }

@@ -57,7 +57,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "pass",
-    "step5": "not-run",
+    "step5": "pass",
     "step6": "n/a",
     "runtimeRatio": 0.37,
     "runtime": {
@@ -103,12 +103,20 @@
       "evidencePath": "evidence/adversarial/WideWorldImporters/Integration.GetTransactionUpdates.json",
       "conversionSha256": "22e158bec18b504431ad015b32a6c413dfe8a5ee8e7080e5443803e850b872cb",
       "runAt": "2026-11-19T06:20:52.604Z"
-    }
+    },
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-3.md",
+    "step5EvidenceSha256": "6d8aa09fbbcf06516e2951864ad3b42c6259509d6e749b14adf875b7da8b96b2",
+    "step5Confirmed": [
+      "objection O01 resolved (label-mismatch): A06 now sends both 1753-01-01 and 9999-12-31 as TransactionDate values on each UNION ALL half. The label and reasoning match the revised rows."
+    ]
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

@@ -116,7 +116,7 @@
       "planted defects caught by the agreed tests: 6 of 6"
     ],
     "reviewer": "Steve Harlow",
-    "reviewDate": "2026-11-16",
+    "reviewDate": "2026-11-19",
     "adversarial": {
       "gate": "pass",
       "ran": 9,
@@ -124,12 +124,25 @@
       "evidencePath": "evidence/adversarial/WideWorldImporters/Website.RecordVehicleTemperature.json",
       "conversionSha256": "46156b46b7be9426e71faa55826546979ce2ce2fd0e570d8509bfbcf03ecae3b",
       "runAt": "2026-11-19T06:23:21.827Z"
-    }
+    },
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-4.md",
+    "step5EvidenceSha256": "a1d6b9d03b22e884e360ad76e1cf78ddecbf9d632cc569c20afccfe78c6bd7de",
+    "step5Confirmed": [
+      "objection O01 resolved (duplicate): A02 now duplicates the numeric temp key rather than rego, and makes the second occurrence exponent notation that would fail if selected. It tests first-occurrence handling through a distinct typed conversion path.",
+      "objection O02 resolved (duplicate): A03 now sends -3.965. The negative midpoint distinguishes half-away-from-zero (-3.97) from half-up and half-even (-3.96), unlike the positive hand-derived midpoint.",
+      "objection O03 resolved (duplicate): A06 now sends the JSON scalar text 'null', not SQL NULL. SQL Server ISJSON without a type constraint rejects that scalar, exposing a conversion that accepts all JSON values.",
+      "trap null-vs-empty accepted as not applicable: The only parameter is one nvarchar(1000) JSON document; NULL vs '' (NULL document inserts nothing without error, '' fails ISJSON) is exercised by named cases on the payload, not by a typed text column the trap checker inspects.",
+      "trap collation-case accepted as not applicable: Case sensitivity of the stored VehicleRegistration is exercised by a named case ('WWI-A' vs an existing 'wwi-a' row); the rego value itself is a JSON token inside the string argument, not a typed text column.",
+      "trap dates-datetime accepted as not applicable: The datetime boundary is a 'when' token inside the JSON string (covered by a named case), not a typed date column or a cutoff window the trap checker reads.",
+      "trap numeric-rounding accepted as not applicable: The decimal rounding is a 'temp' token inside the JSON string (covered by the 3.965 case), not a typed decimal column the trap checker reads.",
+      "trap top-ties accepted as not applicable: The procedure inserts rows parsed from one JSON document and reads no table for row selection, so there is no two-row tie in a typed input to construct; array order within the document is covered by the parsing cases."
+    ]
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

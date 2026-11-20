@@ -106,7 +106,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "n/a",
-    "step5": "not-run",
+    "step5": "pass",
     "step6": "n/a",
     "rowsCompared": 206,
     "trapsCovered": [
@@ -155,12 +155,22 @@
       "evidencePath": "evidence/adversarial/WideWorldImporters/Website.InvoiceCustomerOrders.json",
       "conversionSha256": "ad1de5eaca3cc95e4d1ce4a67b0963f473cc4faa183279d53cf876ec1bd54267",
       "runAt": "2026-11-19T06:22:48.764Z"
-    }
+    },
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-4.md",
+    "step5EvidenceSha256": "7492d60b5564a2bf402a41c829d1e085bb0a85352e0e8825734831dbc82f7f85",
+    "step5Confirmed": [
+      "objection O01 resolved (label-mismatch): A01 now supplies 1 * 0.25 * 50 / 100 = 0.125 exactly. SQL Server rounds it to 0.13 while truncation and half-even rounding produce 0.12, matching the revised label.",
+      "objection O02 resolved (weak): A03 now pairs an empty line 1 with non-NULL line 2 'Back door', producing ', Back door'. Collapsing the empty first line to NULL changes that result, while the second customer separately retains the NULL-line-2 concatenation case.",
+      "objection O03 resolved (duplicate): A06 now requests one order with a valid line before a second order without lines. It tests that the later failure rolls back writes already made for the first order, a transaction-wide behavior absent from the single-order hand-derived case."
+    ]
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

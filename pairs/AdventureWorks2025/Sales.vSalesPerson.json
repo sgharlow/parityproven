@@ -88,7 +88,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "pass",
-    "step5": "not-run",
+    "step5": "pass",
     "step6": "n/a",
     "testsRun": [
       "tSQLt V1.0.8083.3529 on SQL Server (tests/AdventureWorks2025/Sales.vSalesPerson.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/AdventureWorks2025/Sales.vSalesPerson.pg.sql); expected results tests/AdventureWorks2025/Sales.vSalesPerson.expected.json",
@@ -142,12 +142,22 @@
       "evidencePath": "evidence/adversarial/AdventureWorks2025/Sales.vSalesPerson.json",
       "conversionSha256": "f5a932f00a10efdc881b577e448bb5e24b4a074a3045fefde601a21ee41a9071",
       "runAt": "2026-11-19T06:18:19.746Z"
-    }
+    },
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-2.md",
+    "step5EvidenceSha256": "368a04a95d430d2fc9287cc293764614b8a723c7708b5fd506d414c48e6b7483",
+    "step5Confirmed": [
+      "objection O01 resolved (duplicate): A01 now uses non-ASCII Latin-1 and Greek case pairs and puts the combined case/trailing-space variant on the country side, exercising Unicode folding and asymmetric trimming paths absent from the hand-derived inputs.",
+      "objection O02 resolved (not-an-attack): A07 now sends only nonnegative sales values and a positive or NULL quota. The large and half-unit money values retain the mapping attack while satisfying the SalesPerson checks.",
+      "objection O03 resolved (not-an-attack): A09 now sends the same number under two distinct PhoneNumberTypeID values. The PersonPhone keys are valid, and equal type names still create identical projected rows."
+    ]
   },
   "effort": {
     "humanMinutes": 10,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

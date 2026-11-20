@@ -78,7 +78,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "pass",
-    "step5": "not-run",
+    "step5": "pass",
     "step6": "n/a",
     "testsRun": [
       "tSQLt V1.0.8083.3529 on SQL Server (tests/AdventureWorks2025/HumanResources.vEmployee.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/AdventureWorks2025/HumanResources.vEmployee.pg.sql); expected results tests/AdventureWorks2025/HumanResources.vEmployee.expected.json",
@@ -132,12 +132,21 @@
       "evidencePath": "evidence/adversarial/AdventureWorks2025/HumanResources.vEmployee.json",
       "conversionSha256": "7cf6461ee469eabc8617b0018b7cc753b088c1ae071db956441f62ab87a0616a",
       "runAt": "2026-11-19T06:16:30.452Z"
-    }
+    },
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-2.md",
+    "step5EvidenceSha256": "741381823f84cf9c2e5635356e1ee96de1fbd73b0e9796c59119da3cf6d7785c",
+    "step5Confirmed": [
+      "objection O01 resolved (duplicate): A01 now uses non-ASCII Latin-1 and Greek case pairs and places the combined case/trailing-space difference on the country side. Those inputs exercise case folding beyond ASCII and asymmetric trimming paths not covered by the hand-derived cases.",
+      "objection O02 resolved (not-an-attack): A09 now sends the same number under two distinct PhoneNumberTypeID values. The PersonPhone primary-key tuples are distinct while the equal type names still produce identical projected rows."
+    ]
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

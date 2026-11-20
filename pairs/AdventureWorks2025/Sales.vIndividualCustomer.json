@@ -82,7 +82,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "pass",
-    "step5": "not-run",
+    "step5": "pass",
     "step6": "n/a",
     "testsRun": [
       "tSQLt V1.0.8083.3529 on SQL Server (tests/AdventureWorks2025/Sales.vIndividualCustomer.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/AdventureWorks2025/Sales.vIndividualCustomer.pg.sql); expected results tests/AdventureWorks2025/Sales.vIndividualCustomer.expected.json",
@@ -136,12 +136,21 @@
       "evidencePath": "evidence/adversarial/AdventureWorks2025/Sales.vIndividualCustomer.json",
       "conversionSha256": "5ddb81d7087b776df698418ce2f79b986920175604a9dbe3bdad97c1b6105c49",
       "runAt": "2026-11-19T06:18:02.974Z"
-    }
+    },
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-2.md",
+    "step5EvidenceSha256": "86fe45491b12cdb7ec6330f089444f9301dc94a092cd70f43a07653c659e79ac",
+    "step5Confirmed": [
+      "objection O01 resolved (duplicate): A01 now uses non-ASCII Latin-1 and Greek case pairs and puts the combined case/trailing-space variant on the country side, exercising Unicode folding and asymmetric trimming paths absent from the hand-derived inputs.",
+      "objection O02 resolved (not-an-attack): A08 now sends the same number under two distinct PhoneNumberTypeID values and uses separate Customer rows whose omitted CustomerID values are generated independently. The PersonPhone keys are valid and the 2 x 2 fan-out remains visible."
+    ]
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

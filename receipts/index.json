@@ -1,5 +1,5 @@
 {
-  "builtAt": "2026-11-19T18:00:02.620Z",
+  "builtAt": "2026-11-20T04:13:51.669Z",
   "receipts": [
     {
       "database": "AdventureWorks2025",
@@ -7,7 +7,7 @@
       "objectName": "ufnGetAccountingEndDate",
       "objectClass": "function",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "AdventureWorks2025/dbo.ufnGetAccountingEndDate.json"
     },
     {
@@ -16,7 +16,7 @@
       "objectName": "ufnGetAccountingStartDate",
       "objectClass": "function",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "AdventureWorks2025/dbo.ufnGetAccountingStartDate.json"
     },
     {
@@ -25,7 +25,7 @@
       "objectName": "ufnGetContactInformation",
       "objectClass": "function",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "AdventureWorks2025/dbo.ufnGetContactInformation.json"
     },
     {
@@ -34,7 +34,7 @@
       "objectName": "ufnGetDocumentStatusText",
       "objectClass": "function",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "AdventureWorks2025/dbo.ufnGetDocumentStatusText.json"
     },
     {
@@ -43,7 +43,7 @@
       "objectName": "ufnGetProductDealerPrice",
       "objectClass": "function",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "AdventureWorks2025/dbo.ufnGetProductDealerPrice.json"
     },
     {
@@ -52,7 +52,7 @@
       "objectName": "ufnGetProductListPrice",
       "objectClass": "function",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "AdventureWorks2025/dbo.ufnGetProductListPrice.json"
     },
     {
@@ -61,7 +61,7 @@
       "objectName": "ufnGetProductStandardCost",
       "objectClass": "function",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "AdventureWorks2025/dbo.ufnGetProductStandardCost.json"
     },
     {
@@ -70,7 +70,7 @@
       "objectName": "ufnGetPurchaseOrderStatusText",
       "objectClass": "function",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "AdventureWorks2025/dbo.ufnGetPurchaseOrderStatusText.json"
     },
     {
@@ -79,7 +79,7 @@
       "objectName": "ufnGetSalesOrderStatusText",
       "objectClass": "function",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "AdventureWorks2025/dbo.ufnGetSalesOrderStatusText.json"
     },
     {
@@ -88,7 +88,7 @@
       "objectName": "ufnGetStock",
       "objectClass": "function",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "AdventureWorks2025/dbo.ufnGetStock.json"
     },
     {
@@ -97,7 +97,7 @@
       "objectName": "ufnLeadingZeros",
       "objectClass": "function",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "AdventureWorks2025/dbo.ufnLeadingZeros.json"
     },
     {
@@ -106,7 +106,7 @@
       "objectName": "uspGetBillOfMaterials",
       "objectClass": "procedure",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "AdventureWorks2025/dbo.uspGetBillOfMaterials.json"
     },
     {
@@ -115,7 +115,7 @@
       "objectName": "uspGetWhereUsedProductID",
       "objectClass": "procedure",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "AdventureWorks2025/dbo.uspGetWhereUsedProductID.json"
     },
     {
@@ -124,7 +124,7 @@
       "objectName": "vEmployee",
       "objectClass": "view",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "AdventureWorks2025/HumanResources.vEmployee.json"
     },
     {
@@ -133,7 +133,7 @@
       "objectName": "vEmployeeDepartment",
       "objectClass": "view",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "AdventureWorks2025/HumanResources.vEmployeeDepartment.json"
     },
     {
@@ -142,7 +142,7 @@
       "objectName": "vEmployeeDepartmentHistory",
       "objectClass": "view",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "AdventureWorks2025/HumanResources.vEmployeeDepartmentHistory.json"
     },
     {
@@ -151,7 +151,7 @@
       "objectName": "vStateProvinceCountryRegion",
       "objectClass": "view",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "AdventureWorks2025/Person.vStateProvinceCountryRegion.json"
     },
     {
@@ -160,7 +160,7 @@
       "objectName": "vProductAndDescription",
       "objectClass": "view",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "AdventureWorks2025/Production.vProductAndDescription.json"
     },
     {
@@ -169,7 +169,7 @@
       "objectName": "vVendorWithAddresses",
       "objectClass": "view",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "AdventureWorks2025/Purchasing.vVendorWithAddresses.json"
     },
     {
@@ -178,7 +178,7 @@
       "objectName": "vVendorWithContacts",
       "objectClass": "view",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "AdventureWorks2025/Purchasing.vVendorWithContacts.json"
     },
     {
@@ -187,7 +187,7 @@
       "objectName": "vIndividualCustomer",
       "objectClass": "view",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "AdventureWorks2025/Sales.vIndividualCustomer.json"
     },
     {
@@ -196,7 +196,7 @@
       "objectName": "vSalesPerson",
       "objectClass": "view",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "AdventureWorks2025/Sales.vSalesPerson.json"
     },
     {
@@ -205,7 +205,7 @@
       "objectName": "vSalesPersonSalesByFiscalYears",
       "objectClass": "view",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "AdventureWorks2025/Sales.vSalesPersonSalesByFiscalYears.json"
     },
     {
@@ -214,7 +214,7 @@
       "objectName": "vStoreWithAddresses",
       "objectClass": "view",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "AdventureWorks2025/Sales.vStoreWithAddresses.json"
     },
     {
@@ -223,7 +223,7 @@
       "objectName": "vStoreWithContacts",
       "objectClass": "view",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "AdventureWorks2025/Sales.vStoreWithContacts.json"
     },
     {
@@ -268,7 +268,7 @@
       "objectName": "GetMovementUpdates",
       "objectClass": "procedure",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "WideWorldImporters/Integration.GetMovementUpdates.json"
     },
     {
@@ -277,7 +277,7 @@
       "objectName": "GetOrderUpdates",
       "objectClass": "procedure",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "WideWorldImporters/Integration.GetOrderUpdates.json"
     },
     {
@@ -295,7 +295,7 @@
       "objectName": "GetPurchaseUpdates",
       "objectClass": "procedure",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "WideWorldImporters/Integration.GetPurchaseUpdates.json"
     },
     {
@@ -304,7 +304,7 @@
       "objectName": "GetSaleUpdates",
       "objectClass": "procedure",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "WideWorldImporters/Integration.GetSaleUpdates.json"
     },
     {
@@ -313,7 +313,7 @@
       "objectName": "GetStockHoldingUpdates",
       "objectClass": "procedure",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "WideWorldImporters/Integration.GetStockHoldingUpdates.json"
     },
     {
@@ -349,7 +349,7 @@
       "objectName": "GetTransactionUpdates",
       "objectClass": "procedure",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "WideWorldImporters/Integration.GetTransactionUpdates.json"
     },
     {
@@ -358,7 +358,7 @@
       "objectName": "ReseedSequenceBeyondTableValues",
       "objectClass": "procedure",
       "tier": "complex",
-      "status": "pending",
+      "status": "verified",
       "path": "WideWorldImporters/Sequences.ReseedSequenceBeyondTableValues.json"
     },
     {
@@ -367,7 +367,7 @@
       "objectName": "ActivateWebsiteLogon",
       "objectClass": "procedure",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "WideWorldImporters/Website.ActivateWebsiteLogon.json"
     },
     {
@@ -376,7 +376,7 @@
       "objectName": "CalculateCustomerPrice",
       "objectClass": "function",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "WideWorldImporters/Website.CalculateCustomerPrice.json"
     },
     {
@@ -385,7 +385,7 @@
       "objectName": "ChangePassword",
       "objectClass": "procedure",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "WideWorldImporters/Website.ChangePassword.json"
     },
     {
@@ -394,7 +394,7 @@
       "objectName": "Customers",
       "objectClass": "view",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "WideWorldImporters/Website.Customers.json"
     },
     {
@@ -403,7 +403,7 @@
       "objectName": "InsertCustomerOrders",
       "objectClass": "procedure",
       "tier": "medium",
-      "status": "pending",
+      "status": "verified",
       "path": "WideWorldImporters/Website.InsertCustomerOrders.json"
     },
     {
@@ -412,7 +412,7 @@
       "objectName": "InvoiceCustomerOrders",
       "objectClass": "procedure",
       "tier": "medium",
-      "status": "pending",
+      "status": "verified",
       "path": "WideWorldImporters/Website.InvoiceCustomerOrders.json"
     },
     {
@@ -421,7 +421,7 @@
       "objectName": "RecordColdRoomTemperatures",
       "objectClass": "procedure",
       "tier": "medium",
-      "status": "pending",
+      "status": "verified",
       "path": "WideWorldImporters/Website.RecordColdRoomTemperatures.json"
     },
     {
@@ -430,7 +430,7 @@
       "objectName": "RecordVehicleTemperature",
       "objectClass": "procedure",
       "tier": "medium",
-      "status": "pending",
+      "status": "verified",
       "path": "WideWorldImporters/Website.RecordVehicleTemperature.json"
     },
     {
@@ -448,7 +448,7 @@
       "objectName": "SearchForPeople",
       "objectClass": "procedure",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "WideWorldImporters/Website.SearchForPeople.json"
     },
     {
@@ -457,7 +457,7 @@
       "objectName": "SearchForStockItems",
       "objectClass": "procedure",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "WideWorldImporters/Website.SearchForStockItems.json"
     },
     {
@@ -466,7 +466,7 @@
       "objectName": "SearchForStockItemsByTags",
       "objectClass": "procedure",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "WideWorldImporters/Website.SearchForStockItemsByTags.json"
     },
     {
@@ -484,7 +484,7 @@
       "objectName": "Suppliers",
       "objectClass": "view",
       "tier": "simple",
-      "status": "pending",
+      "status": "verified",
       "path": "WideWorldImporters/Website.Suppliers.json"
     },
     {
@@ -946,8 +946,8 @@
   },
   "summary": {
     "total": 55,
-    "verified": 0,
-    "pending": 44,
+    "verified": 44,
+    "pending": 0,
     "failed": 11,
     "excluded": 17,
     "notAttempted": 26,

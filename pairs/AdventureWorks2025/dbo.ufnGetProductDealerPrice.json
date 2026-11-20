@@ -48,7 +48,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "pass",
-    "step5": "not-run",
+    "step5": "pass",
     "step6": "n/a",
     "testsRun": [
       "tSQLt V1.0.8083.3529 on SQL Server (tests/AdventureWorks2025/dbo.ufnGetProductDealerPrice.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/AdventureWorks2025/dbo.ufnGetProductDealerPrice.pg.sql); expected results tests/AdventureWorks2025/dbo.ufnGetProductDealerPrice.expected.json",
@@ -110,12 +110,18 @@
       "evidencePath": "evidence/adversarial/AdventureWorks2025/dbo.ufnGetProductDealerPrice.json",
       "conversionSha256": "0a07be4a3387abb04b2790e5877b00f07566b22d8e38dc91cc9b1753f15d3d8d",
       "runAt": "2026-11-19T17:49:46.385Z"
-    }
+    },
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-1.md",
+    "step5EvidenceSha256": "0ba3dd272c303c41826b0ebc9477e38785987b8fad17107c01c8758b7b682a2d",
+    "step5Confirmed": []
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

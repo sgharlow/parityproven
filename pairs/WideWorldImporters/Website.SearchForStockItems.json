@@ -39,7 +39,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "pass",
-    "step5": "not-run",
+    "step5": "pass",
     "step6": "n/a",
     "runtimeRatio": 0.69,
     "runtime": {
@@ -104,12 +104,24 @@
       "evidencePath": "evidence/adversarial/WideWorldImporters/Website.SearchForStockItems.json",
       "conversionSha256": "9a1a731fc0a4e10ffb460058bb38b6fac185831a93e053d660f0ecad439932eb",
       "runAt": "2026-11-19T17:48:19.660Z"
-    }
+    },
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-4.md",
+    "step5EvidenceSha256": "10b7263bb6f0a80d615231161bc77a629d29c91a411813276f6f1f5c6ff29242",
+    "step5Confirmed": [
+      "objection O01 resolved (duplicate): A01 now uses Cyrillic lower-, upper-, and title-case values with nonmatching Cyrillic and accented controls, testing Unicode case folding beyond the ASCII hand-derived inputs.",
+      "objection O02 resolved (weak): A03 now places the trailing space in SearchText. Its pattern selects values with a space after 'amy' and excludes 'amy' and 'amyx', so trimming the argument changes the result.",
+      "objection O03 resolved (duplicate): A04 now sends the reversed range '[c-a]'. That form exercises T-SQL acceptance versus regular-expression invalid-range handling, a mechanism absent from the ordered hand-derived range.",
+      "objection O04 resolved (duplicate): A05 now ends SearchText with a backslash. A trailing backslash can become a dangling regular-expression escape or escape the appended wildcard, unlike the hand-derived interior backslash.",
+      "trap null-vs-empty accepted as not applicable: SearchDetails is NOT NULL and the only text parameter (SearchText) cannot be both '' and NULL in one case, and a NULL SearchText is outside the object's stated precondition; '' is covered by the empty-search case."
+    ]
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

@@ -38,7 +38,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "pass",
-    "step5": "not-run",
+    "step5": "pass",
     "step6": "n/a",
     "runtimeRatio": 0.46,
     "runtime": {
@@ -83,12 +83,21 @@
       "evidencePath": "evidence/adversarial/WideWorldImporters/Integration.GetStockHoldingUpdates.json",
       "conversionSha256": "eb2a3aed3e96b8909687d5b94bc43bdc3a1fea2531165a8ca18e6857f748b854",
       "runAt": "2026-11-19T17:48:46.523Z"
-    }
+    },
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-3.md",
+    "step5EvidenceSha256": "5ba02a00913c418a6f5c5eff2c07b9c52d5838d38821619716338c26b682f388",
+    "step5Confirmed": [
+      "objection O01 resolved (other): Commit 6702ba2 added an order-key sequence assertion to both the agreed and adversarial PostgreSQL scripts. The adversarial script captures row_number() over the function result and compares the WWI Stock Item ID sequence with the source-captured expected sequence; fresh evidence records the descending-order mutant as caught and reports 2 of 2 planted defects caught by the agreed tests.",
+      "trap null-vs-empty accepted as not applicable: Every column of Warehouse.StockItemHoldings that the procedure reads is NOT NULL, including BinLocation, so no NULL text value can be sent. '' and ' ' are sent as bin locations in the text case."
+    ]
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

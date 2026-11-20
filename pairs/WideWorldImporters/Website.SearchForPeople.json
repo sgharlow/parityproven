@@ -53,7 +53,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "pass",
-    "step5": "not-run",
+    "step5": "pass",
     "step6": "n/a",
     "runtimeRatio": 0.59,
     "runtime": {
@@ -117,12 +117,24 @@
       "evidencePath": "evidence/adversarial/WideWorldImporters/Website.SearchForPeople.json",
       "conversionSha256": "ccbeeb76bd739e4f53ebbec023b5353bb95f68f05ca65e1774582ea33385a895",
       "runAt": "2026-11-19T17:48:05.348Z"
-    }
+    },
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-4.md",
+    "step5EvidenceSha256": "adab266ea999a8bd9a3eb62b5a119bb017e9cbf68fe3b581bf4fdd2c5f0d06ff",
+    "step5Confirmed": [
+      "objection O01 resolved (duplicate): A01 now uses Cyrillic lower-, upper-, and title-case values plus nonmatching Cyrillic and accented controls. It tests Unicode case folding beyond the hand-derived ASCII inputs while retaining the tie.",
+      "objection O02 resolved (weak): A02 now puts the trailing space in the search text. The pattern '%amy %' distinguishes 'amy ' and 'amy b' from 'amy' and 'amyx', so trimming the argument changes the selected rows.",
+      "objection O03 resolved (duplicate): A03 now combines '_' with a multi-character negated range and includes digit, accented-letter, space, case-folded range, and too-short controls. It attacks wildcard character classes absent from the hand-derived case and exposes the missed letter-only '_' defect.",
+      "objection O04 resolved (duplicate): A04 now targets the later customer, supplier-alternate-contact, and no-relationship branches, including a person who has both customer and supplier links. Those branches and COALESCE precedence are absent from the hand-derived salesperson/employee case.",
+      "trap null-vs-empty accepted as not applicable: Application.People.SearchName is NOT NULL and the only text parameter (SearchText) cannot be both '' and NULL in one case; a NULL SearchText is outside the object's stated precondition. '' is covered by the empty-search case."
+    ]
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

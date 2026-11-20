@@ -5,7 +5,7 @@
   "objectClass": "procedure",
   "tier": "simple",
   "predictionTier": "simple",
-  "status": "pending",
+  "status": "verified",
   "code": {
     "source": "\r\nCREATE PROCEDURE Integration.GetPurchaseUpdates\r\n@LastCutoff datetime2(7),\r\n@NewCutoff datetime2(7)\r\nWITH EXECUTE AS OWNER\r\nAS\r\nBEGIN\r\n    SET NOCOUNT ON;\r\n    SET XACT_ABORT ON;\r\n\r\n\r\n    SELECT CAST(po.OrderDate AS date) AS [Date Key],\r\n           po.PurchaseOrderID AS [WWI Purchase Order ID],\r\n           pol.OrderedOuters AS [Ordered Outers],\r\n           pol.OrderedOuters * si.QuantityPerOuter AS [Ordered Quantity],\r\n           pol.ReceivedOuters AS [Received Outers],\r\n           pt.PackageTypeName AS Package,\r\n           pol.IsOrderLineFinalized AS [Is Order Finalized],\r\n           po.SupplierID AS [WWI Supplier ID],\r\n           pol.StockItemID AS [WWI Stock Item ID],\r\n           CASE WHEN pol.LastEditedWhen > po.LastEditedWhen THEN pol.LastEditedWhen ELSE po.LastEditedWhen END AS [Last Modified When]\r\n    FROM Purchasing.PurchaseOrders AS po\r\n    INNER JOIN Purchasing.PurchaseOrderLines AS pol\r\n    ON po.PurchaseOrderID = pol.PurchaseOrderID\r\n    INNER JOIN Warehouse.StockItems AS si\r\n    ON pol.StockItemID = si.StockItemID\r\n    INNER JOIN Warehouse.PackageTypes AS pt\r\n    ON pol.PackageTypeID = pt.PackageTypeID\r\n    WHERE CASE WHEN pol.LastEditedWhen > po.LastEditedWhen THEN pol.LastEditedWhen ELSE po.LastEditedWhen END > @LastCutoff\r\n    AND CASE WHEN pol.LastEditedWhen > po.LastEditedWhen THEN pol.LastEditedWhen ELSE po.LastEditedWhen END <= @NewCutoff\r\n    ORDER BY po.PurchaseOrderID;\r\n\r\n    RETURN 0;\r\nEND;\r\n",
     "engineOutput": "-- PL/pgSQL conversion of Integration.GetPurchaseUpdates (WideWorldImporters).\n-- Engine: Kiro first draft (see pair record).\n-- WITH EXECUTE AS OWNER has no direct PostgreSQL equivalent; omitted.\n\nCREATE OR REPLACE FUNCTION integration.get_purchase_updates(\n    last_cutoff timestamp,\n    new_cutoff  timestamp\n)\nRETURNS TABLE (\n    \"Date Key\"              date,\n    \"WWI Purchase Order ID\" integer,\n    \"Ordered Outers\"        integer,\n    \"Ordered Quantity\"      integer,\n    \"Received Outers\"       integer,\n    \"Package\"               varchar(50),\n    \"Is Order Finalized\"    boolean,\n    \"WWI Supplier ID\"       integer,\n    \"WWI Stock Item ID\"     integer,\n    \"Last Modified When\"    timestamp\n)\nLANGUAGE sql\nSTABLE\nAS $$\n    SELECT\n        po.\"OrderDate\"::date,\n        po.\"PurchaseOrderID\",\n        pol.\"OrderedOuters\",\n        pol.\"OrderedOuters\" * si.\"QuantityPerOuter\",\n        pol.\"ReceivedOuters\",\n        pt.\"PackageTypeName\",\n        pol.\"IsOrderLineFinalized\",\n        po.\"SupplierID\",\n        pol.\"StockItemID\",\n        CASE WHEN pol.\"LastEditedWhen\" > po.\"LastEditedWhen\" THEN pol.\"LastEditedWhen\" ELSE po.\"LastEditedWhen\" END\n    FROM purchasing.purchase_orders AS po\n    INNER JOIN purchasing.purchase_order_lines AS pol ON po.\"PurchaseOrderID\" = pol.\"PurchaseOrderID\"\n    INNER JOIN warehouse.stock_items AS si ON pol.\"StockItemID\" = si.\"StockItemID\"\n    INNER JOIN warehouse.package_types AS pt ON pol.\"PackageTypeID\" = pt.\"PackageTypeID\"\n    WHERE CASE WHEN pol.\"LastEditedWhen\" > po.\"LastEditedWhen\" THEN pol.\"LastEditedWhen\" ELSE po.\"LastEditedWhen\" END > last_cutoff\n      AND CASE WHEN pol.\"LastEditedWhen\" > po.\"LastEditedWhen\" THEN pol.\"LastEditedWhen\" ELSE po.\"LastEditedWhen\" END <= new_cutoff\n    ORDER BY po.\"PurchaseOrderID\"\n$$;\n",
@@ -64,7 +64,7 @@
     {
       "step": 5,
       "label": "Second human review",
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "step": 6,
@@ -108,6 +108,10 @@
       "PostgreSQL: AgreedTests.[test 01 window edges to the microsecond (at @LastCutoff excluded, +1 µs included, at @NewCutoff included, +1…]: pass",
       "planted defects caught by the agreed tests: 2 of 2"
     ],
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-3.md",
     "adversarial": {
       "gate": "pass",
       "ran": 4,
@@ -175,5 +179,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-19T15:58:24.812Z"
+  "builtAt": "2026-11-20T04:13:51.618Z"
 }

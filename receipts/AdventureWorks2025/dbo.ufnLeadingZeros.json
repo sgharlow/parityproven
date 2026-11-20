@@ -5,7 +5,7 @@
   "objectClass": "function",
   "tier": "simple",
   "predictionTier": "simple",
-  "status": "pending",
+  "status": "verified",
   "code": {
     "source": "\r\nCREATE FUNCTION [dbo].[ufnLeadingZeros](\r\n    @Value int\r\n)\r\nRETURNS varchar(8)\r\nWITH SCHEMABINDING\r\nAS\r\nBEGIN\r\n    DECLARE @ReturnValue varchar(8);\r\n\r\n    SET @ReturnValue = CONVERT(varchar(8), @Value);\r\n    SET @ReturnValue = REPLICATE('0', 8 - DATALENGTH(@ReturnValue)) + @ReturnValue;\r\n\r\n    RETURN (@ReturnValue);\r\nEND;\r\n",
     "engineOutput": "-- First draft: left-pad with zeros to 8 characters.\n\nCREATE OR REPLACE FUNCTION dbo.ufn_leading_zeros(value integer)\nRETURNS varchar(8)\nLANGUAGE sql\nIMMUTABLE\nAS $$\n    SELECT lpad(value::text, 8, '0')\n$$;\n",
@@ -42,7 +42,7 @@
     {
       "step": 5,
       "label": "Second human review",
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "step": 6,
@@ -106,6 +106,10 @@
       "PostgreSQL: AgreedTests.[test 11 NULL stays NULL (REPLICATE with a NULL length is NULL)]: pass",
       "planted defects caught by the agreed tests: 1 of 1"
     ],
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-1.md",
     "adversarial": {
       "gate": "pass",
       "ran": 11,
@@ -220,5 +224,5 @@
     "p50Hours": 1.5,
     "p90Hours": 4
   },
-  "builtAt": "2026-11-19T18:00:02.557Z"
+  "builtAt": "2026-11-20T04:13:51.595Z"
 }

@@ -50,7 +50,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "pass",
-    "step5": "not-run",
+    "step5": "pass",
     "step6": "n/a",
     "runtimeRatio": 0.44,
     "runtime": {
@@ -94,12 +94,20 @@
       "evidencePath": "evidence/adversarial/AdventureWorks2025/Purchasing.vVendorWithContacts.json",
       "conversionSha256": "26672aa5a4dd5bf315f0b412edaa635e50b5c180cb56e0502721f6041934b7e7",
       "runAt": "2026-11-19T06:17:45.663Z"
-    }
+    },
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-2.md",
+    "step5EvidenceSha256": "7865f6bf229a4cddf0e6224c5c15ce02138107221554f5bbf2e462ebbcea5283",
+    "step5Confirmed": [
+      "objection O01 resolved (not-an-attack): A03 now sends the repeated number under two distinct PhoneNumberTypeID values. Both PersonPhone primary-key tuples are valid, and equal phone-type names retain the identical-row fan-out attack."
+    ]
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

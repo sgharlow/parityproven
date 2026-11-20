@@ -46,7 +46,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "pass",
-    "step5": "not-run",
+    "step5": "pass",
     "step6": "n/a",
     "runtimeRatio": 0.31,
     "runtime": {
@@ -90,12 +90,23 @@
       "evidencePath": "evidence/adversarial/AdventureWorks2025/Production.vProductAndDescription.json",
       "conversionSha256": "b04818b79472d8adae28766cf48e97d95761a9b57595cc0d347097766e317a7a",
       "runAt": "2026-11-19T06:17:18.498Z"
-    }
+    },
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-2.md",
+    "step5EvidenceSha256": "1eebe3889b849b9c41277cc0a1a5455792a70b553ed420749975120e712ee1ce",
+    "step5Confirmed": [
+      "objection O01 resolved (not-an-attack): A01 now assigns 'en' and 'EN' to different ProductDescriptionID values, so the composite keys are distinct while both stored culture spellings are projected.",
+      "objection O02 resolved (not-an-attack): A03 now places each case-only pair across Product.Name and ProductModel.Name rather than within one uniquely constrained column. Product names and model names are each unique under the source collation.",
+      "objection O03 resolved (not-an-attack): A04 now uses distinct product names and distinct description ids for the equal description text. Every culture bridge key is distinct, while two descriptions still project identical rows per product.",
+      "trap null-vs-empty accepted as not applicable: Every text column the view reads (Product.Name, ProductModel.Name, ProductDescription.Description, CultureID) is NOT NULL, so no NULL text value can be sent; '' is attacked in its own case."
+    ]
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

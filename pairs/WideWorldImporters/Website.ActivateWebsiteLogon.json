@@ -58,7 +58,7 @@
     "step2": "pass",
     "step3": "pass",
     "step4": "n/a",
-    "step5": "not-run",
+    "step5": "pass",
     "step6": "n/a",
     "testsRun": [
       "tSQLt V1.0.8083.3529 on SQL Server (tests/WideWorldImporters/Website.ActivateWebsiteLogon.tsqlt.sql); plain-SQL assertions on PostgreSQL (tests/WideWorldImporters/Website.ActivateWebsiteLogon.pg.sql); expected results tests/WideWorldImporters/Website.ActivateWebsiteLogon.expected.json",
@@ -107,12 +107,21 @@
       "evidencePath": "evidence/adversarial/WideWorldImporters/Website.ActivateWebsiteLogon.json",
       "conversionSha256": "b0e51ef3afbc9c33f7436fababcbbb217afc73edf1226b184f61bc0ffbd4d8b3",
       "runAt": "2026-11-19T06:21:25.708Z"
-    }
+    },
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-3.md",
+    "step5EvidenceSha256": "f6a386d8ec84d74c543666db3bc759bb3e4156a534122ac89e9457c76d2ec6e5",
+    "step5Confirmed": [
+      "objection O01 resolved (duplicate): A11 now documents the unavoidable overlap: PersonID 1 is the only input that can expose removal of the template-person guard, and the adversarial-only planted-defect check does not run the hand-derived case.",
+      "objection O02 resolved (duplicate): A12 is now paired with A13. A12 has an enabled flag and old credentials and must be refused; A13 has the same old-credential shape but a disabled flag and must be activated. Together they distinguish the actual IsPermittedToLogon predicate from an incorrect credential-presence predicate."
+    ]
   },
   "effort": {
     "humanMinutes": 0,
     "engineName": "Kiro",
     "engineVersion": "model selected dynamically by Kiro; exact model/version not exposed in the session"
   },
-  "status": "pending"
+  "status": "verified"
 }

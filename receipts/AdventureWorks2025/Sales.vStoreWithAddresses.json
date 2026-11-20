@@ -5,7 +5,7 @@
   "objectClass": "view",
   "tier": "simple",
   "predictionTier": "simple",
-  "status": "pending",
+  "status": "verified",
   "code": {
     "source": "\r\nCREATE VIEW [Sales].[vStoreWithAddresses] AS\r\nSELECT\r\n    s.[BusinessEntityID]\r\n    ,s.[Name]\r\n    ,at.[Name] AS [AddressType]\r\n    ,a.[AddressLine1]\r\n    ,a.[AddressLine2]\r\n    ,a.[City]\r\n    ,sp.[Name] AS [StateProvinceName]\r\n    ,a.[PostalCode]\r\n    ,cr.[Name] AS [CountryRegionName]\r\nFROM [Sales].[Store] s\r\n    INNER JOIN [Person].[BusinessEntityAddress] bea\r\n    ON bea.[BusinessEntityID] = s.[BusinessEntityID]\r\n    INNER JOIN [Person].[Address] a\r\n    ON a.[AddressID] = bea.[AddressID]\r\n    INNER JOIN [Person].[StateProvince] sp\r\n    ON sp.[StateProvinceID] = a.[StateProvinceID]\r\n    INNER JOIN [Person].[CountryRegion] cr\r\n    ON cr.[CountryRegionCode] = sp.[CountryRegionCode]\r\n    INNER JOIN [Person].[AddressType] at\r\n    ON at.[AddressTypeID] = bea.[AddressTypeID];\r\n",
     "engineOutput": "-- PostgreSQL conversion of the view Sales.vStoreWithAddresses (AdventureWorks2025).\n-- Engine: Kiro (mechanical draft via draft-view: identifiers quoted, table names snake_case).\n-- Verified by the property-based harness, not by this script.\n\nCREATE OR REPLACE VIEW sales.v_store_with_addresses AS\nSELECT\n    s.\"BusinessEntityID\" AS \"BusinessEntityID\"\n    ,s.\"Name\" AS \"Name\"\n    ,at.\"Name\" AS \"AddressType\"\n    ,a.\"AddressLine1\" AS \"AddressLine1\"\n    ,a.\"AddressLine2\" AS \"AddressLine2\"\n    ,a.\"City\" AS \"City\"\n    ,sp.\"Name\" AS \"StateProvinceName\"\n    ,a.\"PostalCode\" AS \"PostalCode\"\n    ,cr.\"Name\" AS \"CountryRegionName\"\nFROM sales.store s\n    INNER JOIN person.business_entity_address bea\n    ON bea.\"BusinessEntityID\" = s.\"BusinessEntityID\"\n    INNER JOIN person.address a\n    ON a.\"AddressID\" = bea.\"AddressID\"\n    INNER JOIN person.state_province sp\n    ON sp.\"StateProvinceID\" = a.\"StateProvinceID\"\n    INNER JOIN person.country_region cr\n    ON cr.\"CountryRegionCode\" = sp.\"CountryRegionCode\"\n    INNER JOIN person.address_type at\n    ON at.\"AddressTypeID\" = bea.\"AddressTypeID\";\n",
@@ -72,7 +72,7 @@
     {
       "step": 5,
       "label": "Second human review",
-      "status": "not-run"
+      "status": "pass"
     },
     {
       "step": 6,
@@ -125,6 +125,10 @@
       "PostgreSQL: AgreedTests.[test 03 trailing space: province code US joins country US (SQL Server equality ignores trailing spaces), so t…]: pass",
       "planted defects caught by the agreed tests: 3 of 3"
     ],
+    "reviewer": "Steve Harlow",
+    "reviewDate": "2026-11-19",
+    "step5Method": "adversarial-report",
+    "step5Report": "evidence/adversarial/reports/batch-3.md",
     "adversarial": {
       "gate": "pass",
       "ran": 9,
@@ -243,5 +247,5 @@
     "p50Hours": 0.75,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-19T15:58:24.773Z"
+  "builtAt": "2026-11-20T04:13:51.600Z"
 }
