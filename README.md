@@ -64,7 +64,7 @@ For each object, `convert`:
 6. Refuses to record a pass if too few samples returned any rows (the property would be vacuous).
 7. Writes `pairs/<db>/<Object>.json` with the step 1, 3 and 4 results. Steps 2 and 5 stay `not-run` until they are actually performed. Step 6 (acceptance on real data) is `n/a` for public sample databases, and step 4 is `n/a` for objects that change data (rulings of 2026-11-12 in `.kiro/steering/verification-standard.md`).
 
-8. Measures **step 4**, runtime within 1.5×: the same synthetic volume is loaded into both engines, and server-side execution time is compared (`SET STATISTICS TIME` vs `EXPLAIN ANALYZE`, median of 7). The full result set at volume is compared too.
+8. Measures **step 4**, runtime within 1.5× (or the factor agreed for that object and recorded on its receipt, for example 3.0× for three AdventureWorks price functions): the same synthetic volume is loaded into both engines, and server-side execution time is compared (`SET STATISTICS TIME` vs `EXPLAIN ANALYZE`, median of 7). The full result set at volume is compared too.
 
 Then `npm run receipts:build` renders the pair records into `receipts/`, which the static site in `web/` displays.
 
