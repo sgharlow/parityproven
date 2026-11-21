@@ -1,0 +1,79 @@
+REQ-0 status: 44 verified, 0 pending, 11 failed
+REQ-0 commits / HEAD: 99 / 5e92f23
+REQ-3 .agents/tasks/adversarial-review files: 13: batches.md, context.json, plan.md, review.md, task.json, verdict.json, features\FEAT-001.json, features\FEAT-002.json, features\FEAT-003.json, features\FEAT-004.json, features\FEAT-005.json, features\FEAT-006.json, features\FEAT-007.json
+REQ-3 task.json status: pending
+REQ-3 .agents tracked?: (none tracked)
+REQ-3 .gitignore has .tmp / .agents: true / false
+REQ-3 .tmp/hook-runs.log exists: true
+REQ-4 review dates: {"2026-11-19":44}
+REQ-4 gate runAt dates: {"2026-11-19":44}
+REQ-4 conversion last changed 2026-11-18: 14
+REQ-4 conversion changed or gate run on the review day: 44
+REQ-4 verified with humanMinutes 0 (receipt shows 'not logged'): 41 of 44; total minutes logged 14
+--- per object ---
+dbo.ufnGetAccountingEndDate: pair first commit 2026-11-10, conversion last changed 2026-11-10, gate 2026-11-19, review 2026-11-19
+dbo.ufnGetAccountingStartDate: pair first commit 2026-11-10, conversion last changed 2026-11-10, gate 2026-11-19, review 2026-11-19
+dbo.ufnGetContactInformation: pair first commit 2026-11-12, conversion last changed 2026-11-12, gate 2026-11-19, review 2026-11-19
+dbo.ufnGetDocumentStatusText: pair first commit 2026-11-10, conversion last changed 2026-11-10, gate 2026-11-19, review 2026-11-19
+dbo.ufnGetProductDealerPrice: pair first commit 2026-11-10, conversion last changed 2026-11-18, gate 2026-11-19, review 2026-11-19
+dbo.ufnGetProductListPrice: pair first commit 2026-11-10, conversion last changed 2026-11-18, gate 2026-11-19, review 2026-11-19
+dbo.ufnGetProductStandardCost: pair first commit 2026-11-10, conversion last changed 2026-11-18, gate 2026-11-19, review 2026-11-19
+dbo.ufnGetPurchaseOrderStatusText: pair first commit 2026-11-10, conversion last changed 2026-11-10, gate 2026-11-19, review 2026-11-19
+dbo.ufnGetSalesOrderStatusText: pair first commit 2026-11-10, conversion last changed 2026-11-10, gate 2026-11-19, review 2026-11-19
+dbo.ufnGetStock: pair first commit 2026-11-10, conversion last changed 2026-11-10, gate 2026-11-19, review 2026-11-19
+dbo.ufnLeadingZeros: pair first commit 2026-11-10, conversion last changed 2026-11-10, gate 2026-11-19, review 2026-11-19
+dbo.uspGetBillOfMaterials: pair first commit 2026-11-12, conversion last changed 2026-11-18, gate 2026-11-19, review 2026-11-19
+dbo.uspGetWhereUsedProductID: pair first commit 2026-11-12, conversion last changed 2026-11-18, gate 2026-11-19, review 2026-11-19
+HumanResources.vEmployee: pair first commit 2026-11-12, conversion last changed 2026-11-18, gate 2026-11-19, review 2026-11-19
+HumanResources.vEmployeeDepartment: pair first commit 2026-11-10, conversion last changed 2026-11-10, gate 2026-11-19, review 2026-11-19
+HumanResources.vEmployeeDepartmentHistory: pair first commit 2026-11-10, conversion last changed 2026-11-10, gate 2026-11-19, review 2026-11-19
+Person.vStateProvinceCountryRegion: pair first commit 2026-11-10, conversion last changed 2026-11-18, gate 2026-11-19, review 2026-11-19
+Production.vProductAndDescription: pair first commit 2026-11-10, conversion last changed 2026-11-10, gate 2026-11-19, review 2026-11-19
+Purchasing.vVendorWithAddresses: pair first commit 2026-11-10, conversion last changed 2026-11-18, gate 2026-11-19, review 2026-11-19
+Purchasing.vVendorWithContacts: pair first commit 2026-11-10, conversion last changed 2026-11-10, gate 2026-11-19, review 2026-11-19
+Sales.vIndividualCustomer: pair first commit 2026-11-12, conversion last changed 2026-11-18, gate 2026-11-19, review 2026-11-19
+Sales.vSalesPerson: pair first commit 2026-11-10, conversion last changed 2026-11-18, gate 2026-11-19, review 2026-11-19
+Sales.vSalesPersonSalesByFiscalYears: pair first commit 2026-11-10, conversion last changed 2026-11-18, gate 2026-11-19, review 2026-11-19
+Sales.vStoreWithAddresses: pair first commit 2026-11-10, conversion last changed 2026-11-18, gate 2026-11-19, review 2026-11-19
+Sales.vStoreWithContacts: pair first commit 2026-11-10, conversion last changed 2026-11-10, gate 2026-11-19, review 2026-11-19
+Integration.GetMovementUpdates: pair first commit 2026-11-06, conversion last changed 2026-11-07, gate 2026-11-19, review 2026-11-19
+Integration.GetOrderUpdates: pair first commit 2026-11-09, conversion last changed 2026-11-09, gate 2026-11-19, review 2026-11-19
+Integration.GetPurchaseUpdates: pair first commit 2026-11-09, conversion last changed 2026-11-09, gate 2026-11-19, review 2026-11-19
+Integration.GetSaleUpdates: pair first commit 2026-11-09, conversion last changed 2026-11-09, gate 2026-11-19, review 2026-11-19
+Integration.GetStockHoldingUpdates: pair first commit 2026-11-09, conversion last changed 2026-11-09, gate 2026-11-19, review 2026-11-19
+Integration.GetTransactionUpdates: pair first commit 2026-11-09, conversion last changed 2026-11-09, gate 2026-11-19, review 2026-11-19
+Sequences.ReseedSequenceBeyondTableValues: pair first commit 2026-11-12, conversion last changed 2026-11-18, gate 2026-11-19, review 2026-11-19
+Website.ActivateWebsiteLogon: pair first commit 2026-11-12, conversion last changed 2026-11-18, gate 2026-11-19, review 2026-11-19
+Website.CalculateCustomerPrice: pair first commit 2026-11-09, conversion last changed 2026-11-09, gate 2026-11-19, review 2026-11-19
+Website.ChangePassword: pair first commit 2026-11-12, conversion last changed 2026-11-12, gate 2026-11-19, review 2026-11-19
+Website.Customers: pair first commit 2026-11-09, conversion last changed 2026-11-09, gate 2026-11-19, review 2026-11-19
+Website.InsertCustomerOrders: pair first commit 2026-11-12, conversion last changed 2026-11-12, gate 2026-11-19, review 2026-11-19
+Website.InvoiceCustomerOrders: pair first commit 2026-11-12, conversion last changed 2026-11-12, gate 2026-11-19, review 2026-11-19
+Website.RecordColdRoomTemperatures: pair first commit 2026-11-12, conversion last changed 2026-11-12, gate 2026-11-19, review 2026-11-19
+Website.RecordVehicleTemperature: pair first commit 2026-11-12, conversion last changed 2026-11-12, gate 2026-11-19, review 2026-11-19
+Website.SearchForPeople: pair first commit 2026-11-12, conversion last changed 2026-11-12, gate 2026-11-19, review 2026-11-19
+Website.SearchForStockItems: pair first commit 2026-11-12, conversion last changed 2026-11-12, gate 2026-11-19, review 2026-11-19
+Website.SearchForStockItemsByTags: pair first commit 2026-11-12, conversion last changed 2026-11-12, gate 2026-11-19, review 2026-11-19
+Website.Suppliers: pair first commit 2026-11-09, conversion last changed 2026-11-09, gate 2026-11-19, review 2026-11-19
+REQ-5 tech.md pgTAP line: false
+REQ-5 tech.md tSQLt unproven line: true
+REQ-5 structure.md mentions agreed/: false
+REQ-5 structure.md mentions adversarial/: true
+REQ-5 structure.md mentions mcp/: false
+REQ-5 structure.md mentions conversions/: false
+REQ-5 structure.md mentions predictions/: true
+REQ-5 structure.md mentions catalog/: false
+REQ-5 structure.md mentions tests/: false
+REQ-5 structure.md mentions scripts/: false
+REQ-5 structure.md CLI names: true
+REQ-5 structure.md pairs/ 'verified pair records': true
+REQ-5 README 'conversion loop is in progress': true
+REQ-5 README log-effort --review: true
+REQ-5 README 'hand-derived fixed cases first': true
+REQ-5 README mentions npm run adversarial / approve: false / false
+REQ-5 README tree mentions adversarial/ and src/mcp: false / true
+REQ-5 README numbered list lines: 59:1 60:2 61:3 62:4 63:5 64:6 65:7 67:8
+REQ-5 README fresh clone line: Checked 2026-11-14 from a fresh clone of commit `a9ce6fc` on ports 14330/54320: every converted object was re-run and step 2 was re-run where it passes, and eve
+REQ-5 kiroween-submission 're-read 2026-11-13': true
+REQ-5 kiroween-submission '62bace8 ... 122/122': true
+REQ-5 kiroween-submission Social Blitz mentions favourite thing: false

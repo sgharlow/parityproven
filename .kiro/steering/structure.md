@@ -9,14 +9,20 @@ inclusion: always
 src/
   inventory/      T-SQL parsing, object classification, complexity tiering
   harness/        database clients, result-set diff, trap generators, PBT properties
-  pairs/          translation-pair record schema, capture and validation
+  pairs/          translation-pair record schema, status rule, capture and validation
+  agreed/         step 2: tSQLt and plain-SQL assertion scripts from an object's fixed cases, and the runner
+  adversarial/    adversarial gate: schema, trap checks, gate rule, evidence and batch-report builders
+  conversions/    specs (tables and planted defects per converted object), automutants, dispositions
+  predictions/    prediction schema, validation and scoring
+  mcp/            read-only MCP server and Agent Access Map
+  specs/          test that every open box in a tasks.md has an 'open because' note
   receipts/       builds receipt JSON from pairs and evidence
-  cli/            command entry points (inventory, predict, verify, capture, receipts)
-web/              receipts UI and questionnaire scan (static)
+  cli/            one entry point per npm script (convert, agreed-tests, adversarial, approve, receipts, ...)
+conversions/      PL/pgSQL conversions, one file per object (optional .draft.sql for the engine first draft)`ncatalog/          object metadata scaffolded from SQL Server's own catalog`ntests/            step 2 expected results captured from the original T-SQL, and the generated test scripts`nscripts/          run-all, get-tsqlt, predeploy and site checks, site build`nweb/              receipts UI and questionnaire scan (static)
 docker/           compose file and init scripts for SQL Server and PostgreSQL
 sources/          manifest of public inputs: repo, commit, license, path
 predictions/      pre-registered predictions; committed before any engine run, never edited after
-pairs/            verified pair records (JSON), one file per object
+pairs/            pair records (JSON), one file per object; status is verified, pending or failed (src/pairs/status.ts)
 receipts/         generated receipt JSON consumed by web/
 evidence/         raw engine output (e.g. the Babelfish Compass report), by run
 adversarial/      agent-written attack cases and auditor objections, per object (<db>/<Schema.Object>.cases.json, .audit.json)

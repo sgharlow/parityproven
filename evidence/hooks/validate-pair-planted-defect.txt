@@ -1,0 +1,4 @@
+payload: {"cwd":"C:\\source\\parityproven","file_path":"C:\\source\\parityproven\\pairs\\WideWorldImporters\\Website.VehicleTemperatures.json","hook_event_name":"PostFileSave"}
+Γ£ù C:\source\parityproven\pairs\WideWorldImporters\Website.VehicleTemperatures.json ΓÇö 1 validation error(s):
+  ┬╖ tier must be one of: simple, medium, complex
+exit 1

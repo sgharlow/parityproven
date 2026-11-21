@@ -7,7 +7,7 @@ inclusion: always
 ## Decided
 - **Language:** TypeScript (strict), Node.js 22, ESM. One language across the scorer, harness, CLI and UI.
 - **Source database:** SQL Server in Docker (`mcr.microsoft.com/mssql/server:2025-latest`; AdventureWorks uses SQL Server 2025 features), with **tSQLt** for source-side unit tests.
-- **Target database:** PostgreSQL in Docker (`postgis/postgis:18-3.6`, the official PostGIS build of `postgres:18`; PostGIS added 2026-11-09 by the project owner so SQL Server `geography` has an equivalent), with **pgTAP** for target-side unit tests.
+- **Target database:** PostgreSQL in Docker (`postgis/postgis:18-3.6`, the official PostGIS build of `postgres:18`; PostGIS added 2026-11-09 by the project owner so SQL Server `geography` has an equivalent), with plain-SQL assertion scripts for target-side tests (ruling 2026-11-12: pgTAP is not in the pinned PostgreSQL image).
 - **Property-based testing:** `fast-check`. Result-set equivalence is the core property (see `verification-standard.md`).
 - **Unit tests:** Vitest.
 - **Engine evidence:** Babelfish Compass, always run with `-noupdatechk` so it makes no network call. Its report is stored as evidence and never treated as the answer. Compass is a compatibility *assessment* tool for Babelfish for PostgreSQL. It does not produce PL/pgSQL; its `-rewrite` option produces Babelfish-compatible T-SQL.
@@ -26,4 +26,4 @@ inclusion: always
 - Pin tool versions. Record the harness version and engine version in every pair record.
 - Prerequisites on the dev machine: Docker Desktop (for both databases) and a Java runtime (for Babelfish Compass). Docker Desktop must be running before any harness command.
 - Column-type mapping is part of the conversion. `datetime2(7)` stores 100 ns ticks and PostgreSQL `timestamp` stores microseconds, so loading the same generated value into both engines can change it. The harness records each mapping and reports any load-time difference as a finding.
-- tSQLt installs a CLR assembly. Its support on the SQL Server 2025 Linux image is unproven; prove it before relying on verification step 2.
+- tSQLt installs a CLR assembly. It runs on the pinned SQL Server 2025 Linux image: step 2 passes there for the converted objects (`tests/`, and each receipt). The exception is a procedure that returns FOR JSON: tSQLt cannot capture it, so its SQL Server side is a client re-run (ruling J1).

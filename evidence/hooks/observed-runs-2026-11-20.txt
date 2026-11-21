@@ -1,0 +1,28 @@
+Observed runs of both Kiro hooks, 2026-11-20 (local time; log stamps are UTC), at code commit 5e92f23. Task 2.4 of submission-closeout (REQ-3.2).
+How: a file was saved through the editor tool in this Kiro workspace. Kiro ran the hook command; each run appended a line to .tmp/hook-runs.log
+(src/cli/hook-input.ts). The log is gitignored, so the lines are copied here. Kiro does not show a hook's output to the agent, so the output below
+is the same command run by hand with the same stdin JSON Kiro sends ({hook_event_name, cwd, file_path}).
+
+Hook-log lines from that session (tab separated: time, event, command, saved file):
+2026-11-21T03:03:36.453Z	PostFileSave	validate-pair.js	C:\source\parityproven\pairs\WideWorldImporters\Website.VehicleTemperatures.json
+2026-11-21T03:03:49.030Z	PostFileSave	validate-pair.js	C:\source\parityproven\pairs\WideWorldImporters\Website.VehicleTemperatures.json
+2026-11-21T03:03:50.865Z	PostFileSave	validate-pair.js	C:\source\parityproven\pairs\WideWorldImporters\Website.VehicleTemperatures.json
+2026-11-21T03:04:11.148Z	PostFileSave	validate-pair.js	C:\source\parityproven\pairs\WideWorldImporters\Website.VehicleTemperatures.json
+2026-11-21T03:04:17.820Z	PostFileSave	validate-pair.js	C:\source\parityproven\pairs\WideWorldImporters\Website.VehicleTemperatures.json
+2026-11-21T03:04:21.742Z	PostFileSave	validate-pair.js	C:\source\parityproven\pairs\WideWorldImporters\Website.VehicleTemperatures.json
+2026-11-21T03:04:38.369Z	PostFileSave	convert.js	C:\source\parityproven\conversions\AdventureWorks2025\dbo.ufnLeadingZeros.sql
+
+1. validate-pair-record (matcher pairs/**/*.json, command: node dist/cli/validate-pair.js)
+   Saved: pairs/WideWorldImporters/Website.VehicleTemperatures.json with "tier" changed from "simple" to "simplex" (a planted defect), then changed back.
+   Log lines at 03:03:36Z, 03:03:50Z, 03:04:11Z, 03:04:17Z, 03:04:21Z (one per save; the first save is the planted defect, the later ones restore or re-save it).
+   Hook command run by hand on the defective file (validate-pair-planted-defect.txt): exit 1, "tier must be one of: simple, medium, complex".
+   After the change was reverted: exit 0, record valid. The file is identical to the committed one (git diff empty).
+
+2. verify-on-conversion-change (matcher conversions/**/*.sql, command: npm run build --silent && node dist/cli/convert.js --file)
+   Saved: conversions/AdventureWorks2025/dbo.ufnLeadingZeros.sql, rewritten with its own text (the editor tool dropped the final newline).
+   Log line at 03:04:38Z. Within a minute the pair record was rewritten by a full convert run:
+     before: seed 126286285, runtime ratio 1.08, status verified
+     after:  seed 1961007826, runtime ratio 1.16, status pending
+   The status fell from verified to pending because the final conversion's text changed by one byte: its hash no longer matches the adversarial gate
+   run, so the gate and the approval were dropped (src/pairs/carry-gate.ts). That is the intended behaviour for a changed conversion.
+   Both files were then restored with git checkout; the committed records are unchanged.

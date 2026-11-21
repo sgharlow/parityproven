@@ -4,7 +4,7 @@ Checks T-SQL to PL/pgSQL conversions object by object against the original on SQ
 
 Hackathon: [Kiroween 2026](https://kiroween.devpost.com/) — category **Resurrection** — due **Dec 4, 2026 2:00 pm PT**.
 
-**Status:** harness, inventory scorer, predictions tooling and receipts site are built. The conversion loop is in progress. The figures below are generated from `receipts/index.json` and `pairs/` (`npm run readme:status`; `npm test` fails if they are stale), and the live scorecard is at https://parityproven.com.
+**Status:** harness, inventory scorer, predictions tooling and receipts site are built. No further conversions are planned for the hackathon entry; every inventoried object is on the scorecard, converted or not. The figures below are generated from `receipts/index.json` and `pairs/` (`npm run readme:status`; `npm test` fails if they are stale), and the live scorecard is at https://parityproven.com.
 
 <!-- status:start (generated from receipts/index.json and pairs/ by npm run readme:status; do not edit) -->
 - Inventoried: 98 programmable objects (AdventureWorks2025 51, WideWorldImporters 47).
@@ -12,7 +12,7 @@ Hackathon: [Kiroween 2026](https://kiroween.devpost.com/) — category **Resurre
 - Converted and run through the harness: 46 objects (the other 9 pair records are recorded as failed without a conversion).
 - Step 2 (agreed tests) passes for 46: `HumanResources.vEmployee`, `HumanResources.vEmployeeDepartment`, `HumanResources.vEmployeeDepartmentHistory`, `Person.vStateProvinceCountryRegion`, `Production.vProductAndDescription`, `Purchasing.vVendorWithAddresses`, `Purchasing.vVendorWithContacts`, `Sales.vIndividualCustomer`, `Sales.vSalesPerson`, `Sales.vSalesPersonSalesByFiscalYears`, `Sales.vStoreWithAddresses`, `Sales.vStoreWithContacts`, `dbo.ufnGetAccountingEndDate`, `dbo.ufnGetAccountingStartDate`, `dbo.ufnGetContactInformation`, `dbo.ufnGetDocumentStatusText`, `dbo.ufnGetProductDealerPrice`, `dbo.ufnGetProductListPrice`, `dbo.ufnGetProductStandardCost`, `dbo.ufnGetPurchaseOrderStatusText`, `dbo.ufnGetSalesOrderStatusText`, `dbo.ufnGetStock`, `dbo.ufnLeadingZeros`, `dbo.uspGetBillOfMaterials`, `dbo.uspGetWhereUsedProductID`, `Integration.GetMovementUpdates`, `Integration.GetOrderUpdates`, `Integration.GetPurchaseUpdates`, `Integration.GetSaleUpdates`, `Integration.GetStockHoldingUpdates`, `Integration.GetTransactionUpdates`, `Sequences.ReseedSequenceBeyondTableValues`, `Website.ActivateWebsiteLogon`, `Website.CalculateCustomerPrice`, `Website.ChangePassword`, `Website.Customers`, `Website.InsertCustomerOrders`, `Website.InvoiceCustomerOrders`, `Website.RecordColdRoomTemperatures`, `Website.RecordVehicleTemperature`, `Website.SearchForCustomers`, `Website.SearchForPeople`, `Website.SearchForStockItems`, `Website.SearchForStockItemsByTags`, `Website.SearchForSuppliers`, `Website.Suppliers`.
 - Step 5 (second review) recorded for 44 (Steve Harlow on 2026-11-19). Verified: `HumanResources.vEmployee`, `HumanResources.vEmployeeDepartment`, `HumanResources.vEmployeeDepartmentHistory`, `Person.vStateProvinceCountryRegion`, `Production.vProductAndDescription`, `Purchasing.vVendorWithAddresses`, `Purchasing.vVendorWithContacts`, `Sales.vIndividualCustomer`, `Sales.vSalesPerson`, `Sales.vSalesPersonSalesByFiscalYears`, `Sales.vStoreWithAddresses`, `Sales.vStoreWithContacts`, `dbo.ufnGetAccountingEndDate`, `dbo.ufnGetAccountingStartDate`, `dbo.ufnGetContactInformation`, `dbo.ufnGetDocumentStatusText`, `dbo.ufnGetProductDealerPrice`, `dbo.ufnGetProductListPrice`, `dbo.ufnGetProductStandardCost`, `dbo.ufnGetPurchaseOrderStatusText`, `dbo.ufnGetSalesOrderStatusText`, `dbo.ufnGetStock`, `dbo.ufnLeadingZeros`, `dbo.uspGetBillOfMaterials`, `dbo.uspGetWhereUsedProductID`, `Integration.GetMovementUpdates`, `Integration.GetOrderUpdates`, `Integration.GetPurchaseUpdates`, `Integration.GetSaleUpdates`, `Integration.GetStockHoldingUpdates`, `Integration.GetTransactionUpdates`, `Sequences.ReseedSequenceBeyondTableValues`, `Website.ActivateWebsiteLogon`, `Website.CalculateCustomerPrice`, `Website.ChangePassword`, `Website.Customers`, `Website.InsertCustomerOrders`, `Website.InvoiceCustomerOrders`, `Website.RecordColdRoomTemperatures`, `Website.RecordVehicleTemperature`, `Website.SearchForPeople`, `Website.SearchForStockItems`, `Website.SearchForStockItemsByTags`, `Website.Suppliers`.
-- Receipts built 2026-11-20T04:13:51.669Z.
+- Receipts built 2026-11-21T03:10:33.054Z.
 <!-- status:end -->
 
 ---
@@ -52,7 +52,7 @@ npm run dispositions          # pair records for objects recorded as not convert
 npm run receipts:build
 ```
 
-To run a second stack beside an existing one, set `MSSQL_PORT`, `PG_PORT` and `COMPOSE_PROJECT_NAME` in its `.env` (see `docker/.env.example`). Checked 2026-11-14 from a fresh clone of commit `a9ce6fc` on ports 14330/54320: every converted object was re-run and step 2 was re-run where it passes, and every pair record came out with the same step results and status as the committed one.
+To run a second stack beside an existing one, set `MSSQL_PORT`, `PG_PORT` and `COMPOSE_PROJECT_NAME` in its `.env` (see `docker/.env.example`). The result of a fresh-clone check (anonymous clone, own compose project on ports 14330/54320, every converted object re-run, every pair record compared with the committed one) is kept under `evidence/fresh-clone/`. No result is recorded there yet for the submitted commit.
 
 For each object, `convert`:
 
@@ -63,7 +63,6 @@ For each object, `convert`:
 5. Requires every **planted defect** (mutant of the final conversion) to be reported as failing. A harness that has never been seen failing is not evidence. Objects that declare no defects get two generated ones (`src/conversions/automutants.ts`).
 6. Refuses to record a pass if too few samples returned any rows (the property would be vacuous).
 7. Writes `pairs/<db>/<Object>.json` with the step 1, 3 and 4 results. Steps 2 and 5 stay `not-run` until they are actually performed. Step 6 (acceptance on real data) is `n/a` for public sample databases, and step 4 is `n/a` for objects that change data (rulings of 2026-11-12 in `.kiro/steering/verification-standard.md`).
-
 8. Measures **step 4**, runtime within 1.5× (or the factor agreed for that object and recorded on its receipt, for example 3.0× for three AdventureWorks price functions): the same synthetic volume is loaded into both engines, and server-side execution time is compared (`SET STATISTICS TIME` vs `EXPLAIN ANALYZE`, median of 7). The full result set at volume is compared too.
 
 Then `npm run receipts:build` renders the pair records into `receipts/`, which the static site in `web/` displays.
@@ -74,7 +73,9 @@ Then `npm run receipts:build` renders the pair records into `receipts/`, which t
 npm run scaffold -- --database AdventureWorks2025 --type V      # catalog/<db>/*.json from SQL Server's own metadata
 npm run draft-view -- --object Sales.vStoreWithAddresses         # mechanical first draft of a plain view
 npm run log-effort -- --object Sales.vSalesPerson --minutes 20   # add human review time
-npm run log-effort -- --object Sales.vSalesPerson --review "Name" --date 2026-11-12   # record step 5
+npm run adversarial -- run --object Sales.vSalesPerson               # adversarial gate: agent-written cases run on both engines (needs attacker and auditor files in adversarial/)
+npm run adversarial -- report --batch 1                           # batch evidence report, evidence/adversarial/reports/
+npm run approve -- --report evidence/adversarial/reports/batch-1.md --reviewer "Name" --date 2026-11-19   # step 5: the owner signs a batch report; needs an interactive terminal, agents cannot run it
 npm run predictions:score -- --database WideWorldImporters       # predicted vs actual, incl. unpredicted failures
 pwsh scripts/run-all.ps1                                         # every object, one at a time, time-limited
 pwsh scripts/get-tsqlt.ps1                                       # pinned tSQLt from tsqlt.org, sha256 checked (for step 2)
@@ -88,7 +89,7 @@ npm run site:check -- https://parityproven.com                   # deployed site
 
 **Step 2 (agreed tests)** turns an object's hand-derived fixed cases into a tSQLt test class for SQL Server and a plain-SQL assertion script for PostgreSQL (pgTAP is not in the pinned PostgreSQL image). Expected results are captured once from the original T-SQL and committed in `tests/<db>/<Object>.expected.json`, so a reviewer can check them against each case's label at step 5. `agreed-tests` also deploys each planted defect and reports how many the agreed tests catch (the gate for planted defects remains step 3).
 
-An object becomes **verified** only when steps 1, 2 and 3 pass, step 4 passes or is ruled n/a, and step 5 (a second review at least a day after the first pass) is recorded. The objects that pass step 2, and those with a recorded step 5, are listed in the status block at the top. The rest need hand-derived fixed cases first, or use features the test generator does not cover yet (table-valued parameters, JSON results, geography and xml columns, setup statements, dependencies).
+An object becomes **verified** only when steps 1, 2 and 3 pass, step 4 passes or is ruled n/a, and step 5 (a second review at least a day after the first pass) is recorded. The objects that pass step 2, and those with a recorded step 5, are listed in the status block at the top. Objects that were not converted, or that fail a step, stay on the scorecard as failed with the reason on their receipt.
 
 ### MCP server and Agent Access Map (local prototype)
 
@@ -129,11 +130,15 @@ src/
   harness/        Database clients, restore, and generic/ (spec types, data generation, comparison, run)
   conversions/    specs.ts (tables and planted defects per converted object), automutants, dispositions
   agreed/         Step 2: tSQLt test classes and plain-SQL assertion scripts from an object's fixed cases
+  adversarial/    Adversarial gate: schema, trap checks, gate rule (gate.ts), evidence and batch reports
+  mcp/            Read-only MCP server and Agent Access Map (npm run mcp:server)
+  specs/          Test that every open box in a tasks.md carries an 'open because' note
   inventory/      Object inventory and complexity tiering
   predictions/    Pre-registered prediction schema, validation and scoring
   receipts/       Builds receipt JSON from pair records; the README status block
   pairs/          PairRecord schema (single definition), status rule and diff helper
   cli/            One entry point per npm script (convert, agreed-tests, review-packet, receipts, readme-status, ...)
+adversarial/      Agent-written attack cases (<db>/<Object>.cases.json) and auditor files (.audit.json)
 catalog/          Object metadata scaffolded from SQL Server's own catalog (npm run scaffold)
 tests/            Step 2 expected results, captured from the original T-SQL (<db>/<Object>.expected.json)
 scripts/          run-all, get-tsqlt, predeploy and site checks, site build
@@ -143,7 +148,7 @@ conversions/      PL/pgSQL conversions (<Schema>.<Object>.sql, optional .draft.s
 predictions/      Pre-registered predictions (append-only)
 pairs/            Pair records (JSON), one per object
 receipts/         Generated receipt JSON consumed by web/
-evidence/         Raw check output kept as evidence (e.g. site-check/: the failing run before a fix)
+evidence/         Raw check output kept as evidence (e.g. site-check/: the failing run before a fix; adversarial/: gate evidence and batch reports; mcp/: tool-call log; closeout/: checks run for the submission)
 web/              Static receipts site and questionnaire (published with receipts/ as _site/)
 ```
 

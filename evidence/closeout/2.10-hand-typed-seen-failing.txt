@@ -1,0 +1,39 @@
+
+ RUN  v5.1.0 C:/source/parityproven
+
+ Γ¥» src/receipts/hand-typed.test.ts (3 tests | 1 failed) 19ms
+   Γ¥» README and steering carry no hand-typed counts or hashes (1)
+     ├ù outside the generated block 10ms
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  src/receipts/hand-typed.test.ts > README and steering carry no hand-typed counts or hashes > outside the generated block
+AssertionError: expected [ 'README.md: `a9ce6fc`', ΓÇª(3) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "README.md: `a9ce6fc`",
++   ".kiro/steering/kiroween-submission.md: 8 steering",
++   ".kiro/steering/kiroween-submission.md: 8 specs",
++   ".kiro/steering/kiroween-submission.md: 2 hooks",
++ ]
+
+ Γ¥» src/receipts/hand-typed.test.ts:29:19
+     27|     const files = ["README.md", ...readdirSync(join(ROOT, ".kiro", "stΓÇª
+     28|     const found = files.flatMap((f) => handTypedFacts(readFileSync(joiΓÇª
+     29|     expect(found).toEqual([]);
+       |                   ^
+     30|   });
+     31| });
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  20:02:24
+   Duration  509ms (transform 49%, import 23%, tests 22%, worker 6%)
+

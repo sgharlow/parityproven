@@ -1,0 +1,71 @@
+
+ RUN  v5.1.0 C:/source/parityproven
+
+ Γ¥» src/specs/tasks.test.ts (2 tests | 1 failed) 33ms
+   Γ¥» tasks.md files under .kiro/specs (2)
+     ├ù has an 'open because' note on every open box in every spec 28ms
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  src/specs/tasks.test.ts > tasks.md files under .kiro/specs > has an 'open because' note on every open box in every spec
+AssertionError: expected [ ΓÇª(36) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "submission-closeout/tasks.md: - [ ] 0.1 Re-measure the \"Found\" lines in `requirements.md` against the repo; correct any ",
++   "submission-closeout/tasks.md: - [ ] 0.2 Add this spec to the README disclosure once D6 is answered (REQ-9.1)",
++   "submission-closeout/tasks.md: - [ ] 1.1 **(owner)** D1 one-day rule ┬╖ D2 `.agents/` ┬╖ D3 batch minutes ┬╖ D4 wording ┬╖ D5",
++   "submission-closeout/tasks.md: - [ ] 1.2 Record each answer as a dated ruling in the steering file it changes",
++   "submission-closeout/tasks.md: - [ ] 2.1 `adversarial-review/tasks.md` items 4-10 and the open `conversion-loop` box: ver",
++   "submission-closeout/tasks.md: - [ ] 2.3 Apply D2: commit `.agents/tasks/adversarial-review/` after the content check, or",
++   "submission-closeout/tasks.md: - [ ] 2.4 One observed run of each hook committed under `evidence/hooks/` (REQ-3.2)",
++   "submission-closeout/tasks.md: - [ ] 2.5 Apply D1. If A: tests seen failing on the 14 objects, guard changed, ruling in `",
++   "submission-closeout/tasks.md: - [ ] 2.6 **(owner)** If D1 = A: `npm run approve` for the affected batch reports on a lat",
++   "submission-closeout/tasks.md: - [ ] 2.7 Receipts show conversion-changed date, gate run time and review date; batch revi",
++   "submission-closeout/tasks.md: - [ ] 2.8 Apply D4 wording for step 5 on scorecard, About and README; `predeploy:check` pa",
++   "submission-closeout/tasks.md: - [ ] 2.9 `tech.md`, `structure.md`, `kiroween-submission.md`, README corrected line by li",
++   "submission-closeout/tasks.md: - [ ] 2.10 Stale-doc test extended to hand-typed counts and hashes in README and steering;",
++   "submission-closeout/tasks.md: - [ ] 2.11 Repo homepage set to `https://parityproven.com`; checked with `gh api` (REQ-5.3",
++   "submission-closeout/tasks.md: - [ ] 2.12 README disclosure updated with D6 (REQ-9.1)",
++   "submission-closeout/tasks.md: - [ ] 2.13 Receipts and README block rebuilt, tests, `predeploy:check`, push, `site:check`",
++   "submission-closeout/tasks.md: - [ ] 3.1 Scorecard table no longer widens the page; checked at 1280, 1024, 768 and 390 px",
++   "submission-closeout/tasks.md: - [ ] 3.2 Favicon, meta description, Open Graph tags on every page; `site:check` requires ",
++   "submission-closeout/tasks.md: - [ ] 3.3 Intro block above the table with D4's words; disclosure notes moved below the co",
++   "submission-closeout/tasks.md: - [ ] 3.4 `npm run facts` and the staleness test (REQ-7.1-7.3); includes the per-feature K",
++   "submission-closeout/tasks.md: - [ ] 3.5 `npm run fact-check -- <file>`; negative control: a draft with one wrong number ",
++   "submission-closeout/tasks.md: - [ ] 3.6 Push, `site:check` PASS, phase recorded in the planning repo's resume file on th",
++   "submission-closeout/tasks.md: - [ ] 4.1 Code freeze commit named in `kiroween-submission.md`",
++   "submission-closeout/tasks.md: - [ ] 4.2 Fresh-clone run at the freeze commit; result in `evidence/fresh-clone/`; README ",
++   "submission-closeout/tasks.md: - [ ] 4.3 One shot list; Desktop checklist points to it (owner's word needed to edit it) (",
++   "submission-closeout/tasks.md: - [ ] 4.4 Stills and cards rendered from the freeze commit, badge absent (REQ-8.2)",
++   "submission-closeout/tasks.md: - [ ] 4.5 Dry run of every shot-list command at the freeze commit, outputs and timings rec",
++   "submission-closeout/tasks.md: - [ ] 4.6 `npm run facts` at the freeze commit; file handed to the owner",
++   "submission-closeout/tasks.md: - [ ] 5.1 **(owner)** Devpost registration confirmed and a draft saved",
++   "submission-closeout/tasks.md: - [ ] 5.2 **(owner)** Decide: Best Startup entry; any AI-generated narration or text",
++   "submission-closeout/tasks.md: - [ ] 5.3 **(owner)** Description fields written; `npm run fact-check` run on the text",
++   "submission-closeout/tasks.md: - [ ] 5.4 **(owner)** Kiro write-up written from the facts file; fact-checked",
++   "submission-closeout/tasks.md: - [ ] 5.5 **(owner)** Video recorded, under 3:00, public on YouTube, no third-party marks ",
++   "submission-closeout/tasks.md: - [ ] 5.6 **(owner)** Optional social post, starting with `#KiroweenHackathon26`, sharing ",
++   "submission-closeout/tasks.md: - [ ] 5.7 **(owner)** Form: category Resurrection, bonus fields, URLs; submitted before 20",
++   "submission-closeout/tasks.md: - [ ] 5.8 Site and repo stay up through 2027-01-29",
++ ]
+
+ Γ¥» src/specs/tasks.test.ts:30:22
+     28|       for (const line of openBoxesWithoutNote(readFileSync(f, "utf-8")ΓÇª
+     29|     }
+     30|     expect(problems).toEqual([]);
+       |                      ^
+     31|   });
+     32| });
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  19:57:38
+   Duration  449ms (tests 39%, transform 30%, import 24%, worker 7%)
+
