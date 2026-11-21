@@ -158,7 +158,7 @@ else {
 }
 
 // ── 4. what the site publishes ──────────────────────────────────────────────────────────────────────────────────
-const mustServe = ["/", "/receipt", "/about", "/questionnaire", "/access-map", "/receipts/index.json", "/web/app.js", "/web/style.css", "/web/data/agent-access-map.json"];
+const mustServe = ["/", "/receipt", "/about", "/questionnaire", "/access-map", "/receipts/index.json", "/web/app.js", "/web/style.css", "/web/data/agent-access-map.json", "/favicon.ico", "/web/favicon.svg"];
 const mustNotServe = ["/src/cli/convert.ts", "/package.json", "/README.md", "/scripts/predeploy-check.mjs",
   "/sources/manifest.json", "/.kiro/steering/product.md", "/pairs/WideWorldImporters/Integration.GetMovementUpdates.json", "/.env"];
 for (const p of mustServe) {
@@ -170,11 +170,28 @@ for (const p of mustNotServe) {
   if (r.status !== 404) fail(`${p} returned ${r.status}, expected 404 (only the site should be published)`);
 }
 
+// head tags on every page (submission-closeout REQ-6.2): a link preview and a favicon need them
+let headPages = 0;
+for (const p of ["/", "/receipt", "/about", "/questionnaire", "/access-map"]) {
+  const r = await get(base + p);
+  if (r.status !== 200) continue;   // reported above
+  headPages++;
+  const html = r.text;
+  const need = [
+    [/<meta name="description" content="[^"]{20,}"/, "meta description"],
+    [/<link rel="icon" href="[^"]+"/, "icon link"],
+    [/<meta property="og:title" content="[^"]+"/, "og:title"],
+    [/<meta property="og:description" content="[^"]{20,}"/, "og:description"],
+    [/<meta property="og:url" content="https?:\/\/[^"]+"/, "og:url"],
+  ];
+  for (const [re, what] of need) if (!re.test(html)) fail(`${p} has no ${what}`);
+}
 // ── report ──────────────────────────────────────────────────────────────────────────────────────────────────────
 console.log(`site check: ${base}  (${new Date().toISOString()})`);
 console.log(`scorecard links followed: ${receiptLinks.length}`);
 for (const [db, c] of Object.entries(perDatabase)) console.log(`  ${db}: ${c.ok} rendered a receipt, ${c.bad} did not`);
 console.log(`agent access map: followed from the scorecard's nav link; ${mapTools} tool(s) from the committed map required on the page`);
+console.log(`head tags (description, icon, Open Graph) checked on ${headPages} pages`);
 console.log(`pages that must return 200: ${mustServe.length}; repository files that must return 404: ${mustNotServe.length}`);
 if (failures.length) {
   console.log(`FAIL: ${failures.length} problem(s)`);

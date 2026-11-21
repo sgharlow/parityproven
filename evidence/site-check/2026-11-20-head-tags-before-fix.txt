@@ -1,0 +1,35 @@
+site check: https://parityproven.com  (2026-11-21T03:10:10.837Z)
+scorecard links followed: 55
+  AdventureWorks2025: 25 rendered a receipt, 0 did not
+  WideWorldImporters: 30 rendered a receipt, 0 did not
+agent access map: followed from the scorecard's nav link; 3 tool(s) from the committed map required on the page
+head tags (description, icon, Open Graph) checked on 5 pages
+pages that must return 200: 11; repository files that must return 404: 8
+FAIL: 27 problem(s)
+  - /favicon.ico returned 404, expected 200
+  - /web/favicon.svg returned 404, expected 200
+  - / has no meta description
+  - / has no icon link
+  - / has no og:title
+  - / has no og:description
+  - / has no og:url
+  - /receipt has no meta description
+  - /receipt has no icon link
+  - /receipt has no og:title
+  - /receipt has no og:description
+  - /receipt has no og:url
+  - /about has no meta description
+  - /about has no icon link
+  - /about has no og:title
+  - /about has no og:description
+  - /about has no og:url
+  - /questionnaire has no meta description
+  - /questionnaire has no icon link
+  - /questionnaire has no og:title
+  - /questionnaire has no og:description
+  - /questionnaire has no og:url
+  - /access-map has no meta description
+  - /access-map has no icon link
+  - /access-map has no og:title
+  - /access-map has no og:description
+  - /access-map has no og:url

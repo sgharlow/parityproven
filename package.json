@@ -27,6 +27,7 @@
     "predeploy:check": "node scripts/predeploy-check.mjs",
     "site:build": "node scripts/build-site.mjs",
     "readme:status": "node dist/cli/readme-status.js",
+    "site:widths": "node scripts/check-widths.mjs",
     "site:check": "node scripts/check-site.mjs",
     "mcp:setup": "node dist/cli/mcp-setup.js",
     "mcp:check": "node dist/cli/mcp-check.js",
