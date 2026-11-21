@@ -23,6 +23,8 @@ export interface BuildInput {
    * (read from git history by the CLI). Objects first committed before their database's predictions are disclosed.
    */
   firstCommits?: Record<string, { at: string; commit: string }>;
+  /** Date of the last commit that changed each object's conversion file, keyed "<database>/<schema>.<object>" (read from git by the CLI). */
+  conversionChanges?: Record<string, string>;
 }
 
 /** Receipt section from the pair record's gate summary, with detail from the evidence JSON when it can be read. */
@@ -142,6 +144,7 @@ export function buildReceipts(input: BuildInput): BuildOutput {
           testsRun: evidence.testsRun,
           reviewer: evidence.reviewer,
           reviewDate: evidence.reviewDate,
+          ...(input.conversionChanges?.[`${database}/${schemaName}.${objectName}`] ? { conversionLastChanged: input.conversionChanges[`${database}/${schemaName}.${objectName}`] } : {}),
           step5Method: evidence.step5Method,
           step5Report: evidence.step5Report,
           adversarial: adversarialOf(evidence.adversarial, input.repoRoot),

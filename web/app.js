@@ -82,7 +82,7 @@ async function initScorecard() {
   const excludedHtml = excluded.length
     ? `<h2 style="margin-top:2rem">Not converted: out of scope (${excluded.length})</h2>
        <p style="color:var(--c-muted);font-size:0.875rem">These objects are in the inventory but were not converted. They are not counted as verified, pending or failed above. Each has its reason.</p>
-       <table>
+       <div class="table-scroll"><table>
          <thead><tr><th>Object</th><th>Database</th><th>Type</th><th>Tier</th><th>Why not converted</th></tr></thead>
          <tbody>${excluded.map(x => `<tr>
            <td>${esc(x.schemaName)}.${esc(x.objectName)}</td>
@@ -91,14 +91,14 @@ async function initScorecard() {
            <td><span class="chip">${esc(x.tier)}</span></td>
            <td style="font-size:0.85rem">${esc(x.reason)}</td>
          </tr>`).join('')}</tbody>
-       </table>`
+       </table></div>`
     : '';
 
   const notAttempted = index.notAttempted || [];
   const notAttemptedHtml = notAttempted.length
     ? `<h2 style="margin-top:2rem">Not converted: not attempted (${notAttempted.length})</h2>
        <p style="color:var(--c-muted);font-size:0.875rem">These objects are in scope and in the inventory, but no conversion was attempted. They are not counted as verified, pending or failed above. Each says what it would need.</p>
-       <table>
+       <div class="table-scroll"><table>
          <thead><tr><th>Object</th><th>Database</th><th>Type</th><th>Tier</th><th>What it needs</th></tr></thead>
          <tbody>${notAttempted.map(x => `<tr>
            <td>${esc(x.schemaName)}.${esc(x.objectName)}</td>
@@ -107,16 +107,16 @@ async function initScorecard() {
            <td><span class="chip">${esc(x.tier)}</span></td>
            <td style="font-size:0.85rem">${esc(x.reason)}</td>
          </tr>`).join('')}</tbody>
-       </table>`
+       </table></div>`
     : '';
 
   root.innerHTML = `
     ${statsHtml}
     ${tierNotesHtml}
-    <table>
+    <div class="table-scroll"><table>
       <thead><tr><th>Object</th><th>Database</th><th>Type</th><th>Tier</th><th>Status</th></tr></thead>
       <tbody>${rows}</tbody>
-    </table>
+    </table></div>
     ${excludedHtml}
     ${notAttemptedHtml}
     <p style="color:var(--c-muted);font-size:0.8rem;margin-top:1rem">Built ${new Date(index.builtAt).toLocaleString()}</p>`;
@@ -159,7 +159,11 @@ async function initReceipt() {
   const stepDetail = (n) => {
     const e = receipt.evidence;
     if (n === 2 && e.testsRun?.length) return `<span style="color:var(--c-muted);font-size:0.85rem">${e.testsRun.length} agreed test(s) on each engine</span>`;
-    if (n === 5 && e.reviewer) return `<span style="color:var(--c-muted);font-size:0.85rem">by ${esc(e.reviewer)} on ${esc(e.reviewDate ?? '')}${e.step5Method ? ' (on the adversarial report)' : ''}</span>`;
+    if (n === 5 && e.reviewer) {
+      const gateDay = e.adversarial?.runAt ? String(e.adversarial.runAt).slice(0, 10) : null;
+      const dates = [e.conversionLastChanged ? `conversion last changed ${esc(e.conversionLastChanged)}` : null, gateDay ? `gate run ${esc(gateDay)}` : null, e.reviewDate ? `review ${esc(e.reviewDate)}` : null].filter(Boolean).join(' · ');
+      return `<span style="color:var(--c-muted);font-size:0.85rem">by ${esc(e.reviewer)} on ${esc(e.reviewDate ?? '')}${e.step5Method ? ' (one sign-off on the adversarial batch report)' : ''}${dates ? `<br>${dates}` : ''}</span>`;
+    }
     return '';
   };
   const stepsHtml = receipt.verificationSteps.map(s => `
@@ -246,10 +250,10 @@ async function initReceipt() {
 
   const colMappings = receipt.columnMappings?.length
     ? `<h3>Column type mappings</h3>
-       <table><thead><tr><th>SQL Server</th><th>PostgreSQL</th><th>Notes</th></tr></thead>
+       <div class="table-scroll"><table><thead><tr><th>SQL Server</th><th>PostgreSQL</th><th>Notes</th></tr></thead>
        <tbody>${receipt.columnMappings.map(m =>
          `<tr><td>${esc(m.sqlServerType)}</td><td>${esc(m.postgresType)}</td><td style="color:var(--c-muted)">${esc(m.notes ?? '')}</td></tr>`
-       ).join('')}</tbody></table>`
+       ).join('')}</tbody></table></div>`
     : '';
 
   root.innerHTML = `
@@ -266,7 +270,7 @@ async function initReceipt() {
     <div class="card">
       <div style="display:flex;gap:2rem;flex-wrap:wrap;font-size:0.875rem">
         <div><span style="color:var(--c-muted)">Engine:</span> ${esc(receipt.code.engine)}</div>
-        <div><span style="color:var(--c-muted)">Human effort:</span> ${receipt.effort.humanMinutes > 0 ? `${receipt.effort.humanMinutes} min` : '<span style="color:var(--c-muted)">not logged</span>'}</div>
+        <div><span style="color:var(--c-muted)">Human effort:</span> ${receipt.effort.humanMinutes > 0 ? `${receipt.effort.humanMinutes} min` : (receipt.evidence.step5Method ? '<span style="color:var(--c-muted)">review time not recorded</span>' : '<span style="color:var(--c-muted)">not logged</span>')}</div>
         <div><span style="color:var(--c-muted)">Prediction:</span> ${predHtml}</div>
       </div>
     </div>

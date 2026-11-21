@@ -128,7 +128,8 @@
       "PostgreSQL: AgreedTests.[test 08 five hits, @MaximumRowsToReturn = 2 returns exactly two]: pass",
       "PostgreSQL: AgreedTests.[test 09 supplier without a contact person is found by its own name]: pass",
       "planted defects caught by the agreed tests: 8 of 8"
-    ]
+    ],
+    "conversionLastChanged": "2026-11-12"
   },
   "effort": {
     "humanMinutes": 0,
@@ -139,5 +140,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-19T15:58:24.871Z"
+  "builtAt": "2026-11-21T03:10:33.007Z"
 }

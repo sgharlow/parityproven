@@ -131,3 +131,15 @@ describe("predictionNotes", () => {
     expect(output.index.predictionNotes).toEqual([]);
   });
 });
+
+describe("conversionLastChanged (submission-closeout REQ-4.2)", () => {
+  it("is set from the CLI's git dates, keyed database/schema.object, and absent without them", () => {
+    const base = { pairsDir: resolve(REPO_ROOT, "pairs"), inventoryDir: resolve(REPO_ROOT, "inventory"), predictionsDir: resolve(REPO_ROOT, "predictions") };
+    const withDates = buildReceipts({ ...base, conversionChanges: { "WideWorldImporters/Integration.GetMovementUpdates": "2026-11-07" } });
+    const hit = withDates.receipts.find((x) => x.objectName === "GetMovementUpdates")!;
+    expect(hit.evidence.conversionLastChanged).toBe("2026-11-07");
+    expect(withDates.receipts.filter((x) => x.evidence.conversionLastChanged).length).toBe(1);
+    const without = buildReceipts(base);
+    expect(without.receipts.some((x) => x.evidence.conversionLastChanged)).toBe(false);
+  });
+});

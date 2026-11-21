@@ -68,6 +68,8 @@ export interface ReceiptFile {
     /** Step 5: the second review. */
     reviewer?: string;
     reviewDate?: string;
+    /** Date (YYYY-MM-DD) of the last commit that changed this object's final conversion file, read from git by the CLI at build time. */
+    conversionLastChanged?: string;
     /** Set when step 5 was recorded from the adversarial evidence report. */
     step5Method?: "adversarial-report";
     step5Report?: string;

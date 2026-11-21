@@ -111,6 +111,7 @@
     ],
     "reviewer": "Steve Harlow",
     "reviewDate": "2026-11-19",
+    "conversionLastChanged": "2026-11-10",
     "step5Method": "adversarial-report",
     "step5Report": "evidence/adversarial/reports/batch-3.md",
     "adversarial": {
@@ -198,5 +199,5 @@
     "p50Hours": 0.75,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-20T04:13:51.600Z"
+  "builtAt": "2026-11-21T03:10:32.991Z"
 }

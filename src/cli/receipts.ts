@@ -50,6 +50,23 @@ if (existsSync(envFile)) {
   }
 }
 
+/**
+ * Date of the last commit that changed each object's final conversion file (not .draft or .naive), keyed "<database>/<schema>.<object>".
+ * Shown on the receipt next to the gate run time and the review date, so a reader can check the interval.
+ */
+function conversionChanges(): Record<string, string> {
+  const log = execFileSync("git", ["log", "--format=@%cs", "--name-only", "--", "conversions"], { cwd: REPO_ROOT, encoding: "utf-8", maxBuffer: 32 * 1024 * 1024 });
+  const out: Record<string, string> = {};
+  let date = "";
+  for (const line of log.split(/\r?\n/)) {
+    if (line.startsWith("@")) { date = line.slice(1); continue; }
+    const m = line.match(/^conversions\/([^/]+)\/([^/]+)\.sql$/);
+    if (!m || /\.(draft|naive)\.sql$/.test(line)) continue;
+    const key = `${m[1]}/${m[2]}`;
+    if (!(key in out)) out[key] = date;   // newest commit first
+  }
+  return out;
+}
 async function main(): Promise<void> {
   const output = buildReceipts({
     pairsDir:       resolve(REPO_ROOT, "pairs"),
@@ -63,6 +80,7 @@ async function main(): Promise<void> {
       database: d.database, schemaName: d.schema, objectName: d.name, reason: d.reason,
     })),
     firstCommits: firstCommits(),
+    conversionChanges: conversionChanges(),
   });
   const unexplained = (output.index.notAttempted ?? []).filter((x) => x.reason.startsWith("Not attempted; no reason recorded"));
   for (const x of unexplained) console.warn(`WARNING: ${x.database} ${x.schemaName}.${x.objectName} has no record and no disposition; shown as not attempted`);
