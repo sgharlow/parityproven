@@ -97,7 +97,7 @@
       "runAt": "2026-11-19T17:47:22.088Z"
     },
     "reviewer": "Steve Harlow",
-    "reviewDate": "2026-11-19",
+    "reviewDate": "2026-11-20",
     "step5Method": "adversarial-report",
     "step5Report": "evidence/adversarial/reports/batch-3.md",
     "step5EvidenceSha256": "64d7ae2fa76e23c8051a4fe403e9805ac9cf9c78e7f8a4698c68d4d8b5222721",

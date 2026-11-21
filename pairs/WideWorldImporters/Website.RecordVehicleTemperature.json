@@ -116,7 +116,7 @@
       "planted defects caught by the agreed tests: 6 of 6"
     ],
     "reviewer": "Steve Harlow",
-    "reviewDate": "2026-11-19",
+    "reviewDate": "2026-11-20",
     "adversarial": {
       "gate": "pass",
       "ran": 9,

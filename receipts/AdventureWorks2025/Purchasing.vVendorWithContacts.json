@@ -110,7 +110,7 @@
       "planted defects caught by the agreed tests: 2 of 2"
     ],
     "reviewer": "Steve Harlow",
-    "reviewDate": "2026-11-19",
+    "reviewDate": "2026-11-20",
     "conversionLastChanged": "2026-11-10",
     "step5Method": "adversarial-report",
     "step5Report": "evidence/adversarial/reports/batch-2.md",
@@ -189,5 +189,5 @@
     "p50Hours": 0.75,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-21T03:10:32.988Z"
+  "builtAt": "2026-11-21T03:44:53.341Z"
 }
