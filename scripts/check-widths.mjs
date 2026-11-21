@@ -63,7 +63,7 @@ try {
     await sleep(1800);   // the scorecard and receipts render client-side after fetching JSON
     const r = await cdp.send("Runtime.evaluate", {
       returnByValue: true,
-      expression: `(() => { const de = document.documentElement; let worst = 0, who = ""; for (const el of document.body.querySelectorAll("*")) { const b = el.getBoundingClientRect(); if (b.right > worst && b.width > 0) { worst = b.right; who = el.tagName.toLowerCase() + (el.className ? "." + String(el.className).split(" ")[0] : ""); } } return { scrollWidth: de.scrollWidth, innerWidth: window.innerWidth, widestRight: Math.round(worst), widest: who, title: document.title, links: [...document.querySelectorAll("a")].map(a => a.href).filter(h => /[?&]obj=/.test(h)).slice(0, 1) }; })()`,
+      expression: `(() => { const de = document.documentElement; let worst = 0, who = ""; const boxed = (el) => { for (let p = el.parentElement; p && p !== document.body && p !== de; p = p.parentElement) { const o = getComputedStyle(p).overflowX; if (o === "auto" || o === "scroll" || o === "hidden") return true; } return false; }; for (const el of document.body.querySelectorAll("*")) { const b = el.getBoundingClientRect(); if (b.right > worst && b.width > 0 && !boxed(el)) { worst = b.right; who = el.tagName.toLowerCase() + (el.className ? "." + String(el.className).split(" ")[0] : "") + (el.id ? "#" + el.id : ""); } } const spills = (el) => el.tagName !== "IFRAME" && !boxed(el) && getComputedStyle(el).overflowX === "visible" && el.scrollWidth > el.clientWidth + 1 && el.clientWidth > 0 && el.getBoundingClientRect().left + el.scrollWidth > window.innerWidth + 1; let spill = ""; for (const el of document.body.querySelectorAll("*")) { if (spills(el) && ![...el.children].some(spills)) { spill = el.tagName.toLowerCase() + (el.className ? "." + String(el.className).split(" ")[0] : "") + (el.id ? "#" + el.id : "") + " content " + el.scrollWidth + " in box " + el.clientWidth + " text: " + (el.textContent || "").trim().slice(0, 40).replace(/\s+/g, " "); break; } } return { spill, scrollWidth: de.scrollWidth, innerWidth: window.innerWidth, widestRight: Math.round(worst), widest: who, title: document.title, links: [...document.querySelectorAll("a")].map(a => a.href).filter(h => /[?&]obj=/.test(h)).slice(0, 1) }; })()`,
     });
     return r.result.result.value;
   };
@@ -77,7 +77,7 @@ try {
       const v = await measure(url, w);
       const over = v.scrollWidth > v.innerWidth + 1;
       if (over) failures++;
-      lines.push(`${over ? "FAIL" : "ok  "} ${String(w).padStart(4)} px  ${url.replace(base, "") || "/"}  scrollWidth ${v.scrollWidth} vs window ${v.innerWidth}${over ? `  (widest element: ${v.widest}, right edge ${v.widestRight})` : ""}`);
+      lines.push(`${over ? "FAIL" : "ok  "} ${String(w).padStart(4)} px  ${url.replace(base, "") || "/"}  scrollWidth ${v.scrollWidth} vs window ${v.innerWidth}${over ? `  (widest element: ${v.widest}, right edge ${v.widestRight}${v.spill ? `; content spills out of ${v.spill}` : ""})` : ""}`);
     }
   }
   cdp.close();

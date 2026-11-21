@@ -1,0 +1,8 @@
+site check: https://parityproven.com  (2026-11-21T03:12:28.826Z)
+scorecard links followed: 55
+  AdventureWorks2025: 25 rendered a receipt, 0 did not
+  WideWorldImporters: 30 rendered a receipt, 0 did not
+agent access map: followed from the scorecard's nav link; 3 tool(s) from the committed map required on the page
+head tags (description, icon, Open Graph) checked on 5 pages
+pages that must return 200: 11; repository files that must return 404: 8
+PASS

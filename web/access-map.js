@@ -36,16 +36,16 @@ async function initAccessMap() {
     <p><strong>System:</strong> ${escMap(map.system)} — ${escMap(map.sourceDatabase)}</p>
 
     <h2>1–2. Entities an agent needs, and the read-only views that expose them (${exposed.length})</h2>
-    <table>
+    <div class="table-scroll"><table>
       <thead><tr><th>Entity and actions</th><th>Exposed through</th><th>4. Risk (judgment)</th></tr></thead>
       <tbody>${entityRows}</tbody>
-    </table>
+    </table></div>
 
     <h2>Not exposed (${notExposed.length})</h2>
-    <table>
+    <div class="table-scroll"><table>
       <thead><tr><th>Entity</th><th>Risk (judgment)</th><th>Why not</th></tr></thead>
       <tbody>${notRows}</tbody>
-    </table>
+    </table></div>
 
     <h2>3. Authentication, row-level limits and audit</h2>
     <ul>
