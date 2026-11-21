@@ -1,0 +1,3 @@
+ParityProven has 45 verified objects out of 55 receipts.
+The checks are production-ready and every result is guaranteed.
+It compared 10,958 rows and ran 385 adversarial cases.

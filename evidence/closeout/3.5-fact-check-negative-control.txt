@@ -1,0 +1,5 @@
+fact-check: evidence\closeout\3.5-planted-draft.txt against C:\source\parityproven\evidence\facts\submission-facts.md
+  line 1: number 45 is not in the facts file   | ParityProven has 45 verified objects out of 55 receipts.
+  line 2: banned phrase "production-ready"   | The checks are production-ready and every result is guaranteed.
+  line 2: banned phrase "guaranteed"   | The checks are production-ready and every result is guaranteed.
+3 finding(s). Nothing was changed.

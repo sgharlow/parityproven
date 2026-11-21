@@ -15,6 +15,7 @@ src/
   conversions/    specs (tables and planted defects per converted object), automutants, dispositions
   predictions/    prediction schema, validation and scoring
   mcp/            read-only MCP server and Agent Access Map
+  facts/          figures for the submission from the committed records (npm run facts) and the draft fact-check
   specs/          test that every open box in a tasks.md has an 'open because' note
   receipts/       builds receipt JSON from pairs and evidence
   cli/            one entry point per npm script (convert, agreed-tests, adversarial, approve, receipts, ...)

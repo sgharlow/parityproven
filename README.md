@@ -85,6 +85,9 @@ npm run predeploy:check                                          # web/ has no p
 npm run readme:status                                            # regenerate this README's status block (receipts:build also does it)
 npm run site:build                                               # _site/ = web/ + receipts/ only (Netlify runs this and publishes _site/)
 npm run site:check -- https://parityproven.com                   # deployed site: follow every scorecard link, require a rendered receipt; repo files must be 404
+npm run site:widths -- https://parityproven.com                  # deployed site: no page scrolls sideways at 1280, 1024, 768 and 390 px (needs Edge or Chrome)
+npm run facts                                                    # evidence/facts/submission-facts.md: every figure the submission may cite, with how to re-derive it
+npm run fact-check -- draft.txt                                  # lists numbers, dates, hashes and banned phrases in a draft that the facts file does not support (rewrites nothing)
 ```
 
 **Step 2 (agreed tests)** turns an object's hand-derived fixed cases into a tSQLt test class for SQL Server and a plain-SQL assertion script for PostgreSQL (pgTAP is not in the pinned PostgreSQL image). Expected results are captured once from the original T-SQL and committed in `tests/<db>/<Object>.expected.json`, so a reviewer can check them against each case's label at step 5. `agreed-tests` also deploys each planted defect and reports how many the agreed tests catch (the gate for planted defects remains step 3).
