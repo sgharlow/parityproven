@@ -36,7 +36,7 @@ function input(): ApproveInput {
     evidence: { step1: "pass", step2: "pass", step3: "pass", step4: "pass", step5: "not-run", step6: "n/a",
       adversarial: { gate: "pass", ran: 1, differed: 0, evidencePath: "x", conversionSha256: SHA, runAt: "2026-11-19T10:00:00Z" } },
   } as unknown as PairRecord;
-  return { name: "AdventureWorks2025 dbo.F", evidence: evidence(), pair, firstCommit: "2026-11-17", date: "2026-11-19" };
+  return { name: "AdventureWorks2025 dbo.F", evidence: evidence(), pair, firstCommit: "2026-11-17", date: "2026-11-20" };
 }
 
 const why = (i: ApproveInput): string => decideApproval(i).reasons.join(" | ");
@@ -92,6 +92,21 @@ describe("decideApproval", () => {
   });
   it("allows step 4 n/a", () => {
     const i = input(); i.pair.evidence.step4 = "n/a";
+    expect(decideApproval(i).ok).toBe(true);
+  });
+});
+
+describe("decideApproval: the one-day rule (ruling D1)", () => {
+  it("refuses a review on the day the adversarial gate ran, and says which date starts the clock", () => {
+    const i = input(); i.date = "2026-11-19";
+    expect(why(i)).toContain("at least one day after the first pass (2026-11-19)");
+  });
+  it("refuses a review on the day the conversion last changed", () => {
+    const i = input(); i.conversionChanged = "2026-11-20";
+    expect(why(i)).toContain("(2026-11-20)");
+  });
+  it("accepts a review the day after both the conversion change and the gate run", () => {
+    const i = input(); i.conversionChanged = "2026-11-18";
     expect(decideApproval(i).ok).toBe(true);
   });
 });

@@ -2,7 +2,7 @@
 import { createHash } from "crypto";
 import { gateResult } from "../adversarial/gate.js";
 import type { AdversarialEvidence } from "../adversarial/schema.js";
-import { oneDayProblem } from "../pairs/review-rules.js";
+import { firstPassDate, oneDayProblem } from "../pairs/review-rules.js";
 import type { PairRecord } from "../pairs/schema.js";
 
 export interface ApproveInput {
@@ -13,6 +13,8 @@ export interface ApproveInput {
   pair: PairRecord;
   /** Date of the pair record's first commit (null when git has none). */
   firstCommit: string | null;
+  /** Date of the last commit that changed the object's conversion file (ruling D1). */
+  conversionChanged?: string | null;
   date: string;
 }
 
@@ -47,7 +49,7 @@ export function decideApproval(i: ApproveInput): ApproveDecision {
   for (const [n, s] of [[1, e.step1], [2, e.step2], [3, e.step3]] as const) if (s !== "pass") reasons.push(`step ${n} is ${s}, not pass`);
   if (e.step4 !== "pass" && e.step4 !== "n/a") reasons.push(`step 4 is ${e.step4}, not pass or n/a`);
 
-  const d = oneDayProblem(i.firstCommit, i.date);
+  const d = oneDayProblem(firstPassDate({ pairFirstCommit: i.firstCommit, conversionChanged: i.conversionChanged, gateRunAt: e.adversarial?.runAt }), i.date);
   if (d) reasons.push(d);
 
   return { name: i.name, ok: reasons.length === 0, reasons };

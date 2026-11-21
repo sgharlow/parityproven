@@ -1,0 +1,24 @@
+{
+  "id": "FEAT-007",
+  "type": "test",
+  "description": "Batch 4 of the adversarial gate: objects 34-44 in batches.md (WideWorldImporters Website.* objects, including FOR JSON search procedures run through the ruling J1 client re-run). Same roles and rules as FEAT-004. Never run approve; never record step 5.",
+  "status": "completed",
+  "steps": [
+    "Attacker, auditor and run as in FEAT-004, for batch 4",
+    "FOR JSON procedures: SQL Server side is the client re-run (no tSQLt); the evidence says so",
+    "After the batch: if any evidence has open objections or inadequate attacks, record that in findings; remediation (attacker revises, auditor confirms, run re-executes the touched objects) is done by the workflow's remediation steps, not here"
+  ],
+  "acceptance_criteria": [
+    "evidence/adversarial/<db>/<Obj>.json exists for all 11 batch 4 objects",
+    "evidence/adversarial/reports/batch-4.md lists every object",
+    "step 5 is unchanged except resets caused by a recorded finding"
+  ],
+  "verification": [
+    "npm run adversarial -- run --batch 4",
+    "npm run adversarial -- report --batch 4",
+    "npm run receipts:build",
+    "npm run site:check"
+  ],
+  "blocked_reason": null,
+  "findings": "Batch 4 run 2026-11-19 (log .tmp/adv-b4-run.log; re-runs .tmp/b4y-1..3.out). Every object: 0 of N adversarial cases differed after the fix (CalculateCustomerPrice 6, ChangePassword 6, Customers 4, InsertCustomerOrders 6, InvoiceCustomerOrders 7, RecordColdRoomTemperatures 4, RecordVehicleTemperature 6, SearchForPeople 6, SearchForStockItems 7, SearchForStockItemsByTags 8, Suppliers 4). Finding F-B4-1 (harness, not conversion): the first run showed 1 differed case on each of SearchForPeople A06, SearchForStockItems A07, SearchForStockItemsByTags A07 (no row qualifies; FOR JSON ROOT returns ''). SQL Server passed; PostgreSQL failed with 'invalid input syntax for type json' because the generated plain-SQL assertion cast both the result and the expected '' to jsonb. The conversions return '' correctly. Fixed in src/agreed/generate.ts (an empty expected document is compared as text); conversions unchanged, so no draft.sql and no regression mark (a conversion fix was not needed; cases and audit files not edited). After the fix, mutant adequacy on these three changed from adequate to inadequate: the always-failing A06/A07 had been 'catching' every mutant; the honest result is one miss, ''_' matches a letter only'. Gate: FAIL on all 11. Reasons: open auditor objections on 10 objects (all except InsertCustomerOrders); inadequate mutant adequacy on 8 (CalculateCustomerPrice: lowest discount instead of highest; ChangePassword: template person 1 can change password, hash without full name, logon not re-enabled; InsertCustomerOrders: priced on expected delivery date, lines for unknown stock items kept; InvoiceCustomerOrders: unpicked orders invoiced; RecordVehicleTemperature: no truncation to nvarchar(1000), ISJSON accepts scalars, '' not 1900-01-01, exponent notation; the three search procedures: '_' matches a letter only). These go to the remediation steps (task 10). No object reset from verified: step 5 values are unchanged on all 11 records; the three verified-at-base objects (CalculateCustomerPrice, ChangePassword, RecordVehicleTemperature) are pending only because the gate is not pass. Also fixed src/receipts/builder.test.ts, which failed since batch 3 (computed status without the adversarial gate). npx vitest run: 242 passed. npm run site:check needs a deployed URL and was not run; npm run predeploy:check passed. Report: evidence/adversarial/reports/batch-4.md."
+}

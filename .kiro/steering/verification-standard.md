@@ -31,6 +31,11 @@ An object counts as **verified** only when steps 1–4 pass and steps 5–6 are 
 - **Step 5 is the owner's review of the adversarial evidence report** against the step-5 checklist, at least one day after the first pass. Agents and workflow steps never record it. `computeStatus` requires `evidence.adversarial.gate = "pass"` in addition to step 5, so records verified before the gate (reviewed by reading code) are pending until the gate has run and the owner has approved on the report.
 - Receipts say "N adversarial cases ran, M differed", and label the cases as agent-written.
 
+**Ruling (project owner, 2026-11-20, D1: what "the first pass" means for the one-day rule)**
+- **The clock starts at the latest of three dates:** the pair record's first commit, the date the reviewed conversion last changed, and the day the adversarial gate last ran on it (`evidence.adversarial.runAt`, UTC). A conversion that changes, or a gate that re-runs, starts the clock again. The review date must be later than that date. `src/pairs/review-rules.ts` (`firstPassDate`) holds the rule once; `approve` and `log-effort --review` both use it.
+- **Why:** on 2026-11-19 all 44 approvals fell on the same day as their gate runs, and 14 conversions had last changed the evening before. Under the earlier rule (first commit of the pair record only) that was allowed.
+- **Existing approvals are not changed by an agent.** `npm run check:review-interval` lists each recorded approval that is not a day after its first pass (44 on 2026-11-20, output in `evidence/closeout/2.5-recorded-approvals-too-soon.txt`). The owner re-runs `npm run approve` for the four batch reports on a later date; until then the receipts show the three dates, so a reader can see the interval.
+- The status rule in `src/pairs/status.ts` is unchanged.
 ## Traps every generator must cover
 - NULL versus empty string (`''`), including concatenation and `ISNULL`/`COALESCE` behaviour
 - Collation and case sensitivity in comparisons, `ORDER BY` and `GROUP BY`

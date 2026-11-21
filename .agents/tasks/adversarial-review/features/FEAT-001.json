@@ -1,0 +1,22 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Plan tasks 1-3: ruling A1 in verification-standard.md, structure.md lines, spec files .kiro/specs/adversarial-review/{requirements,design,tasks}.md, shared checklist (src/pairs/checklist.ts, review-packet imports it), src/adversarial/{schema,traps,load,gate}.ts with tests, PairRecord evidence fields, status.ts gate rule, scripts/mutants-adversarial.json. No database needed.",
+  "status": "completed",
+  "steps": [
+    "Do plan.md tasks 1, 2 and 3 in order; read plan.md design decisions first",
+    "Update existing tests that build verified records so they carry a passing gate"
+  ],
+  "acceptance_criteria": [
+    "npx vitest run passes",
+    "mutate-check on gate.ts and status.ts reports 0 missed",
+    "review-packet output unchanged (10 checklist items)"
+  ],
+  "verification": [
+    "npx tsc --noEmit",
+    "npx vitest run",
+    "pwsh scripts/mutate-check.ps1 -File src/adversarial/gate.ts -Test src/adversarial/gate.test.ts -Mutants scripts/mutants-adversarial.json"
+  ],
+  "blocked_reason": null,
+  "findings": "Done on main. tsc clean; vitest 16 files / 213 tests pass; mutate-check gate.ts 20 planted, 0 missed (scripts/mutants-adversarial.json); status.ts 7 planted, 0 missed (scripts/mutants-status.json). For later steps: (1) src/adversarial/schema.ts holds all adversarial types (TrapId, AdversarialFile, AuditFile, AdversarialEvidence, CaseEvidence, MutantAdequacy); AdversarialEvidence has an extra top-level casesAudited: string[] (copied from the audit file) that the gate compares with case ids. PairRecord.evidence.adversarial / step5Method / step5Report are in src/pairs/schema.ts. (2) gateResult(evidence, finalSha256) and adequacyVerdict({caught,missed,equivalentRecorded}) in gate.ts; evidence.mutantAdequacy.missed must list ALL misses (equivalentRecorded is a subset); verdict must equal adequacyVerdict of the lists or the gate fails. A trap counts as covered only if the covering case id is in traps[t].coveredBy AND the case claims t AND trapChecks[t].present. (3) traps.ts: checkTrap(trap, spec, fixedCase) -> {present, detail}; applicableTraps(spec) -> Record<TrapId,{applicable,why}>; inputValues(spec, fc). (4) load.ts: parseCases/loadCases(path, spec) validate against the ObjectSpec (unknown table/column/arg, inputCell failures, duplicate ids/labels, cutoffs required exactly when spec.windowParams) and set fixedCase.label = case label (runner should prefix [A01] itself); parseAudit/loadAudit; reviveBytes. (5) src/pairs/checklist.ts: CHECKLIST items use traps?: TrapId[] (array, not the plan's single trap) because the 'spaces-ties-gaps' item maps to three traps; checklistLines(hasTests) feeds review-packet (10 lines with tests, 9 without; unchanged text). (6) status.ts now requires evidence.adversarial?.gate === 'pass'; consequently the 7 previously verified pair records (Sales.vSalesPerson, GetMovementUpdates, GetOrderUpdates, ActivateWebsiteLogon, CalculateCustomerPrice, ChangePassword, RecordVehicleTemperature) had status changed to pending by hand in pairs/ (steps and reviewers untouched), dist rebuilt and npm run receipts:build run: 0 verified, 44 pending, 11 failed; receipts/ and README block regenerated (receipts churn includes builtAt timestamps). Spec files are in .kiro/specs/adversarial-review/ (tasks 1-3 ticked). The .agents/ folder is untracked and was not committed."
+}

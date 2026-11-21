@@ -27,6 +27,7 @@
     "predeploy:check": "node scripts/predeploy-check.mjs",
     "site:build": "node scripts/build-site.mjs",
     "readme:status": "node dist/cli/readme-status.js",
+    "check:review-interval": "node dist/cli/check-review-interval.js",
     "facts": "node dist/cli/facts.js",
     "fact-check": "node dist/cli/fact-check.js",
     "site:widths": "node scripts/check-widths.mjs",

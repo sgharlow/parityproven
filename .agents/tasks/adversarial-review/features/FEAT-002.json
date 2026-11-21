@@ -1,0 +1,24 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Plan tasks 4-6: extract the step-2 runner into src/agreed/runner.ts, add the adversarial CLI (run, report, check), evidence JSON and report builders, and the harness check with a planted defect. Needs Docker databases.",
+  "status": "completed",
+  "steps": [
+    "Do plan.md tasks 4, 5 and 6 in order",
+    "Prove the refactor is output-neutral: agreed-tests for dbo.ufnLeadingZeros then git diff --exit-code tests pairs",
+    "Run only one harness process at a time"
+  ],
+  "acceptance_criteria": [
+    "agreed-tests output unchanged",
+    "adversarial run works on a throwaway case file with --no-record",
+    "planted defect is reported as a divergence and the gate fails; evidence/adversarial/harness-check.txt committed"
+  ],
+  "verification": [
+    "npm run build",
+    "npx vitest run",
+    "npm run agreed-tests -- --object dbo.ufnLeadingZeros > .tmp/regress-1.log 2>&1 (then git diff --exit-code tests pairs)",
+    "smoke run per plan task 5 and 6"
+  ],
+  "blocked_reason": null,
+  "findings": "Done on main. (1) src/agreed/runner.ts now holds checkTsqlt, runBatches, clearSs, capture, runOne, recordStep2, TSQLT, TSQLT_DIR, types Outcome/InvalidCase/RunOptions. runOne(conn, spec, opts: {recapture, control, controlColumn, fileTag ''|'.adversarial', record, banner, tolerateInvalid, testsDir, finalSql}); Outcome.tests[].caseIndex maps a test to the index in spec.fixedCases; Outcome.invalid lists cases the original T-SQL could not run (left out of the tests). generate.ts: optional banner for tsqltScript (options.banner), ssClientScript, pgScript. agreed-tests.ts keeps main only. (2) Output neutral: agreed-tests for dbo.uspGetBillOfMaterials and Website.SearchForStockItemsByTags regenerate tests/ and pairs/ byte-identically. dbo.ufnLeadingZeros.tsqlt.sql differs by two comment lines about SCHEMABINDING: the committed file predates the schemaBound code (commit 147f7b1), not caused by the refactor; I restored the committed file (not committed). (3) New: src/adversarial/{evidence,report}.ts (+evidence.test.ts), src/cli/adversarial.ts with check|run|report, npm script 'adversarial'. run --batch n reads .agents/tasks/adversarial-review/batches.md (untracked, not committed; later steps run from this checkout), writes evidence/adversarial/<db>/<Obj>.json, status file evidence/adversarial/status/batch-n.json, sets pair evidence.adversarial and status (refuses objects whose steps 1-4 are not pass/n-a). Options --dir, --evidence-dir, --no-record (tests under <evidence-dir>/tests), --final-sql (needs --no-record). report --batch n writes evidence/adversarial/reports/batch-n.md. Generated adversarial tests go to tests/<db>/<Obj>.adversarial.{expected.json,tsqlt.sql|sqlserver.sql,pg.sql}; cases are labelled '[A01] label'. (4) Harness check: evidence/adversarial/harness-check.txt (planted '> 9' defect gives 1 differed and gate FAIL; five cases missing a planted defect give inadequate and gate FAIL). (5) Verification: tsc clean, npm run build, vitest 17 files / 220 tests pass. The run exits 1 when any gate fails. Note: in adversarial mode a nine-line console message still says tests/<db>/... even with --testsDir override (cosmetic)."
+}

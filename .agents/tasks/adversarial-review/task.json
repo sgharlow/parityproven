@@ -1,0 +1,15 @@
+{
+  "task_description": "Build and run the adversarial review gate (A1 B1 C1) for the 44 objects passing steps 1-4; agents never decide pass/fail and never record step 5.",
+  "task_id": "adversarial-review",
+  "status": "pending",
+  "feature_order": [
+    "FEAT-001",
+    "FEAT-002",
+    "FEAT-003",
+    "FEAT-004",
+    "FEAT-005",
+    "FEAT-006",
+    "FEAT-007"
+  ],
+  "blocked_reason": null
+}

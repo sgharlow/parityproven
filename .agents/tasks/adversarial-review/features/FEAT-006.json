@@ -1,0 +1,24 @@
+{
+  "id": "FEAT-006",
+  "type": "test",
+  "description": "Batch 3 of the adversarial gate: objects 23-33 in batches.md (three AdventureWorks views, then WideWorldImporters Integration.* procedures, Sequences.Reseed..., Website.ActivateWebsiteLogon). Same roles and rules as FEAT-004. Never run approve; never record step 5.",
+  "status": "completed",
+  "steps": [
+    "Attacker, auditor and run as in FEAT-004, for batch 3",
+    "Window-cutoff procedures: attacks sit on the cutoff edges to the microsecond and datetime tick",
+    "Data-changing procedures: attacks observe outcome and table state through the existing stateCheck"
+  ],
+  "acceptance_criteria": [
+    "evidence/adversarial/<db>/<Obj>.json exists for all 11 batch 3 objects",
+    "evidence/adversarial/reports/batch-3.md lists every object",
+    "step 5 is unchanged except resets caused by a recorded finding"
+  ],
+  "verification": [
+    "npm run adversarial -- run --batch 3",
+    "npm run adversarial -- report --batch 3",
+    "npm run receipts:build",
+    "npm run site:check"
+  ],
+  "blocked_reason": null,
+  "findings": "Run 1 (npm run adversarial -- run --batch 3): cases ran/differed: vSalesPersonSalesByFiscalYears 6/2, vStoreWithAddresses 9/3, vStoreWithContacts 6/0, GetMovementUpdates 5/0, GetOrderUpdates 7/0, GetPurchaseUpdates 4/0, GetSaleUpdates 5/0, GetStockHoldingUpdates 5/0, GetTransactionUpdates 6/0, ReseedSequenceBeyondTableValues 10/5, ActivateWebsiteLogon 12/3. Findings fixed in conversions/ (previous versions kept as .draft.sql), diverging cases marked regression, convert + agreed-tests re-run (pass): vSalesPersonSalesByFiscalYears A01-A02 (datetime tick rounding before DATEADD; dbo.round_datetime); vStoreWithAddresses A02-A04 (CountryRegionCode join keys; tsql_compat.ci_as_key); ReseedSequenceBeyondTableValues A01-A05 (case/trailing-space name resolution, NULL names do nothing); ActivateWebsiteLogon A01,A02,A04 (nvarchar(40)/(50) parameter truncation in UTF-16 units; tsql_compat.truncate_utf16); ActivateWebsiteLogon step 5 reset (was verified). Run 2: 0 differed in all 11 objects. Gate pass: vSalesPersonSalesByFiscalYears, vStoreWithContacts, GetMovementUpdates, GetOrderUpdates, GetPurchaseUpdates. Gate fail (unresolved, not run-step work): open auditor objections on vStoreWithAddresses (O01,O02), GetSaleUpdates (O01), GetTransactionUpdates (O01), Reseed (O01), ActivateWebsiteLogon (O01,O02); GetStockHoldingUpdates mutant adequacy inadequate (unexplained miss: descending order). Report: evidence/adversarial/reports/batch-3.md. npx vitest, site:check not run."
+}

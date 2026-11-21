@@ -1,0 +1,24 @@
+{
+  "id": "FEAT-005",
+  "type": "test",
+  "description": "Batch 2 of the adversarial gate: objects 12-22 in batches.md (AdventureWorks procedures and views; Sales.vSalesPerson is verified at base). Same roles and rules as FEAT-004. Never run approve; never record step 5.",
+  "status": "completed",
+  "steps": [
+    "Attacker, auditor and run as in FEAT-004, for batch 2",
+    "Views under CI_AS collation: attacks must include case-only and trailing-space key variants",
+    "A finding on a verified object resets its step 5 with a note (.tmp/reset-step5.mjs pattern)"
+  ],
+  "acceptance_criteria": [
+    "evidence/adversarial/<db>/<Obj>.json exists for all 11 batch 2 objects",
+    "evidence/adversarial/reports/batch-2.md lists every object",
+    "step 5 is unchanged except resets caused by a recorded finding"
+  ],
+  "verification": [
+    "npm run adversarial -- run --batch 2",
+    "npm run adversarial -- report --batch 2",
+    "npm run receipts:build",
+    "npm run site:check"
+  ],
+  "blocked_reason": null,
+  "findings": "Commit 3c75bfe. First run: 6 differed on each of uspGetBillOfMaterials and uspGetWhereUsedProductID (A01-A06, datetime rounding of @CheckDate/StartDate/EndDate; fixed with dbo.round_datetime in conversions/, .draft.sql kept) and 3 differed on each of vEmployee, vStateProvinceCountryRegion, vVendorWithAddresses, vIndividualCustomer, vSalesPerson (A02-A04, collation join keys: AE/ss expansions, Kelvin sign, soft hyphen, NBSP; fixed with tsql_compat.ci_as_key). Re-run: 17,17,11,7,7,8,5,9,5,11,9 adversarial cases ran, 0 differed. Gate still FAIL on all 11: open auditor objections (all objects), invalid case A15 (BOM, WhereUsed) and A07 (vSalesPerson: money beyond driver capture limit), mutant adequacy inadequate on uspGetBillOfMaterials, uspGetWhereUsedProductID ('limit one level too low') and vVendorWithAddresses ('inner join to address type made a left join'). Cases not edited except regression:true on the 27 diverging case ids (flag only; the instruction not to edit cases was overridden by the plan's 'mark the case regression' - flagged for the owner). Sales.vSalesPerson step 5 reset (was pass, Steve Harlow 2026-11-18). site:check needs a deployed URL and was not run. Report: evidence/adversarial/reports/batch-2.md"
+}

@@ -1,0 +1,61 @@
+
+ RUN  v5.1.0 C:/source/parityproven
+
+ Γ¥» src/cli/approve.test.ts (22 tests | 2 failed) 40ms
+   Γ¥» decideApproval (12)
+     ├ù approves a clean object 11ms
+     ├ù allows step 4 n/a 1ms
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 2 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  src/cli/approve.test.ts > decideApproval > approves a clean object
+AssertionError: expected { ΓÇª(3) } to deeply equal { ΓÇª(3) }
+
+- Expected
++ Received
+
+  {
+    "name": "AdventureWorks2025 dbo.F",
+-   "ok": true,
+-   "reasons": [],
++   "ok": false,
++   "reasons": [
++     "step 5 must be at least one day after the first pass (2026-11-19); review date given: 2026-11-19",
++   ],
+  }
+
+ Γ¥» src/cli/approve.test.ts:46:37
+     44| describe("decideApproval", () => {
+     45|   it("approves a clean object", () => {
+     46|     expect(decideApproval(input())).toEqual({ name: "AdventureWorks202ΓÇª
+       |                                     ^
+     47|   });
+     48|   it("refuses missing evidence", () => {
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/2]ΓÄ»
+
+ FAIL  src/cli/approve.test.ts > decideApproval > allows step 4 n/a
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ Γ¥» src/cli/approve.test.ts:95:34
+     93|   it("allows step 4 n/a", () => {
+     94|     const i = input(); i.pair.evidence.step4 = "n/a";
+     95|     expect(decideApproval(i).ok).toBe(true);
+       |                                  ^
+     96|   });
+     97| });
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/2]ΓÄ»
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  2 failed | 25 passed (27)
+   Start at  20:31:07
+   Duration  560ms (import 34%, transform 32%, tests 27%, worker 7%)
+

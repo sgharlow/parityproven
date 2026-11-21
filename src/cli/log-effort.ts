@@ -15,7 +15,7 @@
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 import { existsSync, readFileSync, writeFileSync, readdirSync } from "fs";
-import { firstCommitDate } from "../pairs/review-rules.js";
+import { conversionChangeDate, firstCommitDate, firstPassDate } from "../pairs/review-rules.js";
 import type { PairRecord } from "../pairs/schema.js";
 import { computeStatus, missingForVerified } from "../pairs/status.js";
 import { ttyProblem } from "./approve-decision.js";
@@ -55,7 +55,7 @@ function main(): void {
     const tty = ttyProblem(process.stdin.isTTY, process.stdout.isTTY);
     if (tty) throw new Error(tty.replace("approve needs", "--review needs"));
     const date = arg("--date") ?? new Date().toISOString().slice(0, 10);
-    const first = firstCommitDate(ROOT, path);
+    const first = firstPassDate({ pairFirstCommit: firstCommitDate(ROOT, path), conversionChanged: conversionChangeDate(ROOT, path.split(/[\\/]/).slice(-2)[0]!, object), gateRunAt: rec.evidence.adversarial?.runAt });
     if (first && date <= first) {
       throw new Error(`step 5 must be at least one day after the first pass (${first}); review date given: ${date}`);
     }

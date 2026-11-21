@@ -13,7 +13,7 @@ import { createInterface } from "readline/promises";
 import type { PairRecord } from "../pairs/schema.js";
 import type { AdversarialEvidence } from "../adversarial/schema.js";
 import { computeStatus } from "../pairs/status.js";
-import { firstCommitDate } from "../pairs/review-rules.js";
+import { conversionChangeDate, firstCommitDate } from "../pairs/review-rules.js";
 import { decideApproval, evidenceFileSha256, reportObjects, ownerConfirmItems, reviewerConfirmed, ttyProblem } from "./approve-decision.js";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -40,7 +40,7 @@ async function main(): Promise<void> {
     const pair = JSON.parse(readFileSync(pairPath, "utf-8")) as PairRecord;
     const evPath = resolve(ROOT, "evidence", "adversarial", database, `${object}.json`);
     const evidence = existsSync(evPath) ? (JSON.parse(readFileSync(evPath, "utf-8")) as AdversarialEvidence) : null;
-    const decision = decideApproval({ name: `${database} ${object}`, evidence, pair, firstCommit: firstCommitDate(ROOT, pairPath), date });
+    const decision = decideApproval({ name: `${database} ${object}`, evidence, pair, firstCommit: firstCommitDate(ROOT, pairPath), conversionChanged: conversionChangeDate(ROOT, database, object), date });
     return { pairPath, pair, decision };
   });
 

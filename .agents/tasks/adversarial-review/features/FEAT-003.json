@@ -1,0 +1,24 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "Plan tasks 7-8: src/pairs/review-rules.ts (shared first-commit date and one-day rule), npm run approve (TTY-only, refusal rules re-evaluated from evidence JSON), log-effort refuses a step-5 pass when the gate is not pass, receipts schema/builder and web/app.js adversarial section. Depends on FEAT-001 and FEAT-002 types.",
+  "status": "completed",
+  "steps": [
+    "Do plan.md tasks 7 and 8 in order",
+    "approve decision function is pure and unit tested; a non-TTY invocation exits non-zero and writes nothing",
+    "No code in src/cli/adversarial.ts writes step 5"
+  ],
+  "acceptance_criteria": [
+    "npx vitest run passes",
+    "npm run receipts:build and npm run site:check pass",
+    "mutate-check on the approve decision function reports 0 missed"
+  ],
+  "verification": [
+    "npm run build",
+    "npx vitest run",
+    "npm run receipts:build",
+    "npm run site:check"
+  ],
+  "blocked_reason": null,
+  "findings": "Added src/pairs/review-rules.ts (firstCommitDate(root,path), oneDayProblem, assertOneDay), used by log-effort (which now also refuses a step-5 pass unless evidence.adversarial.gate is pass) and approve. src/cli/approve-decision.ts holds the pure decision (decideApproval, ttyProblem, reviewerConfirmed, reportObjects); src/cli/approve.ts is the TTY-only CLI (npm run approve), all-or-nothing, parses \"## <db> <object>\" headings of the batch report, re-reads evidence/adversarial/<db>/<obj>.json and re-runs gateResult against sha256(pair code.final). Receipts: ReceiptAdversarial in src/receipts/schema.ts, buildReceipts takes optional repoRoot (CLI passes it) to read the evidence JSON; web/app.js shows the Adversarial review section and \"(on the adversarial report)\" at step 5. Mutants: scripts/mutants-approve.json (15) and scripts/mutants-review-rules.json (5), 0 missed. site:check needs a deployed URL argument, so npm run predeploy:check was run instead (passes). receipts:build regenerated receipts/ and README (0 verified, 44 pending, 11 failed). Nothing wrote step 5; approve and log-effort --review were not run."
+}

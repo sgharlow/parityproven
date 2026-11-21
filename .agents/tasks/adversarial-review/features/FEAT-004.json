@@ -1,0 +1,24 @@
+{
+  "id": "FEAT-004",
+  "type": "test",
+  "description": "Batch 1 of the adversarial gate: objects 1-11 in batches.md (AdventureWorks scalar functions). Roles in sequence: ATTACKER writes adversarial/<db>/<Obj>.cases.json; AUDITOR (a different model if available) writes <Obj>.audit.json; RUN executes the CLI. Never run approve; never record step 5.",
+  "status": "completed",
+  "steps": [
+    "Attacker: for each object read the source T-SQL, the conversion, the spec and its fixed cases; write cases built to make the engines disagree for every applicable trap; validate with npm run adversarial -- check --object <obj>; record own model id; commit",
+    "Auditor: check each case is a real attack, the label matches the values sent, every applicable trap is covered; write objections only (no verdict); record own model id; commit",
+    "Run: start npm run adversarial -- run --batch 1 in the background with a new log file, poll evidence/adversarial/status/batch-1.json, then report --batch 1 and npm run receipts:build; handle any divergence as a finding (plan.md Findings), never weaken a case; commit with explicit paths"
+  ],
+  "acceptance_criteria": [
+    "evidence/adversarial/<db>/<Obj>.json exists for all 11 batch 1 objects",
+    "evidence/adversarial/reports/batch-1.md lists every object with its checklist mapping",
+    "step 5 is unchanged on every pair record"
+  ],
+  "verification": [
+    "npm run adversarial -- run --batch 1",
+    "npm run adversarial -- report --batch 1",
+    "npm run receipts:build",
+    "npm run site:check"
+  ],
+  "blocked_reason": null,
+  "findings": "Run 2026-11-19 (logs .tmp/adv-run-batch1-a.log, per-object re-runs .tmp/adv-{list,cost,contact}-*.log). Report: evidence/adversarial/reports/batch-1.md. Evidence JSON for all 11 objects. 0 differed: ufnGetAccountingEndDate (1 case), ufnGetAccountingStartDate (1), ufnGetContactInformation (12, after the harness fix), ufnGetDocumentStatusText (6), ufnGetProductListPrice (19, after the fix), ufnGetProductStandardCost (19, after the fix), ufnGetPurchaseOrderStatusText (6), ufnGetSalesOrderStatusText (6), ufnGetStock (7), ufnLeadingZeros (8). Findings: (1) conversion: datetime 1/300 s tick rounding of argument and StartDate/EndDate missing in ufnGetProductDealerPrice/ListPrice/StandardCost (cases A01-A06), fixed in b9f32c3; (2) harness: money above 2^53/10^4 captured imprecisely (ListPrice/StandardCost A14), fixed in bb760b9; (3) harness: tSQLt.RunAll skipped a test whose name had non-CP1252 characters (ContactInformation A04), fixed in bb760b9. Evidence commit 356c9bb. Gate pass: ufnGetProductListPrice, ufnGetProductStandardCost. Unresolved: ufnGetProductDealerPrice step 4 now 2.73x against the agreed 2.5x after the correctness fix (record failed, gate cannot re-run, its evidence is from before the fix: 19 ran, 6 differed), needs an owner decision; open audit objections on the other 8 objects; mutant adequacy inadequate for ufnGetContactInformation (missed 'consumer rows include store customers') and ufnGetSalesOrderStatusText. No object was verified, so no step 5 was reset. Step 5 unchanged on every pair record. npm run site:check needs a deployed URL; predeploy:check passed instead."
+}
