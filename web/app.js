@@ -270,7 +270,8 @@ async function initReceipt() {
     <div class="card">
       <div style="display:flex;gap:2rem;flex-wrap:wrap;font-size:0.875rem">
         <div><span style="color:var(--c-muted)">Engine:</span> ${esc(receipt.code.engine)}</div>
-        <div><span style="color:var(--c-muted)">Human effort:</span> ${receipt.effort.humanMinutes > 0 ? `${receipt.effort.humanMinutes} min` : (receipt.evidence.step5Method ? '<span style="color:var(--c-muted)">review time not recorded</span>' : '<span style="color:var(--c-muted)">not logged</span>')}</div>
+        <div><span style="color:var(--c-muted)">Human effort:</span> ${receipt.effort.humanMinutes > 0 ? `${receipt.effort.humanMinutes} min` : (receipt.evidence.batchReview ? '<span style="color:var(--c-muted)">none logged for this object alone</span>' : (receipt.evidence.step5Method ? '<span style="color:var(--c-muted)">review time not recorded</span>' : '<span style="color:var(--c-muted)">not logged</span>'))}</div>
+        ${receipt.evidence.batchReview ? `<div><span style="color:var(--c-muted)">Batch review time:</span> ${receipt.evidence.batchReview.minutes} min for one batch report covering ${receipt.evidence.batchReview.objectsInBatch} objects (recorded ${esc(receipt.evidence.batchReview.recordedOn)}; not split per object)</div>` : ''}
         <div><span style="color:var(--c-muted)">Prediction:</span> ${predHtml}</div>
       </div>
     </div>

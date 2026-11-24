@@ -1,0 +1,11 @@
+{
+  "recordedBy": "Steve Harlow",
+  "recordedOn": "2026-11-23",
+  "source": "Owner decision D3-P, 2026-11-23: five minutes per batch report, spent reading the report and its evidence before running npm run approve on 2026-11-20. Recorded per batch; never divided across the objects in a batch.",
+  "batches": {
+    "evidence/adversarial/reports/batch-1.md": { "minutes": 5, "recordedOn": "2026-11-23" },
+    "evidence/adversarial/reports/batch-2.md": { "minutes": 5, "recordedOn": "2026-11-23" },
+    "evidence/adversarial/reports/batch-3.md": { "minutes": 5, "recordedOn": "2026-11-23" },
+    "evidence/adversarial/reports/batch-4.md": { "minutes": 5, "recordedOn": "2026-11-23" }
+  }
+}

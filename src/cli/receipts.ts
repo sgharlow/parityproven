@@ -67,6 +67,12 @@ function conversionChanges(): Record<string, string> {
   }
   return out;
 }
+/** Ruling D3: the owner's minutes per batch report. A report with no entry shows "review time not recorded" on its receipts. */
+function batchReviewMinutes(): Record<string, { minutes: number; recordedOn: string }> {
+  const p = resolve(REPO_ROOT, "evidence", "review-time", "batch-minutes.json");
+  if (!existsSync(p)) return {};
+  return (JSON.parse(readFileSync(p, "utf-8")) as { batches?: Record<string, { minutes: number; recordedOn: string }> }).batches ?? {};
+}
 async function main(): Promise<void> {
   const output = buildReceipts({
     pairsDir:       resolve(REPO_ROOT, "pairs"),
@@ -81,6 +87,7 @@ async function main(): Promise<void> {
     })),
     firstCommits: firstCommits(),
     conversionChanges: conversionChanges(),
+    batchReviewMinutes: batchReviewMinutes(),
   });
   const unexplained = (output.index.notAttempted ?? []).filter((x) => x.reason.startsWith("Not attempted; no reason recorded"));
   for (const x of unexplained) console.warn(`WARNING: ${x.database} ${x.schemaName}.${x.objectName} has no record and no disposition; shown as not attempted`);

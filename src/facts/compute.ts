@@ -15,6 +15,7 @@ export interface RecordFacts {
   steps: { step2Pass: number; step3Pass: number; step4: { pass: number; na: number; fail: number }; step5Recorded: number; step5Methods: string[]; step5Reviewers: string[] };
   agreedRuntimeFactors: string[];
   humanMinutes: { total: number; recordsWithMinutes: number };
+  batchReview: { batches: number; minutesPerBatch: number[]; totalMinutes: number };
   adversarial: { objectsGated: number; casesRan: number; casesDiffered: number; gatePass: number; regressionCases: number; models: string[] };
   kiro: { specs: string[]; steering: string[]; hooks: string[] };
   mcp: { toolCalls: number; clients: string[] };
@@ -25,6 +26,13 @@ const json = (p: string): any => JSON.parse(readFileSync(p, "utf-8"));
 const dirs = (p: string): string[] => (existsSync(p) ? readdirSync(p, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name).sort() : []);
 const files = (p: string): string[] => (existsSync(p) ? readdirSync(p, { withFileTypes: true }).filter((d) => d.isFile()).map((d) => d.name).sort() : []);
 const sortedUnique = (xs: string[]): string[] => [...new Set(xs)].sort();
+
+function batchReview(root: string): RecordFacts["batchReview"] {
+  const p = join(root, "evidence", "review-time", "batch-minutes.json");
+  if (!existsSync(p)) return { batches: 0, minutesPerBatch: [], totalMinutes: 0 };
+  const minutes = Object.entries(json(p).batches as Record<string, { minutes: number }>).sort(([a], [b]) => a.localeCompare(b)).map(([, v]) => v.minutes);
+  return { batches: minutes.length, minutesPerBatch: minutes, totalMinutes: minutes.reduce((s, m) => s + m, 0) };
+}
 
 export function computeRecordFacts(root: string): RecordFacts {
   const idx = json(join(root, "receipts", "index.json")).summary;
@@ -70,6 +78,7 @@ export function computeRecordFacts(root: string): RecordFacts {
       step5Reviewers: sortedUnique(pairs.filter((p) => p.evidence.reviewer).map((p) => `${p.evidence.reviewer} ${p.evidence.reviewDate}`)),
     },
     agreedRuntimeFactors: sortedUnique(pairs.filter((p) => p.evidence.runtime && p.evidence.runtime.threshold !== 1.5).map((p) => `${p.evidence.runtime.threshold}x`)),
+    batchReview: batchReview(root),
     humanMinutes: { total: pairs.reduce((s, p) => s + (p.effort.humanMinutes ?? 0), 0), recordsWithMinutes: pairs.filter((p) => (p.effort.humanMinutes ?? 0) > 0).length },
     adversarial: {
       objectsGated: ev.length, casesRan: ev.reduce((s, e) => s + e.summary.ran, 0), casesDiffered: ev.reduce((s, e) => s + e.summary.differed, 0),

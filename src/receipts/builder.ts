@@ -25,6 +25,8 @@ export interface BuildInput {
   firstCommits?: Record<string, { at: string; commit: string }>;
   /** Date of the last commit that changed each object's conversion file, keyed "<database>/<schema>.<object>" (read from git by the CLI). */
   conversionChanges?: Record<string, string>;
+  /** Ruling D3: owner's minutes per batch report, keyed by the report path a pair record cites in step5Report (evidence/review-time/batch-minutes.json). */
+  batchReviewMinutes?: Record<string, { minutes: number; recordedOn: string }>;
 }
 
 /** Receipt section from the pair record's gate summary, with detail from the evidence JSON when it can be read. */
@@ -157,6 +159,17 @@ export function buildReceipts(input: BuildInput): BuildOutput {
       };
 
       receipts.push(receipt);
+    }
+  }
+
+  // Batch review time (ruling D3): every receipt signed on a report shows that report's minutes and how many objects it covered (counted here, not typed)
+  if (input.batchReviewMinutes) {
+    const perReport = new Map<string, number>();
+    for (const r of receipts) { const rep = r.evidence.step5Report; if (rep) perReport.set(rep, (perReport.get(rep) ?? 0) + 1); }
+    for (const r of receipts) {
+      const rep = r.evidence.step5Report;
+      const rec = rep ? input.batchReviewMinutes[rep] : undefined;
+      if (rep && rec) r.evidence.batchReview = { minutes: rec.minutes, objectsInBatch: perReport.get(rep)!, report: rep, recordedOn: rec.recordedOn };
     }
   }
 

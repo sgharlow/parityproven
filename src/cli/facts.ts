@@ -49,6 +49,7 @@ function main(): void {
     ["Step 5 method", f.steps.step5Methods.join("; ") || "none", "`evidence.step5Method`"],
     ["Step 4 factors other than the default", f.agreedRuntimeFactors.join(", ") || "none", "`evidence.runtime.threshold` in `pairs/`"],
     ["Human minutes logged (total / records with minutes)", `${f.humanMinutes.total} / ${f.humanMinutes.recordsWithMinutes}`, "`effort.humanMinutes` in `pairs/`"],
+    ["Batch review minutes recorded (per batch, in report order / total)", `${f.batchReview.minutesPerBatch.join(", ")} / ${f.batchReview.totalMinutes}`, "`evidence/review-time/batch-minutes.json`"],
     ["Adversarial: objects gated / gate pass", `${f.adversarial.objectsGated} / ${f.adversarial.gatePass}`, "`evidence/adversarial/<db>/*.json` gate.passed"],
     ["Adversarial: cases ran / differed", `${f.adversarial.casesRan} / ${f.adversarial.casesDiffered}`, "`evidence/adversarial/<db>/*.json` summary"],
     ["Adversarial: regression cases kept", String(f.adversarial.regressionCases), "`adversarial/<db>/*.cases.json` regression: true"],

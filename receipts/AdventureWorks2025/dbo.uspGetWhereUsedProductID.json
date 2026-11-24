@@ -347,6 +347,12 @@
           "postgres": "pass"
         }
       ]
+    },
+    "batchReview": {
+      "minutes": 5,
+      "objectsInBatch": 11,
+      "report": "evidence/adversarial/reports/batch-2.md",
+      "recordedOn": "2026-11-23"
     }
   },
   "effort": {
@@ -358,5 +364,5 @@
     "p50Hours": 1,
     "p90Hours": 2
   },
-  "builtAt": "2026-11-21T03:44:53.337Z"
+  "builtAt": "2026-11-24T04:25:38.025Z"
 }
