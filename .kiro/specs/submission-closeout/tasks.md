@@ -1,13 +1,13 @@
 # submission-closeout tasks
 Requirements: `requirements.md`. Design: `design.md`. Tasks marked **(owner)** are never done by an agent. Tick a box only with the commit or evidence file beside it. An open box carries an "open because" note on its own line (`src/specs/tasks.test.ts` fails otherwise).
-Status 2026-11-20: phase 0 done; phase 2 done except the items that wait on owner decisions D1-D6; phase 3 site work in progress; phase 4 starts at the code freeze (design.md).
+Status 2026-11-23: phase 0 done; phase 2 and 3 are done except what waits on D3 (batch minutes), D4 (the owner's step 5 wording and scorecard lines) and D6 (disclosure); D5 is "none found", awaiting the owner's one-word confirmation. The shot list was rewritten 2026-11-23 (4.3). The Gemini source pack was regenerated at `ab371aa` (it had cited 4396287, 257 tests and 98 commits and dated step 5 2026-11-19; the sign-off date on all 44 records is 2026-11-20). Phase 4 starts at the code freeze (design.md).
 
 ## Phase 0: check this spec
 - [x] 0.1 Re-measure the "Found" lines in `requirements.md` against the repo; correct any that are wrong and say which (REQ header) (2026-11-20: all hold; additions and one precision in `requirements.md` "Phase 0 re-measurement"; output `evidence/closeout/0.1-found-lines.txt`)
 - [ ] 0.2 Add this spec to the README disclosure once D6 is answered (REQ-9.1) (open because: D6 is unanswered)
 
 ## Phase 1: owner decisions
-- [ ] 1.1 **(owner)** D1 one-day rule · D2 `.agents/` · D3 batch minutes · D4 wording · D5 custom agents · D6 disclosure sentence (design.md table), asked one at a time (open because: 2026-11-20 answers: D1 A, D2 A, D4 B (the owner writes the wording), D5 "check" (none found), D6 "review only"; D3 answered "5" and needs one clarification: five minutes per batch report, or five in total)
+- [ ] 1.1 **(owner)** D1 one-day rule · D2 `.agents/` · D3 batch minutes · D4 wording · D5 custom agents · D6 disclosure sentence (design.md table), asked one at a time (open because: answered so far: D1 A, D2 A, D4 B (the owner writes the wording), D5 "check" (none found; awaiting N or Y), D6 "review only"; D3 "5" still needs "per batch report or in total"; the answers go in `ParityProven-closeout-checklist.md`)
 - [ ] 1.2 Record each answer as a dated ruling in the steering file it changes (open because: done for D1 (`verification-standard.md`), D2 (`.agents/tasks/adversarial-review/README.md`) and D5 (`kiroween-submission.md`); D3, D4 and D6 are pending)
 
 ## Phase 2: evidence and truth
@@ -36,7 +36,7 @@ Status 2026-11-20: phase 0 done; phase 2 done except the items that wait on owne
 ## Phase 4: freeze and final evidence
 - [ ] 4.1 Code freeze commit named in `kiroween-submission.md` (open because: freeze is proposed for 2026-11-27, after phase 3)
 - [ ] 4.2 Fresh-clone run at the freeze commit; result in `evidence/fresh-clone/`; README line and checklist box updated only then (REQ-1) (open because: runs at the freeze commit; the 2026-11-19 run stopped after 7 of 46 conversions because Docker was not running and is not a result)
-- [ ] 4.3 One shot list; Desktop checklist points to it (owner's word needed to edit it) (REQ-8.1) (open because: after the freeze; editing the Desktop file needs the owner's word)
+- [ ] 4.3 One shot list; Desktop checklist points to it (owner's word needed to edit it) (REQ-8.1) (open because: the shot list was rewritten 2026-11-23 on the owner's instruction, as section H of the Desktop checklist, and `video/VIDEO-KIT.md` now points there instead of repeating it; it is confirmed by the dry run at the freeze (4.5), and its wording follows D4)
 - [ ] 4.4 Stills and cards rendered from the freeze commit, badge absent (REQ-8.2) (open because: after the freeze; the cards were re-rendered from the repo on 2026-11-20 and the stills are stale)
 - [ ] 4.5 Dry run of every shot-list command at the freeze commit, outputs and timings recorded (REQ-8.3) (open because: after the freeze and 4.3)
 - [ ] 4.6 `npm run facts` at the freeze commit; file handed to the owner (open because: after 3.4 and the freeze)
