@@ -7,7 +7,7 @@ Status 2026-11-23: phase 0 done; phase 2 and 3 are done except what waits on D3 
 - [ ] 0.2 Add this spec to the README disclosure once D6 is answered (REQ-9.1) (open because: D6 is unanswered)
 
 ## Phase 1: owner decisions
-- [ ] 1.1 **(owner)** D1 one-day rule · D2 `.agents/` · D3 batch minutes · D4 wording · D5 custom agents · D6 disclosure sentence (design.md table), asked one at a time (open because: answered so far: D1 A, D2 A, D4 B (the owner writes the wording), D5 "check" (none found; awaiting N or Y), D6 "review only"; D3 "5" still needs "per batch report or in total"; the answers go in `ParityProven-closeout-checklist.md`)
+- [ ] 1.1 **(owner)** D1 one-day rule · D2 `.agents/` · D3 batch minutes · D4 wording · D5 custom agents · D6 disclosure sentence (design.md table), asked one at a time (open because: answered so far: D1 A, D2 A, D4 B (the owner writes the wording), D5 N (owner, 2026-11-23; three workflow runs recorded in `.agents/tasks/adversarial-review/README.md`), D6 "review only"; D3 "5" still needs "per batch report or in total"; the answers go in `ParityProven-closeout-checklist.md`)
 - [ ] 1.2 Record each answer as a dated ruling in the steering file it changes (open because: done for D1 (`verification-standard.md`), D2 (`.agents/tasks/adversarial-review/README.md`) and D5 (`kiroween-submission.md`); D3, D4 and D6 are pending)
 
 ## Phase 2: evidence and truth
