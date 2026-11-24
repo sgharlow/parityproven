@@ -22,7 +22,7 @@ Status 2026-11-23: phase 0 done; phase 2 and 3 are done except what waits on D3 
 - [x] 2.9 `tech.md`, `structure.md`, `kiroween-submission.md`, README corrected line by line from the REQ-5 list (REQ-5.1) (2026-11-20; the README's old fresh-clone line is replaced by a pointer to `evidence/fresh-clone/`, which is filled in by 4.2; the "All source code ... run it" box in `kiroween-submission.md` was unticked until that file exists)
 - [x] 2.10 Stale-doc test extended to hand-typed counts and hashes in README and steering; seen failing first (`src/receipts/hand-typed.test.ts`; failing run `evidence/closeout/2.10-hand-typed-seen-failing.txt`: a9ce6fc and three counts)
 - [x] 2.11 Repo homepage set to `https://parityproven.com`; checked with `gh api` (`evidence/closeout/2.11-homepage.txt`)
-- [ ] 2.12 README disclosure updated with D6 (REQ-9.1) (open because: D6a-2 and D6b-1 are in the README (owner 2026-11-23); D6c (Gemini) is unanswered)
+- [ ] 2.12 README disclosure updated with D6 (REQ-9.1) (open because: D6a-2 and D6b-1 are in the README (owner 2026-11-23); D6c-P (a Gemini podcast, optional) needs the owner's disclosure sentence in the README)
 - [ ] 2.13 Receipts and README block rebuilt, tests, `predeploy:check`, push, `site:check` PASS (open because: repeated after each decision-dependent item; the last rebuild is after 2.5-2.8)
 
 ## Phase 3: site and facts
@@ -44,7 +44,7 @@ Status 2026-11-23: phase 0 done; phase 2 and 3 are done except what waits on D3 
 
 ## Owner: the submission (REQ-10)
 - [ ] 5.1 **(owner)** Devpost registration confirmed and a draft saved (open because: owner task)
-- [ ] 5.2 **(owner)** Decide: Best Startup entry; any AI-generated narration or text (open because: owner task)
+- [ ] 5.2 **(owner)** Decide: Best Startup entry; any AI-generated narration or text (open because: owner task; the AI part is decided, D6c-P 2026-11-23: a Gemini podcast only, as an optional extra link, disclosed; none for the video, an infographic, the description, the write-up or the post; the Best Startup part is undecided)
 - [ ] 5.3 **(owner)** Description fields written; `npm run fact-check` run on the text (open because: owner task; needs 3.5)
 - [ ] 5.4 **(owner)** Kiro write-up written from the facts file; fact-checked (open because: owner task; needs 3.4)
 - [ ] 5.5 **(owner)** Video recorded, under 3:00, public on YouTube, no third-party marks or music (open because: owner task)
