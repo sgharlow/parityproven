@@ -164,6 +164,7 @@ web/              Static receipts site and questionnaire (published with receipt
   - `ac09c7d`: QA pass over `tech.md`, `sources-and-data.md`, `verification-standard.md` and `kiroween-submission.md` (converter = Kiro, Compass = assessment only, release-asset sha256, trigger verification, load-time precision).
   - `3042009`: `product.md`, narrowed the problem statement to re-runnable deterministic evidence.
 - Since 2026-11-06, Claude Code, running outside Kiro, wrote the briefs that Kiro implemented, and on 2026-11-20 drafted the submission-closeout spec, which Kiro checked, corrected and implemented. Claude Code wrote no product code. The briefs are not in this repository.
+- Inside the product, Kiro converts the T-SQL, a Claude model writes the adversarial test cases and a GPT model audits them. Each receipt shows which models ran. Code, not a model, decides pass or fail.
 - Sample databases: WideWorldImporters and AdventureWorks2025 from `microsoft/sql-server-samples` (MIT licence, confirmed 2026-11-04). See `sources/manifest.json`.
 - Babelfish Compass (Apache-2.0) is used as a compatibility assessment tool only; its output is stored as evidence and never treated as the conversion answer.
 
