@@ -61,6 +61,8 @@ async function initScorecard() {
       ${summary.inventory ? `<div class="stat"><div class="stat-val">${summary.inventory}</div><div class="stat-lbl">Inventoried</div></div>` : ''}
     </div>`;
 
+  // the verified rule (D4a, option 3) and the re-run sentence sit under the counts; the owner's three lines are static in index.html (D4c)
+  const verifiedNoteHtml = `<p style="color:var(--c-muted);margin:0 0 1rem">An object is shown as verified only when it passes the listed test cases and a named person has signed off the batch evidence report it appears in. Every receipt gives the command that re-runs its check from the repo.</p>`;
   const scoreNotes = [...(index.predictionNotes || []), ...(index.tierNotes || [])];
   const tierNotesHtml = scoreNotes.length
     ? `<div class="card" style="font-size:0.85rem;color:var(--c-muted)">${scoreNotes.map(n => `<p style="margin:0.25rem 0">${esc(n)}</p>`).join('')}</div>`
@@ -112,6 +114,7 @@ async function initScorecard() {
 
   root.innerHTML = `
     ${statsHtml}
+    ${verifiedNoteHtml}
     ${tierNotesHtml}
     <div class="table-scroll"><table>
       <thead><tr><th>Object</th><th>Database</th><th>Type</th><th>Tier</th><th>Status</th></tr></thead>

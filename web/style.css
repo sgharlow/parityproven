@@ -93,6 +93,10 @@ a { color: var(--c-link); }
   color: var(--c-muted);
 }
 
+/* The three lines under the scorecard title (owner's wording, D4c) */
+.intro { margin-bottom: 1.5rem; }
+.intro p { margin: 0 0 0.4rem; color: var(--c-muted); }
+.intro p:first-child { color: var(--c-text); font-size: 1.05rem; }
 /* Tables: a wide table scrolls inside its own box; the page never scrolls sideways (check-widths.mjs) */
 .table-scroll { overflow-x: auto; max-width: 100%; }
 table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
