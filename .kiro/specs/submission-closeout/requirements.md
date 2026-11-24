@@ -88,3 +88,12 @@ These cannot be done by Kiro. The spec tracks them so nothing is found missing o
 2. Decisions the owner still owes: Best Startup while the About page says ParityProven is not yet formed as a company (the sponsor decides eligibility at its discretion); whether AI-generated narration or text from the Gemini source pack is used anywhere, given N1A and that Social Blitz posts are judged on "original thoughts vs AI writing".
 3. The site and the public repo stay up, free and without login, until 2027-01-29 1:00 pm PT.
 4. After submission, the repo's default branch is not changed in a way that makes the submitted description untrue.
+
+### REQ-11 A QA and validation custom agent (owner decision D5b-B, 2026-11-23)
+Found: no custom agent exists (D5-N). The owner chose to build one small agent for the repo's checks, with a hard cut date.
+1. `.kiro/agents/qa-validation.json` (or `.md`): runs the repo's read-only checks and reports what fails. It never edits files, never runs `npm run approve`, never pushes, never records step 5 and never writes submission text. Its `tools` field omits the write tool; its `permissions.rules` allow only the check commands and deny writes, `npm run approve*`, `git push*` and the other git writes.
+2. A repo test reads the agent file and fails if it gains the write tool, allows `approve` or `push`, or loses a deny rule. It is seen failing first against a planted change.
+3. One observed run is kept under `evidence/agents/` (output, date, commit). If this Kiro session cannot launch the agent, the owner selects it once in the IDE and the transcript is kept.
+4. The facts file and the write-up list it only when the file and the run evidence both exist, dated: added late, used for the final QA pass, not "used throughout".
+5. Cut date 2026-11-25. If it is not built, tested and run by then, it is dropped, D5-N stands as written, and the facts file keeps "no artifact in the repo".
+Syntax confirmed 2026-11-23 from kiro.dev (custom agents, configuration reference, permissions): an agent's `permissions.rules` take a capability (`fs_read`, `fs_write`, `shell`), match patterns and an effect (`deny`, `ask`, `allow`); deny overrides allow; shell patterns support `*` and `exclude`; compound shell commands are split and each part is checked; `tools` and `permissions` are separate fields. `npm run facts` is not allowed to the agent because it writes a file: the staleness test inside `npm test` covers it.
