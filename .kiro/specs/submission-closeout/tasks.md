@@ -22,7 +22,7 @@ Status 2026-11-23: phase 0 done; phase 2 and 3 are done except what waits on D3 
 - [x] 2.9 `tech.md`, `structure.md`, `kiroween-submission.md`, README corrected line by line from the REQ-5 list (REQ-5.1) (2026-11-20; the README's old fresh-clone line is replaced by a pointer to `evidence/fresh-clone/`, which is filled in by 4.2; the "All source code ... run it" box in `kiroween-submission.md` was unticked until that file exists)
 - [x] 2.10 Stale-doc test extended to hand-typed counts and hashes in README and steering; seen failing first (`src/receipts/hand-typed.test.ts`; failing run `evidence/closeout/2.10-hand-typed-seen-failing.txt`: a9ce6fc and three counts)
 - [x] 2.11 Repo homepage set to `https://parityproven.com`; checked with `gh api` (`evidence/closeout/2.11-homepage.txt`)
-- [ ] 2.12 README disclosure updated with D6 (REQ-9.1) (open because: D6a-2 and D6b-1 are in the README (owner 2026-11-23); D6c-P (a Gemini podcast, optional) needs the owner's disclosure sentence in the README)
+- [ ] 2.12 README disclosure updated with D6 (REQ-9.1) (open because: D6a-2 and D6b-1 are in the README (owner 2026-11-23); the podcast sentence is chosen (D6c-2) but is added only when the podcast exists, see 5.9)
 - [ ] 2.13 Receipts and README block rebuilt, tests, `predeploy:check`, push, `site:check` PASS (open because: repeated after each decision-dependent item; the last rebuild is after 2.5-2.8)
 
 ## Phase 3: site and facts
@@ -51,3 +51,4 @@ Status 2026-11-23: phase 0 done; phase 2 and 3 are done except what waits on D3 
 - [ ] 5.6 **(owner)** Optional social post, starting with `#KiroweenHackathon26`, sharing a favourite thing about Kiro and how it changed the approach to development (open because: owner task)
 - [ ] 5.7 **(owner)** Form: category Resurrection, bonus fields, URLs; submitted before 2026-12-04 2:00 pm PT (open because: owner task)
 - [ ] 5.8 Site and repo stay up through 2027-01-29 (open because: runs until 2027-01-29)
+- [ ] 5.9 **(owner)** Optional Gemini podcast (D6c-P, D6c-2, 2026-11-23): generate it from the pack, get the script as text, run `npm run fact-check` on the script, listen to all of it, check the tool's terms, then tell Kiro the link (open because: not generated; when it is, Kiro adds exactly this sentence to the README disclosures and the owner links it from his own description text: "An optional podcast about this project was generated with Gemini from a fact sheet drawn from this repository; the voices are AI-generated.")
