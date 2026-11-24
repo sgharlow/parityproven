@@ -43,7 +43,7 @@ export function statusBlock(index: ReceiptIndex, pairs: NamedPair[]): string {
       `A further ${s.excluded ?? 0} are excluded as out of scope and ${s.notAttempted ?? 0} are not attempted, each with its reason.`,
     `- Converted and run through the harness: ${converted.length} objects (the other ${pairs.length - converted.length} pair records are recorded as failed without a conversion).`,
     `- Step 2 (agreed tests) passes for ${step2.length}: ${list(step2)}.`,
-    `- Step 5 (second review) recorded for ${step5.length}${reviewed.length ? ` (${reviewed.join("; ")})` : ""}. Verified: ${list(verified)}.`,
+    `- Step 5 (sign-off by a named person) recorded for ${step5.length}${reviewed.length ? ` (${reviewed.join("; ")})` : ""}. Verified: ${list(verified)}.`,
     `- Receipts built ${index.builtAt}.`,
     BLOCK_END,
   ].join("\n");

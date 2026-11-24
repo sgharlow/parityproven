@@ -65,7 +65,7 @@ export interface ReceiptFile {
     harnessVersion: string;
     /** Step 2: the agreed tests that ran on each engine. */
     testsRun?: string[];
-    /** Step 5: the second review. */
+    /** Step 5: the sign-off by a named person (named "second review" until 2026-11-23). */
     reviewer?: string;
     reviewDate?: string;
     /** Date (YYYY-MM-DD) of the last commit that changed this object's final conversion file, read from git by the CLI at build time. */
@@ -125,6 +125,6 @@ export const STEP_LABELS: Record<number, string> = {
   2: "Agreed tests pass (tSQLt on SQL Server, plain-SQL assertions on PostgreSQL)",
   3: "Result sets match on generated data",
   4: "Runtime within 1.5× factor",
-  5: "Second human review",
+  5: "Sign-off by a named person",
   6: "Acceptance on real data",
 };

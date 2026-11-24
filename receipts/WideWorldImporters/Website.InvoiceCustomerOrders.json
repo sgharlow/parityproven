@@ -121,7 +121,7 @@
     },
     {
       "step": 5,
-      "label": "Second human review",
+      "label": "Sign-off by a named person",
       "status": "pass"
     },
     {
@@ -285,5 +285,5 @@
     "p50Hours": 3,
     "p90Hours": 6
   },
-  "builtAt": "2026-11-24T04:25:38.038Z"
+  "builtAt": "2026-11-24T04:44:06.484Z"
 }

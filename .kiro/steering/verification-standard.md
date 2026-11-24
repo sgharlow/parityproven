@@ -10,7 +10,7 @@ An object counts as **verified** only when steps 1–4 pass and steps 5–6 are 
 2. **Agreed tests pass.** The tSQLt tests (source) and the plain-SQL assertion tests (target) listed for the object pass (see the 2026-11-12 rulings below; pgTAP is not used).
 3. **Result sets match** on generated data that includes every trap below. Comparison covers row count, column names and types, values, and order wherever the source query guarantees an order. For a **trigger**, the result is the state of every table it writes after the same generated DML runs on both engines, compared the same way.
 4. **Runtime within factor.** Target runtime is at most **1.5×** the source on the synthetic volume, unless the object's record states a different agreed factor.
-5. **Second review.** A human review against this checklist, at least one day after the first pass. Record the reviewer and date.
+5. **Sign-off by a named person** (until 2026-11-23: "Second review"; see ruling D4b-1). A human review against this checklist, at least one day after the first pass. Record the reviewer and date.
 6. **Acceptance on real data.** For public sample databases this is **not applicable**, and the receipt says so. For a real engagement, the customer runs the validation scripts on their own data.
 
 **Rulings (project owner, 2026-11-12)**
@@ -36,6 +36,10 @@ An object counts as **verified** only when steps 1–4 pass and steps 5–6 are 
 - **Why:** on 2026-11-19 all 44 approvals fell on the same day as their gate runs, and 14 conversions had last changed the evening before. Under the earlier rule (first commit of the pair record only) that was allowed.
 - **Existing approvals are not changed by an agent.** `npm run check:review-interval` lists each recorded approval that is not a day after its first pass (44 on 2026-11-20, output in `evidence/closeout/2.5-recorded-approvals-too-soon.txt`). The owner re-runs `npm run approve` for the four batch reports on a later date; until then the receipts show the three dates, so a reader can see the interval.
 - The status rule in `src/pairs/status.ts` is unchanged.
+**Ruling (project owner, 2026-11-23, D4b-1: the name of step 5)**
+- Step 5 is named **Sign-off by a named person**. It was "Second review" and, on receipts, "Second human review", which implied a separate reviewer of each object. The rule itself is unchanged: one named person's sign-off on the adversarial batch report (ruling A1), at least one day after the first pass (ruling D1).
+- The name changes on receipts (src/receipts/schema.ts), in the README status line and in the standard. The status rule in src/pairs/status.ts and the pair records' step5 field are unchanged.
+
 ## Traps every generator must cover
 - NULL versus empty string (`''`), including concatenation and `ISNULL`/`COALESCE` behaviour
 - Collation and case sensitivity in comparisons, `ORDER BY` and `GROUP BY`
