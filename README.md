@@ -1,6 +1,6 @@
 # ParityProven
 
-Checks T-SQL to PL/pgSQL conversions object by object against the original on SQL Server, and shows the evidence as a migration receipt. An object is marked verified only when it passes the listed test cases and a second human review.
+Checks T-SQL to PL/pgSQL conversions object by object against the original on SQL Server, and shows the evidence as a migration receipt. An object is marked verified only when it passes the listed test cases and step 5. Step 5 is a named person's sign-off on a batch evidence report, recorded after the automated checks.
 
 Hackathon: [Kiroween 2026](https://kiroween.devpost.com/) — category **Resurrection** — due **Dec 4, 2026 2:00 pm PT**.
 
@@ -92,7 +92,7 @@ npm run fact-check -- draft.txt                                  # lists numbers
 
 **Step 2 (agreed tests)** turns an object's hand-derived fixed cases into a tSQLt test class for SQL Server and a plain-SQL assertion script for PostgreSQL (pgTAP is not in the pinned PostgreSQL image). Expected results are captured once from the original T-SQL and committed in `tests/<db>/<Object>.expected.json`, so a reviewer can check them against each case's label at step 5. `agreed-tests` also deploys each planted defect and reports how many the agreed tests catch (the gate for planted defects remains step 3).
 
-An object becomes **verified** only when steps 1, 2 and 3 pass, step 4 passes or is ruled n/a, and step 5 (a second review at least a day after the first pass) is recorded. The objects that pass step 2, and those with a recorded step 5, are listed in the status block at the top. Objects that were not converted, or that fail a step, stay on the scorecard as failed with the reason on their receipt.
+An object becomes **verified** only when steps 1, 2 and 3 pass, step 4 passes or is ruled n/a, and step 5 is recorded. Step 5 is one named person's sign-off on a batch evidence report that includes cases AI agents wrote to try to break each conversion. It is recorded with `npm run approve` and dated at least a day after the automated checks. The objects that pass step 2, and those with a recorded step 5, are listed in the status block at the top. Objects that were not converted, or that fail a step, stay on the scorecard as failed with the reason on their receipt.
 
 ### MCP server and Agent Access Map (local prototype)
 
