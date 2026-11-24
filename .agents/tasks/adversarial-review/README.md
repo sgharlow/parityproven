@@ -11,7 +11,7 @@ Task files written by the Kiro workflow that built the adversarial review gate (
 | `wf_d4feda0b77ab65fb` | 2026-11-19, 10:31 to 10:52 | Fixed 8 objects after the gate (commits c31c8c1, e4824dc, b78c56a) | wf-workflow-creator x1, wf-coder x5 | claude-opus-5 (attacker step), gpt-5.6-sol (auditor step) |
 
 - All agents are Kiro's built-in agents. No custom agent definition was written (owner confirmed, ruling D5-N, 2026-11-23).
-- The workflow definitions and state files exist only on the owner's PC, under `~/.kiro/sessions/c7cae9a786585d2d/workflows/`. They are not in the repo. This folder holds the task files of the second run only.
+- The three workflow definitions are saved in `.agents/workflows/` (see `.agents/README.md`, with their hashes). The state files are not saved: they carry the owner's chat text. This folder holds the task files of the second run only.
 - The model versions above come from the workflow definitions. The evidence files for the adversarial cases record the attacker only as "claude (Kiro subagent; exact model version not exposed to the agent)". Those evidence files are not edited: the owner's sign-off covers their hashes.
 
 ## Notes on these files

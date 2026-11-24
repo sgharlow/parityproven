@@ -98,7 +98,7 @@ export function computeRecordFacts(root: string): RecordFacts {
       { feature: "Steering", used: steering.length > 0, artifacts: steering.map((s) => `.kiro/steering/${s}`) },
       { feature: "MCP (project-built read-only server, called by Kiro)", used: kiroCalls > 0, artifacts: ["src/mcp", ".kiro/settings/mcp.json", "evidence/mcp/tool-calls.jsonl"].filter((p) => has(p) || p === ".kiro/settings/mcp.json" && existsSync(mcpConfig)) },
       { feature: "Property-based testing (fast-check)", used: hasFastCheck, artifacts: ["src/harness/generic"].filter(has) },
-      { feature: "Kiro workflows with sub-agents", used: has(".agents/tasks"), artifacts: has(".agents/tasks") ? [".agents/tasks"] : [] },
+      { feature: "Kiro workflows with sub-agents", used: has(".agents/workflows") || has(".agents/tasks"), artifacts: [".agents/README.md", ".agents/workflows", ".agents/tasks"].filter(has) },
       { feature: "Kiro powers", used: false, artifacts: [] },
     ],
   };
