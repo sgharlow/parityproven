@@ -1,0 +1,22 @@
+width check: https://parityproven.com (2026-11-24T04:53:24.904Z), widths 1280, 1024, 768, 390
+ok   1280 px  /  scrollWidth 1265 vs window 1280
+ok   1024 px  /  scrollWidth 1009 vs window 1024
+ok    768 px  /  scrollWidth 753 vs window 768
+ok    390 px  /  scrollWidth 375 vs window 390
+ok   1280 px  /about  scrollWidth 1265 vs window 1280
+ok   1024 px  /about  scrollWidth 1009 vs window 1024
+ok    768 px  /about  scrollWidth 753 vs window 768
+ok    390 px  /about  scrollWidth 375 vs window 390
+ok   1280 px  /questionnaire  scrollWidth 1265 vs window 1280
+ok   1024 px  /questionnaire  scrollWidth 1009 vs window 1024
+ok    768 px  /questionnaire  scrollWidth 753 vs window 768
+ok    390 px  /questionnaire  scrollWidth 375 vs window 390
+ok   1280 px  /access-map  scrollWidth 1265 vs window 1280
+ok   1024 px  /access-map  scrollWidth 1009 vs window 1024
+ok    768 px  /access-map  scrollWidth 753 vs window 768
+ok    390 px  /access-map  scrollWidth 375 vs window 390
+ok   1280 px  /receipt?db=AdventureWorks2025&obj=dbo.ufnGetAccountingEndDate  scrollWidth 1265 vs window 1280
+ok   1024 px  /receipt?db=AdventureWorks2025&obj=dbo.ufnGetAccountingEndDate  scrollWidth 1009 vs window 1024
+ok    768 px  /receipt?db=AdventureWorks2025&obj=dbo.ufnGetAccountingEndDate  scrollWidth 753 vs window 768
+ok    390 px  /receipt?db=AdventureWorks2025&obj=dbo.ufnGetAccountingEndDate  scrollWidth 375 vs window 390
+PASS
