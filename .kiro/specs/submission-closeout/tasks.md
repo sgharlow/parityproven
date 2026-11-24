@@ -4,10 +4,10 @@ Status 2026-11-23: phase 0 done; phase 2 and 3 are done except what waits on D3 
 
 ## Phase 0: check this spec
 - [x] 0.1 Re-measure the "Found" lines in `requirements.md` against the repo; correct any that are wrong and say which (REQ header) (2026-11-20: all hold; additions and one precision in `requirements.md` "Phase 0 re-measurement"; output `evidence/closeout/0.1-found-lines.txt`)
-- [ ] 0.2 Add this spec to the README disclosure once D6 is answered (REQ-9.1) (open because: D6 is unanswered)
+- [x] 0.2 Add this spec to the README disclosure once D6 is answered (REQ-9.1) (D6a-2, owner 2026-11-23: the README disclosure names the submission-closeout spec; the other D6 parts are 2.12)
 
 ## Phase 1: owner decisions
-- [ ] 1.1 **(owner)** D1 one-day rule · D2 `.agents/` · D3 batch minutes · D4 wording · D5 custom agents · D6 disclosure sentence (design.md table), asked one at a time (open because: answered so far: D1 A, D2 A, D4 B (the owner writes the wording), D5 N (owner, 2026-11-23; three workflow runs recorded in `.agents/tasks/adversarial-review/README.md`), D6 "review only"; D3 P (owner, 2026-11-23: five minutes per batch report); the answers go in `ParityProven-closeout-checklist.md`)
+- [ ] 1.1 **(owner)** D1 one-day rule · D2 `.agents/` · D3 batch minutes · D4 wording · D5 custom agents · D6 disclosure sentence (design.md table), asked one at a time (open because: answered so far: D1 A, D2 A, D4 B (the owner writes the wording), D5 N (owner, 2026-11-23; three workflow runs recorded in `.agents/tasks/adversarial-review/README.md`), D6a-2 (owner 2026-11-23); D3 P (owner, 2026-11-23: five minutes per batch report); the answers go in `ParityProven-closeout-checklist.md`)
 - [ ] 1.2 Record each answer as a dated ruling in the steering file it changes (open because: done for D1 (`verification-standard.md`), D2 (`.agents/tasks/adversarial-review/README.md`) and D5 (`kiroween-submission.md`); D3, D4 and D6 are pending)
 
 ## Phase 2: evidence and truth
@@ -22,7 +22,7 @@ Status 2026-11-23: phase 0 done; phase 2 and 3 are done except what waits on D3 
 - [x] 2.9 `tech.md`, `structure.md`, `kiroween-submission.md`, README corrected line by line from the REQ-5 list (REQ-5.1) (2026-11-20; the README's old fresh-clone line is replaced by a pointer to `evidence/fresh-clone/`, which is filled in by 4.2; the "All source code ... run it" box in `kiroween-submission.md` was unticked until that file exists)
 - [x] 2.10 Stale-doc test extended to hand-typed counts and hashes in README and steering; seen failing first (`src/receipts/hand-typed.test.ts`; failing run `evidence/closeout/2.10-hand-typed-seen-failing.txt`: a9ce6fc and three counts)
 - [x] 2.11 Repo homepage set to `https://parityproven.com`; checked with `gh api` (`evidence/closeout/2.11-homepage.txt`)
-- [ ] 2.12 README disclosure updated with D6 (REQ-9.1) (open because: D6 is unanswered)
+- [ ] 2.12 README disclosure updated with D6 (REQ-9.1) (open because: D6a-2 is in the README (owner 2026-11-23); D6b (naming the product models) and D6c (Gemini) are unanswered)
 - [ ] 2.13 Receipts and README block rebuilt, tests, `predeploy:check`, push, `site:check` PASS (open because: repeated after each decision-dependent item; the last rebuild is after 2.5-2.8)
 
 ## Phase 3: site and facts
